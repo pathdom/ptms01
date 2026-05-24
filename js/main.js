@@ -2328,24 +2328,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // Check existing session on load
-  const checkPortalSession = () => {
-    // Only run if we are indeed on the portal page index.html
-    if (!loginContainer) return;
 
-    const session = localStorage.getItem('thinkedu_session');
-    if (session) {
-      const user = JSON.parse(session);
-      syncUserInfoUI(user);
-      loginContainer.style.display = 'none';
-      appRoot.style.display = 'flex';
-      switchPortalView('overview-dashboard');
-    } else {
-      loginContainer.style.display = 'flex';
-      appRoot.style.display = 'none';
-    }
-  };
-  checkPortalSession();
 
   // 3. Sidebar View Switcher Logic
   const switchPortalView = (targetViewId) => {
@@ -2579,5 +2562,24 @@ document.addEventListener('DOMContentLoaded', () => {
       renderStaffUsersList();
     });
   }
+
+  // Check existing session on load (placed at the bottom to avoid TDZ ReferenceErrors)
+  const checkPortalSession = () => {
+    // Only run if we are indeed on the portal page index.html
+    if (!loginContainer) return;
+
+    const session = localStorage.getItem('thinkedu_session');
+    if (session) {
+      const user = JSON.parse(session);
+      syncUserInfoUI(user);
+      loginContainer.style.display = 'none';
+      appRoot.style.display = 'flex';
+      switchPortalView('overview-dashboard');
+    } else {
+      loginContainer.style.display = 'flex';
+      appRoot.style.display = 'none';
+    }
+  };
+  checkPortalSession();
 });
 
