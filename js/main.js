@@ -4,6 +4,7 @@ document.addEventListener('DOMContentLoaded', () => {
      ========================================== */
   const header = document.querySelector('header');
   const handleScroll = () => {
+    if (!header) return;
     if (window.scrollY > 50) {
       header.classList.add('scrolled');
     } else {
@@ -11,7 +12,9 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   };
   window.addEventListener('scroll', handleScroll);
-  handleScroll(); // Initial check
+  if (header) {
+    handleScroll(); // Initial check
+  }
 
   /* ==========================================
      MOBILE NAVIGATION TOGGLE
@@ -482,8 +485,8 @@ document.addEventListener('DOMContentLoaded', () => {
     if (mainHeader) mainHeader.style.display = 'none';
 
     // Hide Landing Page & Chat SPA
-    mainLanding.style.display = 'none';
-    footerLanding.style.display = 'none';
+    if (mainLanding) mainLanding.style.display = 'none';
+    if (footerLanding) footerLanding.style.display = 'none';
     if (chatDashboard) chatDashboard.style.display = 'none';
 
     // Show Dashboard
@@ -509,8 +512,8 @@ document.addEventListener('DOMContentLoaded', () => {
     if (mainHeader) mainHeader.style.display = '';
 
     // Show Landing Page
-    mainLanding.style.display = 'block';
-    footerLanding.style.display = 'block';
+    if (mainLanding) mainLanding.style.display = 'block';
+    if (footerLanding) footerLanding.style.display = 'block';
 
     // Hide Dashboard & Chat SPA
     overviewDashboard.style.display = 'none';
@@ -555,8 +558,8 @@ document.addEventListener('DOMContentLoaded', () => {
     if (mainHeader) mainHeader.style.display = 'none';
 
     // Hide Landing Page & CRM Dashboard
-    mainLanding.style.display = 'none';
-    footerLanding.style.display = 'none';
+    if (mainLanding) mainLanding.style.display = 'none';
+    if (footerLanding) footerLanding.style.display = 'none';
     overviewDashboard.style.display = 'none';
 
     // Show Chat Panel
