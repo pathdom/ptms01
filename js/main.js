@@ -2645,17 +2645,33 @@ document.addEventListener('DOMContentLoaded', () => {
   checkPortalSession();
 
   // ==========================================
-  // CLOUD MULTI-DEVICE SYNC ENGINE (KVDB.IO VIA CORSPROXY)
+  // CLOUD MULTI-DEVICE SYNC ENGINE (RESTFUL-API.DEV CLOUD STORAGE)
   // ==========================================
   let syncBucketId = localStorage.getItem('thinkedu_sync_bucket_id') || '';
 
   const saveToCloud = async (key, data) => {
+    // 1. Update the local copy first to make sure it's up to date
+    if (key === 'chat_threads') chatThreads = data;
+    else if (key === 'staff_users') localStorage.setItem('thinkedu_users', JSON.stringify(data));
+    else if (key === 'student_profiles') students = data;
+
     if (!syncBucketId) return;
+    
     try {
-      await fetch(`https://corsproxy.io/?https://kvdb.io/${syncBucketId}/${key}`, {
-        method: 'POST',
+      const users = JSON.parse(localStorage.getItem('thinkedu_users') || '[]');
+      const payload = {
+        name: "thinkedu_sync_data",
+        data: {
+          chat_threads: chatThreads,
+          staff_users: users,
+          student_profiles: students
+        }
+      };
+      
+      await fetch(`https://api.restful-api.dev/objects/${syncBucketId}`, {
+        method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data)
+        body: JSON.stringify(payload)
       });
     } catch (e) {
       console.error(`Failed to save ${key} to cloud:`, e);
@@ -2665,9 +2681,10 @@ document.addEventListener('DOMContentLoaded', () => {
   const readFromCloud = async (key) => {
     if (!syncBucketId) return null;
     try {
-      const response = await fetch(`https://corsproxy.io/?https://kvdb.io/${syncBucketId}/${key}`);
+      const response = await fetch(`https://api.restful-api.dev/objects/${syncBucketId}`);
       if (response.ok) {
-        return await response.json();
+        const result = await response.json();
+        return result.data ? result.data[key] : null;
       }
     } catch (e) {
       console.error(`Failed to read ${key} from cloud:`, e);
@@ -2675,27 +2692,56 @@ document.addEventListener('DOMContentLoaded', () => {
     return null;
   };
 
-  const saveAllToCloud = () => {
-    saveToCloud('chat_threads', chatThreads);
-    const users = JSON.parse(localStorage.getItem('thinkedu_users') || '[]');
-    saveToCloud('staff_users', users);
-    saveToCloud('student_profiles', students);
+  const saveAllToCloud = async () => {
+    if (!syncBucketId) return;
+    try {
+      const users = JSON.parse(localStorage.getItem('thinkedu_users') || '[]');
+      const payload = {
+        name: "thinkedu_sync_data",
+        data: {
+          chat_threads: chatThreads,
+          staff_users: users,
+          student_profiles: students
+        }
+      };
+      await fetch(`https://api.restful-api.dev/objects/${syncBucketId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+    } catch (e) {
+      console.error("Failed to save all to cloud:", e);
+    }
   };
 
   const ensureSyncBucket = async () => {
     if (!syncBucketId) {
       try {
-        const response = await fetch('https://corsproxy.io/?https://kvdb.io/', { method: 'POST' });
+        const users = JSON.parse(localStorage.getItem('thinkedu_users') || '[]');
+        const payload = {
+          name: "thinkedu_sync_data",
+          data: {
+            chat_threads: chatThreads,
+            staff_users: users,
+            student_profiles: students
+          }
+        };
+
+        const response = await fetch('https://api.restful-api.dev/objects', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        
         if (response.ok) {
-          const id = await response.text();
-          syncBucketId = id.trim();
+          const result = await response.json();
+          syncBucketId = result.id;
           localStorage.setItem('thinkedu_sync_bucket_id', syncBucketId);
           console.log("Created shared sync bucket:", syncBucketId);
-          // Upload initial local data to cloud
-          saveAllToCloud();
+          if (txtCurrentSyncCode) txtCurrentSyncCode.value = syncBucketId;
         }
       } catch (e) {
-        console.error("Failed to create kvdb bucket:", e);
+        console.error("Failed to create RESTful API object:", e);
       }
     }
   };
@@ -2703,8 +2749,24 @@ document.addEventListener('DOMContentLoaded', () => {
   const syncWithCloud = async () => {
     if (!syncBucketId) return;
     try {
+      const response = await fetch(`https://api.restful-api.dev/objects/${syncBucketId}`);
+      if (!response.ok) {
+        if (response.status === 404) {
+          // Object might have expired or been deleted. Let's re-create it!
+          console.warn("Sync bucket not found on cloud, re-creating...");
+          syncBucketId = '';
+          await ensureSyncBucket();
+          showToast("Mã đồng bộ cũ đã hết hạn, hệ thống đã tự động tạo mã mới!", "warning");
+        }
+        return;
+      }
+
+      const result = await response.json();
+      const remoteData = result.data;
+      if (!remoteData) return;
+
       // 1. Sync Chat Threads
-      const remoteChats = await readFromCloud('chat_threads');
+      const remoteChats = remoteData.chat_threads;
       if (remoteChats && JSON.stringify(remoteChats) !== JSON.stringify(chatThreads)) {
         chatThreads = remoteChats;
         localStorage.setItem('thinkedu_chat_threads', JSON.stringify(chatThreads));
@@ -2718,7 +2780,7 @@ document.addEventListener('DOMContentLoaded', () => {
       }
 
       // 2. Sync Staff Users
-      const remoteUsers = await readFromCloud('staff_users');
+      const remoteUsers = remoteData.staff_users;
       if (remoteUsers) {
         const remoteString = JSON.stringify(remoteUsers);
         const localUsersStr = localStorage.getItem('thinkedu_users');
@@ -2733,7 +2795,7 @@ document.addEventListener('DOMContentLoaded', () => {
       }
 
       // 3. Sync Students CRM Database
-      const remoteStudents = await readFromCloud('student_profiles');
+      const remoteStudents = remoteData.student_profiles;
       if (remoteStudents && JSON.stringify(remoteStudents) !== JSON.stringify(students)) {
         students = remoteStudents;
         
