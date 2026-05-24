@@ -2645,14 +2645,14 @@ document.addEventListener('DOMContentLoaded', () => {
   checkPortalSession();
 
   // ==========================================
-  // CLOUD MULTI-DEVICE SYNC ENGINE (KVDB.IO)
+  // CLOUD MULTI-DEVICE SYNC ENGINE (KVDB.IO VIA CORSPROXY)
   // ==========================================
   let syncBucketId = localStorage.getItem('thinkedu_sync_bucket_id') || '';
 
   const saveToCloud = async (key, data) => {
     if (!syncBucketId) return;
     try {
-      await fetch(`https://kvdb.io/${syncBucketId}/${key}`, {
+      await fetch(`https://corsproxy.io/?https://kvdb.io/${syncBucketId}/${key}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data)
@@ -2665,7 +2665,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const readFromCloud = async (key) => {
     if (!syncBucketId) return null;
     try {
-      const response = await fetch(`https://kvdb.io/${syncBucketId}/${key}`);
+      const response = await fetch(`https://corsproxy.io/?https://kvdb.io/${syncBucketId}/${key}`);
       if (response.ok) {
         return await response.json();
       }
@@ -2685,7 +2685,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const ensureSyncBucket = async () => {
     if (!syncBucketId) {
       try {
-        const response = await fetch('https://kvdb.io/', { method: 'POST' });
+        const response = await fetch('https://corsproxy.io/?https://kvdb.io/', { method: 'POST' });
         if (response.ok) {
           const id = await response.text();
           syncBucketId = id.trim();
