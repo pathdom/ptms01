@@ -2648,6 +2648,10 @@ document.addEventListener('DOMContentLoaded', () => {
   // CLOUD MULTI-DEVICE SYNC ENGINE (RESTFUL-API.DEV CLOUD STORAGE)
   // ==========================================
   let syncBucketId = localStorage.getItem('thinkedu_sync_bucket_id') || '';
+  if (syncBucketId === 'Chưa có mã' || syncBucketId.length !== 32) {
+    syncBucketId = '';
+    localStorage.removeItem('thinkedu_sync_bucket_id');
+  }
 
   const saveToCloud = async (key, data) => {
     // 1. Update the local copy first to make sure it's up to date
@@ -2755,6 +2759,7 @@ document.addEventListener('DOMContentLoaded', () => {
           // Object might have expired or been deleted. Let's re-create it!
           console.warn("Sync bucket not found on cloud, re-creating...");
           syncBucketId = '';
+          localStorage.removeItem('thinkedu_sync_bucket_id');
           await ensureSyncBucket();
           showToast("Mã đồng bộ cũ đã hết hạn, hệ thống đã tự động tạo mã mới!", "warning");
         }
@@ -2821,11 +2826,17 @@ document.addEventListener('DOMContentLoaded', () => {
   const txtNewSyncCode = document.getElementById('txtNewSyncCode');
 
   if (btnShowSyncPortal && syncPortalModal) {
-    btnShowSyncPortal.addEventListener('click', () => {
-      if (txtCurrentSyncCode) txtCurrentSyncCode.value = syncBucketId || "Chưa có mã";
+    btnShowSyncPortal.addEventListener('click', async () => {
       if (txtNewSyncCode) txtNewSyncCode.value = "";
       syncPortalModal.style.display = 'flex';
       document.body.style.overflow = 'hidden';
+
+      // Auto-retry generating bucket ID if it was missing/network error previously
+      if (!syncBucketId) {
+        if (txtCurrentSyncCode) txtCurrentSyncCode.value = "Đang khởi tạo mã...";
+        await ensureSyncBucket();
+      }
+      if (txtCurrentSyncCode) txtCurrentSyncCode.value = syncBucketId || "Lỗi mạng. Bấm lại nút Đồng bộ để thử lại!";
     });
   }
 
@@ -2847,6 +2858,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
   if (btnCopySyncCode && txtCurrentSyncCode) {
     btnCopySyncCode.addEventListener('click', () => {
+      if (!syncBucketId) {
+        showToast("Chưa có mã đồng bộ để sao chép!", "warning");
+        return;
+      }
       navigator.clipboard.writeText(txtCurrentSyncCode.value);
       showToast("Đã sao chép mã đồng bộ!", "success");
     });
@@ -2857,6 +2872,11 @@ document.addEventListener('DOMContentLoaded', () => {
       const newCode = txtNewSyncCode.value.trim();
       if (!newCode) {
         showToast("Vui lòng nhập mã đồng bộ!", "error");
+        return;
+      }
+
+      if (newCode.length !== 32) {
+        showToast("Mã đồng bộ không hợp lệ! Phải đúng định dạng 32 ký tự.", "error");
         return;
       }
       
