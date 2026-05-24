@@ -1815,6 +1815,7 @@ footer {
   letter-spacing: 1px;
   color: var(--text-muted);
   border-bottom: 1px solid rgba(11, 37, 69, 0.08);
+  text-align: center;
 }
 
 .student-crm-table td {
@@ -1824,6 +1825,13 @@ footer {
   vertical-align: middle;
   color: var(--text-main);
   transition: background-color var(--transition-fast);
+  text-align: center;
+}
+
+/* Maintain left-alignment for the primary student name column to align vertically */
+.student-crm-table th:first-child,
+.student-crm-table td:first-child {
+  text-align: left;
 }
 
 .student-table-row:hover td {
@@ -1834,6 +1842,7 @@ footer {
 .student-profile-cell {
   display: flex;
   align-items: center;
+  justify-content: flex-start;
   gap: 1rem;
 }
 
@@ -3638,4 +3647,205 @@ body.dark-theme-crm .profile-dropdown-item {
 
 body.dark-theme-crm .profile-dropdown-item:hover {
   background-color: #334155;
+}
+
+/* Base styles for Chat Back Button (desktop defaults hidden) */
+.chat-back-btn {
+  display: none;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--text-muted);
+  padding: 6px;
+  margin-right: 0.5rem;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: background-color var(--transition-fast);
+}
+
+.chat-back-btn:hover {
+  background-color: rgba(11, 37, 69, 0.06);
+  color: var(--text-main);
+}
+
+body.dark-theme-crm .chat-back-btn:hover {
+  background-color: #334155;
+  color: #FFFFFF;
+}
+
+/* ==========================================================================
+   MOBILE RESPONSIVENESS AND TABLE CENTERING OVERRIDES
+   ========================================================================== */
+@media (max-width: 768px) {
+  /* CRM Table Horizontal Scroll Optimization */
+  .student-crm-table {
+    min-width: 850px !important;
+  }
+
+  /* Responsive Search and Action Button Toolbar in Card Header */
+  .table-toolset {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
+    width: 100% !important;
+    gap: 0.75rem !important;
+  }
+
+  .table-toolset .search-input-wrapper {
+    width: 100% !important;
+  }
+
+  .table-toolset button {
+    flex: 1 1 auto !important;
+    justify-content: center !important;
+  }
+
+  .table-toolset #btnAddStudent {
+    width: 100% !important;
+    margin-top: 0.25rem !important;
+  }
+
+  /* Centered Table Pagination Stacked Footer */
+  .table-pagination-footer {
+    flex-direction: column !important;
+    gap: 1.25rem !important;
+    padding: 1.25rem !important;
+    text-align: center !important;
+  }
+
+  .table-pagination-footer .footer-left,
+  .table-pagination-footer .footer-right {
+    width: 100% !important;
+    justify-content: center !important;
+    align-items: center !important;
+    gap: 1rem !important;
+  }
+
+  .records-per-page {
+    justify-content: center !important;
+  }
+
+  /* Single Column Responsive Filter panel */
+  .filter-panel-grid {
+    grid-template-columns: 1fr !important;
+    gap: 1rem !important;
+  }
+
+  .filter-actions-col {
+    width: 100% !important;
+    flex-direction: column !important;
+    gap: 0.5rem !important;
+  }
+
+  .filter-actions-col button {
+    width: 100% !important;
+  }
+
+  /* Swipable Analytics Stats Cards in CRM */
+  .dashboard-stats-row {
+    flex-wrap: nowrap !important;
+    overflow-x: auto !important;
+    padding-bottom: 0.75rem !important;
+    gap: 0.75rem !important;
+    scrollbar-width: none !important;
+    -webkit-overflow-scrolling: touch !important;
+  }
+  
+  .dashboard-stats-row::-webkit-scrollbar {
+    display: none !important;
+  }
+  
+  .stat-pill-btn {
+    flex-shrink: 0 !important;
+  }
+
+  /* --- FULL-SCREEN TOGGLE LAYOUT FOR MOBILE CHAT (NATIVE FEEL) --- */
+  .chat-canvas-body {
+    position: relative !important;
+    height: calc(100vh - 60px) !important;
+  }
+
+  /* Default state: Threads list takes full height/width, active chat window hidden */
+  .chat-sidebar {
+    width: 100% !important;
+    height: 100% !important;
+    display: flex !important;
+    border-right: none !important;
+  }
+
+  .chat-window {
+    display: none !important; /* Hide conversation view initially */
+  }
+
+  /* Show conversation active state (toggled on parent body via JS) */
+  .chat-canvas-body.show-conversation .chat-sidebar {
+    display: none !important; /* Hide thread lists when conversation is open */
+  }
+
+  .chat-canvas-body.show-conversation .chat-window {
+    display: flex !important; /* Show active conversation panel */
+    width: 100% !important;
+    height: 100% !important;
+  }
+
+  /* Display back button only on mobile active conversation header */
+  .chat-back-btn {
+    display: flex !important;
+  }
+
+  .chat-sidebar-search {
+    padding: 0.75rem 1rem !important;
+  }
+
+  .chat-sidebar-search .search-icon {
+    left: 1.8rem !important;
+  }
+
+  .chat-sidebar-search input {
+    padding: 0.5rem 1rem 0.5rem 2.2rem !important;
+    font-size: 0.8rem !important;
+  }
+
+  .chat-sidebar-actions {
+    padding: 0.5rem 1rem !important;
+    gap: 0.5rem !important;
+  }
+
+  .chat-action-btn {
+    padding: 0.4rem !important;
+    font-size: 0.7rem !important;
+  }
+
+  .chat-thread-item {
+    padding: 0.75rem 1rem !important;
+  }
+
+  .chat-thread-item .avatar-circle {
+    width: 38px !important;
+    height: 38px !important;
+  }
+
+  .chat-window-header {
+    height: 55px !important;
+    padding: 0 1rem !important;
+  }
+
+  .chat-messages-container {
+    padding: 1rem !important;
+  }
+
+  .chat-input-bar {
+    height: 55px !important;
+    padding: 0 1rem !important;
+    gap: 0.5rem !important;
+  }
+
+  /* Responsive Emoji Picker Positioning */
+  .chat-emoji-picker-popup {
+    bottom: 65px !important;
+    left: 1rem !important;
+    right: 1rem !important;
+    width: auto !important;
+  }
 }

@@ -1707,6 +1707,10 @@ document.addEventListener('DOMContentLoaded', () => {
         if (inlineSearch) inlineSearch.style.display = 'none';
         if (inlineSearchInput) inlineSearchInput.value = '';
         
+        // Add show-conversation class to chat body on mobile to activate full conversation view
+        const chatCanvas = document.querySelector('.chat-canvas-body');
+        if (chatCanvas) chatCanvas.classList.add('show-conversation');
+        
         renderThreadList();
         renderMessages(activeThreadId);
       });
@@ -2143,7 +2147,20 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  // 5. User Profile Menu Hover Items Click Actions (Hồ sơ, Đăng xuất)
+  // 5. Mobile Back Button Toggler to return to Contacts/Sidebar List
+  const btnChatMobileBack = document.getElementById('btnChatMobileBack');
+  if (btnChatMobileBack) {
+    btnChatMobileBack.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      const chatCanvas = document.querySelector('.chat-canvas-body');
+      if (chatCanvas) {
+        chatCanvas.classList.remove('show-conversation');
+      }
+    });
+  }
+
+  // 6. User Profile Menu Hover Items Click Actions (Hồ sơ, Đăng xuất)
   const btnViewProfiles = document.querySelectorAll('.btn-view-my-profile');
   const btnLogoutApps = document.querySelectorAll('.btn-logout-app');
 
