@@ -787,6 +787,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (confirm(`Bạn có chắc chắn muốn xóa học viên ${student.name} (${student.id})?`)) {
           students = students.filter(s => s.id !== student.id);
           showToast(`Đã xóa học viên ${student.name} thành công!`, 'warning');
+          saveToCloud('student_profiles', students);
           updateDashboardStats();
           applyAllFilters();
         }
@@ -1021,6 +1022,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
       // Add to beginning of array
       students.unshift(newStudent);
+      saveToCloud('student_profiles', students);
 
       // Close Modal & toast success
       closeModal();
@@ -2567,6 +2569,7 @@ document.addEventListener('DOMContentLoaded', () => {
           let updatedUsers = JSON.parse(localStorage.getItem('thinkedu_users') || '[]');
           updatedUsers = updatedUsers.filter(u => u.username !== user.username);
           localStorage.setItem('thinkedu_users', JSON.stringify(updatedUsers));
+          saveToCloud('staff_users', updatedUsers);
           
           showToast(`Đã xóa tài khoản nhân viên ${user.name} thành công!`, "warning");
           renderStaffUsersList();
@@ -2611,6 +2614,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
       users.push(newUser);
       localStorage.setItem('thinkedu_users', JSON.stringify(users));
+      saveToCloud('staff_users', users);
 
       // Reset form & Toast
       createStaffUserForm.reset();
@@ -2639,5 +2643,188 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   };
   checkPortalSession();
+
+  // ==========================================
+  // CLOUD MULTI-DEVICE SYNC ENGINE (KVDB.IO)
+  // ==========================================
+  let syncBucketId = localStorage.getItem('thinkedu_sync_bucket_id') || '';
+
+  const saveToCloud = async (key, data) => {
+    if (!syncBucketId) return;
+    try {
+      await fetch(`https://kvdb.io/${syncBucketId}/${key}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      });
+    } catch (e) {
+      console.error(`Failed to save ${key} to cloud:`, e);
+    }
+  };
+
+  const readFromCloud = async (key) => {
+    if (!syncBucketId) return null;
+    try {
+      const response = await fetch(`https://kvdb.io/${syncBucketId}/${key}`);
+      if (response.ok) {
+        return await response.json();
+      }
+    } catch (e) {
+      console.error(`Failed to read ${key} from cloud:`, e);
+    }
+    return null;
+  };
+
+  const saveAllToCloud = () => {
+    saveToCloud('chat_threads', chatThreads);
+    const users = JSON.parse(localStorage.getItem('thinkedu_users') || '[]');
+    saveToCloud('staff_users', users);
+    saveToCloud('student_profiles', students);
+  };
+
+  const ensureSyncBucket = async () => {
+    if (!syncBucketId) {
+      try {
+        const response = await fetch('https://kvdb.io/', { method: 'POST' });
+        if (response.ok) {
+          const id = await response.text();
+          syncBucketId = id.trim();
+          localStorage.setItem('thinkedu_sync_bucket_id', syncBucketId);
+          console.log("Created shared sync bucket:", syncBucketId);
+          // Upload initial local data to cloud
+          saveAllToCloud();
+        }
+      } catch (e) {
+        console.error("Failed to create kvdb bucket:", e);
+      }
+    }
+  };
+
+  const syncWithCloud = async () => {
+    if (!syncBucketId) return;
+    try {
+      // 1. Sync Chat Threads
+      const remoteChats = await readFromCloud('chat_threads');
+      if (remoteChats && JSON.stringify(remoteChats) !== JSON.stringify(chatThreads)) {
+        chatThreads = remoteChats;
+        localStorage.setItem('thinkedu_chat_threads', JSON.stringify(chatThreads));
+        lastThreadsString = JSON.stringify(chatThreads);
+        
+        const chatDashboard = document.getElementById('chat-dashboard');
+        if (chatDashboard && chatDashboard.style.display === 'block') {
+          renderThreadList();
+          renderMessages(activeThreadId);
+        }
+      }
+
+      // 2. Sync Staff Users
+      const remoteUsers = await readFromCloud('staff_users');
+      if (remoteUsers) {
+        const remoteString = JSON.stringify(remoteUsers);
+        const localUsersStr = localStorage.getItem('thinkedu_users');
+        if (remoteString !== localUsersStr) {
+          localStorage.setItem('thinkedu_users', remoteString);
+          
+          const usersDashboard = document.getElementById('users-dashboard');
+          if (usersDashboard && usersDashboard.style.display === 'block') {
+            renderStaffUsersList();
+          }
+        }
+      }
+
+      // 3. Sync Students CRM Database
+      const remoteStudents = await readFromCloud('student_profiles');
+      if (remoteStudents && JSON.stringify(remoteStudents) !== JSON.stringify(students)) {
+        students = remoteStudents;
+        
+        const overviewDashboard = document.getElementById('overview-dashboard');
+        if (overviewDashboard && overviewDashboard.style.display === 'block') {
+          updateDashboardStats();
+          applyAllFilters();
+        }
+      }
+    } catch (e) {
+      console.error("Failed during sync with cloud:", e);
+    }
+  };
+
+  // 1. Sync Settings Modal Operations
+  const syncPortalModal = document.getElementById('syncPortalModal');
+  const btnShowSyncPortal = document.getElementById('btnShowSyncPortal');
+  const btnCloseSyncModal = document.getElementById('btnCloseSyncModal');
+  const btnCancelSync = document.getElementById('btnCancelSync');
+  const btnApplySyncCode = document.getElementById('btnApplySyncCode');
+  const btnCopySyncCode = document.getElementById('btnCopySyncCode');
+  const txtCurrentSyncCode = document.getElementById('txtCurrentSyncCode');
+  const txtNewSyncCode = document.getElementById('txtNewSyncCode');
+
+  if (btnShowSyncPortal && syncPortalModal) {
+    btnShowSyncPortal.addEventListener('click', () => {
+      if (txtCurrentSyncCode) txtCurrentSyncCode.value = syncBucketId || "Chưa có mã";
+      if (txtNewSyncCode) txtNewSyncCode.value = "";
+      syncPortalModal.style.display = 'flex';
+      document.body.style.overflow = 'hidden';
+    });
+  }
+
+  const closeSyncModal = () => {
+    if (syncPortalModal) {
+      syncPortalModal.style.display = 'none';
+      document.body.style.overflow = '';
+    }
+  };
+
+  if (btnCloseSyncModal) btnCloseSyncModal.addEventListener('click', closeSyncModal);
+  if (btnCancelSync) btnCancelSync.addEventListener('click', closeSyncModal);
+
+  if (syncPortalModal) {
+    syncPortalModal.addEventListener('click', (e) => {
+      if (e.target === syncPortalModal) closeSyncModal();
+    });
+  }
+
+  if (btnCopySyncCode && txtCurrentSyncCode) {
+    btnCopySyncCode.addEventListener('click', () => {
+      navigator.clipboard.writeText(txtCurrentSyncCode.value);
+      showToast("Đã sao chép mã đồng bộ!", "success");
+    });
+  }
+
+  if (btnApplySyncCode && txtNewSyncCode) {
+    btnApplySyncCode.addEventListener('click', async () => {
+      const newCode = txtNewSyncCode.value.trim();
+      if (!newCode) {
+        showToast("Vui lòng nhập mã đồng bộ!", "error");
+        return;
+      }
+      
+      if (newCode === syncBucketId) {
+        showToast("Mã này trùng với mã hiện tại của bạn!", "warning");
+        return;
+      }
+
+      if (confirm("Kết nối với mã đồng bộ mới sẽ ghi đè dữ liệu cục bộ trên máy này bằng dữ liệu đám mây của máy kia. Bạn có đồng ý không?")) {
+        syncBucketId = newCode;
+        localStorage.setItem('thinkedu_sync_bucket_id', syncBucketId);
+        closeSyncModal();
+        showToast("Đang đồng bộ dữ liệu đám mây...", "info");
+        
+        await syncWithCloud();
+        showToast("Kết nối đồng bộ liên máy thành công!", "success");
+      }
+    });
+  }
+
+  // Startup Sync Sequence
+  const startupSync = async () => {
+    await ensureSyncBucket();
+    await syncWithCloud();
+  };
+  startupSync();
+
+  // Periodic Cloud sync every 2 seconds
+  setInterval(() => {
+    syncWithCloud();
+  }, 2000);
 });
 
