@@ -4,15 +4,14 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ThinkEdu | Tư Vấn Du Học Tận Tâm - Hệ Sinh Thái Giáo Dục ThinkPro</title>
-  <meta name="description"
-    content="ThinkEdu - Dịch vụ tư vấn du học nước ngoài cao cấp, định hướng học bổng và nghề nghiệp công nghệ toàn cầu. Thừa hưởng triết lý Dịch vụ Tận tâm của ThinkPro.">
+  <title>Cổng Thông Tin Quản Lý | ThinkEdu - Hệ Sinh Thái Giáo Dục ThinkPro</title>
+  <meta name="description" content="Hệ thống quản lý nội bộ dành cho Ban điều hành và Nhân viên ThinkEdu.">
 
   <!-- CSS Stylesheet -->
   <link rel="stylesheet" href="css/main.css">
 </head>
 
-<body>
+<body class="admin-portal-body">
 
   <!-- Fine Editorial Gridlines for Architectural Vibe -->
   <div class="grid-lines">
@@ -23,962 +22,638 @@
   </div>
 
   <!-- ==========================================
-       HEADER SECTION
+       1. LOGIN FORM WRAPPER (DEFAULT VIEW)
        ========================================== -->
-  <header>
-    <!-- Header Top Support Bar (ThinkPro Style) -->
-    <div class="header-top">
-      <div class="container">
-        <div class="header-top-info">
-          <span class="hotline-text">
-            <svg class="header-top-icon" viewBox="0 0 24 24">
-              <path
-                d="M6.62,10.79C8.06,13.62 10.38,15.93 13.21,17.38L15.41,15.18C15.69,14.9 16.08,14.82 16.43,14.93C17.55,15.3 18.75,15.5 20,15.5A1,1 0 0,1 21,16.5V20A1,1 0 0,1 20,21A17,17 0 0,1 3,4A1,1 0 0,1 4,3H7.5A1,1 0 0,1 8.5,4C8.5,5.25 8.7,6.45 9.07,7.57C9.18,7.92 9.1,8.31 8.82,8.59L6.62,10.79Z" />
+  <div id="login-container" class="login-wrapper">
+    <div class="login-card reveal reveal-scale active">
+      <div class="login-header">
+        <div class="login-logo">ThinkEDU</div>
+        <h2>HỆ THỐNG NỘI BỘ</h2>
+        <p>Vui lòng đăng nhập bằng tài khoản Quản trị viên hoặc Nhân viên để truy cập hệ thống.</p>
+      </div>
+
+      <form id="portalLoginForm">
+        <div class="form-group-login">
+          <label for="loginUsername">Tên tài khoản</label>
+          <div class="input-wrapper">
+            <svg class="input-icon" viewBox="0 0 24 24">
+              <path d="M12,4A4,4 0 0,1 16,8A4,4 0 0,1 12,12A4,4 0 0,1 8,8A4,4 0 0,1 12,4M12,14C16.42,14 20,15.79 20,18V20H4V18C4,15.79 7.58,14 12,14Z"/>
             </svg>
-            Hotline: <strong>1900.63.3579</strong>
-          </span>
-          <span class="support-text">
-            <svg class="header-top-icon" viewBox="0 0 24 24">
-              <path
-                d="M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M12,4A8,8 0 0,1 20,12A8,8 0 0,1 12,20A8,8 0 0,1 4,12A8,8 0 0,1 12,4M12,6A6,6 0 0,0 6,12A6,6 0 0,0 12,18A6,6 0 0,0 18,12A6,6 0 0,0 12,6M12,8A4,4 0 0,1 16,12A4,4 0 0,1 12,16A4,4 0 0,1 8,12A4,4 0 0,1 12,8Z" />
-            </svg>
-            Hỗ trợ tận tâm: 9:00 - 21:00
-          </span>
+            <input type="text" id="loginUsername" placeholder="Nhập tài khoản (ví dụ: manhdd)" required>
+          </div>
         </div>
+
+        <div class="form-group-login">
+          <label for="loginPassword">Mật khẩu</label>
+          <div class="input-wrapper">
+            <svg class="input-icon" viewBox="0 0 24 24">
+              <path d="M18,8A2,2 0 0,1 20,10V20A2,2 0 0,1 18,22H6A2,2 0 0,1 4,20V10A2,2 0 0,1 6,8H7V7A5,5 0 0,1 12,2A5,5 0 0,1 17,7V8H18M12,4A3,3 0 0,0 9,7V8H15V7A3,3 0 0,0 12,4M12,17A1.5,1.5 0 1,0 10.5,15.5A1.5,1.5 0 0,0 12,17Z"/>
+            </svg>
+            <input type="password" id="loginPassword" placeholder="Nhập mật khẩu" required>
+            <button type="button" class="btn-toggle-password" id="btnTogglePassword" aria-label="Hiện mật khẩu">
+              <svg viewBox="0 0 24 24" class="eye-icon">
+                <path d="M12,9A3,3 0 0,0 9,12A3,3 0 0,0 12,15A3,3 0 0,0 15,12A3,3 0 0,0 12,9M12,4.5C7,4.5 2.73,7.61 1,12C2.73,16.39 7,19.5 12,19.5C17,19.5 21.27,16.39 23,12C21.27,7.61 17,4.5 12,4.5Z"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <button type="submit" class="btn-submit-login">ĐĂNG NHẬP HỆ THỐNG</button>
+      </form>
+
+      <div class="login-footer">
+        <p>&copy; 2026 ThinkEdu. Hệ sinh thái Dịch vụ Giáo dục Tận tâm.</p>
+        <p><a href="trang-chu.html" class="back-to-home">Quay lại trang chủ học viên ➔</a></p>
       </div>
     </div>
+  </div>
 
-    <!-- Main Navigation Bar -->
-    <div class="header-navigation">
-      <div class="container">
-        <a href="#" class="logo">
-          <span>ThinkEDU</span>
-        </a>
+  <!-- ==========================================
+       2. MAIN APP CONTAINER (HIDDEN UNTIL LOGGED IN)
+       ========================================== -->
+  <div id="app-root" class="app-root-container" style="display: none;">
+    <!-- LEFT NAVIGATION SIDEBAR -->
+    <aside class="portal-sidebar">
+      <div class="sidebar-logo">
+        <span class="logo-text">ThinkEDU</span>
+        <span class="logo-sub">SYSTEM PORTAL</span>
+      </div>
 
-        <nav id="navMenu">
-          <ul>
-            <li><a href="#hero" class="active">Trang Chủ</a></li>
-            <li><a href="#overview" id="btn-overview">Danh Sách</a></li>
-            <li><a href="#chat" id="btn-chat">Chat Box</a></li>
-            <li><a href="#destinations">Điểm Đến</a></li>
-            <li><a href="#booking">Liên Hệ</a></li>
-          </ul>
-          <!-- Mobile-only CTA to prevent desktop redundancy -->
-          <a href="#booking" class="nav-cta mobile-only">Đăng ký tư vấn</a>
-        </nav>
-
-        <div class="header-actions">
-          <a href="#booking" class="nav-cta">Đăng ký tư vấn</a>
+      <!-- Logged-in Account Card -->
+      <div class="sidebar-user-badge">
+        <div class="avatar" id="portalUserAvatar">DM</div>
+        <div class="info">
+          <h4 id="portalUserName">Dương Đức Mạnh</h4>
+          <span id="portalUserRole">Quản trị viên</span>
         </div>
+      </div>
 
-        <button class="mobile-toggle" id="mobileToggle" aria-label="Toggle Navigation">
-          <span></span>
-          <span></span>
-          <span></span>
+      <!-- Menu Navigation -->
+      <nav class="sidebar-menu">
+        <ul>
+          <li class="menu-item active" data-target="overview-dashboard">
+            <svg viewBox="0 0 24 24"><path d="M12,4A4,4 0 0,1 16,8A4,4 0 0,1 12,12A4,4 0 0,1 8,8A4,4 0 0,1 12,4M12,14C16.42,14 20,15.79 20,18V20H4V18C4,15.79 7.58,14 12,14Z"/></svg>
+            <span>Quản lý học viên</span>
+          </li>
+          <li class="menu-item" data-target="chat-dashboard">
+            <svg viewBox="0 0 24 24"><path d="M20,2H4A2,2 0 0,0 2,4V22L6,18H20A2,2 0 0,0 22,16V4A2,2 0 0,0 20,2M20,16H5.17L4,17.17V4H20V16Z"/></svg>
+            <span>Hộp thư trò chuyện</span>
+          </li>
+          <li class="menu-item" data-target="stats-dashboard">
+            <svg viewBox="0 0 24 24"><path d="M19,3H5C3.89,3 3,3.9 3,5V19A2,2 0 0,0 5,21H19A2,2 0 0,0 21,19V5C21,3.9 20.1,3 19,3M19,19H5V5H19V19M7,10H9V17H7V10M11,7H13V17H11V7M15,13H17V17H15V13Z"/></svg>
+            <span>Thống kê doanh thu</span>
+          </li>
+          <!-- Admin-Only menu item -->
+          <li class="menu-item admin-only" data-target="users-dashboard" id="menuItemCreateUsers">
+            <svg viewBox="0 0 24 24"><path d="M15,14C12.33,14 7,15.33 7,18V20H23V18C23,15.33 17.67,14 15,14M6,8.17V5H4V8.17C2.78,8.58 2,9.7 2,11C2,12.3 2.78,13.42 4,13.83V17H6V13.83C7.22,13.42 8,12.3 8,11C8,9.7 7.22,8.58 6,8.17M15,12A4,4 0 0,0 19,8A4,4 0 0,0 15,4A4,4 0 0,0 11,8A4,4 0 0,0 15,12Z"/></svg>
+            <span>Tạo tài khoản NV</span>
+          </li>
+        </ul>
+      </nav>
+
+      <!-- Sidebar Bottom Controls -->
+      <div class="sidebar-footer">
+        <button class="footer-btn dark-mode-toggle-sidebar" id="darkModeTogglePortal" title="Chuyển giao diện">
+          <svg viewBox="0 0 24 24" class="theme-icon"><path d="M12,18C11.11,18 10.26,17.8 9.5,17.45C11.56,16.5 13,14.42 13,12C13,9.58 11.56,7.5 9.5,6.55C10.26,6.2 11.11,6 12,6A6,6 0 0,1 18,12A6,6 0 0,1 12,18M20,8.69V4H15.31L12,0.69L8.69,4H4V8.69L0.69,12L4,15.31V20H8.69L12,23.31L15.31,20H20V15.31L23.31,12L20,8.69Z"/></svg>
+          <span>Đổi giao diện</span>
+        </button>
+        <button class="footer-btn btn-logout-app-portal" id="btnLogoutPortal" title="Đăng xuất">
+          <svg viewBox="0 0 24 24"><path d="M16,17V14H9V10H16V7L21,12L16,17M14,2A2,2 0 0,1 16,4V6H14V4H5V20H14V18H16V20A2,2 0 0,1 14,22H5A2,2 0 0,1 3,20V4A2,2 0 0,1 5,2H14Z"/></svg>
+          <span>Đăng xuất</span>
         </button>
       </div>
-    </div>
-  </header>
+    </aside>
 
-  <main>
-    <!-- ==========================================
-         HERO SECTION
-         ========================================== -->
-    <section class="hero" id="hero">
-      <div class="container">
-        <div class="hero-grid">
-          <div class="hero-content reveal reveal-left">
-            <span class="section-tag">Kiến Tạo Tương Lai Toàn Cầu</span>
-            <h1>Học chuẩn <em>toàn cầu</em>,<br>Mở lối tương lai.</h1>
-            <p class="hero-subtitle">
-              Dịch vụ tư vấn du học cao cấp và xây dựng lộ trình sự nghiệp công nghệ toàn cầu, thừa hưởng triết lý
-              <strong>"Dịch Vụ Tận Tâm"</strong> từ hệ sinh thái ThinkPro.
-            </p>
-            <div class="hero-ctas">
-              <a href="#booking" class="btn-primary">Nhận Lộ Trình Riêng</a>
-              <a href="#services" class="btn-text">Tìm hiểu chương trình</a>
-            </div>
-          </div>
+    <!-- RIGHT MAIN WORKSPACE -->
+    <div class="portal-main-workspace">
 
-          <div class="hero-visual reveal reveal-right delay-1">
-            <div class="hero-img-container">
-              <!-- Inline Premium SVG Graphic mimicking Palais minimalist architecture style -->
-              <svg viewBox="0 0 500 500" style="width: 100%; height: 100%; background: #EDEAE4; display: block;">
-                <!-- Delicate background grid -->
-                <line x1="50" y1="0" x2="50" y2="500" stroke="rgba(26,26,26,0.05)" />
-                <line x1="250" y1="0" x2="250" y2="500" stroke="rgba(26,26,26,0.05)" />
-                <line x1="450" y1="0" x2="450" y2="500" stroke="rgba(26,26,26,0.05)" />
-                <line x1="0" y1="100" x2="500" y2="100" stroke="rgba(26,26,26,0.05)" />
-                <line x1="0" y1="300" x2="500" y2="300" stroke="rgba(26,26,26,0.05)" />
-
-                <!-- Modern architectural abstract layout (minimalist circles & columns) -->
-                <rect x="120" y="80" width="260" height="340" fill="none" stroke="rgba(26,26,26,0.15)"
-                  stroke-width="1.5" />
-                <circle cx="250" cy="180" r="70" fill="none" stroke="#A88B58" stroke-width="1" />
-                <line x1="120" y1="350" x2="380" y2="350" stroke="var(--text-main)" stroke-width="1.5" />
-                <line x1="250" y1="180" x2="250" y2="420" stroke="#A88B58" stroke-width="1" />
-                <rect x="235" y="335" width="30" height="30" fill="var(--text-main)" />
-
-                <!-- Stylized Text Inside SVG -->
-                <text x="140" y="405" font-family="var(--font-serif)" font-size="12" letter-spacing="1"
-                  fill="var(--text-muted)">EST. 2026</text>
-                <text x="310" y="405" font-family="var(--font-serif)" font-size="12" letter-spacing="1"
-                  fill="var(--text-muted)">THINKEDU</text>
-              </svg>
-            </div>
-
-            <div class="hero-badge reveal reveal-scale delay-2">
-              <p class="title">100%</p>
-              <p class="desc">Tận tâm phục vụ định hướng học sinh</p>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- ==========================================
-         HERITAGE & TRIẾT LÝ SỨ MỆNH
-         ========================================== -->
-    <section class="heritage" id="heritage">
-      <div class="container">
-        <div class="heritage-grid">
-          <div class="reveal reveal-left">
-            <span class="section-tag">Triết Lý ThinkPro</span>
-            <h2>Sứ mệnh chuyển dịch thế hệ trẻ vượt giới hạn.</h2>
-          </div>
-          <div class="heritage-text reveal reveal-right delay-1">
-            <p>
-              Bắt đầu từ một thương hiệu phân phối công nghệ hàng đầu tại Việt Nam, <strong>ThinkPro</strong> luôn đặt
-              <strong>"Dịch Vụ Tận Tâm"</strong> và sự tử tế làm kim chỉ nam. Với <strong>ThinkEdu</strong>, chúng tôi
-              mang trọn vẹn ADN đó vào ngành tư vấn giáo dục quốc tế.
-            </p>
-            <p>
-              Chúng tôi không chỉ làm hồ sơ du học thông thường. ThinkEdu là đối tác đồng hành, kết hợp nền tảng công
-              nghệ sẵn có của hệ sinh thái ThinkPro để định hình và phát triển cho học sinh lộ trình sự nghiệp vững chắc
-              nhất tại các quốc gia tiên tiến.
-            </p>
-          </div>
-        </div>
-
-        <div class="values-grid">
-          <div class="value-card reveal reveal-scale">
-            <span class="value-num">I.</span>
-            <h3>Dịch Vụ Tận Tâm</h3>
-            <p>Lắng nghe từng nhu cầu nhỏ nhất của phụ huynh và học sinh để xây dựng lộ trình du học tối ưu, trung thực
-              và cá nhân hóa tuyệt đối.</p>
-          </div>
-          <div class="value-card reveal reveal-scale delay-1">
-            <span class="value-num">II.</span>
-            <h3>Định Hướng Công Nghệ</h3>
-            <p>Tận dụng thế mạnh số 1 về công nghệ của ThinkPro để tư vấn hướng nghiệp chuyên sâu cho các khối ngành
-              hot: AI, CNTT, Data Science, Fintech.</p>
-          </div>
-          <div class="value-card reveal reveal-scale delay-2">
-            <span class="value-num">III.</span>
-            <h3>Minh Bạch Hoàn Toàn</h3>
-            <p>Cam kết minh bạch 100% về lộ trình tài chính, tỷ lệ đậu học bổng và hồ sơ xét duyệt của các trường đại
-              học đối tác danh giá.</p>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- ==========================================
-         SERVICES GRID
-         ========================================== -->
-    <section class="services" id="services">
-      <div class="container">
-        <div class="services-header">
-          <div class="reveal reveal-left">
-            <span class="section-tag">Chương Trình Đào Tạo & Lộ Trình</span>
-            <h2>Các giải pháp du học cao cấp</h2>
-          </div>
-          <div class="reveal reveal-right">
-            <a href="#booking" class="btn-text">Đăng ký tư vấn lộ trình</a>
-          </div>
-        </div>
-
-        <div class="services-grid">
-          <!-- Card 1: 7 Columns Asymmetric -->
-          <div class="service-card col-7 reveal reveal-left">
-            <div class="service-img-wrap">
-              <svg viewBox="0 0 700 250" style="width: 100%; height: 100%; background: #E6E2DA;">
-                <line x1="0" y1="125" x2="700" y2="125" stroke="rgba(26,26,26,0.06)" />
-                <circle cx="350" cy="125" r="50" fill="none" stroke="#A88B58" stroke-width="1.5" />
-                <text x="350" y="130" font-family="var(--font-serif)" font-size="16" text-anchor="middle"
-                  font-style="italic" fill="var(--text-main)">IVY PREP</text>
-              </svg>
-            </div>
-            <div class="service-info">
-              <h3>Tư Vấn Học Bổng & Ivy Prep</h3>
-              <p>Chương trình chuẩn bị hồ sơ du học dài hạn hướng đến các học bổng giá trị cao (từ 50% - 100%) tại các
-                trường Top 100 toàn cầu. Chúng tôi đồng hành xây dựng bài luận ấn tượng, hoạt động ngoại khóa độc bản.
-              </p>
-              <span class="service-arrow">➔</span>
-            </div>
-          </div>
-
-          <!-- Card 2: 5 Columns Asymmetric -->
-          <div class="service-card col-5 reveal reveal-right delay-1">
-            <div class="service-img-wrap">
-              <svg viewBox="0 0 500 250" style="width: 100%; height: 100%; background: #EEEBE6;">
-                <rect x="150" y="50" width="200" height="150" fill="none" stroke="#A88B58" stroke-width="1" />
-                <text x="250" y="130" font-family="var(--font-serif)" font-size="16" text-anchor="middle"
-                  fill="var(--text-main)">PERSONALIZED</text>
-              </svg>
-            </div>
-            <div class="service-info">
-              <h3>Lộ Trình Cá Nhân Hóa</h3>
-              <p>Mỗi học sinh sở hữu một thế mạnh riêng biệt. ThinkEdu thiết lập bản đồ định hướng cá nhân hóa phù hợp
-                với học lực, tài chính và ước mơ của học sinh.</p>
-              <span class="service-arrow">➔</span>
-            </div>
-          </div>
-
-          <!-- Card 3: 6 Columns Asymmetric -->
-          <div class="service-card col-6 reveal reveal-left">
-            <div class="service-img-wrap">
-              <svg viewBox="0 0 600 250" style="width: 100%; height: 100%; background: #F0EDE8;">
-                <line x1="100" y1="50" x2="500" y2="200" stroke="var(--accent)" stroke-width="1" />
-                <line x1="100" y1="200" x2="500" y2="50" stroke="var(--text-main)" stroke-width="1" />
-                <text x="300" y="135" font-family="var(--font-serif)" font-size="16" text-anchor="middle"
-                  fill="var(--text-main)">TECH & GLOBAL</text>
-              </svg>
-            </div>
-            <div class="service-info">
-              <h3>Định Hướng Nghề Nghiệp Công Nghệ</h3>
-              <p>Điểm khác biệt duy nhất từ ThinkEdu: Kết nối với giới chuyên gia công nghệ từ ThinkPro, định hướng nghề
-                nghiệp cụ thể trong các lĩnh vực AI, Lập trình, Phần cứng, và Thiết kế tại Silicon Valley, Singapore hay
-                Châu Âu.</p>
-              <span class="service-arrow">➔</span>
-            </div>
-          </div>
-
-          <!-- Card 4: 6 Columns Asymmetric -->
-          <div class="service-card col-6 reveal reveal-right delay-1">
-            <div class="service-img-wrap">
-              <svg viewBox="0 0 600 250" style="width: 100%; height: 100%; background: #EBE7DF;">
-                <circle cx="300" cy="125" r="70" fill="none" stroke="rgba(26,26,26,0.1)" />
-                <rect x="250" y="100" width="100" height="50" fill="none" stroke="#A88B58" />
-                <text x="300" y="130" font-family="var(--font-serif)" font-size="16" text-anchor="middle"
-                  fill="var(--text-main)">VISA GUARANTEE</text>
-              </svg>
-            </div>
-            <div class="service-info">
-              <h3>Hỗ Trợ Thủ Tục & Luyện Phỏng Vấn Visa</h3>
-              <p>Quy trình hồ sơ visa được đảm bảo chặt chẽ bởi đội ngũ chuyên gia giàu kinh nghiệm. Tổ chức các buổi
-                phỏng vấn giả định (mock interview) khắt khe giúp học sinh tự tin 100% trước Lãnh Sự Quán.</p>
-              <span class="service-arrow">➔</span>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- ==========================================
-         DESTINATIONS (INTERACTIVE DRAWER)
-         ========================================== -->
-    <section class="destinations" id="destinations">
-      <div class="container">
-        <div class="destinations-title reveal reveal-scale">
-          <span class="section-tag">Quốc Gia Đối Tác</span>
-          <h2>Những điểm đến du học hàng đầu</h2>
-          <p>Lựa chọn môi trường đào tạo tiên tiến nhất, phù hợp với định hướng phát triển dài hạn của bản thân.</p>
-        </div>
-
-        <!-- Interactive Tab Navigation -->
-        <div class="tabs-nav reveal reveal-scale delay-1">
-          <button class="tab-btn active" data-tab="usa">MỸ (USA)</button>
-          <button class="tab-btn" data-tab="uk">ANH QUỐC (UK)</button>
-          <button class="tab-btn" data-tab="aus">ÚC (AUSTRALIA)</button>
-          <button class="tab-btn" data-tab="canada">CANADA</button>
-        </div>
-
-        <!-- USA Tab Content -->
-        <div class="tab-content active" id="usa">
-          <div class="destination-info">
-            <h3>Mỹ — Điểm đến của Đổi mới & Công nghệ</h3>
-            <p>Hệ thống giáo dục đại học Hoa Kỳ luôn đứng số 1 thế giới với các trường đại học danh tiếng trong khối Ivy
-              League và các học viện công nghệ hàng đầu như MIT, Stanford. Đây là mảnh đất lý tưởng cho sinh viên đam mê
-              công nghệ và khởi nghiệp.</p>
-
-            <div class="dest-details-grid">
-              <div class="dest-detail">
-                <span class="label">Chi phí trung bình</span>
-                <span class="value">$35,000 - $60,000 / Năm</span>
-              </div>
-              <div class="dest-detail">
-                <span class="label">Cơ hội ở lại làm việc</span>
-                <span class="value">3 Năm (Khối ngành STEM)</span>
-              </div>
-              <div class="dest-detail">
-                <span class="label">Học bổng tối đa</span>
-                <span class="value">100% Học Phí & Sinh Hoạt</span>
-              </div>
-              <div class="dest-detail">
-                <span class="label">Ngành học thế mạnh</span>
-                <span class="value">AI, CS, Robotics, Biz</span>
-              </div>
-            </div>
-          </div>
-
-          <div class="destination-visual">
-            <div class="dest-img-wrap">
-              <svg viewBox="0 0 500 450" style="width: 100%; height: 100%; background: #ECE7DF;">
-                <!-- Abstract USA representation: minimalist Statue of Liberty torch & skyscrapers lines -->
-                <rect x="80" y="150" width="60" height="300" fill="none" stroke="rgba(26,26,26,0.1)" />
-                <rect x="180" y="80" width="80" height="370" fill="none" stroke="rgba(26,26,26,0.1)" />
-                <rect x="300" y="200" width="70" height="250" fill="none" stroke="rgba(26,26,26,0.1)" />
-                <circle cx="220" cy="180" r="30" fill="none" stroke="#A88B58" stroke-width="1.5" />
-                <path d="M 220 180 L 220 320" stroke="#A88B58" stroke-width="1.5" />
-                <text x="250" y="420" font-family="var(--font-serif)" font-size="28" font-weight="300"
-                  text-anchor="middle" fill="var(--text-main)">SILICON VALLEY</text>
-              </svg>
-            </div>
-          </div>
-        </div>
-
-        <!-- UK Tab Content -->
-        <div class="tab-content" id="uk">
-          <div class="destination-info">
-            <h3>Anh Quốc — Cái nôi của học thuật & Truyền thống</h3>
-            <p>Học tập tại Anh Quốc mang đến cho sinh viên tấm bằng chuẩn mực toàn cầu với thời gian tối giản (3 năm cử
-              nhân, 1 năm cao học). Phù hợp cho những ai muốn tiết kiệm thời gian và tiếp cận hệ thống giáo dục lâu đời
-              bậc nhất thế giới.</p>
-
-            <div class="dest-details-grid">
-              <div class="dest-detail">
-                <span class="label">Chi phí trung bình</span>
-                <span class="value">£20,000 - £40,000 / Năm</span>
-              </div>
-              <div class="dest-detail">
-                <span class="label">Cơ hội ở lại làm việc</span>
-                <span class="value">2 Năm (Sau tốt nghiệp)</span>
-              </div>
-              <div class="dest-detail">
-                <span class="label">Học bổng tối đa</span>
-                <span class="value">50% - 100% Học phí</span>
-              </div>
-              <div class="dest-detail">
-                <span class="label">Ngành học thế mạnh</span>
-                <span class="value">Fintech, Law, Medicine</span>
-              </div>
-            </div>
-          </div>
-
-          <div class="destination-visual">
-            <div class="dest-img-wrap">
-              <svg viewBox="0 0 500 450" style="width: 100%; height: 100%; background: #E6E1DA;">
-                <!-- Abstract UK representation: clock tower & grid -->
-                <rect x="200" y="50" width="100" height="400" fill="none" stroke="rgba(26,26,26,0.15)"
-                  stroke-width="1.5" />
-                <circle cx="250" cy="120" r="30" fill="none" stroke="#A88B58" stroke-width="2" />
-                <line x1="250" y1="120" x2="250" y2="105" stroke="var(--text-main)" stroke-width="2" />
-                <line x1="250" y1="120" x2="265" y2="120" stroke="var(--text-main)" stroke-width="2" />
-                <text x="250" y="420" font-family="var(--font-serif)" font-size="28" font-weight="300"
-                  text-anchor="middle" fill="var(--text-main)">OXFORD & LONDON</text>
-              </svg>
-            </div>
-          </div>
-        </div>
-
-        <!-- Australia Tab Content -->
-        <div class="tab-content" id="aus">
-          <div class="destination-info">
-            <h3>Úc — Chất lượng sống vượt trội & Cơ hội việc làm rộng mở</h3>
-            <p>Hệ thống giáo dục xuất sắc của Úc đi kèm với môi trường sống thanh bình, an toàn và thời tiết lý tưởng.
-              Quốc gia này có chính sách thu hút nhân tài thông thoáng với thời gian ở lại làm việc sau tốt nghiệp dài
-              lâu.</p>
-
-            <div class="dest-details-grid">
-              <div class="dest-detail">
-                <span class="label">Chi phí trung bình</span>
-                <span class="value">AUD 30,000 - 50,000 / Năm</span>
-              </div>
-              <div class="dest-detail">
-                <span class="label">Cơ hội ở lại làm việc</span>
-                <span class="value">3 - 5 Năm (Sau tốt nghiệp)</span>
-              </div>
-              <div class="dest-detail">
-                <span class="label">Học bổng tối đa</span>
-                <span class="value">50% - 100% Học phí</span>
-              </div>
-              <div class="dest-detail">
-                <span class="label">Ngành học thế mạnh</span>
-                <span class="value">Data Science, IT, Engineering</span>
-              </div>
-            </div>
-          </div>
-
-          <div class="destination-visual">
-            <div class="dest-img-wrap">
-              <svg viewBox="0 0 500 450" style="width: 100%; height: 100%; background: #ECE6DC;">
-                <!-- Abstract Australia representation: minimalist opera house sails -->
-                <path d="M 100 350 Q 200 150 250 350 Z" fill="none" stroke="rgba(26,26,26,0.15)" stroke-width="1.5" />
-                <path d="M 200 350 Q 300 120 350 350 Z" fill="none" stroke="#A88B58" stroke-width="1.5" />
-                <path d="M 300 350 Q 380 180 420 350 Z" fill="none" stroke="rgba(26,26,26,0.1)" stroke-width="1" />
-                <line x1="50" y1="350" x2="450" y2="350" stroke="var(--text-main)" stroke-width="2" />
-                <text x="250" y="420" font-family="var(--font-serif)" font-size="28" font-weight="300"
-                  text-anchor="middle" fill="var(--text-main)">SYDNEY & MELBOURNE</text>
-              </svg>
-            </div>
-          </div>
-        </div>
-
-        <!-- Canada Tab Content -->
-        <div class="tab-content" id="canada">
-          <div class="destination-info">
-            <h3>Canada — Điểm đến định cư lâu dài cho khối STEM</h3>
-            <p>Canada nổi tiếng với sự chào đón nồng nhiệt dành cho sinh viên quốc tế, chi phí học tập hợp lý hơn và
-              chính sách định cư rộng mở nhất trong các quốc gia phát triển, đặc biệt ưu tiên cho các khối ngành Kỹ
-              thuật và Công nghệ.</p>
-
-            <div class="dest-details-grid">
-              <div class="dest-detail">
-                <span class="label">Chi phí trung bình</span>
-                <span class="value">CAD 25,000 - 45,000 / Năm</span>
-              </div>
-              <div class="dest-detail">
-                <span class="label">Cơ hội ở lại làm việc</span>
-                <span class="value">3 Năm (Giấy phép PGWP)</span>
-              </div>
-              <div class="dest-detail">
-                <span class="label">Học bổng tối đa</span>
-                <span class="value">CAD 10,000 - 30,000 / Năm</span>
-              </div>
-              <div class="dest-detail">
-                <span class="label">Ngành học thế mạnh</span>
-                <span class="value">Software Eng, AI, Telecom</span>
-              </div>
-            </div>
-          </div>
-
-          <div class="destination-visual">
-            <div class="dest-img-wrap">
-              <svg viewBox="0 0 500 450" style="width: 100%; height: 100%; background: #EDEAE4;">
-                <!-- Abstract Canada representation: maple leaf geom & grid -->
-                <polygon points="250,80 270,150 340,150 280,190 300,260 250,210 200,260 220,190 160,150 230,150"
-                  fill="none" stroke="#A88B58" stroke-width="1.5" />
-                <line x1="250" y1="210" x2="250" y2="330" stroke="#A88B58" stroke-width="1.5" />
-                <text x="250" y="420" font-family="var(--font-serif)" font-size="28" font-weight="300"
-                  text-anchor="middle" fill="var(--text-main)">TORONTO & VANCOUVER</text>
-              </svg>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- ==========================================
-         CONSULTATION BOOKING FORM
-         ========================================== -->
-    <section class="booking" id="booking">
-      <div class="container">
-        <div class="booking-grid">
-          <div class="booking-text reveal reveal-left">
-            <span class="section-tag">Khởi Đầu Hành Trình</span>
-            <h2>Nhận bản đánh giá hồ sơ độc lập & Lộ trình học bổng</h2>
-            <p>Đội ngũ chuyên gia ThinkEdu sẽ liên hệ và cùng bạn phân tích chuyên sâu về học lực, khả năng tài chính và
-              định hướng nghề nghiệp lâu dài.</p>
-
-            <div class="contact-meta">
-              <div class="meta-item">
-                <span class="label">Đường dây nóng hỗ trợ</span>
-                <span class="value">1900.63.3579</span>
-              </div>
-              <div class="meta-item">
-                <span class="label">Thời gian tư vấn trực tiếp</span>
-                <span class="value">9:00 - 21:00 (Hàng ngày)</span>
-              </div>
-            </div>
-          </div>
-
-          <div class="booking-form reveal reveal-right delay-1">
-            <form id="consultationForm">
-              <div class="form-group">
-                <input type="text" id="fullname" class="form-input" required>
-                <label for="fullname" class="form-label">Họ và tên học sinh / Phụ huynh *</label>
-              </div>
-
-              <div class="form-row">
-                <div class="form-group">
-                  <input type="email" id="email" class="form-input" required>
-                  <label for="email" class="form-label">Địa chỉ Email *</label>
+      <!-- ==========================================
+           2A. STUDENT CRM DASHBOARD SECTION
+           ========================================== -->
+      <div id="overview-dashboard" class="dashboard-wrapper" style="display: block;">
+        <div class="dashboard-container">
+          <!-- Topbar Header -->
+          <div class="dashboard-topbar">
+            <div class="topbar-left">
+              <div class="topbar-title-group">
+                <h2>Quản lý học viên</h2>
+                <div class="breadcrumbs">
+                  <a href="#" class="portal-breadcrumb-home">Cổng thông tin</a> <span class="sep">/</span> <span class="active-crumb">Danh sách Học viên</span>
                 </div>
-                <div class="form-group">
-                  <input type="tel" id="phone" class="form-input" required>
-                  <label for="phone" class="form-label">Số điện thoại *</label>
+              </div>
+            </div>
+
+            <div class="topbar-middle">
+              <div class="dashboard-search-global">
+                <svg class="search-icon" viewBox="0 0 24 24">
+                  <path d="M9.5,3A6.5,6.5 0 0,1 16,9.5C16,11.11 15.41,12.59 14.44,13.73L14.71,14H15.5L20.5,19L19,20.5L14,15.5V14.71L13.73,14.44C12.59,15.41 11.11,16 9.5,16A6.5,6.5 0 0,1 3,9.5A6.5,6.5 0 0,1 9.5,3M9.5,5C7,5 5,7 5,9.5C5,12 7,14 9.5,14C12,14 14,12 14,9.5C14,7 12,5 9.5,5Z" />
+                </svg>
+                <input type="text" id="globalSearchInput" placeholder="Tìm kiếm nhanh học viên...">
+              </div>
+            </div>
+
+            <div class="topbar-right">
+              <div class="topbar-icon-btn notifications-btn" title="Thông báo">
+                <svg class="icon" viewBox="0 0 24 24">
+                  <path d="M12,2A3,3 0 0,0 9,5A3,3 0 0,0 9,5.22C6.18,6.23 4,9 4,12V17L2,19V20H22V19L20,17V12C20,9 17.82,6.23 15,5.22A3,3 0 0,0 15,5A3,3 0 0,0 12,2M12,22A2,2 0 0,0 14,20H10A2,2 0 0,0 12,22Z" />
+                </svg>
+                <span class="badge-dot"></span>
+              </div>
+              <div class="user-profile-badge-inline">
+                <div class="profile-avatar" id="miniUserAvatar">DM</div>
+                <div class="profile-info-desktop">
+                  <span class="name" id="miniUserName">Dương Đức Mạnh</span>
+                  <span class="role" id="miniUserRole">Quản trị viên</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Main Dashboard Canvas -->
+          <div class="dashboard-canvas">
+            <!-- Category Stats Cards/Pills -->
+            <div class="dashboard-stats-row">
+              <button class="stat-pill-btn active" data-status="Tất cả" id="pillAll">
+                <span class="label">Tất cả</span>
+                <span class="count-badge" id="countAll">53</span>
+              </button>
+              <button class="stat-pill-btn" data-status="Đang học" id="pillStudying">
+                <span class="label">Đang học</span>
+                <span class="count-badge count-studying" id="countStudying">22</span>
+              </button>
+              <button class="stat-pill-btn" data-status="Chờ phỏng vấn" id="pillWaitPV">
+                <span class="label">Chờ PV</span>
+                <span class="count-badge count-waiting" id="countWaitPV">8</span>
+              </button>
+              <button class="stat-pill-btn" data-status="Đã trúng tuyển" id="pillSelected">
+                <span class="label">Trúng tuyển</span>
+                <span class="count-badge count-selected" id="countSelected">7</span>
+              </button>
+              <button class="stat-pill-btn" data-status="Đã xuất cảnh" id="pillDeparted">
+                <span class="label">Xuất cảnh</span>
+                <span class="count-badge count-departed" id="countDeparted">6</span>
+              </button>
+            </div>
+
+            <!-- Student List Section Card -->
+            <div class="dashboard-card">
+              <div class="card-header">
+                <div class="header-left">
+                  <h3>DANH SÁCH HỌC VIÊN</h3>
+                </div>
+
+                <div class="header-right">
+                  <div class="table-toolset">
+                    <div class="search-input-wrapper">
+                      <svg class="search-icon" viewBox="0 0 24 24">
+                        <path d="M9.5,3A6.5,6.5 0 0,1 16,9.5C16,11.11 15.41,12.59 14.44,13.73L14.71,14H15.5L20.5,19L19,20.5L14,15.5V14.71L13.73,14.44C12.59,15.41 11.11,16 9.5,16A6.5,6.5 0 0,1 3,9.5A6.5,6.5 0 0,1 9.5,3M9.5,5C7,5 5,7 5,9.5C5,12 7,14 9.5,14C12,14 14,12 14,9.5C14,7 12,5 9.5,5Z" />
+                      </svg>
+                      <input type="text" id="tableSearchInput" placeholder="Tìm theo tên, mã HV...">
+                    </div>
+
+                    <button class="btn-outline-tool" id="btnFilterTrigger">
+                      <svg class="btn-icon" viewBox="0 0 24 24">
+                        <path d="M14,12V19.88C14.04,20.18 13.94,20.5 13.71,20.71C13.32,21.1 12.69,21.1 12.3,20.71L10.29,18.7C10.06,18.47 9.96,18.16 10,17.87V12C9.97,11.96 3.65,5.1 3.65,5.1C3.12,4.55 3.51,3.62 4.27,3.62H19.74C20.5,3.62 20.89,4.55 20.36,5.1C20.36,5.1 14.03,11.96 14,12Z" />
+                      </svg>
+                      <span>Lọc</span>
+                    </button>
+
+                    <button class="btn-outline-tool" id="btnExportExcel">
+                      <svg class="btn-icon" viewBox="0 0 24 24">
+                        <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,20H18A2,2 0 0,0 20,18V8L14,2M18,18H6V4H13V9H18V18M16,11V13H8V11H16M16,15V17H8V15H16Z" />
+                      </svg>
+                      <span>Xuất Excel</span>
+                    </button>
+
+                    <button class="btn-outline-tool" id="btnImportExcel">
+                      <svg class="btn-icon" viewBox="0 0 24 24">
+                        <path d="M9,16V10H5L12,3L19,10H15V16H9M5,20V18H19V20H5Z" />
+                      </svg>
+                      <span>Nhập Excel</span>
+                    </button>
+                    <input type="file" id="importExcelInput" accept=".csv" style="display: none;">
+
+                    <button class="btn-add-student" id="btnAddStudent">
+                      <svg class="btn-icon" viewBox="0 0 24 24">
+                        <path d="M19,13H13V19H11V13H5V11H11V5H13V11H19V13Z" />
+                      </svg>
+                      <span>Thêm học viên</span>
+                    </button>
+                  </div>
                 </div>
               </div>
 
-              <div class="form-row">
-                <div class="form-group">
-                  <input type="text" id="destination-pref" class="form-input" required>
-                  <label for="destination-pref" class="form-label">Quốc gia mong muốn (Mỹ, Úc, Anh...)</label>
-                </div>
-                <div class="form-group">
-                  <input type="text" id="major-pref" class="form-input" required>
-                  <label for="major-pref" class="form-label">Ngành học quan tâm (IT, Kinh Tế...)</label>
+              <!-- Filter Panel (Collapsible) -->
+              <div class="filter-collapsible-panel" id="filterPanel" style="display: none;">
+                <div class="filter-panel-grid">
+                  <div class="filter-field">
+                    <label>Tìm theo tên</label>
+                    <input type="text" id="filterName" placeholder="Nhập tên học viên...">
+                  </div>
+                  <div class="filter-field">
+                    <label>Trình độ tiếng Nhật</label>
+                    <select id="filterJapanese">
+                      <option value="Tất cả">Tất cả trình độ</option>
+                      <option value="N1">N1</option>
+                      <option value="N2">N2</option>
+                      <option value="N3">N3</option>
+                      <option value="N4">N4</option>
+                      <option value="N5">N5</option>
+                    </select>
+                  </div>
+                  <div class="filter-field">
+                    <label>Giới tính</label>
+                    <select id="filterGender">
+                      <option value="Tất cả">Tất cả giới tính</option>
+                      <option value="Nam">Nam</option>
+                      <option value="Nữ">Nữ</option>
+                    </select>
+                  </div>
+                  <div class="filter-field">
+                    <label>Đơn hàng / Chương trình</label>
+                    <select id="filterProgram">
+                      <option value="Tất cả">Tất cả chương trình</option>
+                      <option value="Điện tử">Điện tử</option>
+                      <option value="Hàn công nghiệp">Hàn công nghiệp</option>
+                      <option value="Chăm sóc người cao tuổi">Chăm sóc người cao tuổi</option>
+                      <option value="Kỹ thuật CNC">Kỹ thuật CNC</option>
+                      <option value="Nông nghiệp">Nông nghiệp</option>
+                      <option value="Xây dựng">Xây dựng</option>
+                      <option value="Dệt may">Dệt may</option>
+                      <option value="Khách sạn">Khách sạn</option>
+                      <option value="Cơ khí">Cơ khí</option>
+                    </select>
+                  </div>
+                  <div class="filter-actions-col">
+                    <button class="btn-apply-filters" id="btnApplyFilters">Áp dụng</button>
+                    <button class="btn-reset-filters" id="btnResetFilters">Đặt lại</button>
+                  </div>
                 </div>
               </div>
 
-              <button type="submit" class="btn-submit">Gửi yêu cầu lộ trình</button>
-            </form>
-          </div>
-        </div>
-      </div>
-    </section>
-  </main>
-
-  <!-- ==========================================
-       FOOTER SECTION
-       ========================================== -->
-  <footer>
-    <div class="container">
-      <div class="footer-grid">
-        <div class="footer-logo">
-          <h3>THINKEDU</h3>
-          <p>Đối tác chiến lược định hướng du học học bổng & phát triển sự nghiệp công nghệ toàn cầu.</p>
-          <div class="heritage-badge">DỊCH VỤ TẬN TÂM - BY THINKPRO</div>
-        </div>
-
-        <div class="footer-links">
-          <h4>VỀ CHÚNG TÔI</h4>
-          <ul>
-            <li><a href="#hero">Trang chủ</a></li>
-            <li><a href="#heritage">Giá trị cốt lõi</a></li>
-            <li><a href="#services">Chương trình du học</a></li>
-            <li><a href="#destinations">Các quốc gia đối tác</a></li>
-            <li><a href="#booking">Liên hệ đăng ký</a></li>
-          </ul>
-        </div>
-
-        <div class="footer-contact">
-          <h4>HỆ THỐNG VĂN PHÒNG & SHOWROOM</h4>
-
-          <div class="footer-showroom">
-            <span class="city">Trụ sở Hà Nội:</span>
-            <span class="address">53 Thái Hà, Quận Đống Đa, Hà Nội.</span>
-          </div>
-
-          <div class="footer-showroom">
-            <span class="city">Văn phòng Bình Thạnh, TP. HCM:</span>
-            <span class="address">Số 5 - 7 Nguyễn Huy Tưởng, Phường 6, Quận Bình Thạnh, TP. Hồ Chí Minh.</span>
-          </div>
-
-          <div class="footer-showroom">
-            <span class="city">Showroom Quận 10, TP. HCM:</span>
-            <span class="address">95 Trần Thiện Chánh, Phường 12, Quận 10, TP. Hồ Chí Minh.</span>
-          </div>
-        </div>
-      </div>
-
-      <div class="footer-bottom">
-        <p>&copy; 2026 ThinkEdu. Toàn bộ bản quyền được bảo lưu. Phát triển bởi Hệ sinh thái ThinkPro.</p>
-        <p>Hotline: 1900.63.3579 | Email: contact@thinkedu.vn</p>
-      </div>
-    </div>
-  </footer>
-
-  <!-- ==========================================
-       STUDENT CRM DASHBOARD SECTION (TỔNG QUAN)
-       ========================================== -->
-  <div id="overview-dashboard" class="dashboard-wrapper" style="display: none;">
-    <!-- Dashboard Sidebar & Content Wrapper -->
-    <div class="dashboard-container">
-
-      <!-- Topbar Header -->
-      <div class="dashboard-topbar">
-        <div class="topbar-left">
-          <button class="sidebar-toggle" id="sidebarToggle" aria-label="Toggle Menu">
-            <svg class="icon" viewBox="0 0 24 24">
-              <path d="M3,6H21V8H3V6M3,11H21V13H3V11M3,16H21V18H3V16Z" />
-            </svg>
-          </button>
-          <div class="topbar-title-group">
-            <h2>Quản lý học viên</h2>
-            <div class="breadcrumbs">
-              <a href="#" class="breadcrumb-home-link">Trang chủ</a> <span class="sep">/</span> <span
-                class="active-crumb">Học viên</span>
-            </div>
-          </div>
-        </div>
-
-        <div class="topbar-middle">
-          <div class="dashboard-search-global">
-            <svg class="search-icon" viewBox="0 0 24 24">
-              <path
-                d="M9.5,3A6.5,6.5 0 0,1 16,9.5C16,11.11 15.41,12.59 14.44,13.73L14.71,14H15.5L20.5,19L19,20.5L14,15.5V14.71L13.73,14.44C12.59,15.41 11.11,16 9.5,16A6.5,6.5 0 0,1 3,9.5A6.5,6.5 0 0,1 9.5,3M9.5,5C7,5 5,7 5,9.5C5,12 7,14 9.5,14C12,14 14,12 14,9.5C14,7 12,5 9.5,5Z" />
-            </svg>
-            <input type="text" id="globalSearchInput" placeholder="Tìm kiếm nhanh học viên...">
-          </div>
-        </div>
-
-        <div class="topbar-right">
-          <!-- Notification Icon -->
-          <div class="topbar-icon-btn notifications-btn" title="Thông báo">
-            <svg class="icon" viewBox="0 0 24 24">
-              <path
-                d="M12,2A3,3 0 0,0 9,5A3,3 0 0,0 9,5.22C6.18,6.23 4,9 4,12V17L2,19V20H22V19L20,17V12C20,9 17.82,6.23 15,5.22A3,3 0 0,0 15,5A3,3 0 0,0 12,2M12,22A2,2 0 0,0 14,20H10A2,2 0 0,0 12,22Z" />
-            </svg>
-            <span class="badge-dot"></span>
-          </div>
-          <!-- Dark Mode Toggle -->
-          <div class="topbar-icon-btn dark-mode-toggle" id="darkModeToggle" title="Chuyển giao diện">
-            <svg class="icon moon-icon" viewBox="0 0 24 24">
-              <path
-                d="M12,18C11.11,18 10.26,17.8 9.5,17.45C11.56,16.5 13,14.42 13,12C13,9.58 11.56,7.5 9.5,6.55C10.26,6.2 11.11,6 12,6A6,6 0 0,1 18,12A6,6 0 0,1 12,18M20,8.69V4H15.31L12,0.69L8.69,4H4V8.69L0.69,12L4,15.31V20H8.69L12,23.31L15.31,20H20V15.31L23.31,12L20,8.69Z" />
-            </svg>
-          </div>
-          <!-- User Profile -->
-          <div class="user-profile-badge">
-            <div class="profile-avatar">DM</div>
-            <div class="profile-info-desktop">
-              <span class="name">Dương Đức Mạnh</span>
-              <span class="role">Quản trị viên</span>
-            </div>
-            <!-- Hover Profile Dropdown Menu -->
-            <div class="profile-dropdown-menu">
-              <div class="profile-dropdown-item btn-view-my-profile">
-                <svg viewBox="0 0 24 24"><path d="M12,4A4,4 0 0,1 16,8A4,4 0 0,1 12,12A4,4 0 0,1 8,8A4,4 0 0,1 12,4M12,14C16.42,14 20,15.79 20,18V20H4V18C4,15.79 7.58,14 12,14Z"/></svg>
-                <span>Hồ sơ</span>
+              <!-- Main Table Container -->
+              <div class="table-responsive-container">
+                <table class="student-crm-table">
+                  <thead>
+                    <tr>
+                      <th>HỌC VIÊN</th>
+                      <th>GIỚI TÍNH</th>
+                      <th>SĐT</th>
+                      <th>ĐƠN HÀNG</th>
+                      <th>TRẠNG THÁI</th>
+                      <th>TIẾNG NHẬT</th>
+                      <th style="text-align: center;">THAO TÁC</th>
+                    </tr>
+                  </thead>
+                  <tbody id="studentTableBody">
+                    <!-- Dynamically populated via JS -->
+                  </tbody>
+                </table>
               </div>
-              <div class="profile-dropdown-item btn-logout-app">
-                <svg viewBox="0 0 24 24"><path d="M16,17V14H9V10H16V7L21,12L16,17M14,2A2,2 0 0,1 16,4V6H14V4H5V20H14V18H16V20A2,2 0 0,1 14,22H5A2,2 0 0,1 3,20V4A2,2 0 0,1 5,2H14Z"/></svg>
-                <span>Đăng xuất</span>
+
+              <!-- Table Pagination Footer -->
+              <div class="table-pagination-footer">
+                <div class="footer-left">
+                  <span id="totalRecordsText">Tổng: 53 bản ghi</span>
+                </div>
+
+                <div class="footer-right">
+                  <div class="records-per-page">
+                    <span>Số bản ghi/trang</span>
+                    <select id="recordsPerPageSelect">
+                      <option value="10" selected>10</option>
+                      <option value="20">20</option>
+                      <option value="50">50</option>
+                    </select>
+                  </div>
+
+                  <div class="pagination-navigation">
+                    <span class="page-info-text" id="pageInfoText">1-10 bản ghi</span>
+
+                    <button class="btn-page-nav" id="btnPrevPage" aria-label="Trang trước">
+                      <svg class="icon" viewBox="0 0 24 24">
+                        <path d="M15.41,16.58L10.83,12L15.41,7.41L14,6L8,12L14,18L15.41,16.58Z" />
+                      </svg>
+                    </button>
+
+                    <button class="btn-page-nav" id="btnNextPage" aria-label="Trang sau">
+                      <svg class="icon" viewBox="0 0 24 24">
+                        <path d="M8.59,16.58L13.17,12L8.59,7.41L10,6L16,12L10,18L8.59,16.58Z" />
+                      </svg>
+                    </button>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
         </div>
       </div>
 
-      <!-- Main Dashboard Canvas -->
-      <div class="dashboard-canvas">
-
-        <!-- Category Stats Cards/Pills -->
-        <div class="dashboard-stats-row">
-          <button class="stat-pill-btn active" data-status="Tất cả" id="pillAll">
-            <span class="label">Tất cả</span>
-            <span class="count-badge" id="countAll">53</span>
-          </button>
-          <button class="stat-pill-btn" data-status="Đang học" id="pillStudying">
-            <span class="label">Đang học</span>
-            <span class="count-badge count-studying" id="countStudying">22</span>
-          </button>
-          <button class="stat-pill-btn" data-status="Chờ phỏng vấn" id="pillWaitPV">
-            <span class="label">Chờ PV</span>
-            <span class="count-badge count-waiting" id="countWaitPV">8</span>
-          </button>
-          <button class="stat-pill-btn" data-status="Đã trúng tuyển" id="pillSelected">
-            <span class="label">Trúng tuyển</span>
-            <span class="count-badge count-selected" id="countSelected">7</span>
-          </button>
-          <button class="stat-pill-btn" data-status="Đã xuất cảnh" id="pillDeparted">
-            <span class="label">Xuất cảnh</span>
-            <span class="count-badge count-departed" id="countDeparted">6</span>
-          </button>
-        </div>
-
-        <!-- Student List Section Card -->
-        <div class="dashboard-card">
-          <div class="card-header">
-            <div class="header-left">
-              <h3>DANH SÁCH HỌC VIÊN</h3>
+      <!-- ==========================================
+           2B. TELEGRAM-STYLE CHAT BOX DASHBOARD
+           ========================================== -->
+      <div id="chat-dashboard" class="dashboard-wrapper chat-page-wrapper" style="display: none;">
+        <div class="dashboard-container">
+          <!-- Topbar Header -->
+          <div class="dashboard-topbar">
+            <div class="topbar-left">
+              <div class="topbar-title-group">
+                <h2>Hệ thống Trò chuyện nội bộ</h2>
+                <div class="breadcrumbs">
+                  <a href="#" class="portal-breadcrumb-home">Cổng thông tin</a> <span class="sep">/</span> <span class="active-crumb">Trò chuyện</span>
+                </div>
+              </div>
             </div>
 
-            <div class="header-right">
-              <!-- Inline Filter & Search Toolset -->
-              <div class="table-toolset">
-                <div class="search-input-wrapper">
-                  <svg class="search-icon" viewBox="0 0 24 24">
-                    <path
-                      d="M9.5,3A6.5,6.5 0 0,1 16,9.5C16,11.11 15.41,12.59 14.44,13.73L14.71,14H15.5L20.5,19L19,20.5L14,15.5V14.71L13.73,14.44C12.59,15.41 11.11,16 9.5,16A6.5,6.5 0 0,1 3,9.5A6.5,6.5 0 0,1 9.5,3M9.5,5C7,5 5,7 5,9.5C5,12 7,14 9.5,14C12,14 14,12 14,9.5C14,7 12,5 9.5,5Z" />
-                  </svg>
-                  <input type="text" id="tableSearchInput" placeholder="Tìm theo tên, mã HV...">
+            <div class="topbar-right">
+              <div class="topbar-icon-btn notifications-btn" title="Thông báo">
+                <svg class="icon" viewBox="0 0 24 24"><path d="M12,2A3,3 0 0,0 9,5A3,3 0 0,0 9,5.22C6.18,6.23 4,9 4,12V17L2,19V20H22V19L20,17V12C20,9 17.82,6.23 15,5.22A3,3 0 0,0 15,5A3,3 0 0,0 12,2M12,22A2,2 0 0,0 14,20H10A2,2 0 0,0 12,22Z" /></svg>
+                <span class="badge-dot"></span>
+              </div>
+              <div class="user-profile-badge-inline">
+                <div class="profile-avatar" id="miniChatAvatar">DM</div>
+                <div class="profile-info-desktop">
+                  <span class="name" id="miniChatName">Dương Đức Mạnh</span>
+                  <span class="role" id="miniChatRole">Quản trị viên</span>
                 </div>
+              </div>
+            </div>
+          </div>
 
-                <button class="btn-outline-tool" id="btnFilterTrigger">
-                  <svg class="btn-icon" viewBox="0 0 24 24">
-                    <path
-                      d="M14,12V19.88C14.04,20.18 13.94,20.5 13.71,20.71C13.32,21.1 12.69,21.1 12.3,20.71L10.29,18.7C10.06,18.47 9.96,18.16 10,17.87V12C9.97,11.96 3.65,5.1 3.65,5.1C3.12,4.55 3.51,3.62 4.27,3.62H19.74C20.5,3.62 20.89,4.55 20.36,5.1C20.36,5.1 14.03,11.96 14,12Z" />
-                  </svg>
-                  <span>Lọc</span>
+          <!-- Main Chat Canvas (Telegram Layout) -->
+          <div class="chat-canvas-body">
+            <!-- Sidebar Panel (Left) -->
+            <div class="chat-sidebar">
+              <div class="chat-sidebar-search">
+                <svg class="search-icon" viewBox="0 0 24 24"><path d="M9.5,3A6.5,6.5 0 0,1 16,9.5C16,11.11 15.41,12.59 14.44,13.73L14.71,14H15.5L20.5,19L19,20.5L14,15.5V14.71L13.73,14.44C12.59,15.41 11.11,16 9.5,16A6.5,6.5 0 0,1 3,9.5A6.5,6.5 0 0,1 9.5,3M9.5,5C7,5 5,7 5,9.5C5,12 7,14 9.5,14C12,14 14,12 14,9.5C14,7 12,5 9.5,5Z" /></svg>
+                <input type="text" id="chatSearchInput" placeholder="Tìm kiếm liên hệ, nhóm...">
+              </div>
+
+              <div class="chat-sidebar-actions">
+                <button class="chat-action-btn btn-new-group" id="btnOpenCreateGroup">
+                  <svg viewBox="0 0 24 24"><path d="M15,14C12.33,14 7,15.33 7,18V20H23V18C23,15.33 17.67,14 15,14M6,8.17V5H4V8.17C2.78,8.58 2,9.7 2,11C2,12.3 2.78,13.42 4,13.83V17H6V13.83C7.22,13.42 8,12.3 8,11C8,9.7 7.22,8.58 6,8.17M15,12A4,4 0 0,0 19,8A4,4 0 0,0 15,4A4,4 0 0,0 11,8A4,4 0 0,0 15,12Z"/></svg>
+                  <span>+ Tạo Nhóm</span>
                 </button>
-
-                <button class="btn-outline-tool" id="btnExportExcel">
-                  <svg class="btn-icon" viewBox="0 0 24 24">
-                    <path
-                      d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,20H18A2,2 0 0,0 20,18V8L14,2M18,18H6V4H13V9H18V18M16,11V13H8V11H16M16,15V17H8V15H16Z" />
-                  </svg>
-                  <span>Xuất Excel</span>
-                </button>
-
-                <button class="btn-outline-tool" id="btnImportExcel">
-                  <svg class="btn-icon" viewBox="0 0 24 24">
-                    <path d="M9,16V10H5L12,3L19,10H15V16H9M5,20V18H19V20H5Z" />
-                  </svg>
-                  <span>Nhập Excel</span>
-                </button>
-                <input type="file" id="importExcelInput" accept=".csv" style="display: none;">
-
-                <button class="btn-add-student" id="btnAddStudent">
-                  <svg class="btn-icon" viewBox="0 0 24 24">
-                    <path d="M19,13H13V19H11V13H5V11H11V5H13V11H19V13Z" />
-                  </svg>
-                  <span>Thêm học viên</span>
+                <button class="chat-action-btn btn-new-friend" id="btnOpenAddFriend">
+                  <svg viewBox="0 0 24 24"><path d="M15,12C17.21,12 19,10.21 19,8C19,5.79 17.21,4 15,4C12.79,4 11,5.79 11,8C11,10.21 12.79,12 15,12M6,17C3.79,17 2,15.21 2,13C2,10.79 3.79,9 6,9C8.21,9 10,10.79 10,13C10,15.21 8.21,17 6,17M15,14C12.33,14 7,15.33 7,18V20H23V18C23,15.33 17.67,14 15,14M6,18H8V20H6V18Z"/></svg>
+                  <span>+ Kết Bạn</span>
                 </button>
               </div>
-            </div>
-          </div>
 
-          <!-- Filter Panel (Collapsible) -->
-          <div class="filter-collapsible-panel" id="filterPanel" style="display: none;">
-            <div class="filter-panel-grid">
-              <div class="filter-field">
-                <label>Tìm theo tên</label>
-                <input type="text" id="filterName" placeholder="Nhập tên học viên...">
-              </div>
-              <div class="filter-field">
-                <label>Trình độ tiếng Nhật</label>
-                <select id="filterJapanese">
-                  <option value="Tất cả">Tất cả trình độ</option>
-                  <option value="N1">N1</option>
-                  <option value="N2">N2</option>
-                  <option value="N3">N3</option>
-                  <option value="N4">N4</option>
-                  <option value="N5">N5</option>
-                </select>
-              </div>
-              <div class="filter-field">
-                <label>Giới tính</label>
-                <select id="filterGender">
-                  <option value="Tất cả">Tất cả giới tính</option>
-                  <option value="Nam">Nam</option>
-                  <option value="Nữ">Nữ</option>
-                </select>
-              </div>
-              <div class="filter-field">
-                <label>Đơn hàng / Chương trình</label>
-                <select id="filterProgram">
-                  <option value="Tất cả">Tất cả chương trình</option>
-                  <option value="Điện tử">Điện tử</option>
-                  <option value="Hàn công nghiệp">Hàn công nghiệp</option>
-                  <option value="Chăm sóc người cao tuổi">Chăm sóc người cao tuổi</option>
-                  <option value="Kỹ thuật CNC">Kỹ thuật CNC</option>
-                  <option value="Nông nghiệp">Nông nghiệp</option>
-                  <option value="Xây dựng">Xây dựng</option>
-                  <option value="Dệt may">Dệt may</option>
-                  <option value="Khách sạn">Khách sạn</option>
-                  <option value="Cơ khí">Cơ khí</option>
-                </select>
-              </div>
-              <div class="filter-actions-col">
-                <button class="btn-apply-filters" id="btnApplyFilters">Áp dụng</button>
-                <button class="btn-reset-filters" id="btnResetFilters">Đặt lại</button>
-              </div>
-            </div>
-          </div>
-
-          <!-- Main Table Container -->
-          <div class="table-responsive-container">
-            <table class="student-crm-table">
-              <thead>
-                <tr>
-                  <th>HỌC VIÊN</th>
-                  <th>GIỚI TÍNH</th>
-                  <th>SĐT</th>
-                  <th>ĐƠN HÀNG</th>
-                  <th>TRẠNG THÁI</th>
-                  <th>TIẾNG NHẬT</th>
-                  <th style="text-align: center;">THAO TÁC</th>
-                </tr>
-              </thead>
-              <tbody id="studentTableBody">
+              <!-- Thread List -->
+              <div class="chat-threads-list" id="chatThreadsList">
                 <!-- Dynamically populated via JS -->
-              </tbody>
-            </table>
-          </div>
-
-          <!-- Table Pagination Footer -->
-          <div class="table-pagination-footer">
-            <div class="footer-left">
-              <span id="totalRecordsText">Tổng: 53 bản ghi</span>
-            </div>
-
-            <div class="footer-right">
-              <div class="records-per-page">
-                <span>Số bản ghi/trang</span>
-                <select id="recordsPerPageSelect">
-                  <option value="10" selected>10</option>
-                  <option value="20">20</option>
-                  <option value="50">50</option>
-                </select>
-              </div>
-
-              <div class="pagination-navigation">
-                <span class="page-info-text" id="pageInfoText">1-10 bản ghi</span>
-
-                <button class="btn-page-nav" id="btnPrevPage" aria-label="Trang trước">
-                  <svg class="icon" viewBox="0 0 24 24">
-                    <path d="M15.41,16.58L10.83,12L15.41,7.41L14,6L8,12L14,18L15.41,16.58Z" />
-                  </svg>
-                </button>
-
-                <button class="btn-page-nav" id="btnNextPage" aria-label="Trang sau">
-                  <svg class="icon" viewBox="0 0 24 24">
-                    <path d="M8.59,16.58L13.17,12L8.59,7.41L10,6L16,12L10,18L8.59,16.58Z" />
-                  </svg>
-                </button>
               </div>
             </div>
-          </div>
 
+            <!-- Chat Window Panel (Right) -->
+            <div class="chat-window" style="position: relative;">
+              <!-- Active Header Info -->
+              <div class="chat-window-header" id="chatWindowHeader" style="position: relative;">
+                <div class="active-chat-info">
+                  <button class="chat-back-btn" id="btnChatMobileBack" aria-label="Quay lại" style="display: none;">
+                    <svg viewBox="0 0 24 24" style="width: 20px; height: 20px; fill: currentColor;"><path d="M20,11V13H8L13.5,18.5L12.08,19.92L4.16,12L12.08,4.16L13.5,5.58L8,11H20Z"/></svg>
+                  </button>
+                  <div class="avatar-circle" id="activeChatAvatar" style="background-color: var(--text-main);">EX</div>
+                  <div class="active-chat-details">
+                    <h4 id="activeChatTitle">Ban Điều Hành ThinkEdu</h4>
+                    <span id="activeChatMembersCount" class="status-online">3 thành viên</span>
+                  </div>
+                </div>
+
+                <!-- Inline Search Bar for Message Contents (toggles visible) -->
+                <div class="chat-search-bar-inline" id="chatSearchInline" style="display: none;">
+                  <svg class="search-icon" viewBox="0 0 24 24"><path d="M9.5,3A6.5,6.5 0 0,1 16,9.5C16,11.11 15.41,12.59 14.44,13.73L14.71,14H15.5L20.5,19L19,20.5L14,15.5V14.71L13.73,14.44C12.59,15.41 11.11,16 9.5,16A6.5,6.5 0 0,1 3,9.5A6.5,6.5 0 0,1 9.5,3M9.5,5C7,5 5,7 5,9.5C5,12 7,14 9.5,14C12,14 14,12 14,9.5C14,7 12,5 9.5,5Z" /></svg>
+                  <input type="text" id="chatMessageSearchInput" placeholder="Tìm nội dung cuộc trò chuyện...">
+                  <button class="btn-close-inline-search" id="btnCloseInlineSearch">&times;</button>
+                </div>
+
+                <div class="chat-header-actions" style="position: relative;">
+                  <button class="header-icon-btn" id="btnToggleChatSearch" title="Tìm tin nhắn">
+                    <svg viewBox="0 0 24 24"><path d="M9.5,3A6.5,6.5 0 0,1 16,9.5C16,11.11 15.41,12.59 14.44,13.73L14.71,14H15.5L20.5,19L19,20.5L14,15.5V14.71L13.73,14.44C12.59,15.41 11.11,16 9.5,16A6.5,6.5 0 0,1 3,9.5A6.5,6.5 0 0,1 9.5,3M9.5,5C7,5 5,7 5,9.5C5,12 7,14 9.5,14C12,14 14,12 14,9.5C14,7 12,5 9.5,5Z" /></svg>
+                  </button>
+                  <button class="header-icon-btn" id="btnToggleChatOptions" title="Tùy chọn">
+                    <svg viewBox="0 0 24 24"><path d="M12,16A2,2 0 0,1 14,18A2,2 0 0,1 12,20A2,2 0 0,1 10,18A2,2 0 0,1 12,16M12,10A2,2 0 0,1 14,12A2,2 0 0,1 12,14A2,2 0 0,1 10,12A2,2 0 0,1 12,10M12,4A2,2 0 0,1 14,6A2,2 0 0,1 12,8A2,2 0 0,1 10,6A2,2 0 0,1 12,4Z" /></svg>
+                  </button>
+                  <!-- Floating Options Dropdown Menu next to 3-dots -->
+                  <div class="chat-header-dropdown" id="chatHeaderDropdown" style="display: none;">
+                    <!-- Populated dynamically based on thread type (group or dm) -->
+                  </div>
+                </div>
+              </div>
+
+              <!-- Messages Container -->
+              <div class="chat-messages-container" id="chatMessagesContainer">
+                <!-- Dynamically populated via JS -->
+              </div>
+
+              <!-- Chat Input Bottom Bar -->
+              <div class="chat-input-bar" style="position: relative;">
+                <button class="chat-input-btn btn-emoji" id="btnToggleEmojiPicker" title="Chèn biểu cảm">
+                  <svg viewBox="0 0 24 24"><path d="M12,2C6.47,2 2,6.47 2,12C2,17.53 6.47,22 12,22C17.53,22 22,17.53 22,12C22,6.47 17.53,2 12,2M12,20A8,8 0 0,1 4,12A8,8 0 0,1 12,4A8,8 0 0,1 20,12A8,8 0 0,1 12,20M15.5,11A1.5,1.5 0 0,0 17,9.5A1.5,1.5 0 0,0 15.5,8A1.5,1.5 0 0,0 14,9.5A1.5,1.5 0 0,0 15.5,11M8.5,11A1.5,1.5 0 0,0 10,9.5A1.5,1.5 0 0,0 8.5,8A1.5,1.5 0 0,0 7,9.5A1.5,1.5 0 0,0 8.5,11M12,18C14.73,18 17,16 17,13H7C7,16 9.27,18 12,18Z"/></svg>
+                </button>
+                <div class="chat-emoji-picker-popup" id="chatEmojiPicker" style="display: none;">
+                  <!-- Grid of popular emojis will be populated via JavaScript -->
+                </div>
+                <input type="text" id="chatMessageInput" placeholder="Nhập tin nhắn trò chuyện...">
+                <button class="chat-input-btn btn-send-message" id="btnSendChatMessage" title="Gửi tin nhắn">
+                  <svg viewBox="0 0 24 24"><path d="M2,21L23,12L2,3V10L17,12L2,14V21Z"/></svg>
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
+      </div>
 
+      <!-- ==========================================
+           2C. PREMIUM REVENUE STATISTICS DASHBOARD
+           ========================================== -->
+      <div id="stats-dashboard" class="dashboard-wrapper stats-page-wrapper" style="display: none;">
+        <div class="dashboard-container">
+          <!-- Topbar Header -->
+          <div class="dashboard-topbar">
+            <div class="topbar-left">
+              <div class="topbar-title-group">
+                <h2>Thống kê Doanh thu</h2>
+                <div class="breadcrumbs">
+                  <a href="#" class="portal-breadcrumb-home">Cổng thông tin</a> <span class="sep">/</span> <span class="active-crumb">Tài chính & Doanh thu</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="topbar-right">
+              <div class="topbar-icon-btn notifications-btn" title="Thông báo">
+                <svg class="icon" viewBox="0 0 24 24"><path d="M12,2A3,3 0 0,0 9,5A3,3 0 0,0 9,5.22C6.18,6.23 4,9 4,12V17L2,19V20H22V19L20,17V12C20,9 17.82,6.23 15,5.22A3,3 0 0,0 15,5A3,3 0 0,0 12,2M12,22A2,2 0 0,0 14,20H10A2,2 0 0,0 12,22Z" /></svg>
+                <span class="badge-dot"></span>
+              </div>
+              <div class="user-profile-badge-inline">
+                <div class="profile-avatar" id="miniStatsAvatar">DM</div>
+                <div class="profile-info-desktop">
+                  <span class="name" id="miniStatsName">Dương Đức Mạnh</span>
+                  <span class="role" id="miniStatsRole">Quản trị viên</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Main Dashboard Canvas -->
+          <div class="dashboard-canvas">
+            <!-- Finance metrics cards -->
+            <div class="stats-cards-grid">
+              <div class="stat-card reveal reveal-scale active">
+                <span class="card-tag">TỔNG HỌC PHÍ DỰ TÍNH</span>
+                <h3 id="statTotalRevenue">0 VND</h3>
+                <p class="desc">Tính trên toàn bộ 70 học viên đăng ký</p>
+                <div class="decor-line"></div>
+              </div>
+              <div class="stat-card reveal reveal-scale active">
+                <span class="card-tag">DOANH THU ĐÃ THU thực tế</span>
+                <h3 id="statTotalPaid" style="color: #22C55E;">0 VND</h3>
+                <p class="desc">Số tiền thực tế học viên đã đóng</p>
+                <div class="decor-line" style="background-color: #22C55E;"></div>
+              </div>
+              <div class="stat-card reveal reveal-scale active">
+                <span class="card-tag">HỌC PHÍ CÒN PHẢI THU</span>
+                <h3 id="statTotalRemaining" style="color: #A88B58;">0 VND</h3>
+                <p class="desc">Công nợ còn lại đang tiếp tục thu hồi</p>
+                <div class="decor-line" style="background-color: #A88B58;"></div>
+              </div>
+            </div>
+
+            <!-- Asymmetrical Grid for Progress Chart & Transactions -->
+            <div class="stats-asymmetric-grid">
+              <!-- Visual progress bar card (Left) -->
+              <div class="stats-left-card">
+                <h3>TIẾN ĐỘ THU HỒI DOANH THU</h3>
+                <div class="revenue-progress-container">
+                  <div class="progress-outer-circle">
+                    <div class="progress-inner-circle">
+                      <span class="percent-text" id="statRevenuePercent">0%</span>
+                      <span class="sub-text">Đã thu hồi</span>
+                    </div>
+                  </div>
+                </div>
+                <div class="progress-legend">
+                  <div class="legend-item">
+                    <span class="dot" style="background-color: #22C55E;"></span>
+                    <span class="label">Thực thu: <strong id="legendPaid">0 VND</strong></span>
+                  </div>
+                  <div class="legend-item">
+                    <span class="dot" style="background-color: var(--accent);"></span>
+                    <span class="label">Còn nợ: <strong id="legendRemaining">0 VND</strong></span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Recent Transactions Table (Right) -->
+              <div class="stats-right-card">
+                <h3>CÁC PHẦN THANH TOÁN GẦN ĐÂY</h3>
+                <div class="mini-table-container">
+                  <table class="financial-table">
+                    <thead>
+                      <tr>
+                        <th>HỌC VIÊN</th>
+                        <th>CHƯƠNG TRÌNH</th>
+                        <th>ĐÃ ĐÓNG</th>
+                        <th>CÒN LẠI</th>
+                      </tr>
+                    </thead>
+                    <tbody id="statsRecentPaymentsBody">
+                      <!-- Populated dynamically -->
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ==========================================
+           2D. STAFF USER CREATION CONSOLE (ADMIN ONLY)
+           ========================================== -->
+      <div id="users-dashboard" class="dashboard-wrapper users-page-wrapper" style="display: none;">
+        <div class="dashboard-container">
+          <!-- Topbar Header -->
+          <div class="dashboard-topbar">
+            <div class="topbar-left">
+              <div class="topbar-title-group">
+                <h2>Tạo Tài Khoản Nhân Viên</h2>
+                <div class="breadcrumbs">
+                  <a href="#" class="portal-breadcrumb-home">Cổng thông tin</a> <span class="sep">/</span> <span class="active-crumb">Quản lý Tài khoản</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="topbar-right">
+              <div class="topbar-icon-btn notifications-btn" title="Thông báo">
+                <svg class="icon" viewBox="0 0 24 24"><path d="M12,2A3,3 0 0,0 9,5A3,3 0 0,0 9,5.22C6.18,6.23 4,9 4,12V17L2,19V20H22V19L20,17V12C20,9 17.82,6.23 15,5.22A3,3 0 0,0 15,5A3,3 0 0,0 12,2M12,22A2,2 0 0,0 14,20H10A2,2 0 0,0 12,22Z" /></svg>
+                <span class="badge-dot"></span>
+              </div>
+              <div class="user-profile-badge-inline">
+                <div class="profile-avatar" id="miniUsersAvatar">DM</div>
+                <div class="profile-info-desktop">
+                  <span class="name" id="miniUsersName">Dương Đức Mạnh</span>
+                  <span class="role" id="miniUsersRole">Quản trị viên</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Main Dashboard Canvas -->
+          <div class="dashboard-canvas">
+            <div class="users-split-grid">
+              <!-- Create User Form (Left) -->
+              <div class="user-form-card">
+                <h3>+ TẠO TÀI KHOẢN MỚI</h3>
+                <form id="createStaffUserForm">
+                  <div class="form-group-login">
+                    <label for="newStaffName">Họ và tên nhân viên *</label>
+                    <input type="text" id="newStaffName" placeholder="Nhập tên nhân viên (ví dụ: Nguyễn Văn A)" required>
+                  </div>
+                  <div class="form-group-login">
+                    <label for="newStaffUsername">Tài khoản đăng nhập (Username) *</label>
+                    <input type="text" id="newStaffUsername" placeholder="Nhập tài khoản đăng nhập (ví dụ: anv)" required>
+                  </div>
+                  <div class="form-group-login">
+                    <label for="newStaffPassword">Mật khẩu ban đầu *</label>
+                    <input type="password" id="newStaffPassword" placeholder="Nhập mật khẩu (ví dụ: Staff123@)" required>
+                  </div>
+                  <button type="submit" class="btn-submit-login">TẠO TÀI KHOẢN NHÂN VIÊN</button>
+                </form>
+              </div>
+
+              <!-- Users list Table (Right) -->
+              <div class="user-list-card">
+                <h3>DANH SÁCH TÀI KHOẢN NHÂN VIÊN</h3>
+                <div class="mini-table-container">
+                  <table class="financial-table">
+                    <thead>
+                      <tr>
+                        <th>HỌ VÀ TÊN</th>
+                        <th>TÀI KHOẢN</th>
+                        <th>MẬT KHẨU</th>
+                        <th>VAI TRÒ</th>
+                        <th style="text-align: center;">XÓA</th>
+                      </tr>
+                    </thead>
+                    <tbody id="staffUsersTableBody">
+                      <!-- Populated dynamically via JS -->
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
 
     </div>
   </div>
 
-  <!-- Telegram-Style Chat Box Dashboard Section -->
-  <div id="chat-dashboard" class="dashboard-wrapper chat-page-wrapper" style="display: none;">
-    <div class="dashboard-container">
-
-      <!-- Topbar Header -->
-      <div class="dashboard-topbar">
-        <div class="topbar-left">
-          <button class="sidebar-toggle" aria-label="Toggle Menu">
-            <svg class="icon" viewBox="0 0 24 24"><path d="M3,6H21V8H3V6M3,11H21V13H3V11M3,16H21V18H3V16Z" /></svg>
-          </button>
-          <div class="topbar-title-group">
-            <h2>Hệ thống Trò chuyện nội bộ</h2>
-            <div class="breadcrumbs">
-              <a href="#" class="breadcrumb-home-link">Trang chủ</a> <span class="sep">/</span> <span class="active-crumb">Trò chuyện</span>
-            </div>
-          </div>
-        </div>
-
-        <div class="topbar-right">
-          <!-- Notification Icon -->
-          <div class="topbar-icon-btn notifications-btn" title="Thông báo">
-            <svg class="icon" viewBox="0 0 24 24"><path d="M12,2A3,3 0 0,0 9,5A3,3 0 0,0 9,5.22C6.18,6.23 4,9 4,12V17L2,19V20H22V19L20,17V12C20,9 17.82,6.23 15,5.22A3,3 0 0,0 15,5A3,3 0 0,0 12,2M12,22A2,2 0 0,0 14,20H10A2,2 0 0,0 12,22Z" /></svg>
-            <span class="badge-dot"></span>
-          </div>
-          <!-- User Profile -->
-          <div class="user-profile-badge">
-            <div class="profile-avatar">DM</div>
-            <div class="profile-info-desktop">
-              <span class="name">Dương Đức Mạnh</span>
-              <span class="role">Quản trị viên</span>
-            </div>
-            <!-- Hover Profile Dropdown Menu -->
-            <div class="profile-dropdown-menu">
-              <div class="profile-dropdown-item btn-view-my-profile">
-                <svg viewBox="0 0 24 24"><path d="M12,4A4,4 0 0,1 16,8A4,4 0 0,1 12,12A4,4 0 0,1 8,8A4,4 0 0,1 12,4M12,14C16.42,14 20,15.79 20,18V20H4V18C4,15.79 7.58,14 12,14Z"/></svg>
-                <span>Hồ sơ</span>
-              </div>
-              <div class="profile-dropdown-item btn-logout-app">
-                <svg viewBox="0 0 24 24"><path d="M16,17V14H9V10H16V7L21,12L16,17M14,2A2,2 0 0,1 16,4V6H14V4H5V20H14V18H16V20A2,2 0 0,1 14,22H5A2,2 0 0,1 3,20V4A2,2 0 0,1 5,2H14Z"/></svg>
-                <span>Đăng xuất</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Main Chat Canvas (Telegram Layout) -->
-      <div class="chat-canvas-body">
-        
-        <!-- Sidebar Panel (Left) -->
-        <div class="chat-sidebar">
-          <!-- Search box -->
-          <div class="chat-sidebar-search">
-            <svg class="search-icon" viewBox="0 0 24 24"><path d="M9.5,3A6.5,6.5 0 0,1 16,9.5C16,11.11 15.41,12.59 14.44,13.73L14.71,14H15.5L20.5,19L19,20.5L14,15.5V14.71L13.73,14.44C12.59,15.41 11.11,16 9.5,16A6.5,6.5 0 0,1 3,9.5A6.5,6.5 0 0,1 9.5,3M9.5,5C7,5 5,7 5,9.5C5,12 7,14 9.5,14C12,14 14,12 14,9.5C14,7 12,5 9.5,5Z" /></svg>
-            <input type="text" id="chatSearchInput" placeholder="Tìm kiếm liên hệ, nhóm...">
-          </div>
-
-          <!-- Quick Action Buttons -->
-          <div class="chat-sidebar-actions">
-            <button class="chat-action-btn btn-new-group" id="btnOpenCreateGroup">
-              <svg viewBox="0 0 24 24"><path d="M15,14C12.33,14 7,15.33 7,18V20H23V18C23,15.33 17.67,14 15,14M6,8.17V5H4V8.17C2.78,8.58 2,9.7 2,11C2,12.3 2.78,13.42 4,13.83V17H6V13.83C7.22,13.42 8,12.3 8,11C8,9.7 7.22,8.58 6,8.17M15,12A4,4 0 0,0 19,8A4,4 0 0,0 15,4A4,4 0 0,0 11,8A4,4 0 0,0 15,12Z"/></svg>
-              <span>+ Tạo Nhóm</span>
-            </button>
-            <button class="chat-action-btn btn-new-friend" id="btnOpenAddFriend">
-              <svg viewBox="0 0 24 24"><path d="M15,12C17.21,12 19,10.21 19,8C19,5.79 17.21,4 15,4C12.79,4 11,5.79 11,8C11,10.21 12.79,12 15,12M6,17C3.79,17 2,15.21 2,13C2,10.79 3.79,9 6,9C8.21,9 10,10.79 10,13C10,15.21 8.21,17 6,17M15,14C12.33,14 7,15.33 7,18V20H23V18C23,15.33 17.67,14 15,14M6,18H8V20H6V18Z"/></svg>
-              <span>+ Kết Bạn</span>
-            </button>
-          </div>
-
-          <!-- Thread List -->
-          <div class="chat-threads-list" id="chatThreadsList">
-            <!-- Dynamically populated via JS -->
-          </div>
-        </div>
-
-        <!-- Chat Window Panel (Right) -->
-        <div class="chat-window" style="position: relative;">
-          <!-- Active Header Info -->
-          <div class="chat-window-header" id="chatWindowHeader" style="position: relative;">
-            <div class="active-chat-info">
-              <button class="chat-back-btn" id="btnChatMobileBack" aria-label="Quay lại" style="display: none;">
-                <svg viewBox="0 0 24 24" style="width: 20px; height: 20px; fill: currentColor;"><path d="M20,11V13H8L13.5,18.5L12.08,19.92L4.16,12L12.08,4.16L13.5,5.58L8,11H20Z"/></svg>
-              </button>
-              <div class="avatar-circle" id="activeChatAvatar" style="background-color: var(--text-main);">EX</div>
-              <div class="active-chat-details">
-                <h4 id="activeChatTitle">Ban Điều Hành ThinkEdu</h4>
-                <span id="activeChatMembersCount" class="status-online">3 thành viên</span>
-              </div>
-            </div>
-            
-            <!-- Inline Search Bar for Message Contents (toggles visible) -->
-            <div class="chat-search-bar-inline" id="chatSearchInline" style="display: none;">
-              <svg class="search-icon" viewBox="0 0 24 24"><path d="M9.5,3A6.5,6.5 0 0,1 16,9.5C16,11.11 15.41,12.59 14.44,13.73L14.71,14H15.5L20.5,19L19,20.5L14,15.5V14.71L13.73,14.44C12.59,15.41 11.11,16 9.5,16A6.5,6.5 0 0,1 3,9.5A6.5,6.5 0 0,1 9.5,3M9.5,5C7,5 5,7 5,9.5C5,12 7,14 9.5,14C12,14 14,12 14,9.5C14,7 12,5 9.5,5Z" /></svg>
-              <input type="text" id="chatMessageSearchInput" placeholder="Tìm nội dung cuộc trò chuyện...">
-              <button class="btn-close-inline-search" id="btnCloseInlineSearch">&times;</button>
-            </div>
-
-            <div class="chat-header-actions" style="position: relative;">
-              <button class="header-icon-btn" id="btnToggleChatSearch" title="Tìm tin nhắn">
-                <svg viewBox="0 0 24 24"><path d="M9.5,3A6.5,6.5 0 0,1 16,9.5C16,11.11 15.41,12.59 14.44,13.73L14.71,14H15.5L20.5,19L19,20.5L14,15.5V14.71L13.73,14.44C12.59,15.41 11.11,16 9.5,16A6.5,6.5 0 0,1 3,9.5A6.5,6.5 0 0,1 9.5,3M9.5,5C7,5 5,7 5,9.5C5,12 7,14 9.5,14C12,14 14,12 14,9.5C14,7 12,5 9.5,5Z" /></svg>
-              </button>
-              <button class="header-icon-btn" id="btnToggleChatOptions" title="Tùy chọn">
-                <svg viewBox="0 0 24 24"><path d="M12,16A2,2 0 0,1 14,18A2,2 0 0,1 12,20A2,2 0 0,1 10,18A2,2 0 0,1 12,16M12,10A2,2 0 0,1 14,12A2,2 0 0,1 12,14A2,2 0 0,1 10,12A2,2 0 0,1 12,10M12,4A2,2 0 0,1 14,6A2,2 0 0,1 12,8A2,2 0 0,1 10,6A2,2 0 0,1 12,4Z" /></svg>
-              </button>
-              
-              <!-- Floating Options Dropdown Menu next to 3-dots -->
-              <div class="chat-header-dropdown" id="chatHeaderDropdown" style="display: none;">
-                <!-- Populated dynamically based on thread type (group or dm) -->
-              </div>
-            </div>
-          </div>
-
-          <!-- Messages Container -->
-          <div class="chat-messages-container" id="chatMessagesContainer">
-            <!-- Dynamically populated via JS -->
-          </div>
-
-          <!-- Chat Input Bottom Bar -->
-          <div class="chat-input-bar" style="position: relative;">
-            <button class="chat-input-btn btn-emoji" id="btnToggleEmojiPicker" title="Chèn biểu cảm">
-              <svg viewBox="0 0 24 24"><path d="M12,2C6.47,2 2,6.47 2,12C2,17.53 6.47,22 12,22C17.53,22 22,17.53 22,12C22,6.47 17.53,2 12,2M12,20A8,8 0 0,1 4,12A8,8 0 0,1 12,4A8,8 0 0,1 20,12A8,8 0 0,1 12,20M15.5,11A1.5,1.5 0 0,0 17,9.5A1.5,1.5 0 0,0 15.5,8A1.5,1.5 0 0,0 14,9.5A1.5,1.5 0 0,0 15.5,11M8.5,11A1.5,1.5 0 0,0 10,9.5A1.5,1.5 0 0,0 8.5,8A1.5,1.5 0 0,0 7,9.5A1.5,1.5 0 0,0 8.5,11M12,18C14.73,18 17,16 17,13H7C7,16 9.27,18 12,18Z"/></svg>
-            </button>
-            
-            <!-- Floating Emoji Picker Popup -->
-            <div class="chat-emoji-picker-popup" id="chatEmojiPicker" style="display: none;">
-              <!-- Grid of popular emojis will be populated via JavaScript -->
-            </div>
-            
-            <input type="text" id="chatMessageInput" placeholder="Nhập tin nhắn trò chuyện...">
-            <button class="chat-input-btn btn-send-message" id="btnSendChatMessage" title="Gửi tin nhắn">
-              <svg viewBox="0 0 24 24"><path d="M2,21L23,12L2,3V10L17,12L2,14V21Z"/></svg>
-            </button>
-          </div>
-        </div>
-
-      </div>
-    </div>
-  </div>
-
+  <!-- ==========================================
+       MODALS & DIALOGS (PORTAL WIDE)
+       ========================================== -->
   <!-- Create Group Modal Overlay -->
   <div class="modal-overlay" id="createGroupModal" style="display: none;">
     <div class="modal-card">

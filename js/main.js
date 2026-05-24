@@ -397,6 +397,9 @@ document.addEventListener('DOMContentLoaded', () => {
       scholarship,
       paidAmount,
       remainingAmount,
+      tuitionVal,
+      paidVal,
+      remainingVal,
       regDate,
       interviewDate,
       visaDate,
@@ -1004,6 +1007,9 @@ document.addEventListener('DOMContentLoaded', () => {
         scholarship: scholarship,
         paidAmount: paidAmount,
         remainingAmount: remainingAmount,
+        tuitionVal: tuitionVal,
+        paidVal: paidVal,
+        remainingVal: totalCostVal - paidVal,
         regDate: regDate,
         interviewDate: interviewDate,
         visaDate: visaDate,
@@ -1402,6 +1408,19 @@ document.addEventListener('DOMContentLoaded', () => {
      ========================================================================== */
   let chatThreads = [
     {
+      id: "group-global",
+      name: "Group Chat Tổng Hợp ThinkEdu",
+      type: "group",
+      avatarInitials: "TH",
+      avatarBg: "#BC9E6C",
+      membersCount: 5,
+      messages: [
+        { sender: "Dương Đức Mạnh", content: "Chào toàn thể anh chị em nhân viên ThinkEdu. Đây là kênh chat tổng hợp chính thức của chúng ta.", time: "09:00" },
+        { sender: "Nguyễn Thảo Chi", content: "Dạ em chào anh Mạnh và mọi người ạ. Chúc cả nhà ngày mới làm việc hiệu quả!", time: "09:05" },
+        { sender: "Trần Minh Quân", content: "Chào anh Mạnh, chào mọi người. Hôm nay phòng Đào tạo có lịch test đầu vào cho 5 bạn học viên mới nhé.", time: "09:10" }
+      ]
+    },
+    {
       id: "group-1",
       name: "Ban Điều Hành ThinkEdu",
       type: "group",
@@ -1423,7 +1442,7 @@ document.addEventListener('DOMContentLoaded', () => {
       membersCount: 4,
       messages: [
         { sender: "Lê Thu Trang", content: "Học viên mới HV-2025-071 vừa nộp hồ sơ Đại học Ngoại Thương, GPA 3.65 ạ.", time: "15:10" },
-        { sender: "Nguyễn Thảo Chi", content: "Hồ sơ GPA tốt quá, để em liên hệ tư vấn học bổng ThinkEdu Merit 50%.", time: "15:15" }
+        { sender: "Nguyễn Thảo Chi", content: "Học hồ sơ GPA tốt quá, để em liên hệ tư vấn học bổng ThinkEdu Merit 50%.", time: "15:15" }
       ]
     },
     {
@@ -1455,7 +1474,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   ];
 
-  let activeThreadId = "group-1";
+  let activeThreadId = "group-global";
   let chatSearchQuery = "";
   let activeChatSearchQuery = ""; // Query for highlighting inside the conversation
 
@@ -1860,7 +1879,17 @@ document.addEventListener('DOMContentLoaded', () => {
     let replyContent = "";
 
     // Pick responder based on channel
-    if (thread.id === "group-1") {
+    if (thread.id === "group-global") {
+      const activeUser = JSON.parse(localStorage.getItem('thinkedu_session') || '{}');
+      responder = Math.random() > 0.5 ? "Nguyễn Thảo Chi" : "Trần Minh Quân";
+      const replies = [
+        `Dạ em nhận được tin rồi anh/chị ${activeUser.name || 'Mạnh'} ạ.`,
+        "Mọi người đang xử lý thông tin này nhé.",
+        "Thông tin rất hữu ích, cảm ơn cả nhà!",
+        "Tiến độ công việc vẫn đang được cập nhật liên tục ạ."
+      ];
+      replyContent = replies[Math.floor(Math.random() * replies.length)];
+    } else if (thread.id === "group-1") {
       responder = Math.random() > 0.5 ? "Nguyễn Thảo Chi" : "Trần Minh Quân";
       const replies = [
         "Dạ vâng anh Mạnh, em nhận được thông tin chỉ đạo rồi ạ.",
@@ -2160,25 +2189,392 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // 6. User Profile Menu Hover Items Click Actions (Hồ sơ, Đăng xuất)
-  const btnViewProfiles = document.querySelectorAll('.btn-view-my-profile');
-  const btnLogoutApps = document.querySelectorAll('.btn-logout-app');
+  /* ==========================================================================
+     ADMIN PORTAL - AUTH, SIDEBAR ROUTING, STATS & USER CRUD
+     ========================================================================== */
+  
+  // 1. Initialize Users in localStorage if not exists
+  const initPortalUsers = () => {
+    let users = localStorage.getItem('thinkedu_users');
+    let parsedUsers = [];
+    if (users) {
+      try {
+        parsedUsers = JSON.parse(users);
+      } catch (e) {
+        parsedUsers = [];
+      }
+    }
+    
+    // Ensure manhdd is always registered
+    const adminExists = Array.isArray(parsedUsers) && parsedUsers.some(u => u && u.username && u.username.toLowerCase() === 'manhdd');
+    if (!adminExists) {
+      if (!Array.isArray(parsedUsers)) parsedUsers = [];
+      parsedUsers.push({
+        name: "Dương Đức Mạnh",
+        username: "manhdd",
+        password: "Admin123@",
+        role: "quản trị viên",
+        createdAt: new Date().toLocaleDateString('vi-VN')
+      });
+      localStorage.setItem('thinkedu_users', JSON.stringify(parsedUsers));
+    }
+  };
+  initPortalUsers();
 
-  btnViewProfiles.forEach(btn => {
-    btn.addEventListener('click', (e) => {
+  // 2. Auth Elements
+  const loginContainer = document.getElementById('login-container');
+  const appRoot = document.getElementById('app-root');
+  const portalLoginForm = document.getElementById('portalLoginForm');
+  const btnTogglePassword = document.getElementById('btnTogglePassword');
+  const loginPasswordInput = document.getElementById('loginPassword');
+
+  // Toggle Password Eye Icon
+  if (btnTogglePassword && loginPasswordInput) {
+    btnTogglePassword.addEventListener('click', () => {
+      const isPassword = loginPasswordInput.type === 'password';
+      loginPasswordInput.type = isPassword ? 'text' : 'password';
+      btnTogglePassword.classList.toggle('active', isPassword);
+    });
+  }
+
+  // Sync Logged-In User Information across Sidebar & Mini-headers
+  const syncUserInfoUI = (user) => {
+    const avatarInitials = user.name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+    
+    // Sidebar Badge
+    const sidebarAvatar = document.getElementById('portalUserAvatar');
+    const sidebarName = document.getElementById('portalUserName');
+    const sidebarRole = document.getElementById('portalUserRole');
+    if (sidebarAvatar) sidebarAvatar.textContent = avatarInitials;
+    if (sidebarName) sidebarName.textContent = user.name;
+    if (sidebarRole) sidebarRole.textContent = user.role.charAt(0).toUpperCase() + user.role.slice(1);
+
+    // Mini CRM header
+    const miniAvatar = document.getElementById('miniUserAvatar');
+    const miniName = document.getElementById('miniUserName');
+    const miniRole = document.getElementById('miniUserRole');
+    if (miniAvatar) miniAvatar.textContent = avatarInitials;
+    if (miniName) miniName.textContent = user.name;
+    if (miniRole) miniRole.textContent = user.role.charAt(0).toUpperCase() + user.role.slice(1);
+
+    // Mini Chat header
+    const miniChatAvatar = document.getElementById('miniChatAvatar');
+    const miniChatName = document.getElementById('miniChatName');
+    const miniChatRole = document.getElementById('miniChatRole');
+    if (miniChatAvatar) miniChatAvatar.textContent = avatarInitials;
+    if (miniChatName) miniChatName.textContent = user.name;
+    if (miniChatRole) miniChatRole.textContent = user.role.charAt(0).toUpperCase() + user.role.slice(1);
+
+    // Mini Stats header
+    const miniStatsAvatar = document.getElementById('miniStatsAvatar');
+    const miniStatsName = document.getElementById('miniStatsName');
+    const miniStatsRole = document.getElementById('miniStatsRole');
+    if (miniStatsAvatar) miniStatsAvatar.textContent = avatarInitials;
+    if (miniStatsName) miniStatsName.textContent = user.name;
+    if (miniStatsRole) miniStatsRole.textContent = user.role.charAt(0).toUpperCase() + user.role.slice(1);
+
+    // Mini Users header
+    const miniUsersAvatar = document.getElementById('miniUsersAvatar');
+    const miniUsersName = document.getElementById('miniUsersName');
+    const miniUsersRole = document.getElementById('miniUsersRole');
+    if (miniUsersAvatar) miniUsersAvatar.textContent = avatarInitials;
+    if (miniUsersName) miniUsersName.textContent = user.name;
+    if (miniUsersRole) miniUsersRole.textContent = user.role.charAt(0).toUpperCase() + user.role.slice(1);
+
+    // Role-based Access Controls
+    const menuItemCreateUsers = document.getElementById('menuItemCreateUsers');
+    if (menuItemCreateUsers) {
+      if (user.role === 'quản trị viên') {
+        menuItemCreateUsers.style.display = 'flex';
+      } else {
+        menuItemCreateUsers.style.display = 'none';
+      }
+    }
+  };
+
+  // Perform Login action
+  const handlePortalLogin = (username, password) => {
+    const users = JSON.parse(localStorage.getItem('thinkedu_users') || '[]');
+    const matchedUser = users.find(u => u.username.toLowerCase() === username.toLowerCase().trim() && u.password === password);
+    
+    if (matchedUser) {
+      // Store session
+      localStorage.setItem('thinkedu_session', JSON.stringify(matchedUser));
+      
+      // Update UI
+      syncUserInfoUI(matchedUser);
+      if (loginContainer) loginContainer.style.display = 'none';
+      if (appRoot) appRoot.style.display = 'flex';
+      
+      showToast(`Chào mừng ${matchedUser.name} đã đăng nhập thành công!`, "success");
+      
+      // Load Default view: CRM list
+      switchPortalView('overview-dashboard');
+    } else {
+      showToast("Tên tài khoản hoặc mật khẩu không chính xác!", "error");
+    }
+  };
+
+  // Bind Submit login form
+  if (portalLoginForm) {
+    portalLoginForm.addEventListener('submit', (e) => {
       e.preventDefault();
-      e.stopPropagation();
-      showToast("Tài khoản: Dương Đức Mạnh | Vai trò: Quản trị viên hệ thống ThinkEdu.", "info");
+      const usernameVal = document.getElementById('loginUsername').value;
+      const passwordVal = document.getElementById('loginPassword').value;
+      handlePortalLogin(usernameVal, passwordVal);
+    });
+  }
+
+  // Check existing session on load
+  const checkPortalSession = () => {
+    // Only run if we are indeed on the portal page index.html
+    if (!loginContainer) return;
+
+    const session = localStorage.getItem('thinkedu_session');
+    if (session) {
+      const user = JSON.parse(session);
+      syncUserInfoUI(user);
+      loginContainer.style.display = 'none';
+      appRoot.style.display = 'flex';
+      switchPortalView('overview-dashboard');
+    } else {
+      loginContainer.style.display = 'flex';
+      appRoot.style.display = 'none';
+    }
+  };
+  checkPortalSession();
+
+  // 3. Sidebar View Switcher Logic
+  const switchPortalView = (targetViewId) => {
+    // Hide all dashboards
+    document.querySelectorAll('.dashboard-wrapper').forEach(wrapper => {
+      wrapper.style.display = 'none';
+    });
+
+    // Show selected dashboard
+    const targetElement = document.getElementById(targetViewId);
+    if (targetElement) {
+      targetElement.style.display = 'block';
+    }
+
+    // Update active nav menu link styling
+    document.querySelectorAll('.sidebar-menu .menu-item').forEach(item => {
+      item.classList.remove('active');
+      if (item.getAttribute('data-target') === targetViewId) {
+        item.classList.add('active');
+      }
+    });
+
+    // Initialize specific module views when active
+    if (targetViewId === 'overview-dashboard') {
+      updateDashboardStats();
+      applyAllFilters();
+    } else if (targetViewId === 'chat-dashboard') {
+      renderThreadList();
+      renderMessages(activeThreadId);
+    } else if (targetViewId === 'stats-dashboard') {
+      renderRevenueStats();
+    } else if (targetViewId === 'users-dashboard') {
+      renderStaffUsersList();
+    }
+  };
+
+  // Bind Menu Click Toggles
+  document.querySelectorAll('.sidebar-menu .menu-item').forEach(item => {
+    item.addEventListener('click', () => {
+      const target = item.getAttribute('data-target');
+      switchPortalView(target);
     });
   });
 
-  btnLogoutApps.forEach(btn => {
-    btn.addEventListener('click', (e) => {
+  // Dark Theme support in Sidebar bottom controls
+  const darkModeTogglePortal = document.getElementById('darkModeTogglePortal');
+  if (darkModeTogglePortal) {
+    darkModeTogglePortal.addEventListener('click', () => {
+      document.body.classList.toggle('dark-theme-crm');
+      const isDark = document.body.classList.contains('dark-theme-crm');
+      showToast(isDark ? "Đã chuyển sang giao diện tối!" : "Đã chuyển sang giao diện sáng!", "info");
+    });
+  }
+
+  // Logout actions
+  const handlePortalLogout = () => {
+    localStorage.removeItem('thinkedu_session');
+    if (portalLoginForm) portalLoginForm.reset();
+    if (loginContainer) loginContainer.style.display = 'flex';
+    if (appRoot) appRoot.style.display = 'none';
+    showToast("Bạn đã đăng xuất tài khoản thành công!", "info");
+  };
+
+  const btnLogoutPortal = document.getElementById('btnLogoutPortal');
+  if (btnLogoutPortal) {
+    btnLogoutPortal.addEventListener('click', handlePortalLogout);
+  }
+
+  // Support breadcrumb home redirection to CRM
+  document.querySelectorAll('.portal-breadcrumb-home').forEach(link => {
+    link.addEventListener('click', (e) => {
       e.preventDefault();
-      e.stopPropagation();
-      showLandingPage();
-      showToast("Đăng xuất tài khoản quản trị thành công!", "success");
+      switchPortalView('overview-dashboard');
     });
   });
+
+  // 4. Financial Statistics Module Calculator
+  const renderRevenueStats = () => {
+    const totalRevEl = document.getElementById('statTotalRevenue');
+    const totalPaidEl = document.getElementById('statTotalPaid');
+    const totalRemEl = document.getElementById('statTotalRemaining');
+    const percentEl = document.getElementById('statRevenuePercent');
+    const legendPaidEl = document.getElementById('legendPaid');
+    const legendRemEl = document.getElementById('legendRemaining');
+    const progressOuter = document.querySelector('.progress-outer-circle');
+    const recentPaymentsBody = document.getElementById('statsRecentPaymentsBody');
+
+    // Sum up values
+    let totalRevenue = 0;
+    let totalPaid = 0;
+    let totalRemaining = 0;
+
+    students.forEach(s => {
+      totalRevenue += s.tuitionVal || 0;
+      totalPaid += s.paidVal || 0;
+      totalRemaining += s.remainingVal || 0;
+    });
+
+    // Format and set inner texts
+    if (totalRevEl) totalRevEl.textContent = totalRevenue.toLocaleString('vi-VN') + " VND";
+    if (totalPaidEl) totalPaidEl.textContent = totalPaid.toLocaleString('vi-VN') + " VND";
+    if (totalRemEl) totalRemEl.textContent = totalRemaining.toLocaleString('vi-VN') + " VND";
+    if (legendPaidEl) legendPaidEl.textContent = totalPaid.toLocaleString('vi-VN') + " VND";
+    if (legendRemEl) legendRemEl.textContent = totalRemaining.toLocaleString('vi-VN') + " VND";
+
+    // Progress math
+    let percent = totalRevenue > 0 ? Math.round((totalPaid / totalRevenue) * 100) : 0;
+    if (percentEl) percentEl.textContent = percent + "%";
+    
+    // Set circle progress degrees (conic gradient)
+    if (progressOuter) {
+      const deg = percent * 3.6;
+      progressOuter.style.setProperty('--progress-deg', deg + 'deg');
+    }
+
+    // Populate top recent payments table (we show students sorted by their paid amounts)
+    if (recentPaymentsBody) {
+      recentPaymentsBody.innerHTML = '';
+      
+      // Get students with active payments, sorted by paid amount descending
+      const premiumPayments = [...students]
+        .filter(s => s.paidVal > 0)
+        .sort((a, b) => b.paidVal - a.paidVal)
+        .slice(0, 10);
+
+      premiumPayments.forEach(s => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td><strong>${s.name}</strong><br><span style="font-size:0.7rem; color:var(--text-muted);">${s.id}</span></td>
+          <td><span style="font-size:0.8rem;">${s.program}</span></td>
+          <td><span style="color:#22C55E; font-weight:600;">${s.paidAmount}</span></td>
+          <td><span style="color:var(--text-muted);">${s.remainingAmount}</span></td>
+        `;
+        recentPaymentsBody.appendChild(tr);
+      });
+    }
+  };
+
+  // 5. Staff User management Module (Admin Only)
+  const renderStaffUsersList = () => {
+    const tableBody = document.getElementById('staffUsersTableBody');
+    if (!tableBody) return;
+    tableBody.innerHTML = '';
+
+    const users = JSON.parse(localStorage.getItem('thinkedu_users') || '[]');
+    
+    // Render each staff member (except default admin to prevent deletion)
+    const staffMembers = users.filter(u => u.username !== 'manhdd');
+
+    if (staffMembers.length === 0) {
+      tableBody.innerHTML = `
+        <tr>
+          <td colspan="5" style="text-align:center; padding: 2rem; color:var(--text-muted); font-size:0.85rem;">
+            Chưa có tài khoản nhân viên nào được tạo.
+          </td>
+        </tr>
+      `;
+      return;
+    }
+
+    staffMembers.forEach(user => {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td><strong>${user.name}</strong><br><span style="font-size:0.7rem; color:var(--text-muted);">Tạo ngày: ${user.createdAt}</span></td>
+        <td><span class="font-mono" style="font-weight:500;">${user.username}</span></td>
+        <td><span class="font-mono" style="color:var(--accent); font-weight:500;">${user.password}</span></td>
+        <td><span class="crm-badge badge-danghoc">Nhân viên</span></td>
+        <td style="text-align: center;">
+          <button class="action-icon-btn btn-delete-staff" data-username="${user.username}" title="Xóa tài khoản" style="color:#EF4444; background:none; border:none; cursor:pointer; padding:6px; border-radius:50%;">
+            <svg viewBox="0 0 24 24" style="width: 18px; height: 18px; fill: currentColor;"><path d="M19,4H15.5L14.5,3H9.5L8.5,4H5V6H19M6,19A2,2 0 0,0 8,21H16A2,2 0 0,0 18,19V7H6V19Z"/></svg>
+          </button>
+        </td>
+      `;
+
+      // Connect delete user click hook
+      tr.querySelector('.btn-delete-staff').addEventListener('click', () => {
+        if (confirm(`Bạn có chắc chắn muốn xóa tài khoản nhân viên ${user.name} (${user.username})?`)) {
+          let updatedUsers = JSON.parse(localStorage.getItem('thinkedu_users') || '[]');
+          updatedUsers = updatedUsers.filter(u => u.username !== user.username);
+          localStorage.setItem('thinkedu_users', JSON.stringify(updatedUsers));
+          
+          showToast(`Đã xóa tài khoản nhân viên ${user.name} thành công!`, "warning");
+          renderStaffUsersList();
+        }
+      });
+
+      tableBody.appendChild(tr);
+    });
+  };
+
+  // Form submission to Register new Staff members
+  const createStaffUserForm = document.getElementById('createStaffUserForm');
+  if (createStaffUserForm) {
+    createStaffUserForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      
+      const newName = document.getElementById('newStaffName').value.trim();
+      const newUsername = document.getElementById('newStaffUsername').value.trim().toLowerCase();
+      const newPassword = document.getElementById('newStaffPassword').value;
+
+      if (!newName || !newUsername || !newPassword) {
+        showToast("Vui lòng điền đầy đủ các thông tin!", "error");
+        return;
+      }
+
+      let users = JSON.parse(localStorage.getItem('thinkedu_users') || '[]');
+      
+      // Check duplicate usernames
+      if (users.some(u => u.username.toLowerCase() === newUsername)) {
+        showToast(`Tài khoản username '${newUsername}' đã tồn tại! Vui lòng chọn tài khoản khác.`, "error");
+        return;
+      }
+
+      // Add user record
+      const newUser = {
+        name: newName,
+        username: newUsername,
+        password: newPassword,
+        role: "nhân viên",
+        createdAt: new Date().toLocaleDateString('vi-VN')
+      };
+
+      users.push(newUser);
+      localStorage.setItem('thinkedu_users', JSON.stringify(users));
+
+      // Reset form & Toast
+      createStaffUserForm.reset();
+      showToast(`Đã tạo tài khoản nhân viên cho ${newName} thành công!`, "success");
+      
+      // Refresh UI list
+      renderStaffUsersList();
+    });
+  }
 });
 
