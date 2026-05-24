@@ -2672,7 +2672,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
       };
       
-      await fetch(`https://api.restful-api.dev/objects/${syncBucketId}`, {
+      await fetch(`https://corsproxy.io/?url=https://api.restful-api.dev/objects/${syncBucketId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
@@ -2685,7 +2685,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const readFromCloud = async (key) => {
     if (!syncBucketId) return null;
     try {
-      const response = await fetch(`https://api.restful-api.dev/objects/${syncBucketId}`);
+      const response = await fetch(`https://corsproxy.io/?url=https://api.restful-api.dev/objects/${syncBucketId}`);
       if (response.ok) {
         const result = await response.json();
         return result.data ? result.data[key] : null;
@@ -2708,7 +2708,7 @@ document.addEventListener('DOMContentLoaded', () => {
           student_profiles: students
         }
       };
-      await fetch(`https://api.restful-api.dev/objects/${syncBucketId}`, {
+      await fetch(`https://corsproxy.io/?url=https://api.restful-api.dev/objects/${syncBucketId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
@@ -2731,7 +2731,7 @@ document.addEventListener('DOMContentLoaded', () => {
           }
         };
 
-        const response = await fetch('https://api.restful-api.dev/objects', {
+        const response = await fetch('https://corsproxy.io/?url=https://api.restful-api.dev/objects', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload)
@@ -2753,7 +2753,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const syncWithCloud = async () => {
     if (!syncBucketId) return;
     try {
-      const response = await fetch(`https://api.restful-api.dev/objects/${syncBucketId}`);
+      const response = await fetch(`https://corsproxy.io/?url=https://api.restful-api.dev/objects/${syncBucketId}`);
       if (!response.ok) {
         if (response.status === 404) {
           // Object might have expired or been deleted. Let's re-create it!
