@@ -1409,73 +1409,107 @@ document.addEventListener('DOMContentLoaded', () => {
   /* ==========================================================================
      TELEGRAM-STYLE CHAT SYSTEM LOGIC & DATA
      ========================================================================== */
-  let chatThreads = [
-    {
-      id: "group-global",
-      name: "Group Chat Tổng Hợp ThinkEdu",
-      type: "group",
-      avatarInitials: "TH",
-      avatarBg: "#BC9E6C",
-      membersCount: 5,
-      messages: [
-        { sender: "Dương Đức Mạnh", content: "Chào toàn thể anh chị em nhân viên ThinkEdu. Đây là kênh chat tổng hợp chính thức của chúng ta.", time: "09:00" },
-        { sender: "Nguyễn Thảo Chi", content: "Dạ em chào anh Mạnh và mọi người ạ. Chúc cả nhà ngày mới làm việc hiệu quả!", time: "09:05" },
-        { sender: "Trần Minh Quân", content: "Chào anh Mạnh, chào mọi người. Hôm nay phòng Đào tạo có lịch test đầu vào cho 5 bạn học viên mới nhé.", time: "09:10" }
-      ]
-    },
-    {
-      id: "group-1",
-      name: "Ban Điều Hành ThinkEdu",
-      type: "group",
-      avatarInitials: "BĐ",
-      avatarBg: "#0B2545",
-      membersCount: 3,
-      messages: [
-        { sender: "Nguyễn Thảo Chi", content: "Dạ em chào anh Mạnh và anh Quân. Danh sách 20 học viên nam đan xen đã sẵn sàng rồi ạ.", time: "16:20" },
-        { sender: "Trần Minh Quân", content: "Tuyệt vời Thảo Chi. Tiến độ phỏng vấn các bạn chờ PV thế nào rồi em?", time: "16:22" },
-        { sender: "Nguyễn Thảo Chi", content: "Các hồ sơ phỏng vấn đợt này đã chuẩn bị dịch thuật công chứng xong xuôi. Chiều nay em gửi đối tác Nhật duyệt ạ.", time: "16:25" }
-      ]
-    },
-    {
-      id: "group-2",
-      name: "Tư Vấn & Xử Lý Hồ Sơ",
-      type: "group",
-      avatarInitials: "HS",
-      avatarBg: "#BC9E6C",
-      membersCount: 4,
-      messages: [
-        { sender: "Lê Thu Trang", content: "Học viên mới HV-2025-071 vừa nộp hồ sơ Đại học Ngoại Thương, GPA 3.65 ạ.", time: "15:10" },
-        { sender: "Nguyễn Thảo Chi", content: "Học hồ sơ GPA tốt quá, để em liên hệ tư vấn học bổng ThinkEdu Merit 50%.", time: "15:15" }
-      ]
-    },
-    {
-      id: "dm-1",
-      name: "Nguyễn Thảo Chi",
-      type: "dm",
-      avatarInitials: "TC",
-      avatarBg: "#4A90E2",
-      status: "online",
-      messages: [
-        { sender: "Nguyễn Thảo Chi", content: "Chào anh Mạnh, anh duyệt hộ em trường hợp học viên Lý Bảo Ngọc xin nộp muộn học phí đợt 2 với ạ.", time: "10:30" },
-        { sender: "Dương Đức Mạnh", content: "Chào Chi, Ngọc xin gia hạn đến bao giờ em?", time: "10:35" },
-        { sender: "Nguyễn Thảo Chi", content: "Dạ bạn ấy xin gia hạn đến ngày 10/06 vì gia đình đang chờ rút sổ tiết kiệm ạ.", time: "10:36" },
-        { sender: "Dương Đức Mạnh", content: "Đồng ý nhé em, note lại vào cột tiến trình hồ sơ của Ngọc giúp anh.", time: "10:40" },
-        { sender: "Nguyễn Thảo Chi", content: "Dạ vâng em cảm ơn anh Mạnh nhiều ạ!", time: "10:42" }
-      ]
-    },
-    {
-      id: "dm-2",
-      name: "Trần Minh Quân",
-      type: "dm",
-      avatarInitials: "MQ",
-      avatarBg: "#50E3C2",
-      status: "offline",
-      messages: [
-        { sender: "Trần Minh Quân", content: "Anh Mạnh ơi, lịch khai giảng lớp Tiếng Nhật N4 ca tối khóa mới chốt ngày 01/06 đúng không anh?", time: "Hôm qua" },
-        { sender: "Dương Đức Mạnh", content: "Đúng rồi Quân, chốt lịch đó để chuẩn bị tài liệu nhé.", time: "Hôm qua" }
-      ]
+  // Helper to load/save chat threads in localStorage
+  const initChatThreads = () => {
+    let threads = localStorage.getItem('thinkedu_chat_threads');
+    if (!threads) {
+      const defaultThreads = [
+        {
+          id: "group-global",
+          name: "Group Chat Tổng Hợp ThinkEdu",
+          type: "group",
+          avatarInitials: "TH",
+          avatarBg: "#BC9E6C",
+          membersCount: 5,
+          messages: [
+            { sender: "Dương Đức Mạnh", content: "Chào toàn thể anh chị em nhân viên ThinkEdu. Đây là kênh chat tổng hợp chính thức của chúng ta.", time: "09:00" },
+            { sender: "Nguyễn Thảo Chi", content: "Dạ em chào anh Mạnh và mọi người ạ. Chúc cả nhà ngày mới làm việc hiệu quả!", time: "09:05" },
+            { sender: "Trần Minh Quân", content: "Chào anh Mạnh, chào mọi người. Hôm nay phòng Đào tạo có lịch test đầu vào cho 5 bạn học viên mới nhé.", time: "09:10" }
+          ]
+        },
+        {
+          id: "group-1",
+          name: "Ban Điều Hành ThinkEdu",
+          type: "group",
+          avatarInitials: "BĐ",
+          avatarBg: "#0B2545",
+          membersCount: 3,
+          messages: [
+            { sender: "Nguyễn Thảo Chi", content: "Dạ em chào anh Mạnh và anh Quân. Danh sách 20 học viên nam đan xen đã sẵn sàng rồi ạ.", time: "16:20" },
+            { sender: "Trần Minh Quân", content: "Tuyệt vời Thảo Chi. Tiến độ phỏng vấn các bạn chờ PV thế nào rồi em?", time: "16:22" },
+            { sender: "Nguyễn Thảo Chi", content: "Các hồ sơ phỏng vấn đợt này đã chuẩn bị dịch thuật công chứng xong xuôi. Chiều nay em gửi đối tác Nhật duyệt ạ.", time: "16:25" }
+          ]
+        },
+        {
+          id: "group-2",
+          name: "Tư Vấn & Xử Lý Hồ Sơ",
+          type: "group",
+          avatarInitials: "HS",
+          avatarBg: "#BC9E6C",
+          membersCount: 4,
+          messages: [
+            { sender: "Lê Thu Trang", content: "Học viên mới HV-2025-071 vừa nộp hồ sơ Đại học Ngoại Thương, GPA 3.65 ạ.", time: "15:10" },
+            { sender: "Nguyễn Thảo Chi", content: "Học hồ sơ GPA tốt quá, để em liên hệ tư vấn học bổng ThinkEdu Merit 50%.", time: "15:15" }
+          ]
+        },
+        {
+          id: "dm-1",
+          name: "Nguyễn Thảo Chi",
+          type: "dm",
+          avatarInitials: "TC",
+          avatarBg: "#4A90E2",
+          status: "online",
+          messages: [
+            { sender: "Nguyễn Thảo Chi", content: "Chào anh Mạnh, anh duyệt hộ em trường hợp học viên Lý Bảo Ngọc xin nộp muộn học phí đợt 2 với ạ.", time: "10:30" },
+            { sender: "Dương Đức Mạnh", content: "Chào Chi, Ngọc xin gia hạn đến bao giờ em?", time: "10:35" },
+            { sender: "Nguyễn Thảo Chi", content: "Dạ bạn ấy xin gia hạn đến ngày 10/06 vì gia đình đang chờ rút sổ tiết kiệm ạ.", time: "10:36" },
+            { sender: "Dương Đức Mạnh", content: "Đồng ý nhé em, note lại vào cột tiến trình hồ sơ của Ngọc giúp anh.", time: "10:40" },
+            { sender: "Nguyễn Thảo Chi", content: "Dạ vâng em cảm ơn anh Mạnh nhiều ạ!", time: "10:42" }
+          ]
+        },
+        {
+          id: "dm-2",
+          name: "Trần Minh Quân",
+          type: "dm",
+          avatarInitials: "MQ",
+          avatarBg: "#50E3C2",
+          status: "offline",
+          messages: [
+            { sender: "Trần Minh Quân", content: "Anh Mạnh ơi, lịch khai giảng lớp Tiếng Nhật N4 ca tối khóa mới chốt ngày 01/06 đúng không anh?", time: "Hôm qua" },
+            { sender: "Dương Đức Mạnh", content: "Đúng rồi Quân, chốt lịch đó để chuẩn bị tài liệu nhé.", time: "Hôm qua" }
+          ]
+        }
+      ];
+      localStorage.setItem('thinkedu_chat_threads', JSON.stringify(defaultThreads));
+      return defaultThreads;
     }
-  ];
+    return JSON.parse(threads);
+  };
+
+  let chatThreads = initChatThreads();
+  let lastThreadsString = JSON.stringify(chatThreads);
+
+  const saveChatThreads = () => {
+    const stringified = JSON.stringify(chatThreads);
+    localStorage.setItem('thinkedu_chat_threads', stringified);
+    lastThreadsString = stringified;
+  };
+
+  // Cross-tab real-time sync polling loop
+  setInterval(() => {
+    const currentStored = localStorage.getItem('thinkedu_chat_threads');
+    if (currentStored && currentStored !== lastThreadsString) {
+      lastThreadsString = currentStored;
+      chatThreads = JSON.parse(currentStored);
+      
+      // If we are currently showing the chat dashboard, update the view in real-time!
+      const chatDashboard = document.getElementById('chat-dashboard');
+      if (chatDashboard && chatDashboard.style.display === 'block') {
+        renderThreadList();
+        renderMessages(activeThreadId);
+      }
+    }
+  }, 1000);
 
   let activeThreadId = "group-global";
   let chatSearchQuery = "";
@@ -1522,6 +1556,7 @@ document.addEventListener('DOMContentLoaded', () => {
       blockBtn.addEventListener('click', () => {
         thread.isBlocked = !thread.isBlocked;
         showToast(thread.isBlocked ? `Đã chặn liên hệ ${thread.name}!` : `Đã bỏ chặn liên hệ ${thread.name}!`, thread.isBlocked ? "error" : "success");
+        saveChatThreads();
         dropdown.style.display = 'none';
         renderThreadList();
         renderMessages(activeThreadId);
@@ -1539,6 +1574,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (confirm(`Bạn có chắc chắn muốn xóa cuộc trò chuyện với ${thread.name}?`)) {
           chatThreads = chatThreads.filter(t => t.id !== thread.id);
           showToast(`Đã xóa liên hệ ${thread.name} khỏi danh sách chat.`, "warning");
+          saveChatThreads();
           dropdown.style.display = 'none';
           
           // Switch to first visible thread
@@ -1573,6 +1609,7 @@ document.addEventListener('DOMContentLoaded', () => {
       muteBtn.addEventListener('click', () => {
         thread.isMuted = !thread.isMuted;
         showToast(thread.isMuted ? "Đã tắt thông báo nhóm trò chuyện này!" : "Đã bật thông báo nhóm trò chuyện này!", thread.isMuted ? "warning" : "success");
+        saveChatThreads();
         dropdown.style.display = 'none';
         renderThreadList();
         renderMessages(activeThreadId);
@@ -1589,6 +1626,7 @@ document.addEventListener('DOMContentLoaded', () => {
       hideBtn.addEventListener('click', () => {
         thread.isHidden = true;
         showToast(`Đã ẩn nhóm "${thread.name}". Bạn vẫn có thể tìm thấy nhóm khi tìm kiếm.`, "info");
+        saveChatThreads();
         dropdown.style.display = 'none';
 
         // Select next visible thread
@@ -1618,6 +1656,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (confirm(`Bạn có chắc chắn muốn rời nhóm "${thread.name}"?`)) {
           chatThreads = chatThreads.filter(t => t.id !== thread.id);
           showToast(`Bạn đã rời nhóm "${thread.name}" thành công!`, "warning");
+          saveChatThreads();
           dropdown.style.display = 'none';
 
           // Select next visible thread
@@ -1801,7 +1840,9 @@ document.addEventListener('DOMContentLoaded', () => {
     container.innerHTML = '';
     
     thread.messages.forEach(msg => {
-      const isSentByMe = (msg.sender === "Dương Đức Mạnh");
+      const activeUser = JSON.parse(localStorage.getItem('thinkedu_session') || '{}');
+      const activeName = activeUser.name || "Dương Đức Mạnh";
+      const isSentByMe = (msg.sender === activeName);
       const bubbleRow = document.createElement('div');
       bubbleRow.className = `chat-bubble-row ${isSentByMe ? 'sent' : 'received'}`;
       
@@ -1856,12 +1897,17 @@ document.addEventListener('DOMContentLoaded', () => {
     const now = new Date();
     const timeStr = `${pad(now.getHours(), 2)}:${pad(now.getMinutes(), 2)}`;
 
+    const activeUser = JSON.parse(localStorage.getItem('thinkedu_session') || '{}');
+    const senderName = activeUser.name || "Dương Đức Mạnh";
+
     // Push new message
     thread.messages.push({
-      sender: "Dương Đức Mạnh",
+      sender: senderName,
       content: content,
       time: timeStr
     });
+
+    saveChatThreads();
 
     input.value = ''; // clear input
     renderThreadList();
@@ -1931,6 +1977,8 @@ document.addEventListener('DOMContentLoaded', () => {
       content: replyContent,
       time: timeStr
     });
+
+    saveChatThreads();
 
     // Mark thread as unread if user switched channels during the delay
     if (thread.id !== activeThreadId) {
@@ -2010,6 +2058,9 @@ document.addEventListener('DOMContentLoaded', () => {
       const checkedBoxes = document.querySelectorAll('input[name="groupMembers"]:checked');
       const selectedMembers = Array.from(checkedBoxes).map(cb => cb.value);
 
+      const activeUser = JSON.parse(localStorage.getItem('thinkedu_session') || '{}');
+      const senderName = activeUser.name || "Dương Đức Mạnh";
+
       // Create new thread in database
       const newThreadId = `group-${chatThreads.length + 1}`;
       const initials = groupName.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
@@ -2022,12 +2073,14 @@ document.addEventListener('DOMContentLoaded', () => {
         avatarBg: getAvatarBgColor(groupName),
         membersCount: selectedMembers.length + 1, // members + me
         messages: [
-          { sender: "Dương Đức Mạnh", content: `Đã tạo nhóm trò chuyện "${groupName}".`, time: "Vừa xong" }
+          { sender: senderName, content: `Đã tạo nhóm trò chuyện "${groupName}".`, time: "Vừa xong" }
         ]
       };
 
       chatThreads.unshift(newThread); // Place at top of sidebar
       activeThreadId = newThreadId;
+
+      saveChatThreads();
 
       toggleCreateGroup(false);
       showToast(`Đã tạo nhóm chat "${groupName}" thành công!`, "success");
@@ -2068,6 +2121,9 @@ document.addEventListener('DOMContentLoaded', () => {
       const newThreadId = `dm-${chatThreads.length + 1}`;
       const initials = friendName.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
 
+      const activeUser = JSON.parse(localStorage.getItem('thinkedu_session') || '{}');
+      const activeName = activeUser.name || "Dương Đức Mạnh";
+
       const newThread = {
         id: newThreadId,
         name: friendName,
@@ -2076,12 +2132,14 @@ document.addEventListener('DOMContentLoaded', () => {
         avatarBg: getAvatarBgColor(friendName),
         status: "online",
         messages: [
-          { sender: friendName, content: "Chào anh Mạnh, em vừa được thêm vào danh bạ chat ThinkEdu ạ.", time: "Vừa xong" }
+          { sender: friendName, content: `Chào ${activeName}, em vừa được thêm vào danh bạ chat ThinkEdu ạ.`, time: "Vừa xong" }
         ]
       };
 
       chatThreads.unshift(newThread); // Place at top
       activeThreadId = newThreadId;
+
+      saveChatThreads();
 
       toggleAddFriend(false);
       showToast(`Đã kết bạn với ${friendName} thành công!`, "success");
