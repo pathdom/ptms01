@@ -99,6 +99,10 @@
             <svg viewBox="0 0 24 24"><path d="M20,2H4A2,2 0 0,0 2,4V22L6,18H20A2,2 0 0,0 22,16V4A2,2 0 0,0 20,2M20,16H5.17L4,17.17V4H20V16Z"/></svg>
             <span>Hộp thư trò chuyện</span>
           </li>
+          <li class="menu-item" data-target="students-dashboard" id="menuItemStudents">
+            <svg viewBox="0 0 24 24"><path d="M12,5.5A3.5,3.5 0 1,1 8.5,9 3.5,3.5 0 0,1 12,5.5M5,8A3,3 0 1,1 2,11 3,3 0 0,1 5,8M19,8A3,3 0 1,1 16,11 3,3 0 0,1 19,8M12,13c3.67,0 11,1.84 11,5.5V21H1v-2.5c0-3.66 7.33-5.5 11-5.5m-7,2.5C4.24,15.5 2,16.7 2,18.5V19.5H7v-1c0-.75.33-1.42.87-1.92A14.28,14.28 0 0,0 5,15.5m14,0a14.28,14.28 0 0,0-2.87.58c.54.5.87,1.17.87,1.92v1h5v-1c0-1.8-2.24-3-3-3z"/></svg>
+            <span>Danh sách học viên</span>
+          </li>
           <!-- Admin-Only menu item -->
           <li class="menu-item admin-only" data-target="users-dashboard" id="menuItemCreateUsers" style="display: none;">
             <svg viewBox="0 0 24 24"><path d="M15,14C12.33,14 7,15.33 7,18V20H23V18C23,15.33 17.67,14 15,14M6,8.17V5H4V8.17C2.78,8.58 2,9.7 2,11C2,12.3 2.78,13.42 4,13.83V17H6V13.83C7.22,13.42 8,12.3 8,11C8,9.7 7.22,8.58 6,8.17M15,12A4,4 0 0,0 19,8A4,4 0 0,0 15,4A4,4 0 0,0 11,8A4,4 0 0,0 15,12Z"/></svg>
@@ -291,6 +295,205 @@
         </div>
       </div>
 
+      <!-- ==========================================
+           TAB 3. STUDENT CRM DASHBOARD (ADMIN & STAFF)
+           ========================================== -->
+      <div id="students-dashboard" class="dashboard-wrapper students-page-wrapper" style="display: none;">
+        <div class="dashboard-container">
+          <!-- Topbar Header -->
+          <div class="dashboard-topbar">
+            <div class="topbar-left">
+              <div class="topbar-title-group">
+                <h2>Quản lý Học viên</h2>
+                <div class="breadcrumbs">
+                  <span class="portal-breadcrumb-home">Cổng thông tin</span> <span class="sep">/</span> <span class="active-crumb">Học viên</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="topbar-right">
+              <div class="user-profile-badge-inline">
+                <div class="profile-avatar" id="miniStudentsAvatar">DM</div>
+                <div class="profile-info-desktop">
+                  <span class="name" id="miniStudentsName">Đang tải...</span>
+                  <span class="role" id="miniStudentsRole">Nhân viên</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Main Dashboard Canvas -->
+          <div class="dashboard-canvas" style="padding: 3rem; overflow-y: auto; flex: 1;">
+            <div class="user-list-card" style="width: 100%; max-width: 1400px; margin: 0 auto;">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem;">
+                <h3 style="margin-bottom: 0; border-bottom: none; padding-bottom: 0;">DANH SÁCH HỒ SƠ HỌC VIÊN</h3>
+                <button type="button" class="btn-submit-login" id="btnOpenAddStudentModal" style="margin-top: 0; width: auto; padding: 0.75rem 1.5rem;">+ THÊM HỌC VIÊN MỚI</button>
+              </div>
+
+              <!-- Filter Toolbar -->
+              <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem; margin-bottom: 2rem; background: var(--bg-primary); padding: 1.5rem; border-radius: 4px; border: 1px solid var(--border);">
+                <div class="form-group-login" style="margin-bottom: 0;">
+                  <label for="studentSearchInput">Tìm kiếm</label>
+                  <input type="text" id="studentSearchInput" placeholder="Tìm theo tên, email, SĐT...">
+                </div>
+                <div class="form-group-login" style="margin-bottom: 0;">
+                  <label for="studentCountryFilter">Quốc gia đến</label>
+                  <select id="studentCountryFilter" style="padding: 0.75rem; background: var(--bg-card); border: 1px solid var(--border); border-radius: 4px; color: var(--text-main); outline: none; height: 42px;">
+                    <option value="All">Tất cả quốc gia</option>
+                    <option value="Mỹ">Mỹ</option>
+                    <option value="Anh">Anh</option>
+                    <option value="Úc">Úc</option>
+                    <option value="Canada">Canada</option>
+                    <option value="Đức">Đức</option>
+                  </select>
+                </div>
+                <div class="form-group-login" style="margin-bottom: 0;">
+                  <label for="studentStatusFilter">Trạng thái hồ sơ</label>
+                  <select id="studentStatusFilter" style="padding: 0.75rem; background: var(--bg-card); border: 1px solid var(--border); border-radius: 4px; color: var(--text-main); outline: none; height: 42px;">
+                    <option value="All">Tất cả trạng thái</option>
+                    <option value="Đang học">Đang học</option>
+                    <option value="Chờ phỏng vấn">Chờ phỏng vấn</option>
+                    <option value="Đã trúng tuyển">Đã trúng tuyển</option>
+                    <option value="Đang làm hồ sơ">Đang làm hồ sơ</option>
+                  </select>
+                </div>
+              </div>
+
+              <!-- Students Table -->
+              <div class="mini-table-container">
+                <table class="financial-table">
+                  <thead>
+                    <tr>
+                      <th>MÃ HỌC VIÊN</th>
+                      <th>HỌ VÀ TÊN</th>
+                      <th>LIÊN HỆ</th>
+                      <th>QUỐC GIA</th>
+                      <th>TRẠNG THÁI</th>
+                      <th style="text-align: center;">HÀNH ĐỘNG</th>
+                    </tr>
+                  </thead>
+                  <tbody id="studentTableBody">
+                    <!-- Populated dynamically via Firestore -->
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ==========================================
+       MODALS WRAPPERS (ADD / VIEW / DETAILS)
+       ========================================== -->
+  <!-- Modal Thêm/Sửa Học Viên -->
+  <div class="modal-overlay" id="studentModal" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.5); z-index: 1000; justify-content: center; align-items: center; padding: 2rem; backdrop-filter: blur(4px);">
+    <div class="login-card" style="max-width: 600px; padding: 2.5rem; width: 100%; border-radius: 4px; box-shadow: var(--shadow-lg);">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+        <h3 id="studentModalTitle" style="font-family: var(--font-serif); font-size: 1.3rem; font-weight: 500; color: var(--text-main);">+ THÊM HỌC VIÊN MỚI</h3>
+        <button type="button" id="btnCloseStudentModal" style="font-size: 1.5rem; color: var(--text-muted); cursor: pointer;">&times;</button>
+      </div>
+      <form id="studentForm">
+        <input type="hidden" id="studentEditId">
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
+          <div class="form-group-login" style="margin-bottom: 0;">
+            <label for="studentName">Họ và tên *</label>
+            <input type="text" id="studentName" required placeholder="Nguyễn Văn A">
+          </div>
+          <div class="form-group-login" style="margin-bottom: 0;">
+            <label for="studentCode">Mã học viên *</label>
+            <input type="text" id="studentCode" required placeholder="TE-2026-001">
+          </div>
+        </div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
+          <div class="form-group-login" style="margin-bottom: 0;">
+            <label for="studentEmail">Email *</label>
+            <input type="email" id="studentEmail" required placeholder="email@gmail.com">
+          </div>
+          <div class="form-group-login" style="margin-bottom: 0;">
+            <label for="studentPhone">Số điện thoại *</label>
+            <input type="text" id="studentPhone" required placeholder="0912345678">
+          </div>
+        </div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
+          <div class="form-group-login" style="margin-bottom: 0;">
+            <label for="studentCountry">Quốc gia *</label>
+            <select id="studentCountry" required style="padding: 0.75rem; border: 1px solid var(--border); border-radius: 4px; background: var(--bg-primary); color: var(--text-main); outline: none; height: 42px;">
+              <option value="Mỹ">Mỹ</option>
+              <option value="Anh">Anh</option>
+              <option value="Úc">Úc</option>
+              <option value="Canada">Canada</option>
+              <option value="Đức">Đức</option>
+            </select>
+          </div>
+          <div class="form-group-login" style="margin-bottom: 0;">
+            <label for="studentStatus">Trạng thái hồ sơ *</label>
+            <select id="studentStatus" required style="padding: 0.75rem; border: 1px solid var(--border); border-radius: 4px; background: var(--bg-primary); color: var(--text-main); outline: none; height: 42px;">
+              <option value="Đang học">Đang học</option>
+              <option value="Chờ phỏng vấn">Chờ phỏng vấn</option>
+              <option value="Đã trúng tuyển">Đã trúng tuyển</option>
+              <option value="Đang làm hồ sơ">Đang làm hồ sơ</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group-login" style="margin-bottom: 1.5rem;">
+          <label for="studentNotes">Ghi chú / Nhật ký tư vấn</label>
+          <textarea id="studentNotes" placeholder="Nhập ghi chú hồ sơ tại đây..." style="padding: 0.75rem; border: 1px solid var(--border); border-radius: 4px; background: var(--bg-primary); color: var(--text-main); outline: none; resize: vertical; min-height: 80px; font-family: inherit;"></textarea>
+        </div>
+        <button type="submit" class="btn-submit-login">LƯU THÔNG TIN HỒ SƠ</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal Chi Tiết Học Viên -->
+  <div class="modal-overlay" id="studentDetailModal" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.5); z-index: 1000; justify-content: center; align-items: center; padding: 2rem; backdrop-filter: blur(4px);">
+    <div class="login-card" style="max-width: 600px; padding: 2.5rem; width: 100%; border-radius: 4px; box-shadow: var(--shadow-lg);">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; border-bottom: 1px solid var(--border-light); padding-bottom: 1rem;">
+        <div style="display: flex; align-items: center; gap: 1rem;">
+          <div class="avatar" id="detailStudentAvatar" style="background: var(--accent); width: 42px; height: 42px; border-radius: 50%; color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 700;">N</div>
+          <div>
+            <h3 id="detailStudentName" style="font-family: var(--font-serif); font-size: 1.4rem; font-weight: 500; color: var(--text-main); margin-bottom: 0;">Nguyễn Văn A</h3>
+            <span id="detailStudentCode" style="font-size: 0.75rem; font-family: monospace; color: var(--accent); font-weight: 600;">TE-2026-001</span>
+          </div>
+        </div>
+        <button type="button" id="btnCloseStudentDetailModal" style="font-size: 1.5rem; color: var(--text-muted); cursor: pointer;">&times;</button>
+      </div>
+      
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 1.5rem;">
+        <div>
+          <span style="display: block; font-size: 0.7rem; font-weight: 600; text-transform: uppercase; color: var(--text-muted); letter-spacing: 1px; margin-bottom: 0.25rem;">Địa chỉ Email</span>
+          <span id="detailStudentEmail" style="font-size: 0.9rem; color: var(--text-main); font-weight: 500;">email@gmail.com</span>
+        </div>
+        <div>
+          <span style="display: block; font-size: 0.7rem; font-weight: 600; text-transform: uppercase; color: var(--text-muted); letter-spacing: 1px; margin-bottom: 0.25rem;">Số điện thoại</span>
+          <span id="detailStudentPhone" style="font-size: 0.9rem; color: var(--text-main); font-weight: 500;">0912345678</span>
+        </div>
+      </div>
+      
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 2rem;">
+        <div>
+          <span style="display: block; font-size: 0.7rem; font-weight: 600; text-transform: uppercase; color: var(--text-muted); letter-spacing: 1px; margin-bottom: 0.25rem;">Quốc gia đến</span>
+          <span id="detailStudentCountry" style="font-size: 0.9rem; color: var(--text-main); font-weight: 500;">Úc</span>
+        </div>
+        <div>
+          <span style="display: block; font-size: 0.7rem; font-weight: 600; text-transform: uppercase; color: var(--text-muted); letter-spacing: 1px; margin-bottom: 0.25rem;">Trạng thái hồ sơ</span>
+          <div>
+            <span id="detailStudentStatus" class="crm-badge badge-danghoc" style="font-size: 0.75rem; margin-top: 0.25rem;">Đang học</span>
+          </div>
+        </div>
+      </div>
+      
+      <div style="background: var(--bg-primary); border: 1px solid var(--border); padding: 1.5rem; border-radius: 4px; margin-bottom: 2rem;">
+        <span style="display: block; font-size: 0.7rem; font-weight: 600; text-transform: uppercase; color: var(--text-muted); letter-spacing: 1px; margin-bottom: 0.5rem;">Ghi chú tư vấn</span>
+        <p id="detailStudentNotes" style="font-size: 0.85rem; color: var(--text-main); white-space: pre-wrap; line-height: 1.6;">Chưa có ghi chú nào.</p>
+      </div>
+      
+      <div style="display: flex; gap: 1rem; justify-content: flex-end;">
+        <button type="button" class="btn-submit-login" id="btnEditDetailStudent" style="margin-top: 0; width: auto; padding: 0.75rem 1.5rem; background: var(--accent); border-color: var(--accent);">CHỈNH SỬA HỒ SƠ</button>
+        <button type="button" class="btn-submit-login" id="btnCloseDetailModalAction" style="margin-top: 0; width: auto; padding: 0.75rem 1.5rem; background: transparent; border-color: var(--border); color: var(--text-main);">ĐÓNG</button>
+      </div>
     </div>
   </div>
 

@@ -386,6 +386,14 @@ document.addEventListener('DOMContentLoaded', () => {
     if (miniUsersName) miniUsersName.textContent = user.name;
     if (miniUsersRole) miniUsersRole.textContent = displayRole;
 
+    // Mini Students header
+    const miniStudentsAvatar = document.getElementById('miniStudentsAvatar');
+    const miniStudentsName = document.getElementById('miniStudentsName');
+    const miniStudentsRole = document.getElementById('miniStudentsRole');
+    if (miniStudentsAvatar) miniStudentsAvatar.textContent = avatarInitials;
+    if (miniStudentsName) miniStudentsName.textContent = user.name;
+    if (miniStudentsRole) miniStudentsRole.textContent = displayRole;
+
     // Role-based Access Controls (Admin Only "Tạo tài khoản NV")
     const menuItemCreateUsers = document.getElementById('menuItemCreateUsers');
     if (menuItemCreateUsers) {
@@ -484,6 +492,8 @@ document.addEventListener('DOMContentLoaded', () => {
       renderMessages(activeThreadId);
     } else if (targetViewId === 'users-dashboard') {
       renderStaffUsersList();
+    } else if (targetViewId === 'students-dashboard') {
+      applyStudentFiltersAndRender();
     }
   };
 
@@ -764,6 +774,351 @@ document.addEventListener('DOMContentLoaded', () => {
     newMsgSendBtn.addEventListener('click', handleSendMessage);
   }
 
+  /* ==========================================================================
+     STUDENT MANAGEMENT MODULE (INTEGRATED WITH FIREBASE FIRESTORE)
+     ========================================================================== */
+  
+  let students = [];
+  let studentsSubscription = null;
+
+  // Default Student Profiles to pre-populate Firestore if empty
+  const defaultStudents = [
+    {
+      code: "TE-2026-001",
+      name: "Nguyễn Thảo Chi",
+      email: "chi.nguyen@gmail.com",
+      phone: "0912345678",
+      country: "Úc",
+      status: "Đang học",
+      notes: "Học sinh xuất sắc, đang chuẩn bị hồ sơ visa du học Úc ngành Công nghệ thông tin."
+    },
+    {
+      code: "TE-2026-002",
+      name: "Trần Minh Hoàng",
+      email: "hoang.tran@outlook.com",
+      phone: "0987654321",
+      country: "Mỹ",
+      status: "Chờ phỏng vấn",
+      notes: "Đã có thư mời nhập học của trường Arizona State University. Đang luyện phỏng vấn visa Mỹ."
+    },
+    {
+      code: "TE-2026-003",
+      name: "Phạm Lê Quỳnh Anh",
+      email: "anh.pham@gmail.com",
+      phone: "0905558888",
+      country: "Canada",
+      status: "Đã trúng tuyển",
+      notes: "Trúng tuyển Đại học Toronto với học bổng 20%. Chuẩn bị lên đường vào tháng 9."
+    },
+    {
+      code: "TE-2026-004",
+      name: "Vũ Đức Huy",
+      email: "huy.vu@domain.com",
+      phone: "0944112233",
+      country: "Đức",
+      status: "Đang làm hồ sơ",
+      notes: "Đang học tiếng Đức trình độ B2. Đang thẩm định hồ sơ APS."
+    },
+    {
+      code: "TE-2026-005",
+      name: "Lê Thị Mai Chi",
+      email: "chi.le@gmail.com",
+      phone: "0933778899",
+      country: "Anh",
+      status: "Đang học",
+      notes: "Đang làm hồ sơ xin visa Anh. Học sinh đạt IELTS 7.5."
+    }
+  ];
+
+  // Setup Student Database real-time observer
+  const subscribeToStudents = () => {
+    if (studentsSubscription) studentsSubscription();
+
+    studentsSubscription = db.collection("students")
+      .orderBy("code", "asc")
+      .onSnapshot(async (snapshot) => {
+        // If empty, auto-populate default student profiles to show a live demo
+        if (snapshot.empty) {
+          console.log("Pre-populating Firestore students database...");
+          for (const s of defaultStudents) {
+            s.createdAt = firebase.firestore.FieldValue.serverTimestamp();
+            await db.collection("students").add(s);
+          }
+          return;
+        }
+
+        students = [];
+        snapshot.forEach((doc) => {
+          const data = doc.data();
+          data.id = doc.id;
+          students.push(data);
+        });
+
+        // Trigger render
+        applyStudentFiltersAndRender();
+      }, (error) => {
+        console.error("Firestore students observer failure:", error);
+      });
+  };
+
+  // Render Student Table Rows
+  const renderStudentsTable = (filteredList) => {
+    const tableBody = document.getElementById("studentTableBody");
+    if (!tableBody) return;
+    tableBody.innerHTML = "";
+
+    if (filteredList.length === 0) {
+      tableBody.innerHTML = `
+        <tr>
+          <td colspan="6" style="text-align:center; padding: 3rem; color:var(--text-muted); font-size:0.85rem;">
+            Không tìm thấy hồ sơ học viên nào phù hợp.
+          </td>
+        </tr>
+      `;
+      return;
+    }
+
+    filteredList.forEach((student) => {
+      const tr = document.createElement("tr");
+      
+      // Determine badge color class based on status
+      let badgeClass = "badge-danghoc";
+      if (student.status === "Chờ phỏng vấn") badgeClass = "badge-waiting";
+      else if (student.status === "Đã trúng tuyển") badgeClass = "badge-selected";
+      else if (student.status === "Đang làm hồ sơ") badgeClass = "badge-processing";
+
+      tr.innerHTML = `
+        <td><span class="font-mono" style="font-weight:600; color:var(--accent);">${student.code}</span></td>
+        <td><strong>${student.name}</strong></td>
+        <td>
+          <span style="font-size:0.8rem; display:block;">${student.email}</span>
+          <span style="font-size:0.75rem; color:var(--text-muted);">${student.phone}</span>
+        </td>
+        <td><strong>${student.country}</strong></td>
+        <td><span class="crm-badge ${badgeClass}">${student.status}</span></td>
+        <td style="text-align: center;">
+          <div style="display: flex; gap: 0.5rem; justify-content: center; align-items: center;">
+            <button class="action-icon-btn btn-view-student" data-id="${student.id}" title="Chi tiết" style="padding: 6px; color: var(--accent); background:none; border:none; cursor:pointer;">
+              <svg viewBox="0 0 24 24" style="width:18px; height:18px; fill:currentColor;"><path d="M12,9A3,3 0 0,0 9,12A3,3 0 0,0 12,15A3,3 0 0,0 15,12A3,3 0 0,0 12,9M12,4.5C7,4.5 2.73,7.61 1,12C2.73,16.39 7,19.5 12,19.5C17,19.5 21.27,16.39 23,12C21.27,7.61 17,4.5 12,4.5Z"/></svg>
+            </button>
+            <button class="action-icon-btn btn-edit-student" data-id="${student.id}" title="Sửa" style="padding: 6px; color: var(--text-main); background:none; border:none; cursor:pointer;">
+              <svg viewBox="0 0 24 24" style="width:18px; height:18px; fill:currentColor;"><path d="M20.71,7.04C21.1,6.65 21.1,6 20.71,5.63L18.37,3.29C18,2.9 17.35,2.9 16.96,3.29L15.12,5.12L18.87,8.87M3,17.25V21H6.75L17.81,9.93L14.07,6.18L3,17.25Z"/></svg>
+            </button>
+            <button class="action-icon-btn btn-delete-student" data-id="${student.id}" title="Xóa" style="padding: 6px; color: #EF4444; background:none; border:none; cursor:pointer;">
+              <svg viewBox="0 0 24 24" style="width:18px; height:18px; fill:currentColor;"><path d="M19,4H15.5L14.5,3H9.5L8.5,4H5V6H19M6,19A2,2 0 0,0 8,21H16A2,2 0 0,0 18,19V7H6V19Z"/></svg>
+            </button>
+          </div>
+        </td>
+      `;
+
+      // Bind Action Listeners inside row
+      tr.querySelector(".btn-view-student").addEventListener("click", () => openStudentDetailModal(student));
+      tr.querySelector(".btn-edit-student").addEventListener("click", () => openEditStudentModal(student));
+      tr.querySelector(".btn-delete-student").addEventListener("click", () => handleDeleteStudent(student));
+
+      tableBody.appendChild(tr);
+    });
+  };
+
+  // Apply Search & Dropdown Filters
+  const applyStudentFiltersAndRender = () => {
+    const searchInputEl = document.getElementById("studentSearchInput");
+    const countryFilterEl = document.getElementById("studentCountryFilter");
+    const statusFilterEl = document.getElementById("studentStatusFilter");
+    
+    const searchVal = searchInputEl ? searchInputEl.value.trim().toLowerCase() : "";
+    const countryVal = countryFilterEl ? countryFilterEl.value : "All";
+    const statusVal = statusFilterEl ? statusFilterEl.value : "All";
+
+    const filtered = students.filter((student) => {
+      const textMatch = !searchVal || 
+        (student.name && student.name.toLowerCase().includes(searchVal)) ||
+        (student.email && student.email.toLowerCase().includes(searchVal)) ||
+        (student.phone && student.phone.includes(searchVal)) ||
+        (student.code && student.code.toLowerCase().includes(searchVal));
+
+      const countryMatch = countryVal === "All" || student.country === countryVal;
+      const statusMatch = statusVal === "All" || student.status === statusVal;
+
+      return textMatch && countryMatch && statusMatch;
+    });
+
+    renderStudentsTable(filtered);
+  };
+
+  // Bind Filters Change Events
+  const bindFilters = () => {
+    const sInput = document.getElementById("studentSearchInput");
+    const cFilter = document.getElementById("studentCountryFilter");
+    const stFilter = document.getElementById("studentStatusFilter");
+
+    if (sInput) sInput.addEventListener("input", applyStudentFiltersAndRender);
+    if (cFilter) cFilter.addEventListener("change", applyStudentFiltersAndRender);
+    if (stFilter) stFilter.addEventListener("change", applyStudentFiltersAndRender);
+  };
+
+  // Modals Logic
+  const studentModal = document.getElementById("studentModal");
+  const studentDetailModal = document.getElementById("studentDetailModal");
+  const studentForm = document.getElementById("studentForm");
+  const btnOpenAddStudentModal = document.getElementById("btnOpenAddStudentModal");
+
+  // Open modal for Adding new student
+  if (btnOpenAddStudentModal && studentModal) {
+    btnOpenAddStudentModal.addEventListener("click", () => {
+      document.getElementById("studentModalTitle").textContent = "+ THÊM HỌC VIÊN MỚI";
+      document.getElementById("studentEditId").value = "";
+      studentForm.reset();
+      studentModal.style.display = "flex";
+    });
+  }
+
+  // Close Modals Hooks
+  const closeStudentModal = () => { if (studentModal) studentModal.style.display = "none"; };
+  const closeStudentDetailModal = () => { if (studentDetailModal) studentDetailModal.style.display = "none"; };
+
+  const btnCloseStudentModal = document.getElementById("btnCloseStudentModal");
+  if (btnCloseStudentModal) btnCloseStudentModal.addEventListener("click", closeStudentModal);
+
+  const btnCloseStudentDetailModal = document.getElementById("btnCloseStudentDetailModal");
+  if (btnCloseStudentDetailModal) btnCloseStudentDetailModal.addEventListener("click", closeStudentDetailModal);
+
+  const btnCloseDetailModalAction = document.getElementById("btnCloseDetailModalAction");
+  if (btnCloseDetailModalAction) btnCloseDetailModalAction.addEventListener("click", closeStudentDetailModal);
+
+  // Close on backdrop click
+  if (studentModal) {
+    studentModal.addEventListener("click", (e) => {
+      if (e.target === studentModal) closeStudentModal();
+    });
+  }
+  if (studentDetailModal) {
+    studentDetailModal.addEventListener("click", (e) => {
+      if (e.target === studentDetailModal) closeStudentDetailModal();
+    });
+  }
+
+  // Open View Details Modal
+  const openStudentDetailModal = (student) => {
+    if (!studentDetailModal) return;
+
+    const displayAvatarInitials = student.name.split(" ").map(n => n[0]).join("").substring(0,2).toUpperCase();
+    document.getElementById("detailStudentAvatar").textContent = displayAvatarInitials;
+    document.getElementById("detailStudentAvatar").style.backgroundColor = getAvatarBgColor(student.name);
+    document.getElementById("detailStudentName").textContent = student.name;
+    document.getElementById("detailStudentCode").textContent = student.code;
+    document.getElementById("detailStudentEmail").textContent = student.email;
+    document.getElementById("detailStudentPhone").textContent = student.phone;
+    document.getElementById("detailStudentCountry").textContent = student.country;
+
+    // Badge styling
+    const badge = document.getElementById("detailStudentStatus");
+    badge.textContent = student.status;
+    badge.className = "crm-badge";
+    let badgeClass = "badge-danghoc";
+    if (student.status === "Chờ phỏng vấn") badgeClass = "badge-waiting";
+    else if (student.status === "Đã trúng tuyển") badgeClass = "badge-selected";
+    else if (student.status === "Đang làm hồ sơ") badgeClass = "badge-processing";
+    badge.classList.add(badgeClass);
+
+    document.getElementById("detailStudentNotes").textContent = student.notes || "Chưa có ghi chú nào.";
+
+    // Bind Edit button inside View details modal
+    const btnEdit = document.getElementById("btnEditDetailStudent");
+    if (btnEdit) {
+      // Re-create node to discard old event listeners safely
+      btnEdit.replaceWith(btnEdit.cloneNode(true));
+      const newBtnEdit = document.getElementById("btnEditDetailStudent");
+      newBtnEdit.addEventListener("click", () => {
+        closeStudentDetailModal();
+        openEditStudentModal(student);
+      });
+    }
+
+    studentDetailModal.style.display = "flex";
+  };
+
+  // Open Edit Form Modal
+  const openEditStudentModal = (student) => {
+    if (!studentModal) return;
+    document.getElementById("studentModalTitle").textContent = "CHỈNH SỬA HỒ SƠ HỌC VIÊN";
+    document.getElementById("studentEditId").value = student.id;
+    document.getElementById("studentName").value = student.name;
+    document.getElementById("studentCode").value = student.code;
+    document.getElementById("studentEmail").value = student.email;
+    document.getElementById("studentPhone").value = student.phone;
+    document.getElementById("studentCountry").value = student.country;
+    document.getElementById("studentStatus").value = student.status;
+    document.getElementById("studentNotes").value = student.notes || "";
+
+    studentModal.style.display = "flex";
+  };
+
+  // Delete Student Profile
+  const handleDeleteStudent = async (student) => {
+    if (confirm(`Bạn có chắc chắn muốn xóa hồ sơ học viên ${student.name} (${student.code})?`)) {
+      try {
+        await db.collection("students").doc(student.id).delete();
+        showToast(`Đã xóa hồ sơ học viên ${student.name} thành công!`, "warning");
+      } catch (err) {
+        console.error("Delete student failure:", err);
+        showToast("Lỗi khi xóa hồ sơ học viên!", "error");
+      }
+    }
+  };
+
+  // Save Student (Add or Update) Form Submit Handler
+  if (studentForm) {
+    studentForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+
+      const editId = document.getElementById("studentEditId").value;
+      const name = document.getElementById("studentName").value.trim();
+      const code = document.getElementById("studentCode").value.trim().toUpperCase();
+      const email = document.getElementById("studentEmail").value.trim();
+      const phone = document.getElementById("studentPhone").value.trim();
+      const country = document.getElementById("studentCountry").value;
+      const status = document.getElementById("studentStatus").value;
+      const notes = document.getElementById("studentNotes").value.trim();
+
+      if (!name || !code || !email || !phone) {
+        showToast("Vui lòng nhập đầy đủ các trường thông tin có dấu *!", "error");
+        return;
+      }
+
+      const payload = {
+        name,
+        code,
+        email,
+        phone,
+        country,
+        status,
+        notes,
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+      };
+
+      try {
+        if (editId) {
+          // Update
+          await db.collection("students").doc(editId).update(payload);
+          showToast(`Đã cập nhật hồ sơ học viên ${name} thành công!`, "success");
+        } else {
+          // Add
+          payload.createdAt = firebase.firestore.FieldValue.serverTimestamp();
+          await db.collection("students").add(payload);
+          showToast(`Đã thêm mới hồ sơ học viên ${name} thành công!`, "success");
+        }
+        closeStudentModal();
+      } catch (err) {
+        console.error("Save student failure:", err);
+        showToast("Lỗi hệ thống khi lưu thông tin học viên!", "error");
+      }
+    });
+  }
+
+  // Bind change events initially
+  bindFilters();
+
   // Startup and Reload Session Handler (Force signOut upon load/refresh)
   const checkPortalSession = () => {
     // 1. Force log out on reload/startup to respect the "reload triggers logout" requirement
@@ -795,6 +1150,9 @@ document.addEventListener('DOMContentLoaded', () => {
           // Subscribe to real-time chat updates
           subscribeToChatMessages();
 
+          // Subscribe to real-time students updates
+          subscribeToStudents();
+
           // Navigate to Chat group dashboard by default
           switchPortalView('chat-dashboard');
         } catch (e) {
@@ -806,6 +1164,10 @@ document.addEventListener('DOMContentLoaded', () => {
         if (chatSubscription) {
           chatSubscription();
           chatSubscription = null;
+        }
+        if (studentsSubscription) {
+          studentsSubscription();
+          studentsSubscription = null;
         }
 
         // Show Login Panel, hide App Workspace

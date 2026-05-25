@@ -1065,6 +1065,21 @@ button {
   color: var(--accent);
 }
 
+.badge-waiting {
+  background: rgba(245, 166, 35, 0.15);
+  color: #D97706;
+}
+
+.badge-selected {
+  background: rgba(16, 185, 129, 0.15);
+  color: #10B981;
+}
+
+.badge-processing {
+  background: rgba(82, 110, 141, 0.15);
+  color: var(--text-muted);
+}
+
 .btn-delete-staff:hover {
   background: rgba(239, 68, 68, 0.08) !important;
   color: #DC2626 !important;
