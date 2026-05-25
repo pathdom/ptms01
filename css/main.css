@@ -1079,6 +1079,7 @@ button {
   color: var(--text-muted);
   padding: 1rem;
   border-bottom: none;
+  text-align: center;
 }
 
 .financial-table td {
@@ -1381,4 +1382,11 @@ button {
 .topbar-user-dropdown .footer-btn.btn-logout-app-portal:hover {
   background: rgba(239, 68, 68, 0.05) !important;
   color: #EF4444 !important;
+}
+
+/* Student Search Input Focus Effect */
+#studentSearchInput:focus {
+  border-color: var(--accent) !important;
+  background: var(--bg-card) !important;
+  box-shadow: 0 0 0 3px rgba(188, 158, 108, 0.15) !important;
 }

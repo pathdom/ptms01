@@ -931,10 +931,283 @@ document.addEventListener('DOMContentLoaded', () => {
       country: "Anh",
       status: "Đang học",
       notes: "Đang làm hồ sơ xin visa Anh. Học sinh đạt IELTS 7.5."
+    },
+    {
+      code: "TE-2026-006",
+      name: "Nguyễn Hoàng Nam",
+      email: "nam.nguyen@gmail.com",
+      phone: "0901234567",
+      country: "Mỹ",
+      status: "Đang học",
+      notes: "Đang học khóa tiếng Anh IELTS nâng cao để chuẩn bị nộp hồ sơ Đại học bang Ohio."
+    },
+    {
+      code: "TE-2026-007",
+      name: "Phạm Minh Thư",
+      email: "thu.pham@outlook.com",
+      phone: "0918889999",
+      country: "Úc",
+      status: "Đang làm hồ sơ",
+      notes: "Hồ sơ Visa đang được thẩm định. Đã hoàn thành đóng học phí kỳ I đại học Monash."
+    },
+    {
+      code: "TE-2026-008",
+      name: "Lê Khánh Linh",
+      email: "linh.le@gmail.com",
+      phone: "0934567890",
+      country: "Canada",
+      status: "Chờ phỏng vấn",
+      notes: "Đã có lịch phỏng vấn học bổng với đại diện tuyển sinh trường đại học McGill."
+    },
+    {
+      code: "TE-2026-009",
+      name: "Trần Anh Tuấn",
+      email: "tuan.tran@gmail.com",
+      phone: "0989998888",
+      country: "Đức",
+      status: "Đang học",
+      notes: "Học sinh đang học tiếng Đức dự bị đại học tại viện Goethe Hà Nội."
+    },
+    {
+      code: "TE-2026-010",
+      name: "Vũ Thùy Chi",
+      email: "chi.vu@gmail.com",
+      phone: "0966667777",
+      country: "Anh",
+      status: "Đã trúng tuyển",
+      notes: "Nhận học bổng 50% học phí chương trình thạc sĩ tài chính của University of Westminster."
+    },
+    {
+      code: "TE-2026-011",
+      name: "Phan Hoàng Long",
+      email: "long.phan@gmail.com",
+      phone: "0977778888",
+      country: "Mỹ",
+      status: "Đang làm hồ sơ",
+      notes: "Đang đợi kết quả thẩm định hồ sơ tài chính từ I-20 của trường Boston University."
+    },
+    {
+      code: "TE-2026-012",
+      name: "Đỗ Mai Phương",
+      email: "phuong.do@gmail.com",
+      phone: "0922223333",
+      country: "Úc",
+      status: "Đang học",
+      notes: "Học sinh đang theo học chương trình Pathway lớp 12 tại Melbourne."
+    },
+    {
+      code: "TE-2026-013",
+      name: "Hoàng Quốc Bảo",
+      email: "bao.hoang@gmail.com",
+      phone: "0933334444",
+      country: "Canada",
+      status: "Đang học",
+      notes: "Học sinh xuất sắc đạt IELTS 8.0, chuẩn bị nộp hồ sơ visa SDS Canada."
+    },
+    {
+      code: "TE-2026-014",
+      name: "Bùi Yến Nhi",
+      email: "nhi.bui@gmail.com",
+      phone: "0944445555",
+      country: "Đức",
+      status: "Chờ phỏng vấn",
+      notes: "Đang chuẩn bị hồ sơ phỏng vấn trực tiếp tại đại sứ quán Đức."
+    },
+    {
+      code: "TE-2026-015",
+      name: "Đặng Đức Minh",
+      email: "minh.dang@gmail.com",
+      phone: "0955556666",
+      country: "Anh",
+      status: "Đang làm hồ sơ",
+      notes: "Đang viết bài luận cá nhân Personal Statement cho UCAS ngành Luật."
+    },
+    {
+      code: "TE-2026-016",
+      name: "Ngô Thanh Hằng",
+      email: "hang.ngo@gmail.com",
+      phone: "0966667777",
+      country: "Mỹ",
+      status: "Đã trúng tuyển",
+      notes: "Nhận được VISA du học Mỹ diện F-1, chuẩn bị bay vào cuối tháng 8."
+    },
+    {
+      code: "TE-2026-017",
+      name: "Dương Gia Huy",
+      email: "huy.duong@gmail.com",
+      phone: "0977778888",
+      country: "Úc",
+      status: "Đang học",
+      notes: "Học sinh đang cải thiện điểm số GPA kỳ 2 lớp 11 để nộp hồ sơ sớm."
+    },
+    {
+      code: "TE-2026-018",
+      name: "Lý Hương Giang",
+      email: "giang.ly@gmail.com",
+      phone: "0988889999",
+      country: "Canada",
+      status: "Đang làm hồ sơ",
+      notes: "Đang chờ dịch thuật công chứng học bạ trung học phổ thông."
+    },
+    {
+      code: "TE-2026-019",
+      name: "Đỗ Minh Triết",
+      email: "triet.do@gmail.com",
+      phone: "0999990000",
+      country: "Đức",
+      status: "Đang học",
+      notes: "Đã đạt chứng chỉ tiếng Đức B1, chuẩn bị nộp hồ sơ xin thư mời."
+    },
+    {
+      code: "TE-2026-020",
+      name: "Trịnh Quỳnh Chi",
+      email: "chi.trinh@gmail.com",
+      phone: "0911112222",
+      country: "Anh",
+      status: "Chờ phỏng vấn",
+      notes: "Đã nhận được thư mời phỏng vấn học bổng danh giá của University of Bristol."
+    },
+    {
+      code: "TE-2026-021",
+      name: "Lâm Thế Vinh",
+      email: "vinh.lam@gmail.com",
+      phone: "0922223333",
+      country: "Mỹ",
+      status: "Đang học",
+      notes: "Học sinh đang ôn tập cho kỳ thi chuẩn hóa SAT đạt mục tiêu 1500 điểm."
+    },
+    {
+      code: "TE-2026-022",
+      name: "Nguyễn Bích Ngọc",
+      email: "ngoc.nguyen@gmail.com",
+      phone: "0933334444",
+      country: "Úc",
+      status: "Đã trúng tuyển",
+      notes: "Trúng tuyển ngành Truyền thông Đại học Quốc gia Úc (ANU) kỳ học mùa xuân."
+    },
+    {
+      code: "TE-2026-023",
+      name: "Trần Đình Phong",
+      email: "phong.tran@gmail.com",
+      phone: "0944445555",
+      country: "Canada",
+      status: "Đang làm hồ sơ",
+      notes: "Đang làm thủ tục chứng minh tài chính qua ngân hàng Scotiabank."
+    },
+    {
+      code: "TE-2026-024",
+      name: "Phạm Thu Thảo",
+      email: "thao.pham@gmail.com",
+      phone: "0955556666",
+      country: "Đức",
+      status: "Đang học",
+      notes: "Đang tham gia khóa học toán dự bị bằng tiếng Đức trực tuyến."
+    },
+    {
+      code: "TE-2026-025",
+      name: "Lê Minh Quân",
+      email: "quan.le@gmail.com",
+      phone: "0966667777",
+      country: "Anh",
+      status: "Đang học",
+      notes: "Học sinh lớp 11 đang chuẩn bị hồ sơ du học A-Level tại Anh quốc."
+    },
+    {
+      code: "TE-2026-026",
+      name: "Vũ Bảo Ngọc",
+      email: "ngoc.vu@gmail.com",
+      phone: "0977778888",
+      country: "Mỹ",
+      status: "Chờ phỏng vấn",
+      notes: "Luyện phỏng vấn VISA Mỹ hàng tuần với cố vấn du học của ThinkEdu."
+    },
+    {
+      code: "TE-2026-027",
+      name: "Phan Hữu Phước",
+      email: "phuoc.phan@gmail.com",
+      phone: "0988889999",
+      country: "Úc",
+      status: "Đang làm hồ sơ",
+      notes: "Đang chuẩn bị hồ sơ nộp xin thư mời học CoE từ Đại học Sydney."
+    },
+    {
+      code: "TE-2026-028",
+      name: "Hoàng Thanh Trúc",
+      email: "truc.hoang@gmail.com",
+      phone: "0999990000",
+      country: "Canada",
+      status: "Đã trúng tuyển",
+      notes: "Nhận VISA du học Canada diện SDS thành công, xuất cảnh vào tháng 9."
+    },
+    {
+      code: "TE-2026-029",
+      name: "Bùi Tiến Dũng",
+      email: "dung.bui@gmail.com",
+      phone: "0911112222",
+      country: "Đức",
+      status: "Đang học",
+      notes: "Học sinh đang theo học lớp tiếng Đức B2 cấp tốc cả ngày."
+    },
+    {
+      code: "TE-2026-030",
+      name: "Nguyễn Khánh Huyền",
+      email: "huyen.nguyen@gmail.com",
+      phone: "0922223333",
+      country: "Anh",
+      status: "Đang làm hồ sơ",
+      notes: "Đang đợi kết quả phản hồi xin thư mời học vô điều kiện (Unconditional Offer)."
+    },
+    {
+      code: "TE-2026-031",
+      name: "Đặng Quang Hải",
+      email: "hai.dang@gmail.com",
+      phone: "0933334444",
+      country: "Mỹ",
+      status: "Đang học",
+      notes: "Đang hoàn tất bài kiểm tra tiếng Anh đầu vào du học phổ thông nội trú Mỹ."
+    },
+    {
+      code: "TE-2026-032",
+      name: "Trịnh Mai Anh",
+      email: "anh.trinh@gmail.com",
+      phone: "0944445555",
+      country: "Úc",
+      status: "Chờ phỏng vấn",
+      notes: "Lên lịch chuẩn bị phỏng vấn học bổng đầu vào 10,000 AUD của UQ."
+    },
+    {
+      code: "TE-2026-033",
+      name: "Ngô Văn Quyết",
+      email: "quyet.ngo@gmail.com",
+      phone: "0955556666",
+      country: "Canada",
+      status: "Đang học",
+      notes: "Học sinh tích cực tham gia các dự án nghiên cứu khoa học để làm đẹp hồ sơ Canada."
+    },
+    {
+      code: "TE-2026-034",
+      name: "Lê Hồng Nhung",
+      email: "nhung.le@gmail.com",
+      phone: "0966667777",
+      country: "Đức",
+      status: "Đã trúng tuyển",
+      notes: "Đã mở thành công tài khoản phong tỏa (Blocked Account) ngân hàng Expatrio."
+    },
+    {
+      code: "TE-2026-035",
+      name: "Phạm Hùng Anh",
+      email: "anh.pham.h@gmail.com",
+      phone: "0977778888",
+      country: "Anh",
+      status: "Đang học",
+      notes: "Đang hoàn tất các thủ tục khám sức khỏe lao động phổi chuẩn bị xin visa Anh quốc."
     }
   ];
 
   // Setup Student Database real-time observer
+  let currentPage = 1;
+  const itemsPerPage = 8;
+
   const subscribeToStudents = () => {
     if (studentsSubscription) studentsSubscription();
 
@@ -957,6 +1230,19 @@ document.addEventListener('DOMContentLoaded', () => {
           data.id = doc.id;
           students.push(data);
         });
+
+        // Migration: Auto-populate 30 more students once if only 5 exist
+        if (students.length === 5 && !localStorage.getItem('thinkedu_populated_30_v3')) {
+          console.log("Auto-populating 30 more students into Firestore...");
+          localStorage.setItem('thinkedu_populated_30_v3', 'true');
+          const extraStudents = defaultStudents.slice(5);
+          for (const s of extraStudents) {
+            s.createdAt = firebase.firestore.FieldValue.serverTimestamp();
+            await db.collection("students").add(s);
+          }
+          showToast("Đang tự động khởi tạo thêm 30 hồ sơ học viên mẫu...", "info");
+          return;
+        }
 
         // Trigger render
         applyStudentFiltersAndRender();
@@ -1047,7 +1333,46 @@ document.addEventListener('DOMContentLoaded', () => {
       return textMatch && countryMatch && statusMatch;
     });
 
-    renderStudentsTable(filtered);
+    const totalItems = filtered.length;
+    const totalPages = Math.ceil(totalItems / itemsPerPage) || 1;
+
+    // Boundary corrections
+    if (currentPage > totalPages) {
+      currentPage = totalPages;
+    }
+    if (currentPage < 1) {
+      currentPage = 1;
+    }
+
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const endIndex = Math.min(startIndex + itemsPerPage, totalItems);
+
+    const pageItems = filtered.slice(startIndex, endIndex);
+
+    renderStudentsTable(pageItems);
+
+    // Update Pagination UI Labels
+    const paginatedStart = document.getElementById("paginatedStart");
+    const paginatedEnd = document.getElementById("paginatedEnd");
+    const paginatedTotal = document.getElementById("paginatedTotal");
+    const currentPageLabel = document.getElementById("currentPageLabel");
+
+    if (paginatedStart) paginatedStart.textContent = totalItems === 0 ? 0 : startIndex + 1;
+    if (paginatedEnd) paginatedEnd.textContent = endIndex;
+    if (paginatedTotal) paginatedTotal.textContent = totalItems;
+    if (currentPageLabel) currentPageLabel.textContent = `Trang ${currentPage} / ${totalPages}`;
+
+    // Enable/Disable buttons
+    const btnPrev = document.getElementById("btnPrevPage");
+    const btnNext = document.getElementById("btnNextPage");
+    if (btnPrev) btnPrev.disabled = (currentPage === 1);
+    if (btnNext) btnNext.disabled = (currentPage === totalPages);
+  };
+
+  // Reset page and trigger filter
+  const resetPageAndFilter = () => {
+    currentPage = 1;
+    applyStudentFiltersAndRender();
   };
 
   // Bind Filters Change Events
@@ -1056,9 +1381,56 @@ document.addEventListener('DOMContentLoaded', () => {
     const cFilter = document.getElementById("studentCountryFilter");
     const stFilter = document.getElementById("studentStatusFilter");
 
-    if (sInput) sInput.addEventListener("input", applyStudentFiltersAndRender);
-    if (cFilter) cFilter.addEventListener("change", applyStudentFiltersAndRender);
-    if (stFilter) stFilter.addEventListener("change", applyStudentFiltersAndRender);
+    if (sInput) sInput.addEventListener("input", resetPageAndFilter);
+    if (cFilter) cFilter.addEventListener("change", resetPageAndFilter);
+    if (stFilter) stFilter.addEventListener("change", resetPageAndFilter);
+
+    // Bind Pagination Clicks
+    const btnPrev = document.getElementById("btnPrevPage");
+    const btnNext = document.getElementById("btnNextPage");
+
+    if (btnPrev) {
+      btnPrev.replaceWith(btnPrev.cloneNode(true));
+      const newBtnPrev = document.getElementById("btnPrevPage");
+      newBtnPrev.addEventListener("click", () => {
+        if (currentPage > 1) {
+          currentPage--;
+          applyStudentFiltersAndRender();
+        }
+      });
+    }
+
+    if (btnNext) {
+      btnNext.replaceWith(btnNext.cloneNode(true));
+      const newBtnNext = document.getElementById("btnNextPage");
+      newBtnNext.addEventListener("click", () => {
+        // Calculate dynamic filtered count
+        const searchInputEl = document.getElementById("studentSearchInput");
+        const countryFilterEl = document.getElementById("studentCountryFilter");
+        const statusFilterEl = document.getElementById("studentStatusFilter");
+        
+        const searchVal = searchInputEl ? searchInputEl.value.trim().toLowerCase() : "";
+        const countryVal = countryFilterEl ? countryFilterEl.value : "All";
+        const statusVal = statusFilterEl ? statusFilterEl.value : "All";
+
+        const filteredCount = students.filter((student) => {
+          const textMatch = !searchVal || 
+            (student.name && student.name.toLowerCase().includes(searchVal)) ||
+            (student.email && student.email.toLowerCase().includes(searchVal)) ||
+            (student.phone && student.phone.includes(searchVal)) ||
+            (student.code && student.code.toLowerCase().includes(searchVal));
+          const countryMatch = countryVal === "All" || student.country === countryVal;
+          const statusMatch = statusVal === "All" || student.status === statusVal;
+          return textMatch && countryMatch && statusMatch;
+        }).length;
+
+        const maxPages = Math.ceil(filteredCount / itemsPerPage) || 1;
+        if (currentPage < maxPages) {
+          currentPage++;
+          applyStudentFiltersAndRender();
+        }
+      });
+    }
   };
 
   // Modals Logic
