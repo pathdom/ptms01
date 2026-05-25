@@ -2621,22 +2621,13 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // Check existing session on load (placed at the bottom to avoid TDZ ReferenceErrors)
+  // Check existing session on load (always clear session on startup/reload to force login)
   const checkPortalSession = () => {
-    // Only run if we are indeed on the portal page index.html
+    localStorage.removeItem('thinkedu_session');
+    
     if (!loginContainer) return;
-
-    const session = localStorage.getItem('thinkedu_session');
-    if (session) {
-      const user = JSON.parse(session);
-      syncUserInfoUI(user);
-      loginContainer.style.display = 'none';
-      appRoot.style.display = 'flex';
-      switchPortalView('overview-dashboard');
-    } else {
-      loginContainer.style.display = 'flex';
-      appRoot.style.display = 'none';
-    }
+    loginContainer.style.display = 'flex';
+    appRoot.style.display = 'none';
   };
   checkPortalSession();
 
