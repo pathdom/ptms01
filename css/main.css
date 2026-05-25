@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,600;1,400&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;500;600;700&family=Quicksand:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,600;1,400&display=swap');
 
 /* ==========================================
    DESIGN TOKENS & ROOT VARIABLES
@@ -17,9 +17,14 @@
   --shadow-md: 0 10px 30px rgba(11, 37, 69, 0.06);
   --shadow-lg: 0 20px 50px rgba(11, 37, 69, 0.1);
 
-  /* Typography */
+  /* Rounded Corner Tokens (approx 18%) */
+  --border-radius-lg: 18px;
+  --border-radius-md: 12px;
+  --border-radius-sm: 8px;
+
+  /* Typography - Curved Geometric rounded pair */
   --font-serif: 'Playfair Display', serif;
-  --font-sans: 'Plus Jakarta Sans', sans-serif;
+  --font-sans: 'Quicksand', 'Lexend', sans-serif;
 
   /* Transitions */
   --transition-smooth: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
@@ -56,6 +61,7 @@ html {
   color: var(--text-main);
   font-family: var(--font-sans);
   font-size: 15px;
+  font-weight: 500;
   -webkit-font-smoothing: antialiased;
 }
 
@@ -136,7 +142,7 @@ button {
   border: 1px solid var(--border);
   padding: 3.5rem 3rem;
   box-shadow: var(--shadow-lg);
-  border-radius: 4px;
+  border-radius: var(--border-radius-lg);
   position: relative;
   transition: background-color 0.4s ease, border-color 0.4s ease;
 }
@@ -207,7 +213,7 @@ button {
   background: var(--bg-primary);
   border: 1px solid var(--border);
   color: var(--text-main);
-  border-radius: 4px;
+  border-radius: var(--border-radius-md);
   outline: none;
   transition: var(--transition-fast);
 }
@@ -245,7 +251,7 @@ button {
   padding: 1.1rem;
   background: var(--text-main);
   color: #FFFFFF;
-  border-radius: 4px;
+  border-radius: var(--border-radius-md);
   font-size: 0.85rem;
   font-weight: 600;
   letter-spacing: 2px;
@@ -324,6 +330,11 @@ button {
   margin-top: 0.2rem;
 }
 
+.sidebar-user-wrapper:hover .sidebar-user-dropdown {
+  display: block !important;
+  animation: slideUp 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
 .sidebar-user-badge {
   display: flex;
   align-items: center;
@@ -331,8 +342,7 @@ button {
   padding: 1.2rem;
   background: var(--bg-primary);
   border: 1px solid var(--border);
-  border-radius: 4px;
-  margin-bottom: 2rem;
+  border-radius: var(--border-radius-md);
   transition: var(--transition-fast);
 }
 
@@ -384,7 +394,7 @@ button {
   align-items: center;
   gap: 1rem;
   padding: 1rem 1.2rem;
-  border-radius: 4px;
+  border-radius: var(--border-radius-sm);
   color: var(--text-muted);
   font-weight: 500;
   font-size: 0.9rem;
@@ -425,7 +435,7 @@ button {
   align-items: center;
   gap: 1rem;
   padding: 0.9rem 1.2rem;
-  border-radius: 4px;
+  border-radius: var(--border-radius-sm);
   color: var(--text-muted);
   font-size: 0.85rem;
   font-weight: 500;
@@ -973,7 +983,7 @@ button {
 .user-form-card, .user-list-card {
   background: var(--bg-card);
   border: 1px solid var(--border);
-  border-radius: 4px;
+  border-radius: var(--border-radius-lg);
   padding: 2.5rem;
   box-shadow: var(--shadow-sm);
   transition: background-color 0.4s ease, border-color 0.4s ease;
@@ -1002,7 +1012,7 @@ button {
   background: var(--bg-primary);
   border: 1px solid var(--border);
   color: var(--text-main);
-  border-radius: 4px;
+  border-radius: var(--border-radius-md);
   outline: none;
   transition: var(--transition-fast);
 }
@@ -1012,14 +1022,54 @@ button {
   background: var(--bg-card);
 }
 
-/* Financial-table style list */
+/* Unified High-Quality Premium Input & Form Styles for Modals */
+.login-card input[type="text"],
+.login-card input[type="email"],
+.login-card input[type="password"],
+.login-card select,
+.login-card textarea {
+  width: 100%;
+  padding: 0.8rem 1.2rem;
+  background: var(--bg-primary);
+  border: 1px solid var(--border);
+  color: var(--text-main);
+  border-radius: var(--border-radius-md);
+  outline: none;
+  font-family: inherit;
+  font-size: 0.9rem;
+  transition: var(--transition-fast);
+}
+
+.login-card input[type="text"]:focus,
+.login-card input[type="email"]:focus,
+.login-card input[type="password"]:focus,
+.login-card select:focus,
+.login-card textarea:focus {
+  border-color: var(--accent);
+  background: var(--bg-card);
+  box-shadow: 0 0 0 3px rgba(188, 158, 108, 0.15);
+}
+
+.login-card select {
+  height: 44px;
+  cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23526E8D'%3E%3Cpath d='M7 10l5 5 5-5H7z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 1rem center;
+  background-size: 1.5rem;
+  padding-right: 2.5rem;
+}
+
+/* Financial-table style list with floating rounded rows */
 .mini-table-container {
   overflow-x: auto;
 }
 
 .financial-table {
   width: 100%;
-  border-collapse: collapse;
+  border-collapse: separate;
+  border-spacing: 0 8px;
   text-align: left;
 }
 
@@ -1030,19 +1080,35 @@ button {
   letter-spacing: 1.5px;
   color: var(--text-muted);
   padding: 1rem;
-  border-bottom: 1px solid var(--border);
+  border-bottom: none;
 }
 
 .financial-table td {
   padding: 1.2rem 1rem;
-  border-bottom: 1px solid var(--border-light);
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
   font-size: 0.85rem;
   color: var(--text-main);
   vertical-align: middle;
+  background: var(--bg-primary);
+  transition: var(--transition-fast);
 }
 
-.financial-table tr:last-child td {
-  border-bottom: none;
+.financial-table td:first-child {
+  border-left: 1px solid var(--border);
+  border-top-left-radius: var(--border-radius-md);
+  border-bottom-left-radius: var(--border-radius-md);
+}
+
+.financial-table td:last-child {
+  border-right: 1px solid var(--border);
+  border-top-right-radius: var(--border-radius-md);
+  border-bottom-right-radius: var(--border-radius-md);
+}
+
+.financial-table tr:hover td {
+  background: var(--accent-light);
+  border-color: var(--accent);
 }
 
 .font-mono {
@@ -1111,7 +1177,7 @@ button {
   display: flex;
   align-items: flex-start;
   gap: 1rem;
-  border-radius: 4px;
+  border-radius: var(--border-radius-md);
   animation: slideInLeft 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
   transition: var(--transition-fast);
 }

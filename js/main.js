@@ -168,17 +168,23 @@ document.addEventListener('DOMContentLoaded', () => {
 
       // Highlight text matches if conversation search query exists
       let displayContent = msg.content;
-      if (activeChatSearchQuery) {
+      if (activeChatSearchQuery && msg.content) {
         const escapedQuery = activeChatSearchQuery.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
         const regex = new RegExp(`(${escapedQuery})`, 'gi');
         displayContent = msg.content.replace(regex, '<span class="highlight-match">$1</span>');
       }
 
+      let displayImage = "";
+      if (msg.image) {
+        displayImage = `<div class="chat-message-image-container" style="margin-bottom: 0.5rem; overflow: hidden; border-radius: var(--border-radius-sm); cursor: pointer;"><img src="${msg.image}" style="max-width: 100%; max-height: 250px; display: block; object-fit: cover; border-radius: var(--border-radius-sm);" class="chat-image-preview"></div>`;
+      }
+
       bubbleRow.innerHTML = `
         ${receivedAvatar}
-        <div class="chat-bubble">
+        <div class="chat-bubble" style="border-radius: var(--border-radius-md);">
           ${senderLabel}
-          <div class="content">${displayContent}</div>
+          ${displayImage}
+          ${msg.content ? `<div class="content">${displayContent}</div>` : ''}
           <span class="time-stamp">${msg.time}</span>
         </div>
       `;
@@ -362,35 +368,44 @@ document.addEventListener('DOMContentLoaded', () => {
     const avatarInitials = user.name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
     const displayRole = user.role === 'admin' ? 'Quản trị viên' : 'Nhân viên';
 
+    // Helper function to sync avatar elements with optional custom image
+    const syncAvatarElement = (elementId) => {
+      const el = document.getElementById(elementId);
+      if (!el) return;
+      if (user.avatar) {
+        el.innerHTML = `<img src="${user.avatar}" style="width:100%; height:100%; object-fit:cover; border-radius:50%;">`;
+        el.style.backgroundColor = "transparent";
+      } else {
+        el.textContent = avatarInitials;
+        el.style.backgroundColor = getAvatarBgColor(user.name);
+      }
+    };
+
     // Sidebar Badge
-    const sidebarAvatar = document.getElementById('portalUserAvatar');
+    syncAvatarElement('portalUserAvatar');
     const sidebarName = document.getElementById('portalUserName');
     const sidebarRole = document.getElementById('portalUserRole');
-    if (sidebarAvatar) sidebarAvatar.textContent = avatarInitials;
     if (sidebarName) sidebarName.textContent = user.name;
     if (sidebarRole) sidebarRole.textContent = displayRole;
 
     // Mini Chat header
-    const miniChatAvatar = document.getElementById('miniChatAvatar');
+    syncAvatarElement('miniChatAvatar');
     const miniChatName = document.getElementById('miniChatName');
     const miniChatRole = document.getElementById('miniChatRole');
-    if (miniChatAvatar) miniChatAvatar.textContent = avatarInitials;
     if (miniChatName) miniChatName.textContent = user.name;
     if (miniChatRole) miniChatRole.textContent = displayRole;
 
     // Mini Users header
-    const miniUsersAvatar = document.getElementById('miniUsersAvatar');
+    syncAvatarElement('miniUsersAvatar');
     const miniUsersName = document.getElementById('miniUsersName');
     const miniUsersRole = document.getElementById('miniUsersRole');
-    if (miniUsersAvatar) miniUsersAvatar.textContent = avatarInitials;
     if (miniUsersName) miniUsersName.textContent = user.name;
     if (miniUsersRole) miniUsersRole.textContent = displayRole;
 
     // Mini Students header
-    const miniStudentsAvatar = document.getElementById('miniStudentsAvatar');
+    syncAvatarElement('miniStudentsAvatar');
     const miniStudentsName = document.getElementById('miniStudentsName');
     const miniStudentsRole = document.getElementById('miniStudentsRole');
-    if (miniStudentsAvatar) miniStudentsAvatar.textContent = avatarInitials;
     if (miniStudentsName) miniStudentsName.textContent = user.name;
     if (miniStudentsRole) miniStudentsRole.textContent = displayRole;
 
@@ -707,6 +722,7 @@ document.addEventListener('DOMContentLoaded', () => {
           messages.push({
             sender: `${data.senderName} (${data.senderRole})`,
             content: data.content,
+            image: data.image || null,
             time: timeStr
           });
         });
@@ -773,6 +789,94 @@ document.addEventListener('DOMContentLoaded', () => {
     const newMsgSendBtn = document.getElementById('btnSendChatMessage');
     newMsgSendBtn.addEventListener('click', handleSendMessage);
   }
+
+  // Image Sending Handler (With Canvas Downscale Compression to stay <1MB)
+  const btnTriggerImageUpload = document.getElementById('btnTriggerImageUpload');
+  const chatImageFileInput = document.getElementById('chatImageFileInput');
+
+  if (btnTriggerImageUpload && chatImageFileInput) {
+    btnTriggerImageUpload.replaceWith(btnTriggerImageUpload.cloneNode(true)); // Clean listeners
+    chatImageFileInput.replaceWith(chatImageFileInput.cloneNode(true)); // Clean listeners
+
+    const newBtnTrigger = document.getElementById('btnTriggerImageUpload');
+    const newFileInput = document.getElementById('chatImageFileInput');
+
+    newBtnTrigger.addEventListener('click', () => {
+      newFileInput.click();
+    });
+
+    newFileInput.addEventListener('change', async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      if (!file.type.startsWith('image/')) {
+        showToast("Vui lòng chỉ chọn tệp hình ảnh!", "error");
+        return;
+      }
+
+      showToast("Đang xử lý và gửi ảnh...", "info");
+
+      const reader = new FileReader();
+      reader.onload = function(event) {
+        const img = new Image();
+        img.onload = function() {
+          // Downscale using HTML5 canvas to keep size small (<100KB is best for Firestore Base64)
+          const maxDim = 400; // max width/height
+          let width = img.width;
+          let height = img.height;
+
+          if (width > maxDim || height > maxDim) {
+            if (width > height) {
+              height = Math.round((height * maxDim) / width);
+              width = maxDim;
+            } else {
+              width = Math.round((width * maxDim) / height);
+              height = maxDim;
+            }
+          }
+
+          const canvas = document.createElement('canvas');
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, width, height);
+
+          // Compress to JPEG with 0.6 quality
+          const compressedBase64 = canvas.toDataURL('image/jpeg', 0.6);
+
+          // Send as message to Firestore
+          sendImageMessage(compressedBase64);
+        };
+        img.src = event.target.result;
+      };
+      reader.readAsDataURL(file);
+
+      // Reset input
+      newFileInput.value = '';
+    });
+  }
+
+  const sendImageMessage = async (base64Data) => {
+    if (!currentUser) {
+      showToast("Vui lòng đăng nhập để gửi tin nhắn!", "error");
+      return;
+    }
+
+    try {
+      const roleLabel = currentUser.role === 'admin' ? 'quản trị viên' : 'nhân viên';
+      await db.collection("messages").add({
+        content: "",
+        image: base64Data,
+        senderName: currentUser.name,
+        senderRole: roleLabel,
+        senderEmail: currentUser.email,
+        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+      });
+    } catch (e) {
+      console.error("Failed to write image message:", e);
+      showToast("Lỗi gửi hình ảnh!", "error");
+    }
+  };
 
   /* ==========================================================================
      STUDENT MANAGEMENT MODULE (INTEGRATED WITH FIREBASE FIRESTORE)
@@ -1118,6 +1222,204 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Bind change events initially
   bindFilters();
+
+  // Excel CSV Exporter Handler
+  const handleExportExcel = () => {
+    if (students.length === 0) {
+      showToast("Không có dữ liệu học viên để xuất!", "warning");
+      return;
+    }
+
+    const searchInputEl = document.getElementById("studentSearchInput");
+    const countryFilterEl = document.getElementById("studentCountryFilter");
+    const statusFilterEl = document.getElementById("studentStatusFilter");
+    
+    const searchVal = searchInputEl ? searchInputEl.value.trim().toLowerCase() : "";
+    const countryVal = countryFilterEl ? countryFilterEl.value : "All";
+    const statusVal = statusFilterEl ? statusFilterEl.value : "All";
+
+    const filtered = students.filter((student) => {
+      const textMatch = !searchVal || 
+        (student.name && student.name.toLowerCase().includes(searchVal)) ||
+        (student.email && student.email.toLowerCase().includes(searchVal)) ||
+        (student.phone && student.phone.includes(searchVal)) ||
+        (student.code && student.code.toLowerCase().includes(searchVal));
+
+      const countryMatch = countryVal === "All" || student.country === countryVal;
+      const statusMatch = statusVal === "All" || student.status === statusVal;
+
+      return textMatch && countryMatch && statusMatch;
+    });
+
+    if (filtered.length === 0) {
+      showToast("Không có bản ghi nào phù hợp với bộ lọc hiện tại để xuất!", "warning");
+      return;
+    }
+
+    // CSV Generation with UTF-8 BOM
+    let csvContent = "MÃ HỌC VIÊN,HỌ VÀ TÊN,EMAIL,SỐ ĐIỆN THOẠI,QUỐC GIA ĐẾN,TRẠNG THÁI HỒ SƠ,GHI CHÚ\n";
+
+    filtered.forEach((s) => {
+      const notesClean = (s.notes || "").replace(/"/g, '""').replace(/\n/g, ' ');
+      csvContent += `"${s.code}","${s.name}","${s.email}","${s.phone}","${s.country}","${s.status}","${notesClean}"\n`;
+    });
+
+    // Create download anchor with UTF-8 BOM (0xEF, 0xBB, 0xBF)
+    const bom = new Uint8Array([0xEF, 0xBB, 0xBF]);
+    const blob = new Blob([bom, csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    
+    const link = document.createElement("a");
+    link.setAttribute("href", url);
+    link.setAttribute("download", `Danh_Sach_Hoc_Vien_ThinkEdu_${new Date().toLocaleDateString('vi-VN').replace(/\//g, '-')}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
+    showToast(`Đã xuất thành công ${filtered.length} hồ sơ học viên ra Excel CSV!`, "success");
+  };
+
+  const btnExportExcel = document.getElementById("btnExportExcel");
+  if (btnExportExcel) {
+    btnExportExcel.addEventListener("click", handleExportExcel);
+  }
+
+  // Profile Update Variables
+  let selectedProfileAvatarBase64 = null;
+
+  // Bind Open Profile Modal click
+  const btnOpenProfileModal = document.getElementById('btnOpenProfileModal');
+  const profileModal = document.getElementById('profileModal');
+  const btnCloseProfileModal = document.getElementById('btnCloseProfileModal');
+  const profileForm = document.getElementById('profileForm');
+  const profileAvatarPreview = document.getElementById('profileAvatarPreview');
+  const btnTriggerAvatarUpload = document.getElementById('btnTriggerAvatarUpload');
+  const profileAvatarFileInput = document.getElementById('profileAvatarFileInput');
+  const profileFullNameInput = document.getElementById('profileFullName');
+
+  if (btnOpenProfileModal && profileModal) {
+    btnOpenProfileModal.replaceWith(btnOpenProfileModal.cloneNode(true));
+    const newBtnOpen = document.getElementById('btnOpenProfileModal');
+
+    newBtnOpen.addEventListener('click', () => {
+      if (!currentUser) {
+        showToast("Vui lòng đăng nhập để thực hiện!", "error");
+        return;
+      }
+
+      profileFullNameInput.value = currentUser.name || "";
+      selectedProfileAvatarBase64 = currentUser.avatar || null;
+
+      // Update avatar preview modal
+      if (selectedProfileAvatarBase64) {
+        profileAvatarPreview.innerHTML = `<img src="${selectedProfileAvatarBase64}" style="width:100%; height:100%; object-fit:cover; border-radius:50%;">`;
+        profileAvatarPreview.style.backgroundColor = "transparent";
+      } else {
+        const initials = currentUser.name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+        profileAvatarPreview.textContent = initials;
+        profileAvatarPreview.style.backgroundColor = getAvatarBgColor(currentUser.name);
+      }
+
+      profileModal.style.display = 'flex';
+    });
+  }
+
+  // Close Profile Modal hooks
+  const closeProfileModal = () => { if (profileModal) profileModal.style.display = 'none'; };
+  if (btnCloseProfileModal) btnCloseProfileModal.addEventListener('click', closeProfileModal);
+  if (profileModal) {
+    profileModal.addEventListener('click', (e) => {
+      if (e.target === profileModal) closeProfileModal();
+    });
+  }
+
+  // Trigger avatar file input clicks
+  const triggerAvatarClick = () => { if (profileAvatarFileInput) profileAvatarFileInput.click(); };
+  if (btnTriggerAvatarUpload) btnTriggerAvatarUpload.addEventListener('click', triggerAvatarClick);
+  if (profileAvatarPreview) profileAvatarPreview.addEventListener('click', triggerAvatarClick);
+
+  // Handle avatar file selection and Canvas compression
+  if (profileAvatarFileInput) {
+    profileAvatarFileInput.addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      if (!file.type.startsWith('image/')) {
+        showToast("Vui lòng chỉ chọn tệp hình ảnh làm đại diện!", "error");
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = function(event) {
+        const img = new Image();
+        img.onload = function() {
+          // Downscale to exactly 80x80 pixels for ultra-light Base64 footprint
+          const dim = 80;
+          const canvas = document.createElement('canvas');
+          canvas.width = dim;
+          canvas.height = dim;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, dim, dim);
+
+          // Compress to JPEG with 0.8 quality
+          const compressedAvatar = canvas.toDataURL('image/jpeg', 0.8);
+          selectedProfileAvatarBase64 = compressedAvatar;
+
+          // Render preview
+          profileAvatarPreview.textContent = "";
+          profileAvatarPreview.innerHTML = `<img src="${compressedAvatar}" style="width:100%; height:100%; object-fit:cover; border-radius:50%;">`;
+          profileAvatarPreview.style.backgroundColor = "transparent";
+        };
+        img.src = event.target.result;
+      };
+      reader.readAsDataURL(file);
+    });
+  }
+
+  // Submit Profile Form and update in Firestore
+  if (profileForm) {
+    profileForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      const newName = profileFullNameInput.value.trim();
+      if (!newName) {
+        showToast("Vui lòng điền đầy đủ họ và tên của bạn!", "error");
+        return;
+      }
+
+      showToast("Đang cập nhật hồ sơ cá nhân...", "info");
+
+      try {
+        const uid = auth.currentUser.uid;
+        const updates = {
+          name: newName,
+          avatar: selectedProfileAvatarBase64 || null,
+          updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        };
+
+        // Write changes to Firestore user document
+        await db.collection("users").doc(uid).update(updates);
+
+        // Update local currentUser state instantly
+        currentUser.name = newName;
+        currentUser.avatar = selectedProfileAvatarBase64 || null;
+
+        // Force reload / re-sync UI details
+        syncUserInfoUI(currentUser);
+        closeProfileModal();
+        showToast("Hồ sơ cá nhân của bạn đã được cập nhật thành công!", "success");
+      } catch (err) {
+        console.error("Failed to update user profile:", err);
+        showToast("Lỗi cập nhật hồ sơ cá nhân!", "error");
+      }
+    });
+  }
+
+  // Bind dropdown logout click
+  const btnLogoutDropdown = document.getElementById('btnLogoutDropdown');
+  if (btnLogoutDropdown) {
+    btnLogoutDropdown.addEventListener('click', handlePortalLogout);
+  }
 
   // Startup and Reload Session Handler (Force signOut upon load/refresh)
   const checkPortalSession = () => {
