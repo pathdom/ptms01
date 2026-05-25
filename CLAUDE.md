@@ -58,7 +58,7 @@ Use Google Fonts to load a high-contrast editorial pair:
 
 ```text
 paoth/
-├── index.html                  # Main entrance (Landing page)
+├── index.html                  # Main entrance (Login Page & Admin Portal)
 ├── services.html               # Custom study abroad programs & services
 ├── destinations.html           # Country guides (US, UK, Australia, Canada, Europe)
 ├── about.html                  # Who we are (Mission, Team, Credentials)

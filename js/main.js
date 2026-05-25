@@ -787,7 +787,6 @@ document.addEventListener('DOMContentLoaded', () => {
         if (confirm(`Bạn có chắc chắn muốn xóa học viên ${student.name} (${student.id})?`)) {
           students = students.filter(s => s.id !== student.id);
           showToast(`Đã xóa học viên ${student.name} thành công!`, 'warning');
-          saveToCloud('student_profiles', students);
           updateDashboardStats();
           applyAllFilters();
         }
@@ -1022,7 +1021,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
       // Add to beginning of array
       students.unshift(newStudent);
-      saveToCloud('student_profiles', students);
 
       // Close Modal & toast success
       closeModal();
@@ -2569,7 +2567,6 @@ document.addEventListener('DOMContentLoaded', () => {
           let updatedUsers = JSON.parse(localStorage.getItem('thinkedu_users') || '[]');
           updatedUsers = updatedUsers.filter(u => u.username !== user.username);
           localStorage.setItem('thinkedu_users', JSON.stringify(updatedUsers));
-          saveToCloud('staff_users', updatedUsers);
           
           showToast(`Đã xóa tài khoản nhân viên ${user.name} thành công!`, "warning");
           renderStaffUsersList();
@@ -2614,7 +2611,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
       users.push(newUser);
       localStorage.setItem('thinkedu_users', JSON.stringify(users));
-      saveToCloud('staff_users', users);
 
       // Reset form & Toast
       createStaffUserForm.reset();
@@ -2644,269 +2640,5 @@ document.addEventListener('DOMContentLoaded', () => {
   };
   checkPortalSession();
 
-  // ==========================================
-  // CLOUD MULTI-DEVICE SYNC ENGINE (RESTFUL-API.DEV CLOUD STORAGE)
-  // ==========================================
-  let syncBucketId = localStorage.getItem('thinkedu_sync_bucket_id') || '';
-  if (syncBucketId === 'Chưa có mã' || syncBucketId.length !== 32) {
-    syncBucketId = '';
-    localStorage.removeItem('thinkedu_sync_bucket_id');
-  }
-
-  const saveToCloud = async (key, data) => {
-    // 1. Update the local copy first to make sure it's up to date
-    if (key === 'chat_threads') chatThreads = data;
-    else if (key === 'staff_users') localStorage.setItem('thinkedu_users', JSON.stringify(data));
-    else if (key === 'student_profiles') students = data;
-
-    if (!syncBucketId) return;
-    
-    try {
-      const users = JSON.parse(localStorage.getItem('thinkedu_users') || '[]');
-      const payload = {
-        name: "thinkedu_sync_data",
-        data: {
-          chat_threads: chatThreads,
-          staff_users: users,
-          student_profiles: students
-        }
-      };
-      
-      await fetch(`https://corsproxy.io/?url=https://api.restful-api.dev/objects/${syncBucketId}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      });
-    } catch (e) {
-      console.error(`Failed to save ${key} to cloud:`, e);
-    }
-  };
-
-  const readFromCloud = async (key) => {
-    if (!syncBucketId) return null;
-    try {
-      const response = await fetch(`https://corsproxy.io/?url=https://api.restful-api.dev/objects/${syncBucketId}`);
-      if (response.ok) {
-        const result = await response.json();
-        return result.data ? result.data[key] : null;
-      }
-    } catch (e) {
-      console.error(`Failed to read ${key} from cloud:`, e);
-    }
-    return null;
-  };
-
-  const saveAllToCloud = async () => {
-    if (!syncBucketId) return;
-    try {
-      const users = JSON.parse(localStorage.getItem('thinkedu_users') || '[]');
-      const payload = {
-        name: "thinkedu_sync_data",
-        data: {
-          chat_threads: chatThreads,
-          staff_users: users,
-          student_profiles: students
-        }
-      };
-      await fetch(`https://corsproxy.io/?url=https://api.restful-api.dev/objects/${syncBucketId}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      });
-    } catch (e) {
-      console.error("Failed to save all to cloud:", e);
-    }
-  };
-
-  const ensureSyncBucket = async () => {
-    if (!syncBucketId) {
-      try {
-        const users = JSON.parse(localStorage.getItem('thinkedu_users') || '[]');
-        const payload = {
-          name: "thinkedu_sync_data",
-          data: {
-            chat_threads: chatThreads,
-            staff_users: users,
-            student_profiles: students
-          }
-        };
-
-        const response = await fetch('https://corsproxy.io/?url=https://api.restful-api.dev/objects', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload)
-        });
-        
-        if (response.ok) {
-          const result = await response.json();
-          syncBucketId = result.id;
-          localStorage.setItem('thinkedu_sync_bucket_id', syncBucketId);
-          console.log("Created shared sync bucket:", syncBucketId);
-          if (txtCurrentSyncCode) txtCurrentSyncCode.value = syncBucketId;
-        }
-      } catch (e) {
-        console.error("Failed to create RESTful API object:", e);
-      }
-    }
-  };
-
-  const syncWithCloud = async () => {
-    if (!syncBucketId) return;
-    try {
-      const response = await fetch(`https://corsproxy.io/?url=https://api.restful-api.dev/objects/${syncBucketId}`);
-      if (!response.ok) {
-        if (response.status === 404) {
-          // Object might have expired or been deleted. Let's re-create it!
-          console.warn("Sync bucket not found on cloud, re-creating...");
-          syncBucketId = '';
-          localStorage.removeItem('thinkedu_sync_bucket_id');
-          await ensureSyncBucket();
-          showToast("Mã đồng bộ cũ đã hết hạn, hệ thống đã tự động tạo mã mới!", "warning");
-        }
-        return;
-      }
-
-      const result = await response.json();
-      const remoteData = result.data;
-      if (!remoteData) return;
-
-      // 1. Sync Chat Threads
-      const remoteChats = remoteData.chat_threads;
-      if (remoteChats && JSON.stringify(remoteChats) !== JSON.stringify(chatThreads)) {
-        chatThreads = remoteChats;
-        localStorage.setItem('thinkedu_chat_threads', JSON.stringify(chatThreads));
-        lastThreadsString = JSON.stringify(chatThreads);
-        
-        const chatDashboard = document.getElementById('chat-dashboard');
-        if (chatDashboard && chatDashboard.style.display === 'block') {
-          renderThreadList();
-          renderMessages(activeThreadId);
-        }
-      }
-
-      // 2. Sync Staff Users
-      const remoteUsers = remoteData.staff_users;
-      if (remoteUsers) {
-        const remoteString = JSON.stringify(remoteUsers);
-        const localUsersStr = localStorage.getItem('thinkedu_users');
-        if (remoteString !== localUsersStr) {
-          localStorage.setItem('thinkedu_users', remoteString);
-          
-          const usersDashboard = document.getElementById('users-dashboard');
-          if (usersDashboard && usersDashboard.style.display === 'block') {
-            renderStaffUsersList();
-          }
-        }
-      }
-
-      // 3. Sync Students CRM Database
-      const remoteStudents = remoteData.student_profiles;
-      if (remoteStudents && JSON.stringify(remoteStudents) !== JSON.stringify(students)) {
-        students = remoteStudents;
-        
-        const overviewDashboard = document.getElementById('overview-dashboard');
-        if (overviewDashboard && overviewDashboard.style.display === 'block') {
-          updateDashboardStats();
-          applyAllFilters();
-        }
-      }
-    } catch (e) {
-      console.error("Failed during sync with cloud:", e);
-    }
-  };
-
-  // 1. Sync Settings Modal Operations
-  const syncPortalModal = document.getElementById('syncPortalModal');
-  const btnShowSyncPortal = document.getElementById('btnShowSyncPortal');
-  const btnCloseSyncModal = document.getElementById('btnCloseSyncModal');
-  const btnCancelSync = document.getElementById('btnCancelSync');
-  const btnApplySyncCode = document.getElementById('btnApplySyncCode');
-  const btnCopySyncCode = document.getElementById('btnCopySyncCode');
-  const txtCurrentSyncCode = document.getElementById('txtCurrentSyncCode');
-  const txtNewSyncCode = document.getElementById('txtNewSyncCode');
-
-  if (btnShowSyncPortal && syncPortalModal) {
-    btnShowSyncPortal.addEventListener('click', async () => {
-      if (txtNewSyncCode) txtNewSyncCode.value = "";
-      syncPortalModal.style.display = 'flex';
-      document.body.style.overflow = 'hidden';
-
-      // Auto-retry generating bucket ID if it was missing/network error previously
-      if (!syncBucketId) {
-        if (txtCurrentSyncCode) txtCurrentSyncCode.value = "Đang khởi tạo mã...";
-        await ensureSyncBucket();
-      }
-      if (txtCurrentSyncCode) txtCurrentSyncCode.value = syncBucketId || "Lỗi mạng. Bấm lại nút Đồng bộ để thử lại!";
-    });
-  }
-
-  const closeSyncModal = () => {
-    if (syncPortalModal) {
-      syncPortalModal.style.display = 'none';
-      document.body.style.overflow = '';
-    }
-  };
-
-  if (btnCloseSyncModal) btnCloseSyncModal.addEventListener('click', closeSyncModal);
-  if (btnCancelSync) btnCancelSync.addEventListener('click', closeSyncModal);
-
-  if (syncPortalModal) {
-    syncPortalModal.addEventListener('click', (e) => {
-      if (e.target === syncPortalModal) closeSyncModal();
-    });
-  }
-
-  if (btnCopySyncCode && txtCurrentSyncCode) {
-    btnCopySyncCode.addEventListener('click', () => {
-      if (!syncBucketId) {
-        showToast("Chưa có mã đồng bộ để sao chép!", "warning");
-        return;
-      }
-      navigator.clipboard.writeText(txtCurrentSyncCode.value);
-      showToast("Đã sao chép mã đồng bộ!", "success");
-    });
-  }
-
-  if (btnApplySyncCode && txtNewSyncCode) {
-    btnApplySyncCode.addEventListener('click', async () => {
-      const newCode = txtNewSyncCode.value.trim();
-      if (!newCode) {
-        showToast("Vui lòng nhập mã đồng bộ!", "error");
-        return;
-      }
-
-      if (newCode.length !== 32) {
-        showToast("Mã đồng bộ không hợp lệ! Phải đúng định dạng 32 ký tự.", "error");
-        return;
-      }
-      
-      if (newCode === syncBucketId) {
-        showToast("Mã này trùng với mã hiện tại của bạn!", "warning");
-        return;
-      }
-
-      if (confirm("Kết nối với mã đồng bộ mới sẽ ghi đè dữ liệu cục bộ trên máy này bằng dữ liệu đám mây của máy kia. Bạn có đồng ý không?")) {
-        syncBucketId = newCode;
-        localStorage.setItem('thinkedu_sync_bucket_id', syncBucketId);
-        closeSyncModal();
-        showToast("Đang đồng bộ dữ liệu đám mây...", "info");
-        
-        await syncWithCloud();
-        showToast("Kết nối đồng bộ liên máy thành công!", "success");
-      }
-    });
-  }
-
-  // Startup Sync Sequence
-  const startupSync = async () => {
-    await ensureSyncBucket();
-    await syncWithCloud();
-  };
-  startupSync();
-
-  // Periodic Cloud sync every 2 seconds
-  setInterval(() => {
-    syncWithCloud();
-  }, 2000);
 });
 
