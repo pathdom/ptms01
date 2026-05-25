@@ -1297,32 +1297,31 @@ document.addEventListener('DOMContentLoaded', () => {
   const profileAvatarFileInput = document.getElementById('profileAvatarFileInput');
   const profileFullNameInput = document.getElementById('profileFullName');
 
-  if (btnOpenProfileModal && profileModal) {
-    btnOpenProfileModal.replaceWith(btnOpenProfileModal.cloneNode(true));
-    const newBtnOpen = document.getElementById('btnOpenProfileModal');
+  const openProfileModalFn = () => {
+    if (!currentUser) {
+      showToast("Vui lòng đăng nhập để thực hiện!", "error");
+      return;
+    }
 
-    newBtnOpen.addEventListener('click', () => {
-      if (!currentUser) {
-        showToast("Vui lòng đăng nhập để thực hiện!", "error");
-        return;
-      }
+    profileFullNameInput.value = currentUser.name || "";
+    selectedProfileAvatarBase64 = currentUser.avatar || null;
 
-      profileFullNameInput.value = currentUser.name || "";
-      selectedProfileAvatarBase64 = currentUser.avatar || null;
+    // Update avatar preview modal
+    if (selectedProfileAvatarBase64) {
+      profileAvatarPreview.innerHTML = `<img src="${selectedProfileAvatarBase64}" style="width:100%; height:100%; object-fit:cover; border-radius:50%;">`;
+      profileAvatarPreview.style.backgroundColor = "transparent";
+    } else {
+      const initials = currentUser.name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+      profileAvatarPreview.textContent = initials;
+      profileAvatarPreview.style.backgroundColor = getAvatarBgColor(currentUser.name);
+    }
 
-      // Update avatar preview modal
-      if (selectedProfileAvatarBase64) {
-        profileAvatarPreview.innerHTML = `<img src="${selectedProfileAvatarBase64}" style="width:100%; height:100%; object-fit:cover; border-radius:50%;">`;
-        profileAvatarPreview.style.backgroundColor = "transparent";
-      } else {
-        const initials = currentUser.name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
-        profileAvatarPreview.textContent = initials;
-        profileAvatarPreview.style.backgroundColor = getAvatarBgColor(currentUser.name);
-      }
+    profileModal.style.display = 'flex';
+  };
 
-      profileModal.style.display = 'flex';
-    });
-  }
+  document.querySelectorAll('#btnOpenProfileModal, .btn-open-profile-from-topbar').forEach(btn => {
+    btn.addEventListener('click', openProfileModalFn);
+  });
 
   // Close Profile Modal hooks
   const closeProfileModal = () => { if (profileModal) profileModal.style.display = 'none'; };
@@ -1416,10 +1415,9 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // Bind dropdown logout click
-  const btnLogoutDropdown = document.getElementById('btnLogoutDropdown');
-  if (btnLogoutDropdown) {
-    btnLogoutDropdown.addEventListener('click', handlePortalLogout);
-  }
+  document.querySelectorAll('.btn-logout-app-portal').forEach(btn => {
+    btn.addEventListener('click', handlePortalLogout);
+  });
 
   // Startup and Reload Session Handler (Force signOut upon load/refresh)
   const checkPortalSession = () => {

@@ -1364,3 +1364,23 @@ button {
     padding: 0 1.5rem;
   }
 }
+
+/* Topbar User Profile Hover Dropdown */
+.topbar-user-wrapper:hover .topbar-user-dropdown {
+  display: block !important;
+  animation: slideUp 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.topbar-user-wrapper:hover .user-profile-badge-inline {
+  background: var(--accent-light);
+}
+
+.topbar-user-dropdown .footer-btn:hover {
+  background: var(--bg-primary) !important;
+  color: var(--text-main) !important;
+}
+
+.topbar-user-dropdown .footer-btn.btn-logout-app-portal:hover {
+  background: rgba(239, 68, 68, 0.05) !important;
+  color: #EF4444 !important;
+}
