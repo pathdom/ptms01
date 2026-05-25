@@ -1407,109 +1407,21 @@ document.addEventListener('DOMContentLoaded', () => {
   };
 
   /* ==========================================================================
-     TELEGRAM-STYLE CHAT SYSTEM LOGIC & DATA
+     TELEGRAM-STYLE CHAT SYSTEM LOGIC & DATA (TRANSITIONED TO FIREBASE)
      ========================================================================== */
-  // Helper to load/save chat threads in localStorage
-  const initChatThreads = () => {
-    let threads = localStorage.getItem('thinkedu_chat_threads');
-    if (!threads) {
-      const defaultThreads = [
-        {
-          id: "group-global",
-          name: "Group Chat Tổng Hợp ThinkEdu",
-          type: "group",
-          avatarInitials: "TH",
-          avatarBg: "#BC9E6C",
-          membersCount: 5,
-          messages: [
-            { sender: "Dương Đức Mạnh", content: "Chào toàn thể anh chị em nhân viên ThinkEdu. Đây là kênh chat tổng hợp chính thức của chúng ta.", time: "09:00" },
-            { sender: "Nguyễn Thảo Chi", content: "Dạ em chào anh Mạnh và mọi người ạ. Chúc cả nhà ngày mới làm việc hiệu quả!", time: "09:05" },
-            { sender: "Trần Minh Quân", content: "Chào anh Mạnh, chào mọi người. Hôm nay phòng Đào tạo có lịch test đầu vào cho 5 bạn học viên mới nhé.", time: "09:10" }
-          ]
-        },
-        {
-          id: "group-1",
-          name: "Ban Điều Hành ThinkEdu",
-          type: "group",
-          avatarInitials: "BĐ",
-          avatarBg: "#0B2545",
-          membersCount: 3,
-          messages: [
-            { sender: "Nguyễn Thảo Chi", content: "Dạ em chào anh Mạnh và anh Quân. Danh sách 20 học viên nam đan xen đã sẵn sàng rồi ạ.", time: "16:20" },
-            { sender: "Trần Minh Quân", content: "Tuyệt vời Thảo Chi. Tiến độ phỏng vấn các bạn chờ PV thế nào rồi em?", time: "16:22" },
-            { sender: "Nguyễn Thảo Chi", content: "Các hồ sơ phỏng vấn đợt này đã chuẩn bị dịch thuật công chứng xong xuôi. Chiều nay em gửi đối tác Nhật duyệt ạ.", time: "16:25" }
-          ]
-        },
-        {
-          id: "group-2",
-          name: "Tư Vấn & Xử Lý Hồ Sơ",
-          type: "group",
-          avatarInitials: "HS",
-          avatarBg: "#BC9E6C",
-          membersCount: 4,
-          messages: [
-            { sender: "Lê Thu Trang", content: "Học viên mới HV-2025-071 vừa nộp hồ sơ Đại học Ngoại Thương, GPA 3.65 ạ.", time: "15:10" },
-            { sender: "Nguyễn Thảo Chi", content: "Học hồ sơ GPA tốt quá, để em liên hệ tư vấn học bổng ThinkEdu Merit 50%.", time: "15:15" }
-          ]
-        },
-        {
-          id: "dm-1",
-          name: "Nguyễn Thảo Chi",
-          type: "dm",
-          avatarInitials: "TC",
-          avatarBg: "#4A90E2",
-          status: "online",
-          messages: [
-            { sender: "Nguyễn Thảo Chi", content: "Chào anh Mạnh, anh duyệt hộ em trường hợp học viên Lý Bảo Ngọc xin nộp muộn học phí đợt 2 với ạ.", time: "10:30" },
-            { sender: "Dương Đức Mạnh", content: "Chào Chi, Ngọc xin gia hạn đến bao giờ em?", time: "10:35" },
-            { sender: "Nguyễn Thảo Chi", content: "Dạ bạn ấy xin gia hạn đến ngày 10/06 vì gia đình đang chờ rút sổ tiết kiệm ạ.", time: "10:36" },
-            { sender: "Dương Đức Mạnh", content: "Đồng ý nhé em, note lại vào cột tiến trình hồ sơ của Ngọc giúp anh.", time: "10:40" },
-            { sender: "Nguyễn Thảo Chi", content: "Dạ vâng em cảm ơn anh Mạnh nhiều ạ!", time: "10:42" }
-          ]
-        },
-        {
-          id: "dm-2",
-          name: "Trần Minh Quân",
-          type: "dm",
-          avatarInitials: "MQ",
-          avatarBg: "#50E3C2",
-          status: "offline",
-          messages: [
-            { sender: "Trần Minh Quân", content: "Anh Mạnh ơi, lịch khai giảng lớp Tiếng Nhật N4 ca tối khóa mới chốt ngày 01/06 đúng không anh?", time: "Hôm qua" },
-            { sender: "Dương Đức Mạnh", content: "Đúng rồi Quân, chốt lịch đó để chuẩn bị tài liệu nhé.", time: "Hôm qua" }
-          ]
-        }
-      ];
-      localStorage.setItem('thinkedu_chat_threads', JSON.stringify(defaultThreads));
-      return defaultThreads;
+  
+  // Single Shared group chat thread
+  let chatThreads = [
+    {
+      id: "group-global",
+      name: "Group Chat Tổng Hợp ThinkEdu",
+      type: "group",
+      avatarInitials: "GT",
+      avatarBg: "var(--accent)",
+      membersCount: "Tất cả",
+      messages: []
     }
-    return JSON.parse(threads);
-  };
-
-  let chatThreads = initChatThreads();
-  let lastThreadsString = JSON.stringify(chatThreads);
-
-  const saveChatThreads = () => {
-    const stringified = JSON.stringify(chatThreads);
-    localStorage.setItem('thinkedu_chat_threads', stringified);
-    lastThreadsString = stringified;
-  };
-
-  // Cross-tab real-time sync polling loop
-  setInterval(() => {
-    const currentStored = localStorage.getItem('thinkedu_chat_threads');
-    if (currentStored && currentStored !== lastThreadsString) {
-      lastThreadsString = currentStored;
-      chatThreads = JSON.parse(currentStored);
-      
-      // If we are currently showing the chat dashboard, update the view in real-time!
-      const chatDashboard = document.getElementById('chat-dashboard');
-      if (chatDashboard && chatDashboard.style.display === 'block') {
-        renderThreadList();
-        renderMessages(activeThreadId);
-      }
-    }
-  }, 1000);
+  ];
 
   let activeThreadId = "group-global";
   let chatSearchQuery = "";
@@ -2251,38 +2163,48 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   /* ==========================================================================
-     ADMIN PORTAL - AUTH, SIDEBAR ROUTING, STATS & USER CRUD
+     ADMIN PORTAL - FIREBASE INTEGRATION (AUTH, REAL-TIME CHAT, STATS & USER CRUD)
      ========================================================================== */
-  
-  // 1. Initialize Users in localStorage if not exists
-  const initPortalUsers = () => {
-    let users = localStorage.getItem('thinkedu_users');
-    let parsedUsers = [];
-    if (users) {
-      try {
-        parsedUsers = JSON.parse(users);
-      } catch (e) {
-        parsedUsers = [];
-      }
-    }
-    
-    // Ensure manhdd is always registered
-    const adminExists = Array.isArray(parsedUsers) && parsedUsers.some(u => u && u.username && u.username.toLowerCase() === 'manhdd');
-    if (!adminExists) {
-      if (!Array.isArray(parsedUsers)) parsedUsers = [];
-      parsedUsers.push({
-        name: "Dương Đức Mạnh",
-        username: "manhdd",
-        password: "Admin123@",
-        role: "quản trị viên",
-        createdAt: new Date().toLocaleDateString('vi-VN')
+
+  // 1. Initialize Firebase
+  const firebaseConfig = {
+    apiKey: "AIzaSyC3wwnvpQwHX6UZcgXIShan5qJ7waR1Ccs",
+    authDomain: "box-chat-noi-bo.firebaseapp.com",
+    projectId: "box-chat-noi-bo",
+    storageBucket: "box-chat-noi-bo.firebasestorage.app",
+    messagingSenderId: "867982221264",
+    appId: "1:867982221264:web:63f22689b875e699fbe3d5",
+    measurementId: "G-P6QLZD5P4Y"
+  };
+
+  firebase.initializeApp(firebaseConfig);
+  const auth = firebase.auth();
+  const db = firebase.firestore();
+
+  let currentUser = null;
+  let chatSubscription = null;
+
+  // Attempt to automatically pre-create/register the default admin account on startup
+  const setupDefaultAdmin = async () => {
+    try {
+      const userCredential = await auth.createUserWithEmailAndPassword("admin@domain.com", "Admin123456@");
+      const uid = userCredential.user.uid;
+      await db.collection("users").doc(uid).set({
+        name: "Admin ThinkEdu",
+        email: "admin@domain.com",
+        role: "admin",
+        createdAt: firebase.firestore.FieldValue.serverTimestamp()
       });
-      localStorage.setItem('thinkedu_users', JSON.stringify(parsedUsers));
+      console.log("Default admin account successfully initialized.");
+      await auth.signOut(); // Ensure we don't remain logged in as admin automatically
+    } catch (error) {
+      // If user already exists (auth/email-already-in-use), ignore error silently
+      console.log("Admin account setup complete (already exists or initial try done).");
     }
   };
-  initPortalUsers();
+  setupDefaultAdmin();
 
-  // 2. Auth Elements
+  // 2. Auth & UI Elements
   const loginContainer = document.getElementById('login-container');
   const appRoot = document.getElementById('app-root');
   const portalLoginForm = document.getElementById('portalLoginForm');
@@ -2301,14 +2223,15 @@ document.addEventListener('DOMContentLoaded', () => {
   // Sync Logged-In User Information across Sidebar & Mini-headers
   const syncUserInfoUI = (user) => {
     const avatarInitials = user.name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
-    
+    const displayRole = user.role === 'admin' ? 'Quản trị viên' : 'Nhân viên';
+
     // Sidebar Badge
     const sidebarAvatar = document.getElementById('portalUserAvatar');
     const sidebarName = document.getElementById('portalUserName');
     const sidebarRole = document.getElementById('portalUserRole');
     if (sidebarAvatar) sidebarAvatar.textContent = avatarInitials;
     if (sidebarName) sidebarName.textContent = user.name;
-    if (sidebarRole) sidebarRole.textContent = user.role.charAt(0).toUpperCase() + user.role.slice(1);
+    if (sidebarRole) sidebarRole.textContent = displayRole;
 
     // Mini CRM header
     const miniAvatar = document.getElementById('miniUserAvatar');
@@ -2316,7 +2239,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const miniRole = document.getElementById('miniUserRole');
     if (miniAvatar) miniAvatar.textContent = avatarInitials;
     if (miniName) miniName.textContent = user.name;
-    if (miniRole) miniRole.textContent = user.role.charAt(0).toUpperCase() + user.role.slice(1);
+    if (miniRole) miniRole.textContent = displayRole;
 
     // Mini Chat header
     const miniChatAvatar = document.getElementById('miniChatAvatar');
@@ -2324,7 +2247,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const miniChatRole = document.getElementById('miniChatRole');
     if (miniChatAvatar) miniChatAvatar.textContent = avatarInitials;
     if (miniChatName) miniChatName.textContent = user.name;
-    if (miniChatRole) miniChatRole.textContent = user.role.charAt(0).toUpperCase() + user.role.slice(1);
+    if (miniChatRole) miniChatRole.textContent = displayRole;
 
     // Mini Stats header
     const miniStatsAvatar = document.getElementById('miniStatsAvatar');
@@ -2332,7 +2255,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const miniStatsRole = document.getElementById('miniStatsRole');
     if (miniStatsAvatar) miniStatsAvatar.textContent = avatarInitials;
     if (miniStatsName) miniStatsName.textContent = user.name;
-    if (miniStatsRole) miniStatsRole.textContent = user.role.charAt(0).toUpperCase() + user.role.slice(1);
+    if (miniStatsRole) miniStatsRole.textContent = displayRole;
 
     // Mini Users header
     const miniUsersAvatar = document.getElementById('miniUsersAvatar');
@@ -2340,12 +2263,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const miniUsersRole = document.getElementById('miniUsersRole');
     if (miniUsersAvatar) miniUsersAvatar.textContent = avatarInitials;
     if (miniUsersName) miniUsersName.textContent = user.name;
-    if (miniUsersRole) miniUsersRole.textContent = user.role.charAt(0).toUpperCase() + user.role.slice(1);
+    if (miniUsersRole) miniUsersRole.textContent = displayRole;
 
-    // Role-based Access Controls
+    // Role-based Access Controls (Admin Only "Tạo tài khoản NV")
     const menuItemCreateUsers = document.getElementById('menuItemCreateUsers');
     if (menuItemCreateUsers) {
-      if (user.role === 'quản trị viên') {
+      if (user.role === 'admin') {
         menuItemCreateUsers.style.display = 'flex';
       } else {
         menuItemCreateUsers.style.display = 'none';
@@ -2353,26 +2276,14 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   };
 
-  // Perform Login action
-  const handlePortalLogin = (username, password) => {
-    const users = JSON.parse(localStorage.getItem('thinkedu_users') || '[]');
-    const matchedUser = users.find(u => u.username.toLowerCase() === username.toLowerCase().trim() && u.password === password);
-    
-    if (matchedUser) {
-      // Store session
-      localStorage.setItem('thinkedu_session', JSON.stringify(matchedUser));
-      
-      // Update UI
-      syncUserInfoUI(matchedUser);
-      if (loginContainer) loginContainer.style.display = 'none';
-      if (appRoot) appRoot.style.display = 'flex';
-      
-      showToast(`Chào mừng ${matchedUser.name} đã đăng nhập thành công!`, "success");
-      
-      // Load Default view: CRM list
-      switchPortalView('overview-dashboard');
-    } else {
-      showToast("Tên tài khoản hoặc mật khẩu không chính xác!", "error");
+  // Perform Firebase Auth Login action
+  const handlePortalLogin = async (email, password) => {
+    try {
+      await auth.signInWithEmailAndPassword(email, password);
+      showToast("Đăng nhập thành công!", "success");
+    } catch (error) {
+      console.error("Login failed:", error);
+      showToast("Tài khoản hoặc mật khẩu không chính xác!", "error");
     }
   };
 
@@ -2380,13 +2291,11 @@ document.addEventListener('DOMContentLoaded', () => {
   if (portalLoginForm) {
     portalLoginForm.addEventListener('submit', (e) => {
       e.preventDefault();
-      const usernameVal = document.getElementById('loginUsername').value;
+      const emailVal = document.getElementById('loginUsername').value.trim();
       const passwordVal = document.getElementById('loginPassword').value;
-      handlePortalLogin(usernameVal, passwordVal);
+      handlePortalLogin(emailVal, passwordVal);
     });
   }
-
-
 
   // 3. Sidebar View Switcher Logic
   const switchPortalView = (targetViewId) => {
@@ -2442,12 +2351,18 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // Logout actions
-  const handlePortalLogout = () => {
-    localStorage.removeItem('thinkedu_session');
-    if (portalLoginForm) portalLoginForm.reset();
-    if (loginContainer) loginContainer.style.display = 'flex';
-    if (appRoot) appRoot.style.display = 'none';
-    showToast("Bạn đã đăng xuất tài khoản thành công!", "info");
+  const handlePortalLogout = async () => {
+    try {
+      if (chatSubscription) {
+        chatSubscription(); // Unsubscribe chat
+        chatSubscription = null;
+      }
+      await auth.signOut();
+      if (portalLoginForm) portalLoginForm.reset();
+      showToast("Bạn đã đăng xuất tài khoản thành công!", "info");
+    } catch (e) {
+      console.error("Logout failed:", e);
+    }
   };
 
   const btnLogoutPortal = document.getElementById('btnLogoutPortal');
@@ -2525,109 +2440,286 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   };
 
-  // 5. Staff User management Module (Admin Only)
-  const renderStaffUsersList = () => {
+  // 5. Staff User management Module (Admin Only) - Loaded from Firestore
+  const renderStaffUsersList = async () => {
     const tableBody = document.getElementById('staffUsersTableBody');
     if (!tableBody) return;
     tableBody.innerHTML = '';
 
-    const users = JSON.parse(localStorage.getItem('thinkedu_users') || '[]');
-    
-    // Render each staff member (except default admin to prevent deletion)
-    const staffMembers = users.filter(u => u.username !== 'manhdd');
-
-    if (staffMembers.length === 0) {
-      tableBody.innerHTML = `
-        <tr>
-          <td colspan="5" style="text-align:center; padding: 2rem; color:var(--text-muted); font-size:0.85rem;">
-            Chưa có tài khoản nhân viên nào được tạo.
-          </td>
-        </tr>
-      `;
-      return;
-    }
-
-    staffMembers.forEach(user => {
-      const tr = document.createElement('tr');
-      tr.innerHTML = `
-        <td><strong>${user.name}</strong><br><span style="font-size:0.7rem; color:var(--text-muted);">Tạo ngày: ${user.createdAt}</span></td>
-        <td><span class="font-mono" style="font-weight:500;">${user.username}</span></td>
-        <td><span class="font-mono" style="color:var(--accent); font-weight:500;">${user.password}</span></td>
-        <td><span class="crm-badge badge-danghoc">Nhân viên</span></td>
-        <td style="text-align: center;">
-          <button class="action-icon-btn btn-delete-staff" data-username="${user.username}" title="Xóa tài khoản" style="color:#EF4444; background:none; border:none; cursor:pointer; padding:6px; border-radius:50%;">
-            <svg viewBox="0 0 24 24" style="width: 18px; height: 18px; fill: currentColor;"><path d="M19,4H15.5L14.5,3H9.5L8.5,4H5V6H19M6,19A2,2 0 0,0 8,21H16A2,2 0 0,0 18,19V7H6V19Z"/></svg>
-          </button>
-        </td>
-      `;
-
-      // Connect delete user click hook
-      tr.querySelector('.btn-delete-staff').addEventListener('click', () => {
-        if (confirm(`Bạn có chắc chắn muốn xóa tài khoản nhân viên ${user.name} (${user.username})?`)) {
-          let updatedUsers = JSON.parse(localStorage.getItem('thinkedu_users') || '[]');
-          updatedUsers = updatedUsers.filter(u => u.username !== user.username);
-          localStorage.setItem('thinkedu_users', JSON.stringify(updatedUsers));
-          
-          showToast(`Đã xóa tài khoản nhân viên ${user.name} thành công!`, "warning");
-          renderStaffUsersList();
+    try {
+      const snapshot = await db.collection("users").orderBy("createdAt", "desc").get();
+      const staffMembers = [];
+      snapshot.forEach(doc => {
+        const user = doc.data();
+        user.uid = doc.id;
+        // Do not list default admin in user creation list to avoid accidental self-deletion
+        if (user.email !== 'admin@domain.com') {
+          staffMembers.push(user);
         }
       });
 
-      tableBody.appendChild(tr);
-    });
+      if (staffMembers.length === 0) {
+        tableBody.innerHTML = `
+          <tr>
+            <td colspan="5" style="text-align:center; padding: 2rem; color:var(--text-muted); font-size:0.85rem;">
+              Chưa có tài khoản nhân viên nào được tạo.
+            </td>
+          </tr>
+        `;
+        return;
+      }
+
+      staffMembers.forEach(user => {
+        const tr = document.createElement('tr');
+        let dateString = "Chưa rõ";
+        if (user.createdAt) {
+          try {
+            dateString = user.createdAt.toDate().toLocaleDateString('vi-VN');
+          } catch(e) {}
+        }
+        
+        tr.innerHTML = `
+          <td><strong>${user.name}</strong><br><span style="font-size:0.7rem; color:var(--text-muted);">Tạo ngày: ${dateString}</span></td>
+          <td><span class="font-mono" style="font-weight:500;">${user.email}</span></td>
+          <td><span class="font-mono" style="color:var(--text-muted); font-weight:500;">********</span></td>
+          <td><span class="crm-badge badge-danghoc">Nhân viên</span></td>
+          <td style="text-align: center;">
+            <button class="action-icon-btn btn-delete-staff" data-uid="${user.uid}" title="Xóa tài khoản" style="color:#EF4444; background:none; border:none; cursor:pointer; padding:6px; border-radius:50%;">
+              <svg viewBox="0 0 24 24" style="width: 18px; height: 18px; fill: currentColor;"><path d="M19,4H15.5L14.5,3H9.5L8.5,4H5V6H19M6,19A2,2 0 0,0 8,21H16A2,2 0 0,0 18,19V7H6V19Z"/></svg>
+            </button>
+          </td>
+        `;
+
+        // Connect delete user click hook (deletes user document from Firestore)
+        tr.querySelector('.btn-delete-staff').addEventListener('click', async () => {
+          if (confirm(`Bạn có chắc chắn muốn xóa tài khoản nhân viên ${user.name} (${user.email})?`)) {
+            try {
+              await db.collection("users").doc(user.uid).delete();
+              showToast(`Đã xóa tài khoản nhân viên ${user.name} thành công!`, "warning");
+              renderStaffUsersList();
+            } catch (err) {
+              console.error("Failed to delete staff:", err);
+              showToast("Lỗi khi xóa tài khoản nhân viên!", "error");
+            }
+          }
+        });
+
+        tableBody.appendChild(tr);
+      });
+    } catch (e) {
+      console.error("Failed to load staff list:", e);
+    }
   };
 
-  // Form submission to Register new Staff members
+  // Secondary Firebase instance to create new staff users without logging out current Admin
+  const handleCreateStaffUser = async (email, password, name) => {
+    const secondaryAppName = "secondary_" + Math.random().toString(36).substring(7);
+    const secondaryApp = firebase.initializeApp(firebaseConfig, secondaryAppName);
+    const secondaryAuth = secondaryApp.auth();
+
+    try {
+      // 1. Create user in Firebase Authentication
+      const userCredential = await secondaryAuth.createUserWithEmailAndPassword(email, password);
+      const newUid = userCredential.user.uid;
+
+      // 2. Write role and data to Firestore users collection
+      await db.collection("users").doc(newUid).set({
+        name: name,
+        email: email,
+        role: "staff",
+        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+      });
+
+      showToast(`Đã tạo tài khoản nhân viên cho ${name} thành công!`, "success");
+      
+      // 3. Log out secondary instance and delete app context
+      await secondaryAuth.signOut();
+      await secondaryApp.delete();
+
+      // 4. Reset create user form & reload list
+      const createForm = document.getElementById('createStaffUserForm');
+      if (createForm) createForm.reset();
+      renderStaffUsersList();
+    } catch (error) {
+      console.error("Error creating secondary user:", error);
+      showToast("Lỗi tạo tài khoản: " + error.message, "error");
+      
+      // Guarantee clean up on exception
+      try {
+        await secondaryAuth.signOut();
+        await secondaryApp.delete();
+      } catch (e) {}
+    }
+  };
+
+  // Bind Submit Create Staff User Form
   const createStaffUserForm = document.getElementById('createStaffUserForm');
   if (createStaffUserForm) {
     createStaffUserForm.addEventListener('submit', (e) => {
       e.preventDefault();
       
       const newName = document.getElementById('newStaffName').value.trim();
-      const newUsername = document.getElementById('newStaffUsername').value.trim().toLowerCase();
+      const newEmail = document.getElementById('newStaffEmail').value.trim().toLowerCase();
       const newPassword = document.getElementById('newStaffPassword').value;
 
-      if (!newName || !newUsername || !newPassword) {
+      if (!newName || !newEmail || !newPassword) {
         showToast("Vui lòng điền đầy đủ các thông tin!", "error");
         return;
       }
 
-      let users = JSON.parse(localStorage.getItem('thinkedu_users') || '[]');
-      
-      // Check duplicate usernames
-      if (users.some(u => u.username.toLowerCase() === newUsername)) {
-        showToast(`Tài khoản username '${newUsername}' đã tồn tại! Vui lòng chọn tài khoản khác.`, "error");
+      if (newPassword.length < 6) {
+        showToast("Mật khẩu phải tối thiểu 6 ký tự!", "error");
         return;
       }
 
-      // Add user record
-      const newUser = {
-        name: newName,
-        username: newUsername,
-        password: newPassword,
-        role: "nhân viên",
-        createdAt: new Date().toLocaleDateString('vi-VN')
-      };
-
-      users.push(newUser);
-      localStorage.setItem('thinkedu_users', JSON.stringify(users));
-
-      // Reset form & Toast
-      createStaffUserForm.reset();
-      showToast(`Đã tạo tài khoản nhân viên cho ${newName} thành công!`, "success");
-      
-      // Refresh UI list
-      renderStaffUsersList();
+      handleCreateStaffUser(newEmail, newPassword, newName);
     });
   }
 
-  // Check existing session on load (always clear session on startup/reload to force login)
-  const checkPortalSession = () => {
-    localStorage.removeItem('thinkedu_session');
+  // Real-time Chat Subscription Handler
+  const subscribeToChatMessages = () => {
+    if (chatSubscription) chatSubscription(); // Cancel active observer if any
     
-    if (!loginContainer) return;
-    loginContainer.style.display = 'flex';
-    appRoot.style.display = 'none';
+    chatSubscription = db.collection("messages")
+      .orderBy("createdAt", "asc")
+      .limitToLast(100)
+      .onSnapshot((snapshot) => {
+        const messages = [];
+        snapshot.forEach((doc) => {
+          const data = doc.data();
+          let timeStr = "";
+          if (data.createdAt) {
+            try {
+              const date = data.createdAt.toDate();
+              timeStr = `${pad(date.getHours(), 2)}:${pad(date.getMinutes(), 2)}`;
+            } catch (e) {
+              const now = new Date();
+              timeStr = `${pad(now.getHours(), 2)}:${pad(now.getMinutes(), 2)}`;
+            }
+          } else {
+            const now = new Date();
+            timeStr = `${pad(now.getHours(), 2)}:${pad(now.getMinutes(), 2)}`;
+          }
+
+          messages.push({
+            sender: `${data.senderName} (${data.senderRole})`,
+            content: data.content,
+            time: timeStr
+          });
+        });
+
+        // Set local thread messages to Firestore real-time snapshot messages
+        chatThreads[0].messages = messages;
+
+        // Render Chat views
+        renderThreadList();
+        const chatDashboard = document.getElementById('chat-dashboard');
+        if (chatDashboard && chatDashboard.style.display === 'block') {
+          renderMessages(activeThreadId);
+        }
+      }, (error) => {
+        console.error("Real-time messages observer failure:", error);
+      });
+  };
+
+  // Send message hook (redirected to Firestore messages collection write)
+  const handleSendMessage = async () => {
+    const input = document.getElementById('chatMessageInput');
+    if (!input) return;
+    const content = input.value.trim();
+    if (!content) return;
+
+    if (!currentUser) {
+      showToast("Vui lòng đăng nhập để gửi tin nhắn!", "error");
+      return;
+    }
+
+    try {
+      input.value = ''; // Instantly clear input
+      
+      const roleLabel = currentUser.role === 'admin' ? 'quản trị viên' : 'nhân viên';
+      await db.collection("messages").add({
+        content: content,
+        senderName: currentUser.name,
+        senderRole: roleLabel,
+        senderEmail: currentUser.email,
+        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+      });
+    } catch (e) {
+      console.error("Error writing message to Firestore:", e);
+      showToast("Lỗi gửi tin nhắn!", "error");
+    }
+  };
+
+  // Rebind the handleSendMessage handler to send message events
+  const msgInput = document.getElementById('chatMessageInput');
+  const msgSendBtn = document.getElementById('btnSendChatMessage');
+
+  if (msgInput) {
+    msgInput.replaceWith(msgInput.cloneNode(true)); // Strip existing listeners
+    const newMsgInput = document.getElementById('chatMessageInput');
+    newMsgInput.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') {
+        handleSendMessage();
+      }
+    });
+  }
+
+  if (msgSendBtn) {
+    msgSendBtn.replaceWith(msgSendBtn.cloneNode(true)); // Strip existing listeners
+    const newMsgSendBtn = document.getElementById('btnSendChatMessage');
+    newMsgSendBtn.addEventListener('click', handleSendMessage);
+  }
+
+  // Startup and Reload Session Handler (Force signOut upon load/refresh)
+  const checkPortalSession = () => {
+    // 1. Force log out on reload/startup to respect the "reload triggers logout" requirement
+    auth.signOut();
+
+    // 2. Setup Auth state changed listener
+    auth.onAuthStateChanged(async (user) => {
+      if (user) {
+        try {
+          const doc = await db.collection("users").doc(user.uid).get();
+          if (doc.exists) {
+            currentUser = doc.data();
+          } else {
+            // Fallback default admin profile in case of delay
+            currentUser = {
+              name: "Admin ThinkEdu",
+              email: user.email,
+              role: user.email === 'admin@domain.com' ? 'admin' : 'staff'
+            };
+          }
+
+          // Sync credentials to UI headers
+          syncUserInfoUI(currentUser);
+
+          // Show Main App Root, hide Login Panel
+          if (loginContainer) loginContainer.style.display = 'none';
+          if (appRoot) appRoot.style.display = 'flex';
+
+          // Subscribe to real-time chat updates
+          subscribeToChatMessages();
+
+          // Navigate to overview CRM dashboard by default
+          switchPortalView('overview-dashboard');
+        } catch (e) {
+          console.error("Error setting up logged in user session:", e);
+          showToast("Lỗi đồng bộ dữ liệu người dùng!", "error");
+        }
+      } else {
+        currentUser = null;
+        if (chatSubscription) {
+          chatSubscription();
+          chatSubscription = null;
+        }
+
+        // Show Login Panel, hide App Workspace
+        if (loginContainer) loginContainer.style.display = 'flex';
+        if (appRoot) appRoot.style.display = 'none';
+      }
+    });
   };
   checkPortalSession();
 

@@ -9,6 +9,11 @@
 
   <!-- CSS Stylesheet -->
   <link rel="stylesheet" href="css/main.css">
+
+  <!-- Firebase Compat SDK -->
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
 </head>
 
 <body class="admin-portal-body">
@@ -34,12 +39,12 @@
 
       <form id="portalLoginForm">
         <div class="form-group-login">
-          <label for="loginUsername">Tên tài khoản</label>
+          <label for="loginUsername">Địa chỉ Email</label>
           <div class="input-wrapper">
             <svg class="input-icon" viewBox="0 0 24 24">
-              <path d="M12,4A4,4 0 0,1 16,8A4,4 0 0,1 12,12A4,4 0 0,1 8,8A4,4 0 0,1 12,4M12,14C16.42,14 20,15.79 20,18V20H4V18C4,15.79 7.58,14 12,14Z"/>
+              <path d="M22 6C22 4.9 21.1 4 20 4H4C2.9 4 2 4.9 2 6V18C2 19.1 2.9 20 4 20H20C21.1 20 22 19.1 22 18V6M20 6L12 11L4 6H20M20 18H4V8L12 13L20 8V18Z"/>
             </svg>
-            <input type="text" id="loginUsername" placeholder="Nhập tài khoản (ví dụ: manhdd)" required>
+            <input type="email" id="loginUsername" placeholder="Nhập email (ví dụ: admin@domain.com)" required>
           </div>
         </div>
 
@@ -388,7 +393,7 @@
                 <input type="text" id="chatSearchInput" placeholder="Tìm kiếm liên hệ, nhóm...">
               </div>
 
-              <div class="chat-sidebar-actions">
+              <div class="chat-sidebar-actions" style="display: none;">
                 <button class="chat-action-btn btn-new-group" id="btnOpenCreateGroup">
                   <svg viewBox="0 0 24 24"><path d="M15,14C12.33,14 7,15.33 7,18V20H23V18C23,15.33 17.67,14 15,14M6,8.17V5H4V8.17C2.78,8.58 2,9.7 2,11C2,12.3 2.78,13.42 4,13.83V17H6V13.83C7.22,13.42 8,12.3 8,11C8,9.7 7.22,8.58 6,8.17M15,12A4,4 0 0,0 19,8A4,4 0 0,0 15,4A4,4 0 0,0 11,8A4,4 0 0,0 15,12Z"/></svg>
                   <span>+ Tạo Nhóm</span>
@@ -611,8 +616,8 @@
                     <input type="text" id="newStaffName" placeholder="Nhập tên nhân viên (ví dụ: Nguyễn Văn A)" required>
                   </div>
                   <div class="form-group-login">
-                    <label for="newStaffUsername">Tài khoản đăng nhập (Username) *</label>
-                    <input type="text" id="newStaffUsername" placeholder="Nhập tài khoản đăng nhập (ví dụ: anv)" required>
+                    <label for="newStaffEmail">Địa chỉ Email nhân viên *</label>
+                    <input type="email" id="newStaffEmail" placeholder="Nhập địa chỉ email (ví dụ: nhanvien@domain.com)" required>
                   </div>
                   <div class="form-group-login">
                     <label for="newStaffPassword">Mật khẩu ban đầu *</label>
