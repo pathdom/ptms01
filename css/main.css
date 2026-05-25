@@ -1023,11 +1023,10 @@ button {
 }
 
 /* Unified High-Quality Premium Input & Form Styles for Modals */
-.login-card input[type="text"],
-.login-card input[type="email"],
-.login-card input[type="password"],
-.login-card select,
-.login-card textarea {
+#studentForm input,
+#studentForm select,
+#studentForm textarea,
+#profileForm input {
   width: 100%;
   padding: 0.8rem 1.2rem;
   background: var(--bg-primary);
@@ -1040,17 +1039,16 @@ button {
   transition: var(--transition-fast);
 }
 
-.login-card input[type="text"]:focus,
-.login-card input[type="email"]:focus,
-.login-card input[type="password"]:focus,
-.login-card select:focus,
-.login-card textarea:focus {
+#studentForm input:focus,
+#studentForm select:focus,
+#studentForm textarea:focus,
+#profileForm input:focus {
   border-color: var(--accent);
   background: var(--bg-card);
   box-shadow: 0 0 0 3px rgba(188, 158, 108, 0.15);
 }
 
-.login-card select {
+#studentForm select {
   height: 44px;
   cursor: pointer;
   appearance: none;
