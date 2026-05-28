@@ -1390,3 +1390,106 @@ button {
   background: var(--bg-card) !important;
   box-shadow: 0 0 0 3px rgba(188, 158, 108, 0.15) !important;
 }
+
+/* ==========================================
+   4. STUDENT PORTAL SPECIFIC STYLING (PALAIS SYSTEM)
+   ========================================== */
+.student-header-navbar {
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  background: rgba(255, 255, 255, 0.85) !important;
+  transition: var(--transition-smooth);
+}
+body.dark-theme-crm .student-header-navbar {
+  background: rgba(22, 22, 26, 0.85) !important;
+}
+
+.student-nav-item {
+  position: relative;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0 0.5rem;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--text-muted);
+  transition: var(--transition-fast);
+}
+
+.student-nav-item:hover {
+  color: var(--text-main);
+}
+
+.student-nav-item.active {
+  color: var(--text-main) !important;
+  font-weight: 600;
+}
+
+.student-tab-content {
+  display: none;
+  animation: fadeInStudentTab 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.student-tab-content.active {
+  display: block;
+}
+
+/* Timeline Customization */
+.milestone-timeline {
+  margin-top: 1.5rem;
+}
+
+.milestone-dot {
+  transition: var(--transition-smooth);
+}
+
+.milestone-dot.completed {
+  box-shadow: 0 0 0 4px rgba(188, 158, 108, 0.2);
+}
+
+.milestone-dot.active {
+  box-shadow: 0 0 0 6px rgba(188, 158, 108, 0.3);
+  animation: pulseGold 2s infinite;
+}
+
+@keyframes pulseGold {
+  0% {
+    box-shadow: 0 0 0 0px rgba(188, 158, 108, 0.4);
+  }
+  70% {
+    box-shadow: 0 0 0 10px rgba(188, 158, 108, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0px rgba(188, 158, 108, 0);
+  }
+}
+
+/* Asymmetric Blog Grid & Elegant Card zoom */
+.blog-card img {
+  transition: var(--transition-smooth);
+}
+
+.blog-card:hover img {
+  transform: scale(1.03);
+}
+
+/* Animations */
+@keyframes fadeInStudentTab {
+  from {
+    opacity: 0;
+    transform: translateY(15px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* VietQR simulator style */
+.student-nav-menu button {
+  border-top: none;
+  border-left: none;
+  border-right: none;
+  border-radius: 0;
+  outline: none;
+}

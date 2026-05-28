@@ -121,6 +121,10 @@
             <svg viewBox="0 0 24 24"><path d="M15,14C12.33,14 7,15.33 7,18V20H23V18C23,15.33 17.67,14 15,14M6,8.17V5H4V8.17C2.78,8.58 2,9.7 2,11C2,12.3 2.78,13.42 4,13.83V17H6V13.83C7.22,13.42 8,12.3 8,11C8,9.7 7.22,8.58 6,8.17M15,12A4,4 0 0,0 19,8A4,4 0 0,0 15,4A4,4 0 0,0 11,8A4,4 0 0,0 15,12Z"/></svg>
             <span>Tạo tài khoản NV</span>
           </li>
+          <li class="menu-item admin-only" data-target="student-users-dashboard" id="menuItemCreateStudentUsers" style="display: none;">
+            <svg viewBox="0 0 24 24" style="width:20px; height:20px; fill:currentColor;"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z"/></svg>
+            <span>Tạo tài khoản HV</span>
+          </li>
         </ul>
       </nav>
 
@@ -328,6 +332,120 @@
                       </tr>
                     </thead>
                     <tbody id="staffUsersTableBody">
+                      <!-- Populated dynamically via JS -->
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ==========================================
+           TAB 2.5. STUDENT USER CREATION CONSOLE (ADMIN ONLY)
+           ========================================== -->
+      <div id="student-users-dashboard" class="dashboard-wrapper users-page-wrapper" style="display: none;">
+        <div class="dashboard-container">
+          <!-- Topbar Header -->
+          <div class="dashboard-topbar">
+            <div class="topbar-left">
+              <div class="topbar-title-group">
+                <h2>Tạo Tài Khoản Học Viên</h2>
+                <div class="breadcrumbs">
+                  <span class="portal-breadcrumb-home">Cổng thông tin</span> <span class="sep">/</span> <span class="active-crumb">Quản lý Học viên</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="topbar-right">
+              <div class="topbar-user-wrapper" style="position: relative;">
+                <div class="user-profile-badge-inline" style="cursor: pointer; padding: 0.5rem 0.8rem; border-radius: var(--border-radius-md); transition: var(--transition-fast); display: flex; align-items: center; gap: 0.75rem;">
+                  <div class="profile-avatar" id="miniStudentUsersAvatar">DM</div>
+                  <div class="profile-info-desktop">
+                    <span class="name" id="miniStudentUsersName">Đang tải...</span>
+                    <span class="role" id="miniStudentUsersRole">Nhân viên</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Main Dashboard Canvas -->
+          <div class="dashboard-canvas" style="padding: 2rem; overflow-y: auto; flex: 1;">
+            <div class="users-split-grid" style="display: grid; grid-template-columns: 1fr 1.5fr; gap: 2rem; align-items: start;">
+              <!-- Create User Form (Left) -->
+              <div class="user-form-card" style="background: var(--bg-card); padding: 2rem; border-radius: var(--border-radius-lg); border: 1px solid var(--border); box-shadow: var(--shadow-sm);">
+                <h3 style="font-family: var(--font-serif); font-size: 1.1rem; border-bottom: 1px solid var(--border); padding-bottom: 0.75rem; margin-bottom: 1.5rem; letter-spacing: 0.5px; color: var(--text-main);">+ TẠO TÀI KHOẢN HỌC VIÊN</h3>
+                <form id="createStudentUserForm">
+                  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                    <div class="form-group-login" style="margin-bottom: 1rem;">
+                      <label for="newStudentName">Họ và tên *</label>
+                      <input type="text" id="newStudentName" placeholder="Nguyễn Văn A" required style="padding: 0.75rem 1rem; border-radius: var(--border-radius-md); border: 1px solid var(--border); background: var(--bg-primary); color: var(--text-main); font-family: inherit; font-size: inherit;">
+                    </div>
+                    <div class="form-group-login" style="margin-bottom: 1rem;">
+                      <label for="newStudentCode">Mã học viên *</label>
+                      <input type="text" id="newStudentCode" placeholder="TE-2026-001" required style="padding: 0.75rem 1rem; border-radius: var(--border-radius-md); border: 1px solid var(--border); background: var(--bg-primary); color: var(--text-main); font-family: inherit; font-size: inherit;">
+                    </div>
+                  </div>
+                  <div class="form-group-login" style="margin-bottom: 1rem;">
+                    <label for="newStudentEmail">Địa chỉ Email học viên *</label>
+                    <input type="email" id="newStudentEmail" placeholder="hocvien@gmail.com" required style="padding: 0.75rem 1rem; border-radius: var(--border-radius-md); border: 1px solid var(--border); background: var(--bg-primary); color: var(--text-main); font-family: inherit; font-size: inherit;">
+                  </div>
+                  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                    <div class="form-group-login" style="margin-bottom: 1rem;">
+                      <label for="newStudentPhone">Số điện thoại *</label>
+                      <input type="text" id="newStudentPhone" placeholder="0912345678" required style="padding: 0.75rem 1rem; border-radius: var(--border-radius-md); border: 1px solid var(--border); background: var(--bg-primary); color: var(--text-main); font-family: inherit; font-size: inherit;">
+                    </div>
+                    <div class="form-group-login" style="margin-bottom: 1rem;">
+                      <label for="newStudentCountry">Quốc gia du học *</label>
+                      <select id="newStudentCountry" required style="padding: 0.75rem 1rem; border-radius: var(--border-radius-md); border: 1px solid var(--border); background: var(--bg-primary); color: var(--text-main); height: 42px; outline: none; font-family: inherit; font-size: inherit;">
+                        <option value="Mỹ">Mỹ</option>
+                        <option value="Anh">Anh</option>
+                        <option value="Úc">Úc</option>
+                        <option value="Canada">Canada</option>
+                        <option value="Đức">Đức</option>
+                      </select>
+                    </div>
+                  </div>
+                  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                    <div class="form-group-login" style="margin-bottom: 1rem;">
+                      <label for="newStudentPassword">Mật khẩu đăng nhập *</label>
+                      <input type="password" id="newStudentPassword" placeholder="Hocvien123@" required style="padding: 0.75rem 1rem; border-radius: var(--border-radius-md); border: 1px solid var(--border); background: var(--bg-primary); color: var(--text-main); font-family: inherit; font-size: inherit;">
+                    </div>
+                    <div class="form-group-login" style="margin-bottom: 1rem;">
+                      <label for="newStudentStatus">Trạng thái hồ sơ *</label>
+                      <select id="newStudentStatus" required style="padding: 0.75rem 1rem; border-radius: var(--border-radius-md); border: 1px solid var(--border); background: var(--bg-primary); color: var(--text-main); height: 42px; outline: none; font-family: inherit; font-size: inherit;">
+                        <option value="Đang học">Đang học</option>
+                        <option value="Chờ phỏng vấn">Chờ phỏng vấn</option>
+                        <option value="Đã trúng tuyển">Đã trúng tuyển</option>
+                        <option value="Đang làm hồ sơ">Đang làm hồ sơ</option>
+                      </select>
+                    </div>
+                  </div>
+                  <div class="form-group-login" style="margin-bottom: 1.5rem;">
+                    <label for="newStudentNotes">Ghi chú ban đầu</label>
+                    <textarea id="newStudentNotes" placeholder="Nhập ghi chú hoặc lộ trình..." style="padding: 0.75rem 1rem; border-radius: var(--border-radius-md); border: 1px solid var(--border); background: var(--bg-primary); color: var(--text-main); resize: vertical; min-height: 80px; font-family: inherit; font-size: inherit; outline: none;"></textarea>
+                  </div>
+                  <button type="submit" class="btn-submit-login" style="margin-top: 0;">TẠO TÀI KHOẢN HỌC VIÊN</button>
+                </form>
+              </div>
+
+              <!-- Users list Table (Right) -->
+              <div class="user-list-card" style="background: var(--bg-card); padding: 2rem; border-radius: var(--border-radius-lg); border: 1px solid var(--border); box-shadow: var(--shadow-sm); overflow: hidden;">
+                <h3 style="font-family: var(--font-serif); font-size: 1.1rem; border-bottom: 1px solid var(--border); padding-bottom: 0.75rem; margin-bottom: 1.5rem; letter-spacing: 0.5px; color: var(--text-main);">DANH SÁCH TÀI KHOẢN HỌC VIÊN</h3>
+                <div class="mini-table-container" style="max-height: 500px; overflow-y: auto;">
+                  <table class="financial-table" style="width: 100%; border-collapse: collapse;">
+                    <thead>
+                      <tr style="border-bottom: 2px solid var(--border);">
+                        <th style="text-align: left; padding: 0.75rem 0.5rem; font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted);">MÃ/HỌ TÊN</th>
+                        <th style="text-align: left; padding: 0.75rem 0.5rem; font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted);">EMAIL ĐĂNG NHẬP</th>
+                        <th style="text-align: left; padding: 0.75rem 0.5rem; font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted);">QUỐC GIA</th>
+                        <th style="text-align: left; padding: 0.75rem 0.5rem; font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted);">TRẠNG THÁI</th>
+                        <th style="text-align: center; padding: 0.75rem 0.5rem; font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted);">XÓA</th>
+                      </tr>
+                    </thead>
+                    <tbody id="studentUsersTableBody">
                       <!-- Populated dynamically via JS -->
                     </tbody>
                   </table>
@@ -596,6 +714,340 @@
         <button type="submit" class="btn-submit-login">LƯU HỒ SƠ CỦA BẠN</button>
       </form>
     </div>
+  </div>
+
+  <!-- ==========================================
+       4. STUDENT PORTAL CONTAINER (HIDDEN UNTIL STUDENT LOGGED IN)
+       ========================================== -->
+  <div id="student-app-root" class="app-root-container" style="display: none; flex-direction: column;">
+    <!-- Top Floating Glass Navbar -->
+    <header class="student-header-navbar" style="height: 80px; background: var(--bg-card); border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; padding: 0 4rem; z-index: 50; flex-shrink: 0; box-shadow: var(--shadow-sm);">
+      <div class="sidebar-logo" style="margin-bottom: 0; flex-direction: row; align-items: center; gap: 10px; padding-left: 0;">
+        <span class="logo-text" style="font-size: 1.6rem;">ThinkEDU</span>
+        <span class="logo-sub" style="margin-top: 0; font-size: 0.7rem; border-left: 1px solid var(--border); padding-left: 10px;">CỔNG HỌC VIÊN</span>
+      </div>
+
+      <!-- Navigation Tabs -->
+      <nav class="student-nav-menu" style="display: flex; gap: 2.5rem; height: 100%;">
+        <button class="student-nav-item active" data-tab="student-news-tab" style="font-family: var(--font-sans); font-size: 0.9rem; font-weight: 600; color: var(--text-main); height: 100%; border-bottom: 3px solid var(--accent); padding: 0 0.5rem; transition: var(--transition-fast);">BẢNG TIN TRUNG TÂM</button>
+        <button class="student-nav-item" data-tab="student-academic-tab" style="font-family: var(--font-sans); font-size: 0.9rem; font-weight: 500; color: var(--text-muted); height: 100%; border-bottom: 3px solid transparent; padding: 0 0.5rem; transition: var(--transition-fast);">KÌ HỌC & LỘ TRÌNH</button>
+        <button class="student-nav-item" data-tab="student-financial-tab" style="font-family: var(--font-sans); font-size: 0.9rem; font-weight: 500; color: var(--text-muted); height: 100%; border-bottom: 3px solid transparent; padding: 0 0.5rem; transition: var(--transition-fast);">THÔNG TIN HỌC PHÍ</button>
+      </nav>
+
+      <!-- Student Profile Badge & Logout -->
+      <div style="display: flex; align-items: center; gap: 1.5rem;">
+        <div class="user-profile-badge-inline" style="padding: 0.5rem 0.8rem; border-radius: var(--border-radius-md); transition: var(--transition-fast); display: flex; align-items: center; gap: 0.75rem;">
+          <div class="profile-avatar" id="studentAvatar" style="background: var(--accent); color: #fff; font-weight: 700; width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center;">HV</div>
+          <div class="profile-info-desktop">
+            <span class="name" id="studentNameDisplay">Đang tải...</span>
+            <span class="role" id="studentCodeDisplay" style="font-family: monospace; font-size: 0.7rem; font-weight: 600; color: var(--accent);">TE-2026-000</span>
+          </div>
+        </div>
+        <button class="footer-btn btn-logout-app-portal" id="btnStudentLogout" style="width: auto; padding: 0.5rem 1rem; border-radius: var(--border-radius-md); font-size: 0.85rem; font-weight: 600; color: #EF4444; border: 1px solid rgba(239, 68, 68, 0.2); background: rgba(239, 68, 68, 0.02); display: flex; align-items: center; gap: 0.5rem;">
+          <svg viewBox="0 0 24 24" style="width:16px; height:16px; fill:currentColor;"><path d="M16,17V14H9V10H16V7L21,12L16,17M14,2A2,2 0 0,1 16,4V6H14V4H5V20H14V18H16V20A2,2 0 0,1 14,22H5A2,2 0 0,1 3,20V4A2,2 0 0,1 5,2H14Z"/></svg>
+          <span>Đăng xuất</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- Main Content Area -->
+    <main class="student-main-content" style="flex: 1; overflow-y: auto; padding: 3rem 4rem; background: var(--bg-primary);">
+      
+      <!-- ==========================================
+           STUDENT TAB 1: BẢNG TIN TRUNG TÂM
+           ========================================== -->
+      <div id="student-news-tab" class="student-tab-content reveal reveal-scale active" style="display: block;">
+        <!-- Featured Event Banner -->
+        <div class="featured-event-card" style="background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--border-radius-lg); padding: 3rem; margin-bottom: 3rem; display: grid; grid-template-columns: 1.5fr 1fr; gap: 3rem; align-items: center; position: relative; overflow: hidden; box-shadow: var(--shadow-sm);">
+          <div style="position: absolute; top: -50px; right: -50px; width: 150px; height: 150px; background: var(--accent-light); border-radius: 50%; opacity: 0.5; z-index: 1;"></div>
+          <div style="position: relative; z-index: 2;">
+            <span style="font-size: 0.75rem; font-weight: 600; text-transform: uppercase; color: var(--accent); letter-spacing: 2px; display: block; margin-bottom: 0.75rem;">SỰ KIỆN ĐẶC BIỆT CHƯA TIỀN LỆ</span>
+            <h2 style="font-family: var(--font-serif); font-size: 2.2rem; font-weight: 500; color: var(--text-main); line-height: 1.3; margin-bottom: 1rem;">Hội Thảo Tư Vấn Học Bổng Toàn Cầu 2026</h2>
+            <p style="color: var(--text-muted); font-size: 0.95rem; line-height: 1.6; margin-bottom: 2rem;">Gặp gỡ trực tiếp đại diện tuyển sinh của hơn 50 trường đại học hàng đầu từ Mỹ, Anh, Úc, Canada. Đánh giá hồ sơ học bổng trực tiếp tại chỗ, cơ hội nhận học bổng lên tới 100% học phí cùng nhiều quà tặng hấp dẫn từ ThinkEdu.</p>
+            <div style="display: flex; gap: 2rem; font-size: 0.85rem; color: var(--text-main); font-weight: 600; margin-bottom: 2rem;">
+              <div style="display: flex; align-items: center; gap: 0.5rem;">
+                <svg viewBox="0 0 24 24" style="width: 18px; height: 18px; fill: var(--accent);"><path d="M19,19H5V8H19M16,1V3H8V1H6V3H5C3.89,3 3,3.9 3,5V19A2,2 0 0,0 5,21H19A2,2 0 0,0 21,19V5C21,3.9 20.1,3 19,3H18V1M17,12H12V17H17V12Z"/></svg>
+                <span>Chủ Nhật, 15 Tháng 6, 2026 (08:30 - 12:00)</span>
+              </div>
+              <div style="display: flex; align-items: center; gap: 0.5rem;">
+                <svg viewBox="0 0 24 24" style="width: 18px; height: 18px; fill: var(--accent);"><path d="M12,2C8.13,2 5,5.13 5,9C5,14.25 12,22 12,22C12,22 19,14.25 19,9C19,5.13 15.87,2 12,2M12,11.5A2.5,2.5 0 0,1 9.5,9A2.5,2.5 0 0,1 12,6.5A2.5,2.5 0 0,1 14.5,9A2.5,2.5 0 0,1 12,11.5Z"/></svg>
+                <span>Khách sạn Lotte Hotel, Ba Đình, Hà Nội</span>
+              </div>
+            </div>
+            <button type="button" class="btn-submit-login" style="margin-top: 0; width: auto; padding: 0.9rem 2rem;">ĐĂNG KÝ THAM GIA MIỄN PHÍ</button>
+          </div>
+          <div style="overflow: hidden; border-radius: var(--border-radius-md); box-shadow: var(--shadow-md); z-index: 2; height: 260px;">
+            <img src="godly.website_website_pa-lais-104.png" alt="Featured event" style="width: 100%; height: 100%; object-fit: cover; filter: brightness(0.95); transition: var(--transition-smooth);" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
+          </div>
+        </div>
+
+        <!-- Section Title -->
+        <h3 style="font-family: var(--font-serif); font-size: 1.6rem; font-weight: 500; color: var(--text-main); margin-bottom: 2rem; border-bottom: 1px solid var(--border); padding-bottom: 0.75rem; letter-spacing: 0.5px;">BÀI VIẾT NỔI BẬT & KINH NGHIỆM DU HỌC</h3>
+
+        <!-- Blog Grid -->
+        <div class="blog-asymmetric-grid" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 2rem;">
+          <!-- Blog 1 -->
+          <div class="blog-card" style="background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--border-radius-md); overflow: hidden; display: flex; flex-direction: column; transition: var(--transition-smooth); box-shadow: var(--shadow-sm);" onmouseover="this.style.transform='translateY(-5px)'; this.style.boxShadow='var(--shadow-md)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='var(--shadow-sm)'">
+            <div style="height: 180px; overflow: hidden; position: relative;">
+              <img src="webduhoc-crm.vercel.app_.png" alt="Australia study" style="width: 100%; height: 100%; object-fit: cover;">
+              <span style="position: absolute; top: 1rem; left: 1rem; background: var(--text-main); color: #fff; font-size: 0.7rem; font-weight: 600; padding: 0.35rem 0.75rem; border-radius: var(--border-radius-sm); text-transform: uppercase; letter-spacing: 1px;">ÚC / KINH NGHIỆM</span>
+            </div>
+            <div style="padding: 1.5rem; flex: 1; display: flex; flex-direction: column; justify-content: space-between;">
+              <div>
+                <h4 style="font-family: var(--font-serif); font-size: 1.15rem; font-weight: 600; color: var(--text-main); line-height: 1.4; margin-bottom: 0.75rem;">Kinh Nghiệm Săn Học Bổng Úc Xuất Sắc 2026</h4>
+                <p style="color: var(--text-muted); font-size: 0.85rem; line-height: 1.6; margin-bottom: 1.5rem;">Cập nhật những thay đổi mới nhất về chính sách visa du học Úc diện ưu tiên, cùng với bài chia sẻ thực tế từ cựu học sinh ThinkEdu đạt học bổng 50% Đại học Sydney...</p>
+              </div>
+              <a href="#" style="color: var(--accent); font-size: 0.8rem; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; display: inline-flex; align-items: center; gap: 0.25rem; text-decoration: none;">Đọc bài viết <svg viewBox="0 0 24 24" style="width:14px; height:14px; fill:currentColor;"><path d="M4,11V13H16L10.5,18.5L11.92,19.92L19.84,12L11.92,4.08L10.5,5.5L16,11H4Z"/></svg></a>
+            </div>
+          </div>
+
+          <!-- Blog 2 -->
+          <div class="blog-card" style="background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--border-radius-md); overflow: hidden; display: flex; flex-direction: column; transition: var(--transition-smooth); box-shadow: var(--shadow-sm);" onmouseover="this.style.transform='translateY(-5px)'; this.style.boxShadow='var(--shadow-md)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='var(--shadow-sm)'">
+            <div style="height: 180px; overflow: hidden; position: relative;">
+              <img src="godly.website_website_pa-lais-104.png" alt="Canada study" style="width: 100%; height: 100%; object-fit: cover;">
+              <span style="position: absolute; top: 1rem; left: 1rem; background: var(--text-main); color: #fff; font-size: 0.7rem; font-weight: 600; padding: 0.35rem 0.75rem; border-radius: var(--border-radius-sm); text-transform: uppercase; letter-spacing: 1px;">CANADA / SDS</span>
+            </div>
+            <div style="padding: 1.5rem; flex: 1; display: flex; flex-direction: column; justify-content: space-between;">
+              <div>
+                <h4 style="font-family: var(--font-serif); font-size: 1.15rem; font-weight: 600; color: var(--text-main); line-height: 1.4; margin-bottom: 0.75rem;">Lộ Trình Du Học Canada Không Chứng Minh Tài Chính</h4>
+                <p style="color: var(--text-muted); font-size: 0.85rem; line-height: 1.6; margin-bottom: 1.5rem;">Visa diện SDS giúp rút ngắn thời gian xét duyệt hồ sơ Canada. Dưới đây là danh sách toàn bộ các trường DLI được áp dụng diện ưu tiên và cách hoàn thiện hồ sơ đạt tỉ lệ đỗ tối đa...</p>
+              </div>
+              <a href="#" style="color: var(--accent); font-size: 0.8rem; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; display: inline-flex; align-items: center; gap: 0.25rem; text-decoration: none;">Đọc bài viết <svg viewBox="0 0 24 24" style="width:14px; height:14px; fill:currentColor;"><path d="M4,11V13H16L10.5,18.5L11.92,19.92L19.84,12L11.92,4.08L10.5,5.5L16,11H4Z"/></svg></a>
+            </div>
+          </div>
+
+          <!-- Blog 3 -->
+          <div class="blog-card" style="background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--border-radius-md); overflow: hidden; display: flex; flex-direction: column; transition: var(--transition-smooth); box-shadow: var(--shadow-sm);" onmouseover="this.style.transform='translateY(-5px)'; this.style.boxShadow='var(--shadow-md)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='var(--shadow-sm)'">
+            <div style="height: 180px; overflow: hidden; position: relative;">
+              <img src="webduhoc-crm.vercel.app_.png" alt="Germany study" style="width: 100%; height: 100%; object-fit: cover; filter: hue-rotate(45deg);">
+              <span style="position: absolute; top: 1rem; left: 1rem; background: var(--text-main); color: #fff; font-size: 0.7rem; font-weight: 600; padding: 0.35rem 0.75rem; border-radius: var(--border-radius-sm); text-transform: uppercase; letter-spacing: 1px;">ĐỨC / APS</span>
+            </div>
+            <div style="padding: 1.5rem; flex: 1; display: flex; flex-direction: column; justify-content: space-between;">
+              <div>
+                <h4 style="font-family: var(--font-serif); font-size: 1.15rem; font-weight: 600; color: var(--text-main); line-height: 1.4; margin-bottom: 0.75rem;">Quy Trình Thẩm Định APS Du Học Đức Chi Tiết Từ A-Z</h4>
+                <p style="color: var(--text-muted); font-size: 0.85rem; line-height: 1.6; margin-bottom: 1.5rem;">APS là bước bắt buộc cho mọi sinh viên muốn học tập tại các trường Đại học Đức. Cẩm nang tổng hợp các tài liệu cần thiết, lưu ý khi nộp tiền ngân hàng và kinh nghiệm ôn tập...</p>
+              </div>
+              <a href="#" style="color: var(--accent); font-size: 0.8rem; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; display: inline-flex; align-items: center; gap: 0.25rem; text-decoration: none;">Đọc bài viết <svg viewBox="0 0 24 24" style="width:14px; height:14px; fill:currentColor;"><path d="M4,11V13H16L10.5,18.5L11.92,19.92L19.84,12L11.92,4.08L10.5,5.5L16,11H4Z"/></svg></a>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ==========================================
+           STUDENT TAB 2: KÌ HỌC & LỘ TRÌNH (CÁ NHÂN HÓA)
+           ========================================== -->
+      <div id="student-academic-tab" class="student-tab-content reveal reveal-scale" style="display: none;">
+        <div style="display: grid; grid-template-columns: 1.8fr 1fr; gap: 3rem; align-items: start;">
+          <!-- Timeline progress (Left) -->
+          <div style="background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--border-radius-lg); padding: 3rem; box-shadow: var(--shadow-sm);">
+            <h3 style="font-family: var(--font-serif); font-size: 1.4rem; font-weight: 500; color: var(--text-main); margin-bottom: 2rem; border-bottom: 1px solid var(--border); padding-bottom: 0.75rem; letter-spacing: 0.5px;">TIẾN ĐỘ & LỘ TRÌNH HỒ SƠ</h3>
+            
+            <div class="milestone-timeline" style="position: relative; padding-left: 2.5rem; display: flex; flex-direction: column; gap: 2.5rem;">
+              <!-- Line running behind the nodes -->
+              <div style="position: absolute; top: 10px; left: 9px; bottom: 10px; width: 2px; background: var(--border);"></div>
+
+              <!-- Step 1 -->
+              <div class="milestone-step" id="milestone-step-1" style="position: relative;">
+                <div class="milestone-dot completed" style="position: absolute; left: -2.5rem; top: 4px; width: 20px; height: 20px; border-radius: 50%; background: var(--accent); border: 4px solid var(--accent-light); z-index: 5; display: flex; align-items: center; justify-content: center;"></div>
+                <h4 style="font-size: 0.95rem; font-weight: 600; color: var(--text-main); margin-bottom: 0.25rem;">Giai Đoạn 1: Định Hướng & Chọn Trường</h4>
+                <p style="color: var(--text-muted); font-size: 0.85rem; line-height: 1.5;">Học viên đã hoàn thành buổi tư vấn 1-1, lựa chọn danh sách 3 trường đại học phù hợp nhất với điều kiện tài chính và học thuật.</p>
+                <span class="status-badge" style="font-size: 0.7rem; font-weight: 600; background: var(--accent-light); color: var(--accent); padding: 0.2rem 0.5rem; border-radius: var(--border-radius-sm); margin-top: 0.5rem; display: inline-block;">ĐÃ HOÀN THÀNH</span>
+              </div>
+
+              <!-- Step 2 -->
+              <div class="milestone-step" id="milestone-step-2" style="position: relative;">
+                <div class="milestone-dot completed" style="position: absolute; left: -2.5rem; top: 4px; width: 20px; height: 20px; border-radius: 50%; background: var(--accent); border: 4px solid var(--accent-light); z-index: 5; display: flex; align-items: center; justify-content: center;"></div>
+                <h4 style="font-size: 0.95rem; font-weight: 600; color: var(--text-main); margin-bottom: 0.25rem;">Giai Đoạn 2: Chuẩn Bị Bài Luận & Luyện Thi Chứng Chỉ</h4>
+                <p style="color: var(--text-muted); font-size: 0.85rem; line-height: 1.5;">Hoàn thiện bài luận cá nhân (Personal Statement) và đạt chứng chỉ ngôn ngữ mục tiêu (IELTS/B2).</p>
+                <span class="status-badge" style="font-size: 0.7rem; font-weight: 600; background: var(--accent-light); color: var(--accent); padding: 0.2rem 0.5rem; border-radius: var(--border-radius-sm); margin-top: 0.5rem; display: inline-block;">ĐÃ HOÀN THÀNH</span>
+              </div>
+
+              <!-- Step 3 -->
+              <div class="milestone-step" id="milestone-step-3" style="position: relative;">
+                <div class="milestone-dot active" style="position: absolute; left: -2.5rem; top: 4px; width: 20px; height: 20px; border-radius: 50%; background: #FAF9F6; border: 5px solid var(--accent); z-index: 5;"></div>
+                <h4 style="font-size: 0.95rem; font-weight: 600; color: var(--text-main); margin-bottom: 0.25rem;">Giai Đoạn 3: Nộp Hồ Sơ & Đợi Thư Mời Nhập Học (Letter of Offer)</h4>
+                <p style="color: var(--text-muted); font-size: 0.85rem; line-height: 1.5;">Hồ sơ chính thức đã được gửi tới đại diện tuyển sinh của trường. Đang trong giai đoạn chờ kết quả phê duyệt và cấp mã I-20/CoE.</p>
+                <span class="status-badge" style="font-size: 0.7rem; font-weight: 600; background: var(--border); color: var(--text-main); padding: 0.2rem 0.5rem; border-radius: var(--border-radius-sm); margin-top: 0.5rem; display: inline-block;">ĐANG THỰC HIỆN</span>
+              </div>
+
+              <!-- Step 4 -->
+              <div class="milestone-step" id="milestone-step-4" style="position: relative; opacity: 0.7;">
+                <div class="milestone-dot" style="position: absolute; left: -2.5rem; top: 4px; width: 20px; height: 20px; border-radius: 50%; background: var(--border); border: 4px solid var(--bg-card); z-index: 5;"></div>
+                <h4 style="font-size: 0.95rem; font-weight: 600; color: var(--text-muted); margin-bottom: 0.25rem;">Giai Đoạn 4: Chứng Minh Tài Chính & Luyện Phỏng Vấn Visa</h4>
+                <p style="color: var(--text-muted); font-size: 0.85rem; line-height: 1.5;">Nộp hồ sơ xin visa lên Lãnh sự quán. Tham gia các buổi phỏng vấn thử (Mock-interview) 1-1 cực kỳ nghiêm ngặt cùng cố vấn cấp cao.</p>
+                <span class="status-badge" style="font-size: 0.7rem; font-weight: 600; background: transparent; border: 1px solid var(--border); color: var(--text-muted); padding: 0.2rem 0.5rem; border-radius: var(--border-radius-sm); margin-top: 0.5rem; display: inline-block;">CHƯA BẮT ĐẦU</span>
+              </div>
+
+              <!-- Step 5 -->
+              <div class="milestone-step" id="milestone-step-5" style="position: relative; opacity: 0.7;">
+                <div class="milestone-dot" style="position: absolute; left: -2.5rem; top: 4px; width: 20px; height: 20px; border-radius: 50%; background: var(--border); border: 4px solid var(--bg-card); z-index: 5;"></div>
+                <h4 style="font-size: 0.95rem; font-weight: 600; color: var(--text-muted); margin-bottom: 0.25rem;">Giai Đoạn 5: Nhận Kết Quả Visa & Hướng Dẫn Trước Bay (Pre-departure)</h4>
+                <p style="color: var(--text-muted); font-size: 0.85rem; line-height: 1.5;">Nhận visa chính thức. Tham gia buổi họp định hướng trước khi bay, hướng dẫn chuẩn bị hành lý, nhập cảnh và hỗ trợ nhà ở tại nước ngoài.</p>
+                <span class="status-badge" style="font-size: 0.7rem; font-weight: 600; background: transparent; border: 1px solid var(--border); color: var(--text-muted); padding: 0.2rem 0.5rem; border-radius: var(--border-radius-sm); margin-top: 0.5rem; display: inline-block;">CHƯA BẮT ĐẦU</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Academic Sidebar (Right) -->
+          <div style="display: flex; flex-direction: column; gap: 2rem;">
+            <!-- Current Semester Info -->
+            <div style="background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--border-radius-lg); padding: 2rem; box-shadow: var(--shadow-sm);">
+              <h4 style="font-family: var(--font-serif); font-size: 1.15rem; font-weight: 500; color: var(--text-main); margin-bottom: 1.25rem; border-bottom: 1px solid var(--border); padding-bottom: 0.5rem;">KÌ HỌC HIỆN TẠI</h4>
+              <div style="display: flex; flex-direction: column; gap: 1rem; font-size: 0.9rem;">
+                <div>
+                  <span style="font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted); font-weight: 600; display: block; margin-bottom: 0.15rem;">Khóa học chuẩn bị</span>
+                  <strong style="color: var(--text-main);">IELTS Advanced Score Booster 7.5+</strong>
+                </div>
+                <div>
+                  <span style="font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted); font-weight: 600; display: block; margin-bottom: 0.15rem;">Lịch học trực tiếp</span>
+                  <strong style="color: var(--text-main);">Thứ 2, Thứ 4, Thứ 6 (18:30 - 20:30)</strong>
+                </div>
+                <div>
+                  <span style="font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted); font-weight: 600; display: block; margin-bottom: 0.15rem;">Phòng học</span>
+                  <strong style="color: var(--text-main);">Phòng Lab VIP 1, Tầng 3 ThinkEdu Building</strong>
+                </div>
+                <div>
+                  <span style="font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted); font-weight: 600; display: block; margin-bottom: 0.15rem;">Ngày bắt đầu kì</span>
+                  <strong style="color: var(--text-main);">01/03/2026</strong>
+                </div>
+              </div>
+            </div>
+
+            <!-- Advisor Info -->
+            <div style="background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--border-radius-lg); padding: 2rem; box-shadow: var(--shadow-sm); display: flex; flex-direction: column; align-items: center; text-align: center;">
+              <span style="font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted); font-weight: 600; letter-spacing: 1px; display: block; margin-bottom: 1rem;">CỐ VẤN HỌC TẬP & HỒ SƠ</span>
+              <div class="avatar" style="width: 70px; height: 70px; font-size: 1.5rem; background: var(--text-main); margin-bottom: 1rem; box-shadow: var(--shadow-md);">EN</div>
+              <strong style="font-size: 1rem; color: var(--text-main); display: block; margin-bottom: 0.25rem;">Ms. Evelyn Nguyễn</strong>
+              <span style="font-size: 0.8rem; color: var(--text-muted); display: block; margin-bottom: 1.25rem;">Trưởng bộ phận tư vấn visa ThinkEdu</span>
+              <div style="display: flex; gap: 0.5rem; width: 100%;">
+                <a href="mailto:evelyn.nguyen@thinkedu.vn" style="flex: 1; text-align: center; text-decoration: none; padding: 0.6rem; border: 1px solid var(--border); border-radius: var(--border-radius-md); font-size: 0.8rem; font-weight: 600; color: var(--text-main); background: var(--bg-primary); transition: var(--transition-fast);" onmouseover="this.style.borderColor='var(--accent)';" onmouseout="this.style.borderColor='var(--border)';">EMAIL</a>
+                <a href="tel:0901234567" style="flex: 1; text-align: center; text-decoration: none; padding: 0.6rem; border: 1px solid var(--border); border-radius: var(--border-radius-md); font-size: 0.8rem; font-weight: 600; color: #fff; background: var(--text-main); transition: var(--transition-fast);" onmouseover="this.style.background='var(--accent)';" onmouseout="this.style.background='var(--text-main)';">GỌI ĐIỆN</a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ==========================================
+           STUDENT TAB 3: THÔNG TIN HỌC PHÍ
+           ========================================== -->
+      <div id="student-financial-tab" class="student-tab-content reveal reveal-scale" style="display: none;">
+        <div style="display: grid; grid-template-columns: 1.8fr 1fr; gap: 3rem; align-items: start;">
+          <!-- Left side: tuition summary & history -->
+          <div style="display: flex; flex-direction: column; gap: 2.5rem;">
+            <!-- Tuition Summary Cards -->
+            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem;">
+              <div style="background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--border-radius-md); padding: 1.5rem; border-left: 4px solid var(--accent); box-shadow: var(--shadow-sm);">
+                <span style="font-size: 0.7rem; text-transform: uppercase; color: var(--text-muted); font-weight: 600; display: block; margin-bottom: 0.5rem;">TỔNG HỌC PHÍ DỰ KIẾN</span>
+                <strong style="font-size: 1.3rem; color: var(--text-main); font-family: monospace;">185,000,000 ₫</strong>
+              </div>
+              <div style="background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--border-radius-md); padding: 1.5rem; border-left: 4px solid #10B981; box-shadow: var(--shadow-sm);">
+                <span style="font-size: 0.7rem; text-transform: uppercase; color: var(--text-muted); font-weight: 600; display: block; margin-bottom: 0.5rem;">SỐ TIỀN ĐÃ ĐÓNG</span>
+                <strong style="font-size: 1.3rem; color: #10B981; font-family: monospace;">110,000,000 ₫</strong>
+              </div>
+              <div style="background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--border-radius-md); padding: 1.5rem; border-left: 4px solid #EF4444; box-shadow: var(--shadow-sm);">
+                <span style="font-size: 0.7rem; text-transform: uppercase; color: var(--text-muted); font-weight: 600; display: block; margin-bottom: 0.5rem;">DƯ NỢ CẦN THANH TOÁN</span>
+                <strong style="font-size: 1.3rem; color: #EF4444; font-family: monospace;" id="remainingBalanceDisplay">75,000,000 ₫</strong>
+              </div>
+            </div>
+
+            <!-- Transaction History -->
+            <div style="background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--border-radius-lg); padding: 2.5rem; box-shadow: var(--shadow-sm);">
+              <h3 style="font-family: var(--font-serif); font-size: 1.3rem; font-weight: 500; color: var(--text-main); margin-bottom: 1.5rem; border-bottom: 1px solid var(--border); padding-bottom: 0.75rem; letter-spacing: 0.5px;">LỊCH SỬ NỘP HỌC PHÍ</h3>
+              
+              <div class="mini-table-container">
+                <table class="financial-table" style="width: 100%; border-collapse: collapse; text-align: left; font-size: 0.85rem;">
+                  <thead>
+                    <tr style="border-bottom: 2px solid var(--border);">
+                      <th style="padding: 0.75rem 0.5rem; color: var(--text-muted);">MÃ GIAO DỊCH</th>
+                      <th style="padding: 0.75rem 0.5rem; color: var(--text-muted);">NGÀY THANH TOÁN</th>
+                      <th style="padding: 0.75rem 0.5rem; color: var(--text-muted);">MÔ TẢ KHOẢN PHÍ</th>
+                      <th style="padding: 0.75rem 0.5rem; color: var(--text-muted);">SỐ TIỀN</th>
+                      <th style="padding: 0.75rem 0.5rem; color: var(--text-muted); text-align: center;">TRẠNG THÁI</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr style="border-bottom: 1px solid var(--border-light);">
+                      <td style="padding: 1rem 0.5rem; font-family: monospace; font-weight: 600;">TE-TX-90112</td>
+                      <td style="padding: 1rem 0.5rem;">15/03/2026</td>
+                      <td style="padding: 1rem 0.5rem;">Đợt 2: Phí dịch thuật hồ sơ & Luyện thi chứng chỉ</td>
+                      <td style="padding: 1rem 0.5rem; font-weight: 600;">50,000,000 ₫</td>
+                      <td style="padding: 1rem 0.5rem; text-align: center;"><span class="crm-badge badge-selected" style="background: rgba(16, 185, 129, 0.1); color: #10B981; font-size: 0.7rem; font-weight: 600; padding: 0.2rem 0.5rem; border-radius: var(--border-radius-sm);">THÀNH CÔNG</span></td>
+                    </tr>
+                    <tr style="border-bottom: 1px solid var(--border-light);">
+                      <td style="padding: 1rem 0.5rem; font-family: monospace; font-weight: 600;">TE-TX-90054</td>
+                      <td style="padding: 1rem 0.5rem;">02/01/2026</td>
+                      <td style="padding: 1rem 0.5rem;">Đợt 1: Phí ghi danh hồ sơ & Đặt cọc chọn trường</td>
+                      <td style="padding: 1rem 0.5rem; font-weight: 600;">60,000,000 ₫</td>
+                      <td style="padding: 1rem 0.5rem; text-align: center;"><span class="crm-badge badge-selected" style="background: rgba(16, 185, 129, 0.1); color: #10B981; font-size: 0.7rem; font-weight: 600; padding: 0.2rem 0.5rem; border-radius: var(--border-radius-sm);">THÀNH CÔNG</span></td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <!-- Right side: Banking & QR Code -->
+          <div style="background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--border-radius-lg); padding: 2.5rem; box-shadow: var(--shadow-sm); display: flex; flex-direction: column; gap: 1.5rem;">
+            <h4 style="font-family: var(--font-serif); font-size: 1.15rem; font-weight: 500; color: var(--text-main); border-bottom: 1px solid var(--border); padding-bottom: 0.5rem; margin-bottom: 0.5rem;">HƯỚNG DẪN THANH TOÁN</h4>
+            
+            <div style="font-size: 0.85rem; display: flex; flex-direction: column; gap: 0.75rem;">
+              <div>
+                <span style="font-size: 0.7rem; text-transform: uppercase; color: var(--text-muted); font-weight: 600; display: block; margin-bottom: 0.15rem;">Ngân hàng thụ hưởng</span>
+                <strong style="color: var(--text-main);">Ngân hàng Vietcombank (VCB)</strong>
+              </div>
+              <div>
+                <span style="font-size: 0.7rem; text-transform: uppercase; color: var(--text-muted); font-weight: 600; display: block; margin-bottom: 0.15rem;">Số tài khoản</span>
+                <strong style="color: var(--accent); font-size: 1rem; font-family: monospace;">1023456789</strong>
+              </div>
+              <div>
+                <span style="font-size: 0.7rem; text-transform: uppercase; color: var(--text-muted); font-weight: 600; display: block; margin-bottom: 0.15rem;">Tên tài khoản</span>
+                <strong style="color: var(--text-main);">CONG TY CP GIAO DUC THINKEDU</strong>
+              </div>
+              <div>
+                <span style="font-size: 0.7rem; text-transform: uppercase; color: var(--text-muted); font-weight: 600; display: block; margin-bottom: 0.15rem;">Nội dung chuyển khoản mẫu</span>
+                <div style="background: var(--bg-primary); border: 1px dashed var(--accent); padding: 0.5rem; border-radius: var(--border-radius-sm); font-family: monospace; font-size: 0.75rem; font-weight: 600; color: var(--text-main); margin-top: 0.25rem;" id="transferSyntaxDisplay">
+                  Nop hoc phi - TE-2026-000 - [Ten hoc vien]
+                </div>
+              </div>
+            </div>
+
+            <!-- QR code container -->
+            <div style="border: 1px solid var(--border); border-radius: var(--border-radius-md); padding: 1.5rem; text-align: center; background: var(--bg-primary); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.75rem;">
+              <span style="font-size: 0.7rem; font-weight: 600; text-transform: uppercase; color: var(--text-muted); letter-spacing: 0.5px;">Quét Mã Thanh Toán VietQR</span>
+              <div style="width: 150px; height: 150px; background: #fff; padding: 10px; border-radius: var(--border-radius-sm); box-shadow: var(--shadow-sm); display: flex; align-items: center; justify-content: center; position: relative;">
+                <!-- Simulated QR elements -->
+                <div style="position: absolute; top: 10px; left: 10px; width: 30px; height: 30px; border: 4px solid var(--text-main); border-bottom: none; border-right: none;"></div>
+                <div style="position: absolute; top: 10px; right: 10px; width: 30px; height: 30px; border: 4px solid var(--text-main); border-bottom: none; border-left: none;"></div>
+                <div style="position: absolute; bottom: 10px; left: 10px; width: 30px; height: 30px; border: 4px solid var(--text-main); border-top: none; border-right: none;"></div>
+                <!-- Mini simulated blocks inside -->
+                <div style="width: 90px; height: 90px; display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px;">
+                  <div style="background: var(--accent); border-radius: 2px;"></div>
+                  <div style="background: var(--text-main); border-radius: 2px;"></div>
+                  <div style="background: transparent; border-radius: 2px;"></div>
+                  <div style="background: var(--text-main); border-radius: 2px;"></div>
+                  <div style="background: var(--text-main); border-radius: 2px;"></div>
+                  <div style="background: var(--accent); border-radius: 2px;"></div>
+                  <div style="background: var(--text-main); border-radius: 2px;"></div>
+                  <div style="background: transparent; border-radius: 2px;"></div>
+                  <div style="background: transparent; border-radius: 2px;"></div>
+                  <div style="background: var(--text-main); border-radius: 2px;"></div>
+                  <div style="background: var(--accent); border-radius: 2px;"></div>
+                  <div style="background: var(--text-main); border-radius: 2px;"></div>
+                  <div style="background: var(--text-main); border-radius: 2px;"></div>
+                  <div style="background: transparent; border-radius: 2px;"></div>
+                  <div style="background: var(--text-main); border-radius: 2px;"></div>
+                  <div style="background: var(--accent); border-radius: 2px;"></div>
+                </div>
+                <!-- Small logo in the center of QR -->
+                <div style="position: absolute; background: #fff; width: 34px; height: 20px; border-radius: 4px; box-shadow: var(--shadow-sm); display: flex; align-items: center; justify-content: center; font-size: 0.5rem; font-weight: 700; color: var(--accent); border: 1px solid var(--border);">TE</div>
+              </div>
+              <span style="font-size: 0.65rem; color: var(--text-muted); line-height: 1.4;">Tự động điền số tài khoản, số tiền và nội dung chuyển khoản</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
   </div>
 
   <!-- Toast Notification Wrapper -->

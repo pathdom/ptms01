@@ -4,7 +4,7 @@ echo     TIEN HANH DONG BO VA PUSH CODE THINKEDU LEN GITHUB
 echo =======================================================
 echo.
 git add .
-git commit -m "feat: rounding layout, photo sharing, profile edits, and Excel export"
+git commit -m "feat: add student account creation and personalized student portal"
 git push
 echo.
 echo =======================================================
