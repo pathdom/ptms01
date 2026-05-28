@@ -437,7 +437,6 @@ document.addEventListener('DOMContentLoaded', () => {
   const handlePortalLogin = async (email, password) => {
     try {
       await auth.signInWithEmailAndPassword(email, password);
-      localStorage.setItem('thinkedu_login_time', Date.now().toString()); // Save session login time
       showToast("Đăng nhập thành công!", "success");
     } catch (error) {
       console.error("Login failed:", error);
@@ -455,7 +454,6 @@ document.addEventListener('DOMContentLoaded', () => {
             createdAt: firebase.firestore.FieldValue.serverTimestamp()
           });
           showToast("Khởi tạo tài khoản Admin thành công! Đang tự động đăng nhập...", "success");
-          localStorage.setItem('thinkedu_login_time', Date.now().toString()); // Save session login time
           // Firebase automatically signs in the user upon creation. We sync session naturally.
           return;
         } catch (createErr) {
@@ -550,11 +548,6 @@ document.addEventListener('DOMContentLoaded', () => {
   // Logout actions
   const handlePortalLogout = async () => {
     try {
-      if (window.sessionTimeoutInterval) {
-        clearInterval(window.sessionTimeoutInterval);
-      }
-      localStorage.removeItem('thinkedu_login_time'); // Clear session timestamp
-
       if (chatSubscription) {
         chatSubscription(); // Unsubscribe chat
         chatSubscription = null;
@@ -1082,315 +1075,315 @@ document.addEventListener('DOMContentLoaded', () => {
       name: "Nguyễn Thảo Chi",
       email: "chi.nguyen@gmail.com",
       phone: "0912345678",
-      country: "Úc",
+      country: "Nhật",
       status: "Đang học",
-      notes: "Học sinh xuất sắc, đang chuẩn bị hồ sơ visa du học Úc ngành Công nghệ thông tin."
+      notes: "Học sinh xuất sắc, đang chuẩn bị hồ sơ visa du học Nhật Bản ngành Công nghệ thông tin."
     },
     {
       code: "TE-2026-002",
       name: "Trần Minh Hoàng",
       email: "hoang.tran@outlook.com",
       phone: "0987654321",
-      country: "Mỹ",
+      country: "Hàn",
       status: "Chờ phỏng vấn",
-      notes: "Đã có thư mời nhập học của trường Arizona State University. Đang luyện phỏng vấn visa Mỹ."
+      notes: "Đã có thư mời nhập học của trường Đại học Quốc gia Seoul (SNU). Đang luyện phỏng vấn visa Hàn Quốc."
     },
     {
       code: "TE-2026-003",
       name: "Phạm Lê Quỳnh Anh",
       email: "anh.pham@gmail.com",
       phone: "0905558888",
-      country: "Canada",
+      country: "Đài",
       status: "Đã trúng tuyển",
-      notes: "Trúng tuyển Đại học Toronto với học bổng 20%. Chuẩn bị lên đường vào tháng 9."
+      notes: "Trúng tuyển Đại học Quốc gia Đài Loan (NTU) với học bổng 20%. Chuẩn bị lên đường vào tháng 9."
     },
     {
       code: "TE-2026-004",
       name: "Vũ Đức Huy",
       email: "huy.vu@domain.com",
       phone: "0944112233",
-      country: "Đức",
+      country: "Nhật",
       status: "Đang làm hồ sơ",
-      notes: "Đang học tiếng Đức trình độ B2. Đang thẩm định hồ sơ APS."
+      notes: "Đang học tiếng Nhật trình độ N3. Đang thẩm định hồ sơ COE Nhật Bản."
     },
     {
       code: "TE-2026-005",
       name: "Lê Thị Mai Chi",
       email: "chi.le@gmail.com",
       phone: "0933778899",
-      country: "Anh",
+      country: "Hàn",
       status: "Đang học",
-      notes: "Đang làm hồ sơ xin visa Anh. Học sinh đạt IELTS 7.5."
+      notes: "Đang làm hồ sơ xin visa Hàn Quốc. Học sinh đạt TOPIK 4."
     },
     {
       code: "TE-2026-006",
       name: "Nguyễn Hoàng Nam",
       email: "nam.nguyen@gmail.com",
       phone: "0901234567",
-      country: "Mỹ",
+      country: "Đài",
       status: "Đang học",
-      notes: "Đang học khóa tiếng Anh IELTS nâng cao để chuẩn bị nộp hồ sơ Đại học bang Ohio."
+      notes: "Đang học khóa tiếng Trung TOCFL nâng cao để chuẩn bị nộp hồ sơ Đại học Sư phạm Đài Loan."
     },
     {
       code: "TE-2026-007",
       name: "Phạm Minh Thư",
       email: "thu.pham@outlook.com",
       phone: "0918889999",
-      country: "Úc",
+      country: "Nhật",
       status: "Đang làm hồ sơ",
-      notes: "Hồ sơ Visa đang được thẩm định. Đã hoàn thành đóng học phí kỳ I đại học Monash."
+      notes: "Hồ sơ Visa đang được thẩm định. Đã hoàn thành đóng học phí kỳ I trường Nhật ngữ tại Tokyo."
     },
     {
       code: "TE-2026-008",
       name: "Lê Khánh Linh",
       email: "linh.le@gmail.com",
       phone: "0934567890",
-      country: "Canada",
+      country: "Hàn",
       status: "Chờ phỏng vấn",
-      notes: "Đã có lịch phỏng vấn học bổng với đại diện tuyển sinh trường đại học McGill."
+      notes: "Đã có lịch phỏng vấn học bổng với đại diện tuyển sinh trường Đại học Yonsei."
     },
     {
       code: "TE-2026-009",
       name: "Trần Anh Tuấn",
       email: "tuan.tran@gmail.com",
       phone: "0989998888",
-      country: "Đức",
+      country: "Đài",
       status: "Đang học",
-      notes: "Học sinh đang học tiếng Đức dự bị đại học tại viện Goethe Hà Nội."
+      notes: "Học sinh đang học tiếng Trung TOCFL tại trung tâm ngoại ngữ ThinkEdu."
     },
     {
       code: "TE-2026-010",
       name: "Vũ Thùy Chi",
       email: "chi.vu@gmail.com",
       phone: "0966667777",
-      country: "Anh",
+      country: "Nhật",
       status: "Đã trúng tuyển",
-      notes: "Nhận học bổng 50% học phí chương trình thạc sĩ tài chính của University of Westminster."
+      notes: "Nhận học bổng 50% học phí chương trình thạc sĩ của Đại học Waseda."
     },
     {
       code: "TE-2026-011",
       name: "Phan Hoàng Long",
       email: "long.phan@gmail.com",
       phone: "0977778888",
-      country: "Mỹ",
+      country: "Hàn",
       status: "Đang làm hồ sơ",
-      notes: "Đang đợi kết quả thẩm định hồ sơ tài chính từ I-20 của trường Boston University."
+      notes: "Đang đợi kết quả thẩm định hồ sơ tài chính từ Đại học Korea (Korea University)."
     },
     {
       code: "TE-2026-012",
       name: "Đỗ Mai Phương",
       email: "phuong.do@gmail.com",
       phone: "0922223333",
-      country: "Úc",
+      country: "Đài",
       status: "Đang học",
-      notes: "Học sinh đang theo học chương trình Pathway lớp 12 tại Melbourne."
+      notes: "Học sinh đang theo học chương trình tiếng Trung dự bị tại Đài Bắc."
     },
     {
       code: "TE-2026-013",
       name: "Hoàng Quốc Bảo",
       email: "bao.hoang@gmail.com",
       phone: "0933334444",
-      country: "Canada",
+      country: "Nhật",
       status: "Đang học",
-      notes: "Học sinh xuất sắc đạt IELTS 8.0, chuẩn bị nộp hồ sơ visa SDS Canada."
+      notes: "Học sinh xuất sắc đạt chứng chỉ tiếng Nhật N2, chuẩn bị nộp hồ sơ visa du học."
     },
     {
       code: "TE-2026-014",
       name: "Bùi Yến Nhi",
       email: "nhi.bui@gmail.com",
       phone: "0944445555",
-      country: "Đức",
+      country: "Hàn",
       status: "Chờ phỏng vấn",
-      notes: "Đang chuẩn bị hồ sơ phỏng vấn trực tiếp tại đại sứ quán Đức."
+      notes: "Đang chuẩn bị hồ sơ phỏng vấn trực tiếp tại Đại sứ quán Hàn Quốc."
     },
     {
       code: "TE-2026-015",
       name: "Đặng Đức Minh",
       email: "minh.dang@gmail.com",
       phone: "0955556666",
-      country: "Anh",
+      country: "Đài",
       status: "Đang làm hồ sơ",
-      notes: "Đang viết bài luận cá nhân Personal Statement cho UCAS ngành Luật."
+      notes: "Đang viết bài luận cá nhân xin học bổng trường Đại học Khoa học Kỹ thuật Đài Loan."
     },
     {
       code: "TE-2026-016",
       name: "Ngô Thanh Hằng",
       email: "hang.ngo@gmail.com",
       phone: "0966667777",
-      country: "Mỹ",
+      country: "Nhật",
       status: "Đã trúng tuyển",
-      notes: "Nhận được VISA du học Mỹ diện F-1, chuẩn bị bay vào cuối tháng 8."
+      notes: "Nhận được tư cách lưu trú COE du học Nhật Bản, chuẩn bị bay vào cuối tháng 8."
     },
     {
       code: "TE-2026-017",
       name: "Dương Gia Huy",
       email: "huy.duong@gmail.com",
       phone: "0977778888",
-      country: "Úc",
+      country: "Hàn",
       status: "Đang học",
-      notes: "Học sinh đang cải thiện điểm số GPA kỳ 2 lớp 11 để nộp hồ sơ sớm."
+      notes: "Học sinh đang cải thiện điểm số GPA kỳ 2 lớp 11 để nộp hồ sơ du học Hàn Quốc."
     },
     {
       code: "TE-2026-018",
       name: "Lý Hương Giang",
       email: "giang.ly@gmail.com",
       phone: "0988889999",
-      country: "Canada",
+      country: "Đài",
       status: "Đang làm hồ sơ",
-      notes: "Đang chờ dịch thuật công chứng học bạ trung học phổ thông."
+      notes: "Đang chờ dịch thuật công chứng học bạ trung học phổ thông để nộp sang Đài Loan."
     },
     {
       code: "TE-2026-019",
       name: "Đỗ Minh Triết",
       email: "triet.do@gmail.com",
       phone: "0999990000",
-      country: "Đức",
+      country: "Nhật",
       status: "Đang học",
-      notes: "Đã đạt chứng chỉ tiếng Đức B1, chuẩn bị nộp hồ sơ xin thư mời."
+      notes: "Đã đạt chứng chỉ tiếng Nhật N3, chuẩn bị nộp hồ sơ xin thư mời học."
     },
     {
       code: "TE-2026-020",
       name: "Trịnh Quỳnh Chi",
       email: "chi.trinh@gmail.com",
       phone: "0911112222",
-      country: "Anh",
+      country: "Hàn",
       status: "Chờ phỏng vấn",
-      notes: "Đã nhận được thư mời phỏng vấn học bổng danh giá của University of Bristol."
+      notes: "Đã nhận được thư mời phỏng vấn học bổng danh giá của Đại học Sogang."
     },
     {
       code: "TE-2026-021",
       name: "Lâm Thế Vinh",
       email: "vinh.lam@gmail.com",
       phone: "0922223333",
-      country: "Mỹ",
+      country: "Đài",
       status: "Đang học",
-      notes: "Học sinh đang ôn tập cho kỳ thi chuẩn hóa SAT đạt mục tiêu 1500 điểm."
+      notes: "Học sinh đang ôn tập để đạt chứng chỉ TOCFL cấp 4."
     },
     {
       code: "TE-2026-022",
       name: "Nguyễn Bích Ngọc",
       email: "ngoc.nguyen@gmail.com",
       phone: "0933334444",
-      country: "Úc",
+      country: "Nhật",
       status: "Đã trúng tuyển",
-      notes: "Trúng tuyển ngành Truyền thông Đại học Quốc gia Úc (ANU) kỳ học mùa xuân."
+      notes: "Trúng tuyển ngành Truyền thông Đại học Nagoya kỳ học mùa xuân."
     },
     {
       code: "TE-2026-023",
       name: "Trần Đình Phong",
       email: "phong.tran@gmail.com",
       phone: "0944445555",
-      country: "Canada",
+      country: "Hàn",
       status: "Đang làm hồ sơ",
-      notes: "Đang làm thủ tục chứng minh tài chính qua ngân hàng Scotiabank."
+      notes: "Đang làm thủ tục chứng minh tài chính xin visa D-2 du học Hàn Quốc."
     },
     {
       code: "TE-2026-024",
       name: "Phạm Thu Thảo",
       email: "thao.pham@gmail.com",
       phone: "0955556666",
-      country: "Đức",
+      country: "Đài",
       status: "Đang học",
-      notes: "Đang tham gia khóa học toán dự bị bằng tiếng Đức trực tuyến."
+      notes: "Đang tham gia khóa học tiếng Trung giao tiếp trực tuyến với giáo viên bản xứ."
     },
     {
       code: "TE-2026-025",
       name: "Lê Minh Quân",
       email: "quan.le@gmail.com",
       phone: "0966667777",
-      country: "Anh",
+      country: "Nhật",
       status: "Đang học",
-      notes: "Học sinh lớp 11 đang chuẩn bị hồ sơ du học A-Level tại Anh quốc."
+      notes: "Học sinh lớp 11 đang chuẩn bị hồ sơ du học tự túc tại Nhật Bản."
     },
     {
       code: "TE-2026-026",
       name: "Vũ Bảo Ngọc",
       email: "ngoc.vu@gmail.com",
       phone: "0977778888",
-      country: "Mỹ",
+      country: "Hàn",
       status: "Chờ phỏng vấn",
-      notes: "Luyện phỏng vấn VISA Mỹ hàng tuần với cố vấn du học của ThinkEdu."
+      notes: "Luyện phỏng vấn visa du học Hàn Quốc hàng tuần với cố vấn của ThinkEdu."
     },
     {
       code: "TE-2026-027",
       name: "Phan Hữu Phước",
       email: "phuoc.phan@gmail.com",
       phone: "0988889999",
-      country: "Úc",
+      country: "Đài",
       status: "Đang làm hồ sơ",
-      notes: "Đang chuẩn bị hồ sơ nộp xin thư mời học CoE từ Đại học Sydney."
+      notes: "Đang chuẩn bị hồ sơ nộp xin thư mời học từ Đại học Giao thông Đài Loan."
     },
     {
       code: "TE-2026-028",
       name: "Hoàng Thanh Trúc",
       email: "truc.hoang@gmail.com",
       phone: "0999990000",
-      country: "Canada",
+      country: "Nhật",
       status: "Đã trúng tuyển",
-      notes: "Nhận VISA du học Canada diện SDS thành công, xuất cảnh vào tháng 9."
+      notes: "Nhận VISA du học Nhật Bản thành công, xuất cảnh vào tháng 9."
     },
     {
       code: "TE-2026-029",
       name: "Bùi Tiến Dũng",
       email: "dung.bui@gmail.com",
       phone: "0911112222",
-      country: "Đức",
+      country: "Hàn",
       status: "Đang học",
-      notes: "Học sinh đang theo học lớp tiếng Đức B2 cấp tốc cả ngày."
+      notes: "Học sinh đang theo học lớp tiếng Hàn TOPIK cấp tốc cả ngày."
     },
     {
       code: "TE-2026-030",
       name: "Nguyễn Khánh Huyền",
       email: "huyen.nguyen@gmail.com",
       phone: "0922223333",
-      country: "Anh",
+      country: "Đài",
       status: "Đang làm hồ sơ",
-      notes: "Đang đợi kết quả phản hồi xin thư mời học vô điều kiện (Unconditional Offer)."
+      notes: "Đang đợi kết quả phản hồi xin thư mời học vô điều kiện từ trường Đại học Tsing Hua Đài Loan."
     },
     {
       code: "TE-2026-031",
       name: "Đặng Quang Hải",
       email: "hai.dang@gmail.com",
       phone: "0933334444",
-      country: "Mỹ",
+      country: "Nhật",
       status: "Đang học",
-      notes: "Đang hoàn tất bài kiểm tra tiếng Anh đầu vào du học phổ thông nội trú Mỹ."
+      notes: "Đang hoàn tất bài kiểm tra năng lực tiếng Nhật đầu vào trường THPT nội trú Nhật Bản."
     },
     {
       code: "TE-2026-032",
       name: "Trịnh Mai Anh",
       email: "anh.trinh@gmail.com",
       phone: "0944445555",
-      country: "Úc",
+      country: "Hàn",
       status: "Chờ phỏng vấn",
-      notes: "Lên lịch chuẩn bị phỏng vấn học bổng đầu vào 10,000 AUD của UQ."
+      notes: "Lên lịch chuẩn bị phỏng vấn học bổng đầu vào của Đại học Hanyang."
     },
     {
       code: "TE-2026-033",
       name: "Ngô Văn Quyết",
       email: "quyet.ngo@gmail.com",
       phone: "0955556666",
-      country: "Canada",
+      country: "Đài",
       status: "Đang học",
-      notes: "Học sinh tích cực tham gia các dự án nghiên cứu khoa học để làm đẹp hồ sơ Canada."
+      notes: "Học sinh tích cực tham gia các dự án nghiên cứu khoa học để làm đẹp hồ sơ du học Đài Loan."
     },
     {
       code: "TE-2026-034",
       name: "Lê Hồng Nhung",
       email: "nhung.le@gmail.com",
       phone: "0966667777",
-      country: "Đức",
+      country: "Nhật",
       status: "Đã trúng tuyển",
-      notes: "Đã mở thành công tài khoản phong tỏa (Blocked Account) ngân hàng Expatrio."
+      notes: "Đã nộp thành công học phí kỳ đầu tiên cho trường Nhật ngữ tại Osaka."
     },
     {
       code: "TE-2026-035",
       name: "Phạm Hùng Anh",
       email: "anh.pham.h@gmail.com",
       phone: "0977778888",
-      country: "Anh",
+      country: "Hàn",
       status: "Đang học",
-      notes: "Đang hoàn tất các thủ tục khám sức khỏe lao động phổi chuẩn bị xin visa Anh quốc."
+      notes: "Đang hoàn tất các thủ tục khám sức khỏe lao phổi chuẩn bị xin visa du học Hàn Quốc."
     }
   ];
 
@@ -1981,27 +1974,11 @@ document.addEventListener('DOMContentLoaded', () => {
     btn.addEventListener('click', handlePortalLogout);
   });
 
-  // Startup and Reload Session Handler (Force signOut upon load/refresh if session expired)
+  // Startup and Reload Session Handler
   const checkPortalSession = () => {
     // 2. Setup Auth state changed listener
     auth.onAuthStateChanged(async (user) => {
       if (user) {
-        const lastLoginTime = localStorage.getItem('thinkedu_login_time');
-        const now = Date.now();
-        const timeoutDuration = 5 * 60 * 1000; // 5 minutes in ms
-
-        // Force sign out if no login timestamp exists or if the session has expired (>5 minutes)
-        if (!lastLoginTime || (now - parseInt(lastLoginTime) > timeoutDuration)) {
-          console.log("Session expired. Forcing sign out.");
-          localStorage.removeItem('thinkedu_login_time');
-          auth.signOut();
-          showToast("Phiên đăng nhập đã hết hạn sau 5 phút. Vui lòng đăng nhập lại!", "warning");
-          return; // Stop execution to prevent loading user workspaces
-        }
-
-        // If valid, renew timestamp for sliding session window
-        localStorage.setItem('thinkedu_login_time', now.toString());
-
         try {
           const doc = await db.collection("users").doc(user.uid).get();
           if (doc.exists) {
@@ -2018,32 +1995,6 @@ document.addEventListener('DOMContentLoaded', () => {
           // Sync credentials to UI headers
           syncUserInfoUI(currentUser);
 
-          // Start background interval to check for inactivity/session timeout
-          if (window.sessionTimeoutInterval) clearInterval(window.sessionTimeoutInterval);
-          window.sessionTimeoutInterval = setInterval(() => {
-            const lastTime = localStorage.getItem('thinkedu_login_time');
-            const currentTime = Date.now();
-            if (!lastTime || (currentTime - parseInt(lastTime) > 5 * 60 * 1000)) {
-              localStorage.removeItem('thinkedu_login_time');
-              clearInterval(window.sessionTimeoutInterval);
-              auth.signOut();
-              showToast("Phiên làm việc đã hết hạn sau 5 phút. Vui lòng đăng nhập lại!", "warning");
-            }
-          }, 10000); // Check every 10 seconds
-
-          // Reset sliding session timer on user activity
-          let interactionThrottle = false;
-          window.handleUserInteraction = () => {
-            if (interactionThrottle) return;
-            interactionThrottle = true;
-            localStorage.setItem('thinkedu_login_time', Date.now().toString());
-            setTimeout(() => { interactionThrottle = false; }, 5000); // Throttle to 5s
-          };
-
-          ['click', 'keypress', 'scroll', 'mousemove'].forEach(evt => {
-            window.addEventListener(evt, window.handleUserInteraction);
-          });
-
           if (currentUser.role === 'student') {
             // SHOW Student App Root, hide Login Panel and Admin Portal
             if (loginContainer) loginContainer.style.display = 'none';
@@ -2059,7 +2010,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 name: currentUser.name,
                 code: "TE-2026-999",
                 phone: "Chưa rõ",
-                country: "Mỹ",
+                country: "Nhật",
                 status: "Đang học",
                 notes: ""
               };

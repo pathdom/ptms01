@@ -1091,6 +1091,7 @@ button {
   vertical-align: middle;
   background: var(--bg-primary);
   transition: var(--transition-fast);
+  text-align: center;
 }
 
 .financial-table td:first-child {
