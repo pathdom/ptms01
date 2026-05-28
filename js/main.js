@@ -1983,25 +1983,25 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Startup and Reload Session Handler (Force signOut upon load/refresh if session expired)
   const checkPortalSession = () => {
-    const lastLoginTime = localStorage.getItem('thinkedu_login_time');
-    const now = Date.now();
-    const timeoutDuration = 5 * 60 * 1000; // 5 minutes in ms
-
-    // Force sign out if no login timestamp exists or if the session has expired (>5 minutes)
-    if (!lastLoginTime || (now - parseInt(lastLoginTime) > timeoutDuration)) {
-      auth.signOut();
-      localStorage.removeItem('thinkedu_login_time');
-      if (lastLoginTime) {
-        showToast("Phiên đăng nhập đã hết hạn sau 5 phút. Vui lòng đăng nhập lại!", "warning");
-      }
-    } else {
-      // If valid, renew timestamp for sliding session window
-      localStorage.setItem('thinkedu_login_time', now.toString());
-    }
-
     // 2. Setup Auth state changed listener
     auth.onAuthStateChanged(async (user) => {
       if (user) {
+        const lastLoginTime = localStorage.getItem('thinkedu_login_time');
+        const now = Date.now();
+        const timeoutDuration = 5 * 60 * 1000; // 5 minutes in ms
+
+        // Force sign out if no login timestamp exists or if the session has expired (>5 minutes)
+        if (!lastLoginTime || (now - parseInt(lastLoginTime) > timeoutDuration)) {
+          console.log("Session expired. Forcing sign out.");
+          localStorage.removeItem('thinkedu_login_time');
+          auth.signOut();
+          showToast("Phiên đăng nhập đã hết hạn sau 5 phút. Vui lòng đăng nhập lại!", "warning");
+          return; // Stop execution to prevent loading user workspaces
+        }
+
+        // If valid, renew timestamp for sliding session window
+        localStorage.setItem('thinkedu_login_time', now.toString());
+
         try {
           const doc = await db.collection("users").doc(user.uid).get();
           if (doc.exists) {
@@ -2023,13 +2023,26 @@ document.addEventListener('DOMContentLoaded', () => {
           window.sessionTimeoutInterval = setInterval(() => {
             const lastTime = localStorage.getItem('thinkedu_login_time');
             const currentTime = Date.now();
-            if (lastTime && (currentTime - parseInt(lastTime) > 5 * 60 * 1000)) {
+            if (!lastTime || (currentTime - parseInt(lastTime) > 5 * 60 * 1000)) {
               localStorage.removeItem('thinkedu_login_time');
               clearInterval(window.sessionTimeoutInterval);
               auth.signOut();
               showToast("Phiên làm việc đã hết hạn sau 5 phút. Vui lòng đăng nhập lại!", "warning");
             }
           }, 10000); // Check every 10 seconds
+
+          // Reset sliding session timer on user activity
+          let interactionThrottle = false;
+          window.handleUserInteraction = () => {
+            if (interactionThrottle) return;
+            interactionThrottle = true;
+            localStorage.setItem('thinkedu_login_time', Date.now().toString());
+            setTimeout(() => { interactionThrottle = false; }, 5000); // Throttle to 5s
+          };
+
+          ['click', 'keypress', 'scroll', 'mousemove'].forEach(evt => {
+            window.addEventListener(evt, window.handleUserInteraction);
+          });
 
           if (currentUser.role === 'student') {
             // SHOW Student App Root, hide Login Panel and Admin Portal
