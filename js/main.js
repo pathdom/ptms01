@@ -612,10 +612,10 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         
         tr.innerHTML = `
-          <td><strong>${user.name}</strong><br><span style="font-size:0.7rem; color:var(--text-muted);">Tạo ngày: ${dateString}</span></td>
-          <td><span class="font-mono" style="font-weight:500;">${user.email}</span></td>
-          <td><span class="font-mono" style="color:var(--text-muted); font-weight:500;">********</span></td>
-          <td><span class="crm-badge badge-danghoc">Nhân viên</span></td>
+          <td style="text-align: center;"><strong>${user.name}</strong><br><span style="font-size:0.7rem; color:var(--text-muted);">Tạo ngày: ${dateString}</span></td>
+          <td style="text-align: center;"><span class="font-mono" style="font-weight:500;">${user.email}</span></td>
+          <td style="text-align: center;"><span class="font-mono" style="color:var(--text-muted); font-weight:500;">********</span></td>
+          <td style="text-align: center;"><span class="crm-badge badge-danghoc">Nhân viên</span></td>
           <td style="text-align: center;">
             <button class="action-icon-btn btn-delete-staff" data-uid="${user.uid}" title="Xóa tài khoản" style="color:#EF4444; background:none; border:none; cursor:pointer; padding:6px; border-radius:50%;">
               <svg viewBox="0 0 24 24" style="width: 18px; height: 18px; fill: currentColor;"><path d="M19,4H15.5L14.5,3H9.5L8.5,4H5V6H19M6,19A2,2 0 0,0 8,21H16A2,2 0 0,0 18,19V7H6V19Z"/></svg>
@@ -756,10 +756,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const tr = document.createElement('tr');
         tr.innerHTML = `
-          <td><strong>${user.name}</strong><br><span style="font-size:0.75rem; font-family: monospace; color:var(--accent); font-weight: 600;">${code}</span></td>
-          <td><span class="font-mono" style="font-weight:500;">${user.email}</span></td>
-          <td><strong>${country}</strong></td>
-          <td><span class="crm-badge ${badgeClass}">${status}</span></td>
+          <td style="text-align: center;"><strong>${user.name}</strong><br><span style="font-size:0.75rem; font-family: monospace; color:var(--accent); font-weight: 600;">${code}</span></td>
+          <td style="text-align: center;"><span class="font-mono" style="font-weight:500;">${user.email}</span></td>
+          <td style="text-align: center;"><strong>${country}</strong></td>
+          <td style="text-align: center;"><span class="crm-badge ${badgeClass}">${status}</span></td>
           <td style="text-align: center;">
             <button class="action-icon-btn btn-delete-student-user" data-uid="${user.uid}" data-email="${user.email}" title="Xóa tài khoản" style="color:#EF4444; background:none; border:none; cursor:pointer; padding:6px; border-radius:50%;">
               <svg viewBox="0 0 24 24" style="width: 18px; height: 18px; fill: currentColor;"><path d="M19,4H15.5L14.5,3H9.5L8.5,4H5V6H19M6,19A2,2 0 0,0 8,21H16A2,2 0 0,0 18,19V7H6V19Z"/></svg>
@@ -1397,6 +1397,20 @@ document.addEventListener('DOMContentLoaded', () => {
     studentsSubscription = db.collection("students")
       .orderBy("code", "asc")
       .onSnapshot(async (snapshot) => {
+        // Real-time migration: delete old mock students containing other countries
+        let hasInvalidCountry = false;
+        snapshot.forEach((doc) => {
+          const data = doc.data();
+          if (data.country && !["Nhật", "Đài", "Hàn"].includes(data.country)) {
+            hasInvalidCountry = true;
+            db.collection("students").doc(doc.id).delete();
+          }
+        });
+        if (hasInvalidCountry) {
+          console.log("Cleaned up old mock student data with non-target countries.");
+          return;
+        }
+
         // If empty, auto-populate default student profiles to show a live demo
         if (snapshot.empty) {
           console.log("Pre-populating Firestore students database...");
@@ -1461,14 +1475,14 @@ document.addEventListener('DOMContentLoaded', () => {
       else if (student.status === "Đang làm hồ sơ") badgeClass = "badge-processing";
 
       tr.innerHTML = `
-        <td><span class="font-mono" style="font-weight:600; color:var(--accent);">${student.code}</span></td>
-        <td><strong>${student.name}</strong></td>
-        <td>
-          <span style="font-size:0.8rem; display:block;">${student.email}</span>
-          <span style="font-size:0.75rem; color:var(--text-muted);">${student.phone}</span>
+        <td style="text-align: center;"><span class="font-mono" style="font-weight:600; color:var(--accent);">${student.code}</span></td>
+        <td style="text-align: center;"><strong>${student.name}</strong></td>
+        <td style="text-align: center;">
+          <span style="font-size:0.8rem; display:block; text-align: center;">${student.email}</span>
+          <span style="font-size:0.75rem; color:var(--text-muted); display:block; text-align: center;">${student.phone}</span>
         </td>
-        <td><strong>${student.country}</strong></td>
-        <td><span class="crm-badge ${badgeClass}">${student.status}</span></td>
+        <td style="text-align: center;"><strong>${student.country}</strong></td>
+        <td style="text-align: center;"><span class="crm-badge ${badgeClass}">${student.status}</span></td>
         <td style="text-align: center;">
           <div style="display: flex; gap: 0.5rem; justify-content: center; align-items: center;">
             <button class="action-icon-btn btn-view-student" data-id="${student.id}" title="Chi tiết" style="padding: 6px; color: var(--accent); background:none; border:none; cursor:pointer;">
