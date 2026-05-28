@@ -318,6 +318,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
   firebase.initializeApp(firebaseConfig);
   const auth = firebase.auth();
+  
+  // Set persistence to NONE so the session is never saved in storage (always log in on refresh/new tab)
+  auth.setPersistence(firebase.auth.Auth.Persistence.NONE)
+    .catch((err) => console.error("Error setting Firebase persistence to NONE:", err));
+
   const db = firebase.firestore();
 
   let currentUser = null;
@@ -432,6 +437,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const handlePortalLogin = async (email, password) => {
     try {
       await auth.signInWithEmailAndPassword(email, password);
+      localStorage.setItem('thinkedu_login_time', Date.now().toString()); // Save session login time
       showToast("Đăng nhập thành công!", "success");
     } catch (error) {
       console.error("Login failed:", error);
@@ -449,6 +455,7 @@ document.addEventListener('DOMContentLoaded', () => {
             createdAt: firebase.firestore.FieldValue.serverTimestamp()
           });
           showToast("Khởi tạo tài khoản Admin thành công! Đang tự động đăng nhập...", "success");
+          localStorage.setItem('thinkedu_login_time', Date.now().toString()); // Save session login time
           // Firebase automatically signs in the user upon creation. We sync session naturally.
           return;
         } catch (createErr) {
@@ -543,6 +550,11 @@ document.addEventListener('DOMContentLoaded', () => {
   // Logout actions
   const handlePortalLogout = async () => {
     try {
+      if (window.sessionTimeoutInterval) {
+        clearInterval(window.sessionTimeoutInterval);
+      }
+      localStorage.removeItem('thinkedu_login_time'); // Clear session timestamp
+
       if (chatSubscription) {
         chatSubscription(); // Unsubscribe chat
         chatSubscription = null;
@@ -1969,10 +1981,23 @@ document.addEventListener('DOMContentLoaded', () => {
     btn.addEventListener('click', handlePortalLogout);
   });
 
-  // Startup and Reload Session Handler (Force signOut upon load/refresh)
+  // Startup and Reload Session Handler (Force signOut upon load/refresh if session expired)
   const checkPortalSession = () => {
-    // 1. Force log out on reload/startup to respect the "reload triggers logout" requirement
-    auth.signOut();
+    const lastLoginTime = localStorage.getItem('thinkedu_login_time');
+    const now = Date.now();
+    const timeoutDuration = 5 * 60 * 1000; // 5 minutes in ms
+
+    // Force sign out if no login timestamp exists or if the session has expired (>5 minutes)
+    if (!lastLoginTime || (now - parseInt(lastLoginTime) > timeoutDuration)) {
+      auth.signOut();
+      localStorage.removeItem('thinkedu_login_time');
+      if (lastLoginTime) {
+        showToast("Phiên đăng nhập đã hết hạn sau 5 phút. Vui lòng đăng nhập lại!", "warning");
+      }
+    } else {
+      // If valid, renew timestamp for sliding session window
+      localStorage.setItem('thinkedu_login_time', now.toString());
+    }
 
     // 2. Setup Auth state changed listener
     auth.onAuthStateChanged(async (user) => {
@@ -1992,6 +2017,19 @@ document.addEventListener('DOMContentLoaded', () => {
 
           // Sync credentials to UI headers
           syncUserInfoUI(currentUser);
+
+          // Start background interval to check for inactivity/session timeout
+          if (window.sessionTimeoutInterval) clearInterval(window.sessionTimeoutInterval);
+          window.sessionTimeoutInterval = setInterval(() => {
+            const lastTime = localStorage.getItem('thinkedu_login_time');
+            const currentTime = Date.now();
+            if (lastTime && (currentTime - parseInt(lastTime) > 5 * 60 * 1000)) {
+              localStorage.removeItem('thinkedu_login_time');
+              clearInterval(window.sessionTimeoutInterval);
+              auth.signOut();
+              showToast("Phiên làm việc đã hết hạn sau 5 phút. Vui lòng đăng nhập lại!", "warning");
+            }
+          }, 10000); // Check every 10 seconds
 
           if (currentUser.role === 'student') {
             // SHOW Student App Root, hide Login Panel and Admin Portal
