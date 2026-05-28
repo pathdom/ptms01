@@ -4,8 +4,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Cổng Trò Chuyện Nội Bộ | ThinkEdu - Hệ Sinh Thái Giáo Dục ThinkPro</title>
-  <meta name="description" content="Hệ thống chat nội bộ thời gian thực dành cho Ban điều hành và Nhân viên ThinkEdu.">
+  <title>ThinkEdu Portal | Cổng Thông Tin Học Viên & Quản Lý Du Học Nhật - Đài - Hàn</title>
+  <meta name="description" content="Hệ thống quản lý học tập, lộ trình hồ sơ và bảng tin trung tâm du học Nhật Bản, Đài Loan, Hàn Quốc từ ThinkEdu.">
 
   <!-- CSS Stylesheet -->
   <link rel="stylesheet" href="css/main.css">
@@ -115,6 +115,10 @@
           <li class="menu-item" data-target="students-dashboard" id="menuItemStudents">
             <svg viewBox="0 0 24 24"><path d="M12,5.5A3.5,3.5 0 1,1 8.5,9 3.5,3.5 0 0,1 12,5.5M5,8A3,3 0 1,1 2,11 3,3 0 0,1 5,8M19,8A3,3 0 1,1 16,11 3,3 0 0,1 19,8M12,13c3.67,0 11,1.84 11,5.5V21H1v-2.5c0-3.66 7.33-5.5 11-5.5m-7,2.5C4.24,15.5 2,16.7 2,18.5V19.5H7v-1c0-.75.33-1.42.87-1.92A14.28,14.28 0 0,0 5,15.5m14,0a14.28,14.28 0 0,0-2.87.58c.54.5.87,1.17.87,1.92v1h5v-1c0-1.8-2.24-3-3-3z"/></svg>
             <span>Danh sách học viên</span>
+          </li>
+          <li class="menu-item" data-target="blogs-dashboard" id="menuItemBlogs">
+            <svg viewBox="0 0 24 24" style="width:20px; height:20px; fill:currentColor;"><path d="M19,3H5C3.89,3 3,3.89 3,5V19A2,2 0 0,0 5,21H19A2,2 0 0,0 21,19V5C21,3.89 20.1,3 19,3M19,19H5V5H19V19M17,12H7V10H17V12M17,16H7V14H17V16M14,8H7V6H14V8Z"/></svg>
+            <span>Quản lý bài viết</span>
           </li>
           <!-- Admin-Only menu item -->
           <li class="menu-item admin-only" data-target="users-dashboard" id="menuItemCreateUsers" style="display: none;">
@@ -573,6 +577,110 @@
         </div>
       </div>
 
+      <!-- ==========================================
+           TAB 3.5. BLOG MANAGEMENT DASHBOARD (ADMIN & STAFF)
+           ========================================== -->
+      <div id="blogs-dashboard" class="dashboard-wrapper blogs-page-wrapper" style="display: none;">
+        <div class="dashboard-container">
+          <!-- Topbar Header -->
+          <div class="dashboard-topbar">
+            <div class="topbar-left">
+              <div class="topbar-title-group">
+                <h2>Quản lý Bài viết & Tin tức</h2>
+                <div class="breadcrumbs">
+                  <span class="portal-breadcrumb-home">Cổng thông tin</span> <span class="sep">/</span> <span class="active-crumb">Bài viết</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="topbar-right">
+              <div class="topbar-user-wrapper" style="position: relative;">
+                <div class="user-profile-badge-inline" style="cursor: pointer; padding: 0.5rem 0.8rem; border-radius: var(--border-radius-md); transition: var(--transition-fast); display: flex; align-items: center; gap: 0.75rem;">
+                  <div class="profile-avatar" id="miniBlogsAvatar">DM</div>
+                  <div class="profile-info-desktop">
+                    <span class="name" id="miniBlogsName">Đang tải...</span>
+                    <span class="role" id="miniBlogsRole">Nhân viên</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Main Dashboard Canvas -->
+          <div class="dashboard-canvas" style="padding: 2.5rem; overflow-y: auto; flex: 1;">
+            <div class="users-split-grid" style="display: grid; grid-template-columns: 1fr 1.5fr; gap: 2.5rem; align-items: start; max-width: 1400px; margin: 0 auto;">
+              
+              <!-- Create/Edit Blog Form (Left) -->
+              <div class="user-form-card" style="background: var(--bg-card); padding: 2rem; border-radius: var(--border-radius-lg); border: 1px solid var(--border); box-shadow: var(--shadow-sm);">
+                <h3 id="adminBlogFormTitle" style="font-family: var(--font-serif); font-size: 1.15rem; border-bottom: 1px solid var(--border); padding-bottom: 0.75rem; margin-bottom: 1.5rem; letter-spacing: 0.5px; color: var(--text-main);">+ TẠO BÀI VIẾT MỚI</h3>
+                <form id="adminBlogForm">
+                  <input type="hidden" id="adminBlogEditId">
+                  
+                  <div class="form-group-login" style="margin-bottom: 1.25rem;">
+                    <label for="adminBlogTitle">Tiêu đề bài viết *</label>
+                    <input type="text" id="adminBlogTitle" placeholder="Nhập tiêu đề hấp dẫn..." required style="padding: 0.75rem 1rem; border-radius: var(--border-radius-md); border: 1px solid var(--border); background: var(--bg-primary); color: var(--text-main); font-family: inherit; font-size: inherit;">
+                  </div>
+
+                  <div class="form-group-login" style="margin-bottom: 1.25rem;">
+                    <label for="adminBlogCategory">Danh mục / Quốc gia *</label>
+                    <input type="text" id="adminBlogCategory" placeholder="Ví dụ: NHẬT BẢN / COE, HÀN QUỐC / TOPIK" required style="padding: 0.75rem 1rem; border-radius: var(--border-radius-md); border: 1px solid var(--border); background: var(--bg-primary); color: var(--text-main); font-family: inherit; font-size: inherit;">
+                  </div>
+
+                  <div class="form-group-login" style="margin-bottom: 1.25rem;">
+                    <label for="adminBlogSummary">Mô tả ngắn gọn / Tóm tắt *</label>
+                    <textarea id="adminBlogSummary" placeholder="Nhập mô tả bài viết hiển thị ở bảng tin..." required style="padding: 0.75rem 1rem; border-radius: var(--border-radius-md); border: 1px solid var(--border); background: var(--bg-primary); color: var(--text-main); resize: vertical; min-height: 90px; font-family: inherit; font-size: inherit; outline: none;"></textarea>
+                  </div>
+
+                  <div class="form-group-login" style="margin-bottom: 1.25rem;">
+                    <label for="adminBlogImageSelect">Hình ảnh bài viết *</label>
+                    <select id="adminBlogImageSelect" style="padding: 0.75rem 1rem; border-radius: var(--border-radius-md); border: 1px solid var(--border); background: var(--bg-primary); color: var(--text-main); height: 42px; outline: none; font-family: inherit; font-size: inherit; cursor: pointer;">
+                      <option value="japan_news_thumbnail.png">Mặc định Nhật Bản (Hoa Anh Đào)</option>
+                      <option value="korea_news_thumbnail.png">Mặc định Hàn Quốc (Gyeongbokgung)</option>
+                      <option value="taiwan_news_thumbnail.png">Mặc định Đài Loan (Tháp Taipei 101)</option>
+                      <option value="custom">-- Tải lên ảnh tùy chỉnh từ máy --</option>
+                    </select>
+                  </div>
+
+                  <!-- File input for custom image (hidden until "custom" selected) -->
+                  <div class="form-group-login" id="adminBlogCustomImageGroup" style="display: none; margin-bottom: 1.5rem;">
+                    <label for="adminBlogImageFileInput">Tải ảnh đại diện bài viết *</label>
+                    <input type="file" id="adminBlogImageFileInput" accept="image/*" style="padding: 0.5rem; font-size: 0.8rem; background: var(--bg-primary); border-radius: var(--border-radius-md); border: 1px dashed var(--accent);">
+                    <div id="adminBlogImagePreviewContainer" style="margin-top: 0.75rem; width: 100%; height: 120px; border-radius: var(--border-radius-sm); border: 1px solid var(--border); overflow: hidden; display: none; background: #eee;">
+                      <img id="adminBlogImagePreview" src="" style="width: 100%; height: 100%; object-fit: cover;">
+                    </div>
+                  </div>
+
+                  <div style="display: flex; gap: 0.75rem;">
+                    <button type="submit" id="btnAdminSaveBlog" class="btn-submit-login" style="margin-top: 0; flex: 1;">LƯU BÀI VIẾT</button>
+                    <button type="button" id="btnAdminCancelBlogEdit" class="btn-submit-login" style="margin-top: 0; display: none; background: transparent; border-color: var(--border); color: var(--text-main); flex: 1;">HỦY BỎ</button>
+                  </div>
+                </form>
+              </div>
+
+              <!-- Admin Blogs List Table (Right) -->
+              <div class="user-list-card" style="background: var(--bg-card); padding: 2rem; border-radius: var(--border-radius-lg); border: 1px solid var(--border); box-shadow: var(--shadow-sm); overflow: hidden;">
+                <h3 style="font-family: var(--font-serif); font-size: 1.1rem; border-bottom: 1px solid var(--border); padding-bottom: 0.75rem; margin-bottom: 1.5rem; letter-spacing: 0.5px; color: var(--text-main);">DANH SÁCH BÀI VIẾT HIỆN TẠI</h3>
+                <div class="mini-table-container" style="max-height: 600px; overflow-y: auto;">
+                  <table class="financial-table" style="width: 100%; border-collapse: collapse;">
+                    <thead>
+                      <tr style="border-bottom: 2px solid var(--border);">
+                        <th style="padding: 0.75rem 0.5rem; font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted); width: 120px;">ẢNH BÌA</th>
+                        <th style="padding: 0.75rem 0.5rem; font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted); text-align: left;">TIÊU ĐỀ / DANH MỤC</th>
+                        <th style="padding: 0.75rem 0.5rem; font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted); text-align: center; width: 150px;">HÀNH ĐỘNG</th>
+                      </tr>
+                    </thead>
+                    <tbody id="adminBlogsTableBody">
+                      <!-- Populated dynamically via Firestore -->
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+            </div>
+          </div>
+        </div>
+      </div>
+
     </div>
   </div>
 
@@ -780,7 +888,7 @@
         <h3 style="font-family: var(--font-serif); font-size: 1.6rem; font-weight: 500; color: var(--text-main); margin-bottom: 2rem; border-bottom: 1px solid var(--border); padding-bottom: 0.75rem; letter-spacing: 0.5px;">BÀI VIẾT NỔI BẬT & KINH NGHIỆM DU HỌC</h3>
 
         <!-- Blog Grid -->
-        <div class="blog-asymmetric-grid" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 2rem;">
+        <div class="blog-asymmetric-grid" id="studentBlogGrid" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 2rem;">
           <!-- Blog 1 -->
           <div class="blog-card" style="background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--border-radius-md); overflow: hidden; display: flex; flex-direction: column; transition: var(--transition-smooth); box-shadow: var(--shadow-sm);" onmouseover="this.style.transform='translateY(-5px)'; this.style.boxShadow='var(--shadow-md)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='var(--shadow-sm)'">
             <div style="height: 180px; overflow: hidden; position: relative;">

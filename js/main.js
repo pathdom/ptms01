@@ -421,6 +421,13 @@ document.addEventListener('DOMContentLoaded', () => {
     if (miniStudentUsersName) miniStudentUsersName.textContent = user.name;
     if (miniStudentUsersRole) miniStudentUsersRole.textContent = displayRole;
 
+    // Mini Blogs header
+    syncAvatarElement('miniBlogsAvatar');
+    const miniBlogsName = document.getElementById('miniBlogsName');
+    const miniBlogsRole = document.getElementById('miniBlogsRole');
+    if (miniBlogsName) miniBlogsName.textContent = user.name;
+    if (miniBlogsRole) miniBlogsRole.textContent = displayRole;
+
     // Role-based Access Controls (Admin Only "Tạo tài khoản NV" & "Tạo tài khoản HV")
     const menuItemCreateUsers = document.getElementById('menuItemCreateUsers');
     const menuItemCreateStudentUsers = document.getElementById('menuItemCreateStudentUsers');
@@ -524,6 +531,8 @@ document.addEventListener('DOMContentLoaded', () => {
       renderStudentUsersList();
     } else if (targetViewId === 'students-dashboard') {
       applyStudentFiltersAndRender();
+    } else if (targetViewId === 'blogs-dashboard') {
+      renderAdminBlogsList();
     }
   };
 
@@ -1886,6 +1895,376 @@ document.addEventListener('DOMContentLoaded', () => {
     btnExportExcel.addEventListener("click", handleExportExcel);
   }
 
+  /* ==========================================================================
+     BLOG MANAGEMENT MODULE (INTEGRATED WITH FIREBASE FIRESTORE)
+     ========================================================================== */
+  
+  let blogs = [];
+  let blogsSubscription = null;
+  let customBlogImageBase64 = null;
+
+  // Default J-K-T Blogs to pre-populate Firestore if empty
+  const defaultBlogs = [
+    {
+      title: "Bí Quyết Đậu COE Du Học Nhật Bản 100% Năm 2026",
+      category: "NHẬT BẢN / COE",
+      summary: "Tìm hiểu các yêu cầu cốt lõi trong hồ sơ xin tư cách lưu trú (COE) du học Nhật. Những điểm cần đặc biệt lưu ý về chứng minh tài chính và lộ trình học tập tối ưu từ cố vấn ThinkEdu.",
+      image: "japan_news_thumbnail.png"
+    },
+    {
+      title: "Lộ Trình Du Học Hàn Quốc Trọn Gói Với TOPIK 3",
+      category: "HÀN QUỐC / TOPIK",
+      summary: "Visa thẳng giúp rút ngắn thời gian xét duyệt hồ sơ Hàn Quốc. Dưới đây là danh sách các trường đại học ưu tiên (trường 1%) và cách hoàn thiện hồ sơ để có tỉ lệ đỗ tối đa.",
+      image: "korea_news_thumbnail.png"
+    },
+    {
+      title: "Chinh Phục Học Bổng Toàn Phần Chính Phủ Đài Loan",
+      category: "ĐÀI LOAN / HỌC BỔNG",
+      summary: "Học bổng MOE và các suất học bổng trường học Đài Loan luôn hấp dẫn. Cẩm nang tổng hợp điều kiện chuẩn bị chứng chỉ TOCFL, viết bài luận cá nhân và kỹ năng phỏng vấn xuất sắc.",
+      image: "taiwan_news_thumbnail.png"
+    },
+    {
+      title: "Nhật Ký Học Viên: Mùa Hoa Anh Đào Đầu Tiên Tại Tokyo",
+      category: "NHẬT BẢN / KỶ NIỆM",
+      summary: "Chia sẻ chân thực từ bạn Thảo Chi - cựu học sinh ThinkEdu đang học tập tại Tokyo về những ngày đầu làm quen với ga tàu, văn hóa bản xứ và cuộc sống tự lập đáng nhớ.",
+      image: "japan_news_thumbnail.png"
+    },
+    {
+      title: "Kỷ Niệm Ngày Hội Giao Lưu Văn Hóa Quốc Tế Tại Seoul",
+      category: "HÀN QUỐC / KỶ NIỆM",
+      summary: "Cùng ngắm nhìn những khoảnh khắc tuyệt vời của cộng đồng học sinh ThinkEdu tham gia trại hè giao lưu văn hóa và trải nghiệm cuộc sống sinh viên đầy màu sắc tại Yonsei.",
+      image: "korea_news_thumbnail.png"
+    },
+    {
+      title: "Đài Loan - Thiên Đường Học Tập Thân Thiện & Tiết Kiệm",
+      category: "ĐÀI LOAN / ĐỜI SỐNG",
+      summary: "Đánh giá khách quan của du học sinh về môi trường sống an toàn, chi phí sinh hoạt cực kỳ hợp lý cùng nét văn hóa ẩm thực độc đáo tại chợ đêm Đài Bắc.",
+      image: "taiwan_news_thumbnail.png"
+    },
+    {
+      title: "Quy Định Làm Thêm & Thu Nhập Của Du Học Sinh Nhật",
+      category: "NHẬT BẢN / ĐỜI SỐNG",
+      summary: "Hướng dẫn chi tiết về quy định làm thêm 28 giờ/tuần tại Nhật Bản. Gợi ý các công việc phổ biến lương cao và cách xin giấy phép hoạt động ngoài tư cách lưu trú.",
+      image: "japan_news_thumbnail.png"
+    },
+    {
+      title: "Mùa Thu Vàng Seoul & Hành Trình Du Học Đầy Hoài Bão",
+      category: "HÀN QUỐC / CẢM HỨNG",
+      summary: "Nhật ký hình ảnh ghi lại vẻ đẹp lãng mạn của mùa thu xứ kim chi qua ống kính du học sinh ThinkEdu. Nguồn động lực to lớn cho những bạn đang ấp ủ giấc mơ Hàn Quốc.",
+      image: "korea_news_thumbnail.png"
+    },
+    {
+      title: "Cơ Hội Việc Làm Ngành Bán Dẫn Tại Đài Loan",
+      category: "ĐÀI LOAN / CƠ HỘI",
+      summary: "Phân tích tiềm năng nghề nghiệp rộng mở tại các tập đoàn công nghệ hàng đầu Đài Loan. Chính sách hỗ trợ thực tập và ở lại làm việc sau tốt nghiệp cho học sinh quốc tế.",
+      image: "taiwan_news_thumbnail.png"
+    }
+  ];
+
+  // Subscribe to Blogs time-series Firestore Collection
+  const subscribeToBlogs = () => {
+    if (blogsSubscription) blogsSubscription();
+
+    blogsSubscription = db.collection("blogs")
+      .orderBy("createdAt", "asc")
+      .onSnapshot(async (snapshot) => {
+        // Seed database if empty
+        if (snapshot.empty) {
+          console.log("Seeding default J-K-T blogs to Firestore...");
+          for (const blog of defaultBlogs) {
+            blog.createdAt = firebase.firestore.FieldValue.serverTimestamp();
+            await db.collection("blogs").add(blog);
+          }
+          return;
+        }
+
+        blogs = [];
+        snapshot.forEach((doc) => {
+          const data = doc.data();
+          data.id = doc.id;
+          blogs.push(data);
+        });
+
+        // 1. Render in Admin Blogs list table
+        const blogsDashboard = document.getElementById("blogs-dashboard");
+        if (blogsDashboard && blogsDashboard.style.display === "block") {
+          renderAdminBlogsList();
+        }
+
+        // 2. Render dynamically in Student News tab
+        renderStudentBlogsGrid();
+      }, (error) => {
+        console.error("Firestore blogs observer failure:", error);
+      });
+  };
+
+  // Render Blogs in Student News Tab
+  const renderStudentBlogsGrid = () => {
+    const grid = document.getElementById("studentBlogGrid");
+    if (!grid) return;
+    grid.innerHTML = "";
+
+    if (blogs.length === 0) {
+      grid.innerHTML = `
+        <div style="grid-column: span 3; text-align: center; padding: 3rem; color: var(--text-muted); font-size: 0.9rem;">
+          Chưa có bài viết nào được đăng tải.
+        </div>
+      `;
+      return;
+    }
+
+    blogs.forEach((blog) => {
+      // Resolve image source
+      let imgUrl = blog.image;
+      let fallbackUrl = "webduhoc-crm.vercel.app_.png";
+      if (blog.image === "korea_news_thumbnail.png") fallbackUrl = "godly.website_website_pa-lais-104.png";
+      
+      const card = document.createElement("div");
+      card.className = "blog-card";
+      card.style.cssText = "background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--border-radius-md); overflow: hidden; display: flex; flex-direction: column; transition: var(--transition-smooth); box-shadow: var(--shadow-sm);";
+      card.setAttribute("onmouseover", "this.style.transform='translateY(-5px)'; this.style.boxShadow='var(--shadow-md)'");
+      card.setAttribute("onmouseout", "this.style.transform='translateY(0)'; this.style.boxShadow='var(--shadow-sm)'");
+
+      card.innerHTML = `
+        <div style="height: 180px; overflow: hidden; position: relative;">
+          <img src="${imgUrl}" onerror="this.src='${fallbackUrl}'" alt="${blog.title}" style="width: 100%; height: 100%; object-fit: cover; transition: var(--transition-smooth);">
+          <span style="position: absolute; top: 1rem; left: 1rem; background: var(--text-main); color: #fff; font-size: 0.7rem; font-weight: 600; padding: 0.35rem 0.75rem; border-radius: var(--border-radius-sm); text-transform: uppercase; letter-spacing: 1px;">${blog.category}</span>
+        </div>
+        <div style="padding: 1.5rem; flex: 1; display: flex; flex-direction: column; justify-content: space-between;">
+          <div>
+            <h4 style="font-family: var(--font-serif); font-size: 1.15rem; font-weight: 600; color: var(--text-main); line-height: 1.4; margin-bottom: 0.75rem;">${blog.title}</h4>
+            <p style="color: var(--text-muted); font-size: 0.85rem; line-height: 1.6; margin-bottom: 1.5rem;">${blog.summary}</p>
+          </div>
+          <a href="#" style="color: var(--accent); font-size: 0.8rem; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; display: inline-flex; align-items: center; gap: 0.25rem; text-decoration: none;">Đọc bài viết <svg viewBox="0 0 24 24" style="width:14px; height:14px; fill:currentColor;"><path d="M4,11V13H16L10.5,18.5L11.92,19.92L19.84,12L11.92,4.08L10.5,5.5L16,11H4Z"/></svg></a>
+        </div>
+      `;
+
+      // Elegant image zoom transition
+      const img = card.querySelector("img");
+      card.addEventListener("mouseenter", () => { img.style.transform = "scale(1.03)"; });
+      card.addEventListener("mouseleave", () => { img.style.transform = "scale(1)"; });
+
+      grid.appendChild(card);
+    });
+  };
+
+  // Render Blogs in Admin Dashboard
+  const renderAdminBlogsList = () => {
+    const tableBody = document.getElementById("adminBlogsTableBody");
+    if (!tableBody) return;
+    tableBody.innerHTML = "";
+
+    if (blogs.length === 0) {
+      tableBody.innerHTML = `
+        <tr>
+          <td colspan="3" style="text-align: center; padding: 2rem; color: var(--text-muted); font-size: 0.85rem;">
+            Chưa có bài viết nào được tạo.
+          </td>
+        </tr>
+      `;
+      return;
+    }
+
+    blogs.forEach((blog) => {
+      const tr = document.createElement("tr");
+
+      // Resolve thumbnail fallback
+      let imgUrl = blog.image;
+      let fallbackUrl = "webduhoc-crm.vercel.app_.png";
+      if (blog.image === "korea_news_thumbnail.png") fallbackUrl = "godly.website_website_pa-lais-104.png";
+
+      tr.innerHTML = `
+        <td style="text-align: center; padding: 0.75rem 0.5rem; width: 120px; vertical-align: middle;">
+          <div style="width: 100px; height: 60px; border-radius: var(--border-radius-sm); border: 1px solid var(--border); overflow: hidden; margin: 0 auto; background: #eee;">
+            <img src="${imgUrl}" onerror="this.src='${fallbackUrl}'" style="width: 100%; height: 100%; object-fit: cover;">
+          </div>
+        </td>
+        <td style="text-align: left; padding: 1rem; vertical-align: middle;">
+          <strong style="color: var(--text-main); font-size: 0.95rem; display: block; margin-bottom: 0.25rem;">${blog.title}</strong>
+          <span style="font-size: 0.7rem; font-weight: 600; text-transform: uppercase; color: var(--accent); letter-spacing: 0.5px;">${blog.category}</span>
+        </td>
+        <td style="text-align: center; padding: 0.75rem 0.5rem; width: 150px; vertical-align: middle;">
+          <div style="display: flex; gap: 0.5rem; justify-content: center; align-items: center;">
+            <button class="action-icon-btn btn-edit-blog" data-id="${blog.id}" title="Sửa" style="padding: 6px; color: var(--text-main); background:none; border:none; cursor:pointer;">
+              <svg viewBox="0 0 24 24" style="width:18px; height:18px; fill:currentColor;"><path d="M20.71,7.04C21.1,6.65 21.1,6 20.71,5.63L18.37,3.29C18,2.9 17.35,2.9 16.96,3.29L15.12,5.12L18.87,8.87M3,17.25V21H6.75L17.81,9.93L14.07,6.18L3,17.25Z"/></svg>
+            </button>
+            <button class="action-icon-btn btn-delete-blog" data-id="${blog.id}" title="Xóa" style="padding: 6px; color: #EF4444; background:none; border:none; cursor:pointer;">
+              <svg viewBox="0 0 24 24" style="width:18px; height:18px; fill:currentColor;"><path d="M19,4H15.5L14.5,3H9.5L8.5,4H5V6H19M6,19A2,2 0 0,0 8,21H16A2,2 0 0,0 18,19V7H6V19Z"/></svg>
+            </button>
+          </div>
+        </td>
+      `;
+
+      tr.querySelector(".btn-edit-blog").addEventListener("click", () => setupEditBlog(blog));
+      tr.querySelector(".btn-delete-blog").addEventListener("click", () => handleDeleteBlog(blog));
+
+      tableBody.appendChild(tr);
+    });
+  };
+
+  // Setup Admin Edit Blog Form values
+  const setupEditBlog = (blog) => {
+    document.getElementById("adminBlogFormTitle").textContent = "CHỈNH SỬA BÀI VIẾT";
+    document.getElementById("adminBlogEditId").value = blog.id;
+    document.getElementById("adminBlogTitle").value = blog.title;
+    document.getElementById("adminBlogCategory").value = blog.category;
+    document.getElementById("adminBlogSummary").value = blog.summary;
+
+    const imgSelect = document.getElementById("adminBlogImageSelect");
+    const customGroup = document.getElementById("adminBlogCustomImageGroup");
+    const previewContainer = document.getElementById("adminBlogImagePreviewContainer");
+    const previewImg = document.getElementById("adminBlogImagePreview");
+
+    if (["japan_news_thumbnail.png", "korea_news_thumbnail.png", "taiwan_news_thumbnail.png"].includes(blog.image)) {
+      imgSelect.value = blog.image;
+      customGroup.style.display = "none";
+      customBlogImageBase64 = null;
+    } else {
+      imgSelect.value = "custom";
+      customGroup.style.display = "flex";
+      customBlogImageBase64 = blog.image;
+      previewImg.src = blog.image;
+      previewContainer.style.display = "block";
+    }
+
+    document.getElementById("btnAdminCancelBlogEdit").style.display = "inline-block";
+  };
+
+  // Cancel edit handler
+  const cancelBlogEdit = () => {
+    document.getElementById("adminBlogFormTitle").textContent = "+ TẠO BÀI VIẾT MỚI";
+    document.getElementById("adminBlogForm").reset();
+    document.getElementById("adminBlogEditId").value = "";
+    document.getElementById("adminBlogCustomImageGroup").style.display = "none";
+    document.getElementById("adminBlogImagePreviewContainer").style.display = "none";
+    document.getElementById("adminBlogImagePreview").src = "";
+    document.getElementById("btnAdminCancelBlogEdit").style.display = "none";
+    customBlogImageBase64 = null;
+  };
+
+  const btnCancelBlogEdit = document.getElementById("btnAdminCancelBlogEdit");
+  if (btnCancelBlogEdit) {
+    btnCancelBlogEdit.addEventListener("click", cancelBlogEdit);
+  }
+
+  // Delete Blog
+  const handleDeleteBlog = async (blog) => {
+    if (confirm(`Bạn có chắc chắn muốn xóa bài viết "${blog.title}"?`)) {
+      try {
+        await db.collection("blogs").doc(blog.id).delete();
+        showToast("Đã xóa bài viết thành công!", "warning");
+      } catch (err) {
+        console.error("Delete blog error:", err);
+        showToast("Lỗi khi xóa bài viết!", "error");
+      }
+    }
+  };
+
+  // Toggle custom file uploader
+  const adminBlogImageSelect = document.getElementById("adminBlogImageSelect");
+  const adminBlogCustomImageGroup = document.getElementById("adminBlogCustomImageGroup");
+  if (adminBlogImageSelect && adminBlogCustomImageGroup) {
+    adminBlogImageSelect.addEventListener("change", (e) => {
+      if (e.target.value === "custom") {
+        adminBlogCustomImageGroup.style.display = "flex";
+      } else {
+        adminBlogCustomImageGroup.style.display = "none";
+      }
+    });
+  }
+
+  // Handle custom thumbnail uploading & Canvas Compression (to exactly 400x260px)
+  const adminBlogImageFileInput = document.getElementById("adminBlogImageFileInput");
+  const previewContainer = document.getElementById("adminBlogImagePreviewContainer");
+  const previewImg = document.getElementById("adminBlogImagePreview");
+
+  if (adminBlogImageFileInput) {
+    adminBlogImageFileInput.addEventListener("change", (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      if (!file.type.startsWith("image/")) {
+        showToast("Vui lòng chọn hình ảnh hợp lệ!", "error");
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = function(event) {
+        const img = new Image();
+        img.onload = function() {
+          const w = 400;
+          const h = 260;
+          const canvas = document.createElement("canvas");
+          canvas.width = w;
+          canvas.height = h;
+          const ctx = canvas.getContext("2d");
+          ctx.drawImage(img, 0, 0, w, h);
+
+          const compressed = canvas.toDataURL("image/jpeg", 0.7);
+          customBlogImageBase64 = compressed;
+
+          previewImg.src = compressed;
+          previewContainer.style.display = "block";
+        };
+        img.src = event.target.result;
+      };
+      reader.readAsDataURL(file);
+    });
+  }
+
+  // Submit Blog Form Save (Add or Update)
+  const adminBlogForm = document.getElementById("adminBlogForm");
+  if (adminBlogForm) {
+    adminBlogForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+
+      const editId = document.getElementById("adminBlogEditId").value;
+      const title = document.getElementById("adminBlogTitle").value.trim();
+      const category = document.getElementById("adminBlogCategory").value.trim().toUpperCase();
+      const summary = document.getElementById("adminBlogSummary").value.trim();
+      const imageSelectVal = document.getElementById("adminBlogImageSelect").value;
+
+      let imagePayload = imageSelectVal;
+      if (imageSelectVal === "custom") {
+        if (!customBlogImageBase64) {
+          showToast("Vui lòng tải ảnh lên hoặc chọn ảnh mặc định!", "error");
+          return;
+        }
+        imagePayload = customBlogImageBase64;
+      }
+
+      if (!title || !category || !summary || !imagePayload) {
+        showToast("Vui lòng điền đầy đủ các thông tin bắt buộc!", "error");
+        return;
+      }
+
+      showToast("Đang lưu thông tin bài viết...", "info");
+
+      const payload = {
+        title,
+        category,
+        summary,
+        image: imagePayload,
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+      };
+
+      try {
+        if (editId) {
+          await db.collection("blogs").doc(editId).update(payload);
+          showToast("Cập nhật bài viết thành công!", "success");
+        } else {
+          payload.createdAt = firebase.firestore.FieldValue.serverTimestamp();
+          await db.collection("blogs").add(payload);
+          showToast("Thêm bài viết mới thành công!", "success");
+        }
+        cancelBlogEdit();
+      } catch (err) {
+        console.error("Save blog failed:", err);
+        showToast("Lỗi hệ thống khi lưu bài viết!", "error");
+      }
+    });
+  }
+
   // Profile Update Variables
   let selectedProfileAvatarBase64 = null;
 
@@ -2220,6 +2599,9 @@ document.addEventListener('DOMContentLoaded', () => {
               newBtnStudentLogout.addEventListener('click', handlePortalLogout);
             }
 
+            // Subscribe to real-time blogs updates
+            subscribeToBlogs();
+
             // Default to Tab 1 (Bảng Tin)
             const newsTabBtn = document.querySelector('[data-tab="student-news-tab"]');
             if (newsTabBtn) newsTabBtn.click();
@@ -2237,6 +2619,9 @@ document.addEventListener('DOMContentLoaded', () => {
             // Subscribe to real-time students updates
             subscribeToStudents();
 
+            // Subscribe to real-time blogs updates
+            subscribeToBlogs();
+
             // Navigate to Chat group dashboard by default
             switchPortalView('chat-dashboard');
           }
@@ -2253,6 +2638,10 @@ document.addEventListener('DOMContentLoaded', () => {
         if (studentsSubscription) {
           studentsSubscription();
           studentsSubscription = null;
+        }
+        if (blogsSubscription) {
+          blogsSubscription();
+          blogsSubscription = null;
         }
 
         // Show Login Panel, hide App Workspaces
