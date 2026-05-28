@@ -1,30 +1,30 @@
-@import url('https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;500;600;700&family=Quicksand:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,600;1,400&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,300;0,400;0,500;0,700;0,900;1,400&display=swap');
 
 /* ==========================================
    DESIGN TOKENS & ROOT VARIABLES
    ========================================== */
 :root {
-  /* Editorial Warm Cream & Champagne Gold Palette */
-  --bg-primary: #FAF9F6;
+  /* Premium Light Sky Blue & Modern Slate Palette */
+  --bg-primary: #F1F5F9; /* Clean modern slate-100 background */
   --bg-card: #FFFFFF;
-  --text-main: #0B2545;
-  --text-muted: #526E8D;
-  --accent: #BC9E6C;
-  --accent-light: #F4EFE6;
-  --border: rgba(11, 37, 69, 0.08);
-  --border-light: rgba(11, 37, 69, 0.03);
-  --shadow-sm: 0 2px 8px rgba(11, 37, 69, 0.04);
-  --shadow-md: 0 10px 30px rgba(11, 37, 69, 0.06);
-  --shadow-lg: 0 20px 50px rgba(11, 37, 69, 0.1);
+  --text-main: #0F172A; /* Deep slate-900 for absolute contrast and readability */
+  --text-muted: #475569; /* Slate-600 for high readability secondary text */
+  --accent: #3FA2F6; /* Vibrant premium Light Sky Blue */
+  --accent-light: #E0F2FE; /* Softest sky blue-50 highlight background */
+  --border: rgba(63, 162, 246, 0.15);
+  --border-light: rgba(63, 162, 246, 0.08);
+  --shadow-sm: 0 2px 8px rgba(63, 162, 246, 0.05);
+  --shadow-md: 0 10px 30px rgba(63, 162, 246, 0.08);
+  --shadow-lg: 0 20px 50px rgba(63, 162, 246, 0.12);
 
   /* Rounded Corner Tokens (approx 18%) */
   --border-radius-lg: 18px;
   --border-radius-md: 12px;
   --border-radius-sm: 8px;
 
-  /* Typography - Curved Geometric rounded pair */
-  --font-serif: 'Playfair Display', serif;
-  --font-sans: 'Quicksand', 'Lexend', sans-serif;
+  /* Typography - Unified Roboto Font Family */
+  --font-serif: 'Roboto', sans-serif;
+  --font-sans: 'Roboto', sans-serif;
 
   /* Transitions */
   --transition-smooth: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
@@ -33,17 +33,17 @@
 
 /* Dark Theme Variables */
 body.dark-theme-crm {
-  --bg-primary: #0F0F11;
-  --bg-card: #16161A;
-  --text-main: #F4F4F6;
-  --text-muted: #8E9BAE;
-  --accent: #D4AF37;
-  --accent-light: #24242B;
-  --border: rgba(255, 255, 255, 0.08);
-  --border-light: rgba(255, 255, 255, 0.03);
-  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.2);
-  --shadow-md: 0 10px 30px rgba(0, 0, 0, 0.3);
-  --shadow-lg: 0 20px 50px rgba(0, 0, 0, 0.4);
+  --bg-primary: #0F172A; /* Deep slate-900 */
+  --bg-card: #1E293B; /* Slate-800 */
+  --text-main: #F8FAFC; /* Slate-50 */
+  --text-muted: #94A3B8; /* Slate-400 */
+  --accent: #38BDF8; /* Radiant Light Sky Blue for dark mode */
+  --accent-light: #0C4A6E; /* Slate-800 deep sky highlight */
+  --border: rgba(56, 189, 248, 0.25);
+  --border-light: rgba(56, 189, 248, 0.12);
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 10px 30px rgba(0, 0, 0, 0.4);
+  --shadow-lg: 0 20px 50px rgba(0, 0, 0, 0.5);
 }
 
 /* ==========================================

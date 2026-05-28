@@ -1851,45 +1851,6 @@ document.addEventListener('DOMContentLoaded', () => {
     showToast(`Đã xuất thành công ${filtered.length} hồ sơ học viên ra Excel CSV!`, "success");
   };
 
-  const handleResetDemoData = async () => {
-    if (confirm("Bạn có chắc chắn muốn xóa toàn bộ học viên hiện tại và khởi tạo lại 35 học viên mẫu (chỉ đi Nhật, Đài, Hàn)?")) {
-      showToast("Đang xóa dữ liệu cũ...", "info");
-      try {
-        const snapshot = await db.collection("students").get();
-        const batch = db.batch();
-        snapshot.forEach((doc) => {
-          batch.delete(doc.ref);
-        });
-        await batch.commit();
-
-        showToast("Đang khởi tạo 35 học viên mẫu mới...", "info");
-        for (const s of defaultStudents) {
-          const payload = {
-            code: s.code,
-            name: s.name,
-            email: s.email,
-            phone: s.phone,
-            country: s.country,
-            status: s.status,
-            notes: s.notes,
-            createdAt: firebase.firestore.FieldValue.serverTimestamp()
-          };
-          await db.collection("students").add(payload);
-        }
-        localStorage.removeItem('thinkedu_populated_30_v3');
-        showToast("Khởi tạo lại dữ liệu mẫu thành công!", "success");
-      } catch (err) {
-        console.error("Reset data error:", err);
-        showToast("Lỗi khi đặt lại dữ liệu mẫu!", "error");
-      }
-    }
-  };
-
-  const btnResetDemoData = document.getElementById("btnResetDemoData");
-  if (btnResetDemoData) {
-    btnResetDemoData.addEventListener("click", handleResetDemoData);
-  }
-
   const btnExportExcel = document.getElementById("btnExportExcel");
   if (btnExportExcel) {
     btnExportExcel.addEventListener("click", handleExportExcel);
@@ -2112,8 +2073,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const imgSelect = document.getElementById("adminBlogImageSelect");
     const customGroup = document.getElementById("adminBlogCustomImageGroup");
-    const previewContainer = document.getElementById("adminBlogImagePreviewContainer");
-    const previewImg = document.getElementById("adminBlogImagePreview");
+    const formPreviewImg = document.getElementById("adminBlogFormImagePreview");
 
     if (["japan_news_thumbnail.png", "korea_news_thumbnail.png", "taiwan_news_thumbnail.png"].includes(blog.image)) {
       imgSelect.value = blog.image;
@@ -2123,8 +2083,11 @@ document.addEventListener('DOMContentLoaded', () => {
       imgSelect.value = "custom";
       customGroup.style.display = "flex";
       customBlogImageBase64 = blog.image;
-      previewImg.src = blog.image;
-      previewContainer.style.display = "block";
+    }
+
+    if (formPreviewImg) {
+      formPreviewImg.src = blog.image;
+      formPreviewImg.style.display = "block";
     }
 
     document.getElementById("btnAdminCancelBlogEdit").style.display = "inline-block";
@@ -2136,8 +2099,13 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById("adminBlogForm").reset();
     document.getElementById("adminBlogEditId").value = "";
     document.getElementById("adminBlogCustomImageGroup").style.display = "none";
-    document.getElementById("adminBlogImagePreviewContainer").style.display = "none";
-    document.getElementById("adminBlogImagePreview").src = "";
+    
+    const formPreviewImg = document.getElementById("adminBlogFormImagePreview");
+    if (formPreviewImg) {
+      formPreviewImg.src = "japan_news_thumbnail.png";
+      formPreviewImg.style.display = "block";
+    }
+
     document.getElementById("btnAdminCancelBlogEdit").style.display = "none";
     customBlogImageBase64 = null;
   };
@@ -2160,23 +2128,31 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   };
 
-  // Toggle custom file uploader
+  // Toggle custom file uploader & Update Live form preview
   const adminBlogImageSelect = document.getElementById("adminBlogImageSelect");
   const adminBlogCustomImageGroup = document.getElementById("adminBlogCustomImageGroup");
+  const formPreviewImg = document.getElementById("adminBlogFormImagePreview");
+
   if (adminBlogImageSelect && adminBlogCustomImageGroup) {
     adminBlogImageSelect.addEventListener("change", (e) => {
       if (e.target.value === "custom") {
         adminBlogCustomImageGroup.style.display = "flex";
+        if (formPreviewImg) {
+          formPreviewImg.src = customBlogImageBase64 || "";
+          formPreviewImg.style.display = customBlogImageBase64 ? "block" : "none";
+        }
       } else {
         adminBlogCustomImageGroup.style.display = "none";
+        if (formPreviewImg) {
+          formPreviewImg.src = e.target.value;
+          formPreviewImg.style.display = "block";
+        }
       }
     });
   }
 
   // Handle custom thumbnail uploading & Canvas Compression (to exactly 400x260px)
   const adminBlogImageFileInput = document.getElementById("adminBlogImageFileInput");
-  const previewContainer = document.getElementById("adminBlogImagePreviewContainer");
-  const previewImg = document.getElementById("adminBlogImagePreview");
 
   if (adminBlogImageFileInput) {
     adminBlogImageFileInput.addEventListener("change", (e) => {
@@ -2203,8 +2179,10 @@ document.addEventListener('DOMContentLoaded', () => {
           const compressed = canvas.toDataURL("image/jpeg", 0.7);
           customBlogImageBase64 = compressed;
 
-          previewImg.src = compressed;
-          previewContainer.style.display = "block";
+          if (formPreviewImg) {
+            formPreviewImg.src = compressed;
+            formPreviewImg.style.display = "block";
+          }
         };
         img.src = event.target.result;
       };
