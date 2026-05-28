@@ -1398,18 +1398,12 @@ document.addEventListener('DOMContentLoaded', () => {
       .orderBy("code", "asc")
       .onSnapshot(async (snapshot) => {
         // Real-time migration: delete old mock students containing other countries
-        let hasInvalidCountry = false;
         snapshot.forEach((doc) => {
           const data = doc.data();
           if (data.country && !["Nhật", "Đài", "Hàn"].includes(data.country)) {
-            hasInvalidCountry = true;
-            db.collection("students").doc(doc.id).delete();
+            db.collection("students").doc(doc.id).delete().catch(console.error);
           }
         });
-        if (hasInvalidCountry) {
-          console.log("Cleaned up old mock student data with non-target countries.");
-          return;
-        }
 
         // If empty, auto-populate default student profiles to show a live demo
         if (snapshot.empty) {
@@ -1847,6 +1841,45 @@ document.addEventListener('DOMContentLoaded', () => {
 
     showToast(`Đã xuất thành công ${filtered.length} hồ sơ học viên ra Excel CSV!`, "success");
   };
+
+  const handleResetDemoData = async () => {
+    if (confirm("Bạn có chắc chắn muốn xóa toàn bộ học viên hiện tại và khởi tạo lại 35 học viên mẫu (chỉ đi Nhật, Đài, Hàn)?")) {
+      showToast("Đang xóa dữ liệu cũ...", "info");
+      try {
+        const snapshot = await db.collection("students").get();
+        const batch = db.batch();
+        snapshot.forEach((doc) => {
+          batch.delete(doc.ref);
+        });
+        await batch.commit();
+
+        showToast("Đang khởi tạo 35 học viên mẫu mới...", "info");
+        for (const s of defaultStudents) {
+          const payload = {
+            code: s.code,
+            name: s.name,
+            email: s.email,
+            phone: s.phone,
+            country: s.country,
+            status: s.status,
+            notes: s.notes,
+            createdAt: firebase.firestore.FieldValue.serverTimestamp()
+          };
+          await db.collection("students").add(payload);
+        }
+        localStorage.removeItem('thinkedu_populated_30_v3');
+        showToast("Khởi tạo lại dữ liệu mẫu thành công!", "success");
+      } catch (err) {
+        console.error("Reset data error:", err);
+        showToast("Lỗi khi đặt lại dữ liệu mẫu!", "error");
+      }
+    }
+  };
+
+  const btnResetDemoData = document.getElementById("btnResetDemoData");
+  if (btnResetDemoData) {
+    btnResetDemoData.addEventListener("click", handleResetDemoData);
+  }
 
   const btnExportExcel = document.getElementById("btnExportExcel");
   if (btnExportExcel) {

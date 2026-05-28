@@ -500,6 +500,7 @@
               <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem;">
                 <h3 style="margin-bottom: 0; border-bottom: none; padding-bottom: 0;">DANH SÁCH HỒ SƠ HỌC VIÊN</h3>
                 <div style="display: flex; gap: 1rem;">
+                  <button type="button" class="btn-submit-login" id="btnResetDemoData" style="margin-top: 0; width: auto; padding: 0.75rem 1.5rem; background: #EF4444; border-color: #EF4444; color: white;">RESET DỮ LIỆU MẪU</button>
                   <button type="button" class="btn-submit-login" id="btnExportExcel" style="margin-top: 0; width: auto; padding: 0.75rem 1.5rem; background: var(--accent); border-color: var(--accent);">XUẤT EXCEL</button>
                   <button type="button" class="btn-submit-login" id="btnOpenAddStudentModal" style="margin-top: 0; width: auto; padding: 0.75rem 1.5rem;">+ THÊM HỌC VIÊN MỚI</button>
                 </div>
@@ -756,8 +757,8 @@
           <div style="position: absolute; top: -50px; right: -50px; width: 150px; height: 150px; background: var(--accent-light); border-radius: 50%; opacity: 0.5; z-index: 1;"></div>
           <div style="position: relative; z-index: 2;">
             <span style="font-size: 0.75rem; font-weight: 600; text-transform: uppercase; color: var(--accent); letter-spacing: 2px; display: block; margin-bottom: 0.75rem;">SỰ KIỆN ĐẶC BIỆT CHƯA TIỀN LỆ</span>
-            <h2 style="font-family: var(--font-serif); font-size: 2.2rem; font-weight: 500; color: var(--text-main); line-height: 1.3; margin-bottom: 1rem;">Hội Thảo Tư Vấn Học Bổng Toàn Cầu 2026</h2>
-            <p style="color: var(--text-muted); font-size: 0.95rem; line-height: 1.6; margin-bottom: 2rem;">Gặp gỡ trực tiếp đại diện tuyển sinh của hơn 50 trường đại học hàng đầu từ Mỹ, Anh, Úc, Canada. Đánh giá hồ sơ học bổng trực tiếp tại chỗ, cơ hội nhận học bổng lên tới 100% học phí cùng nhiều quà tặng hấp dẫn từ ThinkEdu.</p>
+            <h2 style="font-family: var(--font-serif); font-size: 2.2rem; font-weight: 500; color: var(--text-main); line-height: 1.3; margin-bottom: 1rem;">Hội Thảo Học Bổng Du Học Nhật - Đài - Hàn 2026</h2>
+            <p style="color: var(--text-muted); font-size: 0.95rem; line-height: 1.6; margin-bottom: 2rem;">Gặp gỡ trực tiếp đại diện tuyển sinh của hơn 30 trường đại học, trường Nhật ngữ và học viện danh tiếng hàng đầu từ Nhật Bản, Đài Loan, Hàn Quốc. Đánh giá hồ sơ trực tiếp tại chỗ, cơ hội nhận học bổng toàn phần, học bổng chính phủ cùng nhiều quà tặng hấp dẫn từ ThinkEdu.</p>
             <div style="display: flex; gap: 2rem; font-size: 0.85rem; color: var(--text-main); font-weight: 600; margin-bottom: 2rem;">
               <div style="display: flex; align-items: center; gap: 0.5rem;">
                 <svg viewBox="0 0 24 24" style="width: 18px; height: 18px; fill: var(--accent);"><path d="M19,19H5V8H19M16,1V3H8V1H6V3H5C3.89,3 3,3.9 3,5V19A2,2 0 0,0 5,21H19A2,2 0 0,0 21,19V5C21,3.9 20.1,3 19,3H18V1M17,12H12V17H17V12Z"/></svg>
@@ -783,13 +784,13 @@
           <!-- Blog 1 -->
           <div class="blog-card" style="background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--border-radius-md); overflow: hidden; display: flex; flex-direction: column; transition: var(--transition-smooth); box-shadow: var(--shadow-sm);" onmouseover="this.style.transform='translateY(-5px)'; this.style.boxShadow='var(--shadow-md)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='var(--shadow-sm)'">
             <div style="height: 180px; overflow: hidden; position: relative;">
-              <img src="webduhoc-crm.vercel.app_.png" alt="Australia study" style="width: 100%; height: 100%; object-fit: cover;">
-              <span style="position: absolute; top: 1rem; left: 1rem; background: var(--text-main); color: #fff; font-size: 0.7rem; font-weight: 600; padding: 0.35rem 0.75rem; border-radius: var(--border-radius-sm); text-transform: uppercase; letter-spacing: 1px;">ÚC / KINH NGHIỆM</span>
+              <img src="japan_news_thumbnail.png" onerror="this.src='webduhoc-crm.vercel.app_.png'" alt="Japan study" style="width: 100%; height: 100%; object-fit: cover;">
+              <span style="position: absolute; top: 1rem; left: 1rem; background: var(--text-main); color: #fff; font-size: 0.7rem; font-weight: 600; padding: 0.35rem 0.75rem; border-radius: var(--border-radius-sm); text-transform: uppercase; letter-spacing: 1px;">NHẬT BẢN / COE</span>
             </div>
             <div style="padding: 1.5rem; flex: 1; display: flex; flex-direction: column; justify-content: space-between;">
               <div>
-                <h4 style="font-family: var(--font-serif); font-size: 1.15rem; font-weight: 600; color: var(--text-main); line-height: 1.4; margin-bottom: 0.75rem;">Kinh Nghiệm Săn Học Bổng Úc Xuất Sắc 2026</h4>
-                <p style="color: var(--text-muted); font-size: 0.85rem; line-height: 1.6; margin-bottom: 1.5rem;">Cập nhật những thay đổi mới nhất về chính sách visa du học Úc diện ưu tiên, cùng với bài chia sẻ thực tế từ cựu học sinh ThinkEdu đạt học bổng 50% Đại học Sydney...</p>
+                <h4 style="font-family: var(--font-serif); font-size: 1.15rem; font-weight: 600; color: var(--text-main); line-height: 1.4; margin-bottom: 0.75rem;">Bí Quyết Đậu COE Du Học Nhật Bản 100% Năm 2026</h4>
+                <p style="color: var(--text-muted); font-size: 0.85rem; line-height: 1.6; margin-bottom: 1.5rem;">Tìm hiểu các yêu cầu cốt lõi trong hồ sơ xin tư cách lưu trú (COE) du học Nhật. Những điểm cần đặc biệt lưu ý về chứng minh tài chính và lộ trình học tập tối ưu từ cố vấn ThinkEdu.</p>
               </div>
               <a href="#" style="color: var(--accent); font-size: 0.8rem; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; display: inline-flex; align-items: center; gap: 0.25rem; text-decoration: none;">Đọc bài viết <svg viewBox="0 0 24 24" style="width:14px; height:14px; fill:currentColor;"><path d="M4,11V13H16L10.5,18.5L11.92,19.92L19.84,12L11.92,4.08L10.5,5.5L16,11H4Z"/></svg></a>
             </div>
@@ -798,13 +799,13 @@
           <!-- Blog 2 -->
           <div class="blog-card" style="background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--border-radius-md); overflow: hidden; display: flex; flex-direction: column; transition: var(--transition-smooth); box-shadow: var(--shadow-sm);" onmouseover="this.style.transform='translateY(-5px)'; this.style.boxShadow='var(--shadow-md)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='var(--shadow-sm)'">
             <div style="height: 180px; overflow: hidden; position: relative;">
-              <img src="godly.website_website_pa-lais-104.png" alt="Canada study" style="width: 100%; height: 100%; object-fit: cover;">
-              <span style="position: absolute; top: 1rem; left: 1rem; background: var(--text-main); color: #fff; font-size: 0.7rem; font-weight: 600; padding: 0.35rem 0.75rem; border-radius: var(--border-radius-sm); text-transform: uppercase; letter-spacing: 1px;">CANADA / SDS</span>
+              <img src="korea_news_thumbnail.png" onerror="this.src='godly.website_website_pa-lais-104.png'" alt="Korea study" style="width: 100%; height: 100%; object-fit: cover;">
+              <span style="position: absolute; top: 1rem; left: 1rem; background: var(--text-main); color: #fff; font-size: 0.7rem; font-weight: 600; padding: 0.35rem 0.75rem; border-radius: var(--border-radius-sm); text-transform: uppercase; letter-spacing: 1px;">HÀN QUỐC / TOPIK</span>
             </div>
             <div style="padding: 1.5rem; flex: 1; display: flex; flex-direction: column; justify-content: space-between;">
               <div>
-                <h4 style="font-family: var(--font-serif); font-size: 1.15rem; font-weight: 600; color: var(--text-main); line-height: 1.4; margin-bottom: 0.75rem;">Lộ Trình Du Học Canada Không Chứng Minh Tài Chính</h4>
-                <p style="color: var(--text-muted); font-size: 0.85rem; line-height: 1.6; margin-bottom: 1.5rem;">Visa diện SDS giúp rút ngắn thời gian xét duyệt hồ sơ Canada. Dưới đây là danh sách toàn bộ các trường DLI được áp dụng diện ưu tiên và cách hoàn thiện hồ sơ đạt tỉ lệ đỗ tối đa...</p>
+                <h4 style="font-family: var(--font-serif); font-size: 1.15rem; font-weight: 600; color: var(--text-main); line-height: 1.4; margin-bottom: 0.75rem;">Lộ Trình Du Học Hàn Quốc Trọn Gói Với TOPIK 3</h4>
+                <p style="color: var(--text-muted); font-size: 0.85rem; line-height: 1.6; margin-bottom: 1.5rem;">Visa thẳng giúp rút ngắn thời gian xét duyệt hồ sơ Hàn Quốc. Dưới đây là danh sách các trường đại học ưu tiên (trường 1%) và cách hoàn thiện hồ sơ để có tỉ lệ đỗ tối đa.</p>
               </div>
               <a href="#" style="color: var(--accent); font-size: 0.8rem; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; display: inline-flex; align-items: center; gap: 0.25rem; text-decoration: none;">Đọc bài viết <svg viewBox="0 0 24 24" style="width:14px; height:14px; fill:currentColor;"><path d="M4,11V13H16L10.5,18.5L11.92,19.92L19.84,12L11.92,4.08L10.5,5.5L16,11H4Z"/></svg></a>
             </div>
@@ -813,13 +814,103 @@
           <!-- Blog 3 -->
           <div class="blog-card" style="background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--border-radius-md); overflow: hidden; display: flex; flex-direction: column; transition: var(--transition-smooth); box-shadow: var(--shadow-sm);" onmouseover="this.style.transform='translateY(-5px)'; this.style.boxShadow='var(--shadow-md)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='var(--shadow-sm)'">
             <div style="height: 180px; overflow: hidden; position: relative;">
-              <img src="webduhoc-crm.vercel.app_.png" alt="Germany study" style="width: 100%; height: 100%; object-fit: cover; filter: hue-rotate(45deg);">
-              <span style="position: absolute; top: 1rem; left: 1rem; background: var(--text-main); color: #fff; font-size: 0.7rem; font-weight: 600; padding: 0.35rem 0.75rem; border-radius: var(--border-radius-sm); text-transform: uppercase; letter-spacing: 1px;">ĐỨC / APS</span>
+              <img src="taiwan_news_thumbnail.png" onerror="this.src='webduhoc-crm.vercel.app_.png'" alt="Taiwan study" style="width: 100%; height: 100%; object-fit: cover;">
+              <span style="position: absolute; top: 1rem; left: 1rem; background: var(--text-main); color: #fff; font-size: 0.7rem; font-weight: 600; padding: 0.35rem 0.75rem; border-radius: var(--border-radius-sm); text-transform: uppercase; letter-spacing: 1px;">ĐÀI LOAN / HỌC BỔNG</span>
             </div>
             <div style="padding: 1.5rem; flex: 1; display: flex; flex-direction: column; justify-content: space-between;">
               <div>
-                <h4 style="font-family: var(--font-serif); font-size: 1.15rem; font-weight: 600; color: var(--text-main); line-height: 1.4; margin-bottom: 0.75rem;">Quy Trình Thẩm Định APS Du Học Đức Chi Tiết Từ A-Z</h4>
-                <p style="color: var(--text-muted); font-size: 0.85rem; line-height: 1.6; margin-bottom: 1.5rem;">APS là bước bắt buộc cho mọi sinh viên muốn học tập tại các trường Đại học Đức. Cẩm nang tổng hợp các tài liệu cần thiết, lưu ý khi nộp tiền ngân hàng và kinh nghiệm ôn tập...</p>
+                <h4 style="font-family: var(--font-serif); font-size: 1.15rem; font-weight: 600; color: var(--text-main); line-height: 1.4; margin-bottom: 0.75rem;">Chinh Phục Học Bổng Toàn Phần Chính Phủ Đài Loan</h4>
+                <p style="color: var(--text-muted); font-size: 0.85rem; line-height: 1.6; margin-bottom: 1.5rem;">Học bổng MOE và các suất học bổng trường học Đài Loan luôn hấp dẫn. Cẩm nang tổng hợp điều kiện chuẩn bị chứng chỉ TOCFL, viết bài luận cá nhân và kỹ năng phỏng vấn xuất sắc.</p>
+              </div>
+              <a href="#" style="color: var(--accent); font-size: 0.8rem; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; display: inline-flex; align-items: center; gap: 0.25rem; text-decoration: none;">Đọc bài viết <svg viewBox="0 0 24 24" style="width:14px; height:14px; fill:currentColor;"><path d="M4,11V13H16L10.5,18.5L11.92,19.92L19.84,12L11.92,4.08L10.5,5.5L16,11H4Z"/></svg></a>
+            </div>
+          </div>
+
+          <!-- Blog 4 -->
+          <div class="blog-card" style="background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--border-radius-md); overflow: hidden; display: flex; flex-direction: column; transition: var(--transition-smooth); box-shadow: var(--shadow-sm);" onmouseover="this.style.transform='translateY(-5px)'; this.style.boxShadow='var(--shadow-md)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='var(--shadow-sm)'">
+            <div style="height: 180px; overflow: hidden; position: relative;">
+              <img src="japan_news_thumbnail.png" onerror="this.src='webduhoc-crm.vercel.app_.png'" alt="Japan student life" style="width: 100%; height: 100%; object-fit: cover; filter: saturate(1.2);">
+              <span style="position: absolute; top: 1rem; left: 1rem; background: var(--text-main); color: #fff; font-size: 0.7rem; font-weight: 600; padding: 0.35rem 0.75rem; border-radius: var(--border-radius-sm); text-transform: uppercase; letter-spacing: 1px;">NHẬT BẢN / KỶ NIỆM</span>
+            </div>
+            <div style="padding: 1.5rem; flex: 1; display: flex; flex-direction: column; justify-content: space-between;">
+              <div>
+                <h4 style="font-family: var(--font-serif); font-size: 1.15rem; font-weight: 600; color: var(--text-main); line-height: 1.4; margin-bottom: 0.75rem;">Nhật Ký Học Viên: Mùa Hoa Anh Đào Đầu Tiên Tại Tokyo</h4>
+                <p style="color: var(--text-muted); font-size: 0.85rem; line-height: 1.6; margin-bottom: 1.5rem;">Chia sẻ chân thực từ bạn Thảo Chi - cựu học sinh ThinkEdu đang học tập tại Tokyo về những ngày đầu làm quen với ga tàu, văn hóa bản xứ và cuộc sống tự lập đáng nhớ.</p>
+              </div>
+              <a href="#" style="color: var(--accent); font-size: 0.8rem; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; display: inline-flex; align-items: center; gap: 0.25rem; text-decoration: none;">Đọc bài viết <svg viewBox="0 0 24 24" style="width:14px; height:14px; fill:currentColor;"><path d="M4,11V13H16L10.5,18.5L11.92,19.92L19.84,12L11.92,4.08L10.5,5.5L16,11H4Z"/></svg></a>
+            </div>
+          </div>
+
+          <!-- Blog 5 -->
+          <div class="blog-card" style="background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--border-radius-md); overflow: hidden; display: flex; flex-direction: column; transition: var(--transition-smooth); box-shadow: var(--shadow-sm);" onmouseover="this.style.transform='translateY(-5px)'; this.style.boxShadow='var(--shadow-md)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='var(--shadow-sm)'">
+            <div style="height: 180px; overflow: hidden; position: relative;">
+              <img src="korea_news_thumbnail.png" onerror="this.src='godly.website_website_pa-lais-104.png'" alt="Korea memories" style="width: 100%; height: 100%; object-fit: cover; filter: sepia(0.15);">
+              <span style="position: absolute; top: 1rem; left: 1rem; background: var(--text-main); color: #fff; font-size: 0.7rem; font-weight: 600; padding: 0.35rem 0.75rem; border-radius: var(--border-radius-sm); text-transform: uppercase; letter-spacing: 1px;">HÀN QUỐC / KỶ NIỆM</span>
+            </div>
+            <div style="padding: 1.5rem; flex: 1; display: flex; flex-direction: column; justify-content: space-between;">
+              <div>
+                <h4 style="font-family: var(--font-serif); font-size: 1.15rem; font-weight: 600; color: var(--text-main); line-height: 1.4; margin-bottom: 0.75rem;">Kỷ Niệm Ngày Hội Giao Lưu Văn Hóa Quốc Tế Tại Seoul</h4>
+                <p style="color: var(--text-muted); font-size: 0.85rem; line-height: 1.6; margin-bottom: 1.5rem;">Cùng ngắm nhìn những khoảnh khắc tuyệt vời của cộng đồng học sinh ThinkEdu tham gia trại hè giao lưu văn hóa và trải nghiệm cuộc sống sinh viên đầy màu sắc tại Yonsei.</p>
+              </div>
+              <a href="#" style="color: var(--accent); font-size: 0.8rem; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; display: inline-flex; align-items: center; gap: 0.25rem; text-decoration: none;">Đọc bài viết <svg viewBox="0 0 24 24" style="width:14px; height:14px; fill:currentColor;"><path d="M4,11V13H16L10.5,18.5L11.92,19.92L19.84,12L11.92,4.08L10.5,5.5L16,11H4Z"/></svg></a>
+            </div>
+          </div>
+
+          <!-- Blog 6 -->
+          <div class="blog-card" style="background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--border-radius-md); overflow: hidden; display: flex; flex-direction: column; transition: var(--transition-smooth); box-shadow: var(--shadow-sm);" onmouseover="this.style.transform='translateY(-5px)'; this.style.boxShadow='var(--shadow-md)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='var(--shadow-sm)'">
+            <div style="height: 180px; overflow: hidden; position: relative;">
+              <img src="taiwan_news_thumbnail.png" onerror="this.src='webduhoc-crm.vercel.app_.png'" alt="Taiwan life" style="width: 100%; height: 100%; object-fit: cover; filter: brightness(0.95);">
+              <span style="position: absolute; top: 1rem; left: 1rem; background: var(--text-main); color: #fff; font-size: 0.7rem; font-weight: 600; padding: 0.35rem 0.75rem; border-radius: var(--border-radius-sm); text-transform: uppercase; letter-spacing: 1px;">ĐÀI LOAN / ĐỜI SỐNG</span>
+            </div>
+            <div style="padding: 1.5rem; flex: 1; display: flex; flex-direction: column; justify-content: space-between;">
+              <div>
+                <h4 style="font-family: var(--font-serif); font-size: 1.15rem; font-weight: 600; color: var(--text-main); line-height: 1.4; margin-bottom: 0.75rem;">Đài Loan - Thiên Đường Học Tập Thân Thiện & Tiết Kiệm</h4>
+                <p style="color: var(--text-muted); font-size: 0.85rem; line-height: 1.6; margin-bottom: 1.5rem;">Đánh giá khách quan của du học sinh về môi trường sống an toàn, chi phí sinh hoạt cực kỳ hợp lý cùng nét văn hóa ẩm thực độc đáo tại chợ đêm Đài Bắc.</p>
+              </div>
+              <a href="#" style="color: var(--accent); font-size: 0.8rem; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; display: inline-flex; align-items: center; gap: 0.25rem; text-decoration: none;">Đọc bài viết <svg viewBox="0 0 24 24" style="width:14px; height:14px; fill:currentColor;"><path d="M4,11V13H16L10.5,18.5L11.92,19.92L19.84,12L11.92,4.08L10.5,5.5L16,11H4Z"/></svg></a>
+            </div>
+          </div>
+
+          <!-- Blog 7 -->
+          <div class="blog-card" style="background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--border-radius-md); overflow: hidden; display: flex; flex-direction: column; transition: var(--transition-smooth); box-shadow: var(--shadow-sm);" onmouseover="this.style.transform='translateY(-5px)'; this.style.boxShadow='var(--shadow-md)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='var(--shadow-sm)'">
+            <div style="height: 180px; overflow: hidden; position: relative;">
+              <img src="japan_news_thumbnail.png" onerror="this.src='webduhoc-crm.vercel.app_.png'" alt="Japan part time job" style="width: 100%; height: 100%; object-fit: cover; filter: contrast(1.1);">
+              <span style="position: absolute; top: 1rem; left: 1rem; background: var(--text-main); color: #fff; font-size: 0.7rem; font-weight: 600; padding: 0.35rem 0.75rem; border-radius: var(--border-radius-sm); text-transform: uppercase; letter-spacing: 1px;">NHẬT BẢN / ĐỜI SỐNG</span>
+            </div>
+            <div style="padding: 1.5rem; flex: 1; display: flex; flex-direction: column; justify-content: space-between;">
+              <div>
+                <h4 style="font-family: var(--font-serif); font-size: 1.15rem; font-weight: 600; color: var(--text-main); line-height: 1.4; margin-bottom: 0.75rem;">Quy Định Làm Thêm & Thu Nhập Của Du Học Sinh Nhật</h4>
+                <p style="color: var(--text-muted); font-size: 0.85rem; line-height: 1.6; margin-bottom: 1.5rem;">Hướng dẫn chi tiết về quy định làm thêm 28 giờ/tuần tại Nhật Bản. Gợi ý các công việc phổ biến lương cao và cách xin giấy phép hoạt động ngoài tư cách lưu trú.</p>
+              </div>
+              <a href="#" style="color: var(--accent); font-size: 0.8rem; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; display: inline-flex; align-items: center; gap: 0.25rem; text-decoration: none;">Đọc bài viết <svg viewBox="0 0 24 24" style="width:14px; height:14px; fill:currentColor;"><path d="M4,11V13H16L10.5,18.5L11.92,19.92L19.84,12L11.92,4.08L10.5,5.5L16,11H4Z"/></svg></a>
+            </div>
+          </div>
+
+          <!-- Blog 8 -->
+          <div class="blog-card" style="background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--border-radius-md); overflow: hidden; display: flex; flex-direction: column; transition: var(--transition-smooth); box-shadow: var(--shadow-sm);" onmouseover="this.style.transform='translateY(-5px)'; this.style.boxShadow='var(--shadow-md)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='var(--shadow-sm)'">
+            <div style="height: 180px; overflow: hidden; position: relative;">
+              <img src="korea_news_thumbnail.png" onerror="this.src='godly.website_website_pa-lais-104.png'" alt="Korea autumn" style="width: 100%; height: 100%; object-fit: cover; filter: saturate(0.9);">
+              <span style="position: absolute; top: 1rem; left: 1rem; background: var(--text-main); color: #fff; font-size: 0.7rem; font-weight: 600; padding: 0.35rem 0.75rem; border-radius: var(--border-radius-sm); text-transform: uppercase; letter-spacing: 1px;">HÀN QUỐC / CẢM HỨNG</span>
+            </div>
+            <div style="padding: 1.5rem; flex: 1; display: flex; flex-direction: column; justify-content: space-between;">
+              <div>
+                <h4 style="font-family: var(--font-serif); font-size: 1.15rem; font-weight: 600; color: var(--text-main); line-height: 1.4; margin-bottom: 0.75rem;">Mùa Thu Vàng Seoul & Hành Trình Du Học Đầy Hoài Bão</h4>
+                <p style="color: var(--text-muted); font-size: 0.85rem; line-height: 1.6; margin-bottom: 1.5rem;">Nhật ký hình ảnh ghi lại vẻ đẹp lãng mạn của mùa thu xứ kim chi qua ống kính du học sinh ThinkEdu. Nguồn động lực to lớn cho những bạn đang ấp ủ giấc mơ Hàn Quốc.</p>
+              </div>
+              <a href="#" style="color: var(--accent); font-size: 0.8rem; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; display: inline-flex; align-items: center; gap: 0.25rem; text-decoration: none;">Đọc bài viết <svg viewBox="0 0 24 24" style="width:14px; height:14px; fill:currentColor;"><path d="M4,11V13H16L10.5,18.5L11.92,19.92L19.84,12L11.92,4.08L10.5,5.5L16,11H4Z"/></svg></a>
+            </div>
+          </div>
+
+          <!-- Blog 9 -->
+          <div class="blog-card" style="background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--border-radius-md); overflow: hidden; display: flex; flex-direction: column; transition: var(--transition-smooth); box-shadow: var(--shadow-sm);" onmouseover="this.style.transform='translateY(-5px)'; this.style.boxShadow='var(--shadow-md)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='var(--shadow-sm)'">
+            <div style="height: 180px; overflow: hidden; position: relative;">
+              <img src="taiwan_news_thumbnail.png" onerror="this.src='webduhoc-crm.vercel.app_.png'" alt="Taiwan tech careers" style="width: 100%; height: 100%; object-fit: cover; filter: hue-rotate(15deg);">
+              <span style="position: absolute; top: 1rem; left: 1rem; background: var(--text-main); color: #fff; font-size: 0.7rem; font-weight: 600; padding: 0.35rem 0.75rem; border-radius: var(--border-radius-sm); text-transform: uppercase; letter-spacing: 1px;">ĐÀI LOAN / CƠ HỘI</span>
+            </div>
+            <div style="padding: 1.5rem; flex: 1; display: flex; flex-direction: column; justify-content: space-between;">
+              <div>
+                <h4 style="font-family: var(--font-serif); font-size: 1.15rem; font-weight: 600; color: var(--text-main); line-height: 1.4; margin-bottom: 0.75rem;">Cơ Hội Việc Làm Ngành Bán Dẫn Tại Đài Loan</h4>
+                <p style="color: var(--text-muted); font-size: 0.85rem; line-height: 1.6; margin-bottom: 1.5rem;">Phân tích tiềm năng nghề nghiệp rộng mở tại các tập đoàn công nghệ hàng đầu Đài Loan. Chính sách hỗ trợ thực tập và ở lại làm việc sau tốt nghiệp cho học sinh quốc tế.</p>
               </div>
               <a href="#" style="color: var(--accent); font-size: 0.8rem; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; display: inline-flex; align-items: center; gap: 0.25rem; text-decoration: none;">Đọc bài viết <svg viewBox="0 0 24 24" style="width:14px; height:14px; fill:currentColor;"><path d="M4,11V13H16L10.5,18.5L11.92,19.92L19.84,12L11.92,4.08L10.5,5.5L16,11H4Z"/></svg></a>
             </div>
