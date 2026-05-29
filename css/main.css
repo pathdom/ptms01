@@ -1513,21 +1513,41 @@ body.dark-theme-crm .student-header-navbar {
   padding: 4px 6px;
   border-radius: 20px;
   box-shadow: var(--shadow-sm);
-  z-index: 10;
+  z-index: 100;
   position: absolute;
   top: 50%;
   transform: translateY(-50%);
   transition: opacity 0.2s ease, visibility 0.2s ease;
+  pointer-events: auto;
 }
 
 .chat-bubble-row.sent .chat-bubble-actions {
-  left: -8px;
+  left: -4px;
   transform: translate(-100%, -50%);
 }
 
 .chat-bubble-row.received .chat-bubble-actions {
-  right: -8px;
+  right: -4px;
   transform: translate(100%, -50%);
+}
+
+/* Invisible hover bridge to prevent toolbar from disappearing when cursor crosses the gap */
+.chat-bubble-actions::after {
+  content: '';
+  position: absolute;
+  top: -10px;
+  bottom: -10px;
+  width: 25px;
+  background: transparent;
+  z-index: -1;
+}
+
+.chat-bubble-row.sent .chat-bubble-actions::after {
+  right: -15px;
+}
+
+.chat-bubble-row.received .chat-bubble-actions::after {
+  left: -15px;
 }
 
 .chat-action-btn {

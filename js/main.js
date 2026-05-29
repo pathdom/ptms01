@@ -1021,62 +1021,26 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  let usersSubscription = null;
-  const subscribeToChatThreads = () => {
-    if (usersSubscription) usersSubscription();
-    
-    usersSubscription = db.collection("users").onSnapshot((snap) => {
-      if (!currentUser) return;
-      
-      const threads = [
-        {
-          id: "group-global",
-          name: "Nội Bộ Aladdin Group",
-          type: "group",
-          avatarInitials: "GT",
-          avatarBg: "var(--accent)",
-          membersCount: "Tất cả",
-          messages: []
-        }
-      ];
-
-      snap.forEach(doc => {
-        const u = doc.data();
-        const uid = doc.id;
-        if (u.email === currentUser.email) return;
-
-        const initials = u.name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
-        // Generate standard sorted DM threadId
-        const sortedIds = [currentUser.uid || 'me', uid].sort();
-        const dmThreadId = `dm-${sortedIds[0]}-${sortedIds[1]}`;
-
-        threads.push({
-          id: dmThreadId,
-          name: u.name,
-          type: "direct",
-          avatarInitials: initials,
-          avatarBg: getAvatarBgColor(u.name),
-          membersCount: u.role === 'admin' ? 'Quản trị viên' : (u.role === 'student' ? 'Học viên' : 'Nhân viên'),
-          messages: []
-        });
-      });
-
-      chatThreads = threads;
-      
-      // Resubscribe to chat messages to populate the new threads
-      subscribeToChatMessages();
-    }, (error) => {
-      console.error("Failed to subscribe to users for chat threads:", error);
-    });
-  };
-
   // Real-time Chat Subscription Handler
   const subscribeToChatMessages = () => {
     if (chatSubscription) chatSubscription(); // Cancel active observer if any
     
+    activeThreadId = "group-global";
+    chatThreads = [
+      {
+        id: "group-global",
+        name: "Nội Bộ Aladdin Group",
+        type: "group",
+        avatarInitials: "GT",
+        avatarBg: "var(--accent)",
+        membersCount: "Tất cả",
+        messages: []
+      }
+    ];
+
     chatSubscription = db.collection("messages")
       .orderBy("createdAt", "asc")
-      .limitToLast(300)
+      .limitToLast(150)
       .onSnapshot((snapshot) => {
         const allMessages = [];
         snapshot.forEach((doc) => {
@@ -1113,11 +1077,8 @@ document.addEventListener('DOMContentLoaded', () => {
           });
         });
 
-        // Distribute messages to each thread locally
-        chatThreads.forEach(thread => {
-          const deletedIds = JSON.parse(localStorage.getItem('deletedMessageIds') || '[]');
-          thread.messages = allMessages.filter(m => m.threadId === thread.id && !deletedIds.includes(m.id));
-        });
+        const deletedIds = JSON.parse(localStorage.getItem('deletedMessageIds') || '[]');
+        chatThreads[0].messages = allMessages.filter(m => !deletedIds.includes(m.id));
 
         // Render Chat views
         renderThreadList();
@@ -3022,7 +2983,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (appRoot) appRoot.style.display = 'flex';
 
             // Subscribe to real-time chat updates
-            subscribeToChatThreads();
+            subscribeToChatMessages();
 
             // Subscribe to real-time students updates
             subscribeToStudents();
