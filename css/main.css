@@ -840,6 +840,14 @@ button {
   line-height: 1.5;
 }
 
+.chat-bubble-row {
+  position: relative;
+}
+
+.chat-bubble-row:hover .chat-bubble-actions {
+  display: flex !important;
+}
+
 .chat-bubble-row.sent .chat-bubble {
   background: var(--accent-light);
   color: var(--text-main);

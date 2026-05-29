@@ -66,7 +66,7 @@ document.addEventListener('DOMContentLoaded', () => {
   let chatThreads = [
     {
       id: "group-global",
-      name: "Group Chat Tổng Hợp ThinkEdu",
+      name: "Nội Bộ Aladdin Group",
       type: "group",
       avatarInitials: "GT",
       avatarBg: "var(--accent)",
@@ -179,11 +179,27 @@ document.addEventListener('DOMContentLoaded', () => {
         displayImage = `<div class="chat-message-image-container" style="margin-bottom: 0.5rem; overflow: hidden; border-radius: var(--border-radius-sm); cursor: pointer;"><img src="${msg.image}" style="max-width: 100%; max-height: 250px; display: block; object-fit: cover; border-radius: var(--border-radius-sm);" class="chat-image-preview"></div>`;
       }
 
+      let displayFile = "";
+      if (msg.file) {
+        displayFile = `
+          <div class="chat-message-file-container" style="margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.75rem; background: var(--bg-primary); border: 1px solid var(--border); padding: 0.75rem 1rem; border-radius: 8px; max-width: 300px; cursor: pointer;" onclick="const a = document.createElement('a'); a.href='${msg.file}'; a.download='${msg.fileName || 'file'}'; a.click();">
+            <div style="width: 40px; height: 40px; border-radius: 6px; background: var(--accent-light); color: var(--accent); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+              <svg viewBox="0 0 24 24" style="width: 24px; height: 24px; fill: currentColor;"><path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,20H18A2,2 0 0,0 20,18V8L14,2M12,18H6V16H12V18M16,14H6V12H16V14M16,10H6V8H16V10M14,8V3.5L18.5,8H14Z"/></svg>
+            </div>
+            <div style="display: flex; flex-direction: column; overflow: hidden; text-align: left;">
+              <span style="font-size: 0.85rem; font-weight: 600; color: var(--text-main); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${msg.fileName || 'Tài liệu'}">${msg.fileName || 'Tài liệu'}</span>
+              <span style="font-size: 0.7rem; color: var(--text-muted); font-weight: 500;">${msg.fileSize || 'Chưa rõ dung lượng'}</span>
+            </div>
+          </div>
+        `;
+      }
+
       bubbleRow.innerHTML = `
         ${receivedAvatar}
         <div class="chat-bubble" style="border-radius: var(--border-radius-md);">
           ${senderLabel}
           ${displayImage}
+          ${displayFile}
           ${msg.content ? `<div class="content">${displayContent}</div>` : ''}
           <span class="time-stamp">${msg.time}</span>
         </div>
@@ -334,7 +350,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const userCredential = await auth.createUserWithEmailAndPassword("admin@domain.com", "Admin123456@");
       const uid = userCredential.user.uid;
       await db.collection("users").doc(uid).set({
-        name: "Admin ThinkEdu",
+        name: "Admin Aladdin Group",
         email: "admin@domain.com",
         role: "admin",
         createdAt: firebase.firestore.FieldValue.serverTimestamp()
@@ -455,7 +471,7 @@ document.addEventListener('DOMContentLoaded', () => {
           const userCredential = await auth.createUserWithEmailAndPassword(email, password);
           const uid = userCredential.user.uid;
           await db.collection("users").doc(uid).set({
-            name: "Admin ThinkEdu",
+            name: "Admin Aladdin Group",
             email: "admin@domain.com",
             role: "admin",
             createdAt: firebase.firestore.FieldValue.serverTimestamp()
@@ -915,6 +931,9 @@ document.addEventListener('DOMContentLoaded', () => {
             sender: `${data.senderName} (${data.senderRole})`,
             content: data.content,
             image: data.image || null,
+            file: data.file || null,
+            fileName: data.fileName || null,
+            fileSize: data.fileSize || null,
             time: timeStr
           });
         });
@@ -1067,6 +1086,76 @@ document.addEventListener('DOMContentLoaded', () => {
     } catch (e) {
       console.error("Failed to write image message:", e);
       showToast("Lỗi gửi hình ảnh!", "error");
+    }
+  };
+
+  // Document File Sending Handler (with Base64 Reader)
+  const btnTriggerDocUpload = document.getElementById('btnTriggerDocUpload');
+  const chatDocFileInput = document.getElementById('chatDocFileInput');
+
+  if (btnTriggerDocUpload && chatDocFileInput) {
+    btnTriggerDocUpload.replaceWith(btnTriggerDocUpload.cloneNode(true));
+    chatDocFileInput.replaceWith(chatDocFileInput.cloneNode(true));
+
+    const newBtnTrigger = document.getElementById('btnTriggerDocUpload');
+    const newFileInput = document.getElementById('chatDocFileInput');
+
+    newBtnTrigger.addEventListener('click', () => {
+      newFileInput.click();
+    });
+
+    newFileInput.addEventListener('change', async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      // Limit file size to 1.5MB for Base64 in Firestore to prevent payload issues
+      if (file.size > 1.5 * 1024 * 1024) {
+        showToast("Tệp quá lớn! Vui lòng chọn tệp dưới 1.5MB.", "error");
+        return;
+      }
+
+      showToast("Đang xử lý và gửi tài liệu...", "info");
+
+      const reader = new FileReader();
+      reader.onload = async function(event) {
+        const base64Data = event.target.result;
+        // Format file size
+        let sizeStr = `${(file.size / 1024).toFixed(1)} KB`;
+        if (file.size > 1024 * 1024) {
+          sizeStr = `${(file.size / (1024 * 1024)).toFixed(1)} MB`;
+        }
+        
+        await sendDocMessage(base64Data, file.name, sizeStr);
+      };
+      reader.readAsDataURL(file);
+
+      // Reset input
+      newFileInput.value = '';
+    });
+  }
+
+  const sendDocMessage = async (base64Data, fileName, fileSize) => {
+    if (!currentUser) {
+      showToast("Vui lòng đăng nhập để gửi tin nhắn!", "error");
+      return;
+    }
+
+    try {
+      const roleLabel = currentUser.role === 'admin' ? 'quản trị viên' : 'nhân viên';
+      await db.collection("messages").add({
+        content: "",
+        file: base64Data,
+        fileName: fileName,
+        fileSize: fileSize,
+        senderName: currentUser.name,
+        senderRole: roleLabel,
+        senderEmail: currentUser.email,
+        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+      });
+      showToast("Gửi tài liệu thành công!", "success");
+    } catch (e) {
+      console.error("Failed to write document message:", e);
+      showToast("Lỗi gửi tài liệu!", "error");
     }
   };
 
