@@ -121,6 +121,12 @@ document.addEventListener('DOMContentLoaded', () => {
         </div>
       `;
 
+      div.addEventListener('click', () => {
+        activeThreadId = thread.id;
+        renderThreadList();
+        renderMessages(activeThreadId);
+      });
+
       listContainer.appendChild(div);
     });
   };
@@ -143,7 +149,9 @@ document.addEventListener('DOMContentLoaded', () => {
         avatarCircle.style.backgroundColor = thread.avatarBg;
       }
       if (titleText) titleText.textContent = thread.name;
-      if (statusSpan) statusSpan.textContent = "Cập nhật thời gian thực";
+      if (statusSpan) {
+        statusSpan.textContent = thread.type === 'group' ? "Cập nhật thời gian thực" : thread.membersCount;
+      }
     }
 
     // Render bubbles
@@ -166,46 +174,153 @@ document.addEventListener('DOMContentLoaded', () => {
         senderLabel = `<span class="sender-name">${msg.sender}</span>`;
       }
 
-      // Highlight text matches if conversation search query exists
-      let displayContent = msg.content;
-      if (activeChatSearchQuery && msg.content) {
-        const escapedQuery = activeChatSearchQuery.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
-        const regex = new RegExp(`(${escapedQuery})`, 'gi');
-        displayContent = msg.content.replace(regex, '<span class="highlight-match">$1</span>');
-      }
-
-      let displayImage = "";
-      if (msg.image) {
-        displayImage = `<div class="chat-message-image-container" style="margin-bottom: 0.5rem; overflow: hidden; border-radius: var(--border-radius-sm); cursor: pointer;"><img src="${msg.image}" style="max-width: 100%; max-height: 250px; display: block; object-fit: cover; border-radius: var(--border-radius-sm);" class="chat-image-preview"></div>`;
-      }
-
-      let displayFile = "";
-      if (msg.file) {
-        displayFile = `
-          <div class="chat-message-file-container" style="margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.75rem; background: var(--bg-primary); border: 1px solid var(--border); padding: 0.75rem 1rem; border-radius: 8px; max-width: 300px; cursor: pointer;" onclick="const a = document.createElement('a'); a.href='${msg.file}'; a.download='${msg.fileName || 'file'}'; a.click();">
-            <div style="width: 40px; height: 40px; border-radius: 6px; background: var(--accent-light); color: var(--accent); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
-              <svg viewBox="0 0 24 24" style="width: 24px; height: 24px; fill: currentColor;"><path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,20H18A2,2 0 0,0 20,18V8L14,2M12,18H6V16H12V18M16,14H6V12H16V14M16,10H6V8H16V10M14,8V3.5L18.5,8H14Z"/></svg>
-            </div>
-            <div style="display: flex; flex-direction: column; overflow: hidden; text-align: left;">
-              <span style="font-size: 0.85rem; font-weight: 600; color: var(--text-main); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${msg.fileName || 'Tài liệu'}">${msg.fileName || 'Tài liệu'}</span>
-              <span style="font-size: 0.7rem; color: var(--text-muted); font-weight: 500;">${msg.fileSize || 'Chưa rõ dung lượng'}</span>
-            </div>
+      if (msg.isRecalled) {
+        // Render Recalled Message
+        bubbleRow.innerHTML = `
+          ${receivedAvatar}
+          <div class="chat-bubble recalled">
+            <svg class="recalled-icon" viewBox="0 0 24 24"><path d="M12 2C6.47 2 2 6.47 2 12s4.47 10 10 10 10-4.47 10-10S17.53 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm3.59-13L17 8.41L13.41 12L17 15.59L15.59 17L12 13.41L8.41 17L7 15.59L10.59 12L7 8.41L8.41 7L12 10.59L15.59 7z"/></svg>
+            <span>Tin nhắn đã được thu hồi</span>
+            <span class="time-stamp">${msg.time}</span>
           </div>
         `;
-      }
+      } else {
+        // Highlight text matches if conversation search query exists
+        let displayContent = msg.content;
+        if (activeChatSearchQuery && msg.content) {
+          const escapedQuery = activeChatSearchQuery.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
+          const regex = new RegExp(`(${escapedQuery})`, 'gi');
+          displayContent = msg.content.replace(regex, '<span class="highlight-match">$1</span>');
+        }
 
-      bubbleRow.innerHTML = `
-        ${receivedAvatar}
-        <div class="chat-bubble" style="border-radius: var(--border-radius-md);">
-          ${senderLabel}
-          ${displayImage}
-          ${displayFile}
-          ${msg.content ? `<div class="content">${displayContent}</div>` : ''}
-          <span class="time-stamp">${msg.time}</span>
-        </div>
-      `;
+        let displayImage = "";
+        if (msg.image) {
+          displayImage = `<div class="chat-message-image-container" style="margin-bottom: 0.5rem; overflow: hidden; border-radius: var(--border-radius-sm); cursor: pointer;"><img src="${msg.image}" style="max-width: 100%; max-height: 250px; display: block; object-fit: cover; border-radius: var(--border-radius-sm);" class="chat-image-preview"></div>`;
+        }
+
+        let displayFile = "";
+        if (msg.file) {
+          displayFile = `
+            <div class="chat-message-file-container" style="margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.75rem; background: var(--bg-primary); border: 1px solid var(--border); padding: 0.75rem 1rem; border-radius: 8px; max-width: 300px; cursor: pointer;">
+              <div style="width: 40px; height: 40px; border-radius: 6px; background: var(--accent-light); color: var(--accent); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                <svg viewBox="0 0 24 24" style="width: 24px; height: 24px; fill: currentColor;"><path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,20H18A2,2 0 0,0 20,18V8L14,2M12,18H6V16H12V18M16,14H6V12H16V14M16,10H6V8H16V10M14,8V3.5L18.5,8H14Z"/></svg>
+              </div>
+              <div style="display: flex; flex-direction: column; overflow: hidden; text-align: left; max-width: 180px;">
+                <span style="font-size: 0.85rem; font-weight: 600; color: var(--text-main); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${msg.fileName || 'Tài liệu'}">${msg.fileName || 'Tài liệu'}</span>
+                <span style="font-size: 0.7rem; color: var(--text-muted); font-weight: 500;">${msg.fileSize || 'Chưa rõ dung lượng'}</span>
+              </div>
+              <div style="margin-left: auto; color: var(--text-muted); display: flex; align-items: center; justify-content: center; opacity: 0.7;">
+                <svg viewBox="0 0 24 24" style="width: 18px; height: 18px; fill: currentColor;"><path d="M5,20H19V18H5M19,9H15V3H9V9H5L12,16L19,9Z"/></svg>
+              </div>
+            </div>
+          `;
+        }
+
+        let forwardedHtml = "";
+        if (msg.forwardedFrom) {
+          forwardedHtml = `
+            <div class="forwarded-tag">
+              <svg viewBox="0 0 24 24"><path d="M10,9V5L3,12L10,19V14.9C15,14.9 18.5,16.5 21,20C20,15 17,10 10,9Z"/></svg>
+              Chuyển tiếp từ ${msg.forwardedFrom}
+            </div>
+          `;
+        }
+
+        // Action Toolbar
+        const canRecall = isSentByMe || (currentUser && currentUser.role === 'admin');
+        const canDeleteEveryone = isSentByMe || (currentUser && currentUser.role === 'admin');
+
+        const actionsHtml = `
+          <div class="chat-bubble-actions" style="display: none;">
+            <button class="chat-action-btn btn-forward-action" data-msg-id="${msg.id}" title="Chuyển tiếp">
+              <svg viewBox="0 0 24 24"><path d="M10,9V5L3,12L10,19V14.9C15,14.9 18.5,16.5 21,20C20,15 17,10 10,9Z"/></svg>
+            </button>
+            ${canRecall ? `
+            <button class="chat-action-btn btn-recall-action" data-msg-id="${msg.id}" title="Thu hồi">
+              <svg viewBox="0 0 24 24"><path d="M13,3A9,9 0 0,0 4,12H1L4.89,15.89L4.96,16.03L9,12H6A7,7 0 0,1 13,5A7,7 0 0,1 20,12A7,7 0 0,1 13,19C11.07,19 9.32,18.13 8.14,16.73L6.7,18.17C8.28,19.92 10.5,21 13,21A9,9 0 0,0 22,12A9,9 0 0,0 13,3M12,8V13L16.28,15.54L17,14.33L13.5,12.25V8H12Z"/></svg>
+            </button>
+            ` : ''}
+            <button class="chat-action-btn btn-delete-action" data-msg-id="${msg.id}" data-can-everyone="${canDeleteEveryone}" title="Xóa">
+              <svg viewBox="0 0 24 24"><path d="M19,4H15.5L14.5,3H9.5L8.5,4H5V6H19M6,19A2,2 0 0,0 8,21H16A2,2 0 0,0 18,19V7H6V19Z"/></svg>
+            </button>
+          </div>
+        `;
+
+        bubbleRow.innerHTML = `
+          ${receivedAvatar}
+          <div class="chat-bubble" style="border-radius: var(--border-radius-md);">
+            ${senderLabel}
+            ${forwardedHtml}
+            ${displayImage}
+            ${displayFile}
+            ${msg.content ? `<div class="content">${displayContent}</div>` : ''}
+            <span class="time-stamp">${msg.time}</span>
+          </div>
+          ${actionsHtml}
+        `;
+      }
       
       container.appendChild(bubbleRow);
+
+      // Connect dynamically built handlers
+      bubbleRow.querySelectorAll('.btn-forward-action').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const msgId = btn.getAttribute('data-msg-id');
+          openForwardModal(msgId);
+        });
+      });
+      bubbleRow.querySelectorAll('.btn-recall-action').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const msgId = btn.getAttribute('data-msg-id');
+          recallMessage(msgId);
+        });
+      });
+      bubbleRow.querySelectorAll('.btn-delete-action').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const msgId = btn.getAttribute('data-msg-id');
+          const canEveryone = btn.getAttribute('data-can-everyone') === 'true';
+          deleteMessage(msgId, canEveryone);
+        });
+      });
+
+      // Secure Base64 to Blob URL download handler
+      bubbleRow.querySelectorAll('.chat-message-file-container').forEach(container => {
+        container.addEventListener('click', () => {
+          if (!msg.file) return;
+          try {
+            const base64Data = msg.file;
+            const parts = base64Data.split(';base64,');
+            const contentType = parts[0].split(':')[1];
+            const raw = window.atob(parts[1]);
+            const rawLength = raw.length;
+            const uInt8Array = new Uint8Array(rawLength);
+            
+            for (let i = 0; i < rawLength; ++i) {
+              uInt8Array[i] = raw.charCodeAt(i);
+            }
+            
+            const blob = new Blob([uInt8Array], { type: contentType });
+            const blobUrl = URL.createObjectURL(blob);
+            
+            const a = document.createElement('a');
+            a.href = blobUrl;
+            a.download = msg.fileName || 'file';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            
+            setTimeout(() => URL.revokeObjectURL(blobUrl), 100);
+          } catch (err) {
+            console.error("Blob URL download failed, falling back to direct data-uri click", err);
+            const a = document.createElement('a');
+            a.href = msg.file;
+            a.download = msg.fileName || 'file';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+          }
+        });
+      });
     });
 
     // Auto scroll to bottom
@@ -577,6 +692,10 @@ document.addEventListener('DOMContentLoaded', () => {
         chatSubscription(); // Unsubscribe chat
         chatSubscription = null;
       }
+      if (usersSubscription) {
+        usersSubscription(); // Unsubscribe chat threads
+        usersSubscription = null;
+      }
       await auth.signOut();
       if (portalLoginForm) portalLoginForm.reset();
       showToast("Bạn đã đăng xuất tài khoản thành công!", "info");
@@ -902,15 +1021,64 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
+  let usersSubscription = null;
+  const subscribeToChatThreads = () => {
+    if (usersSubscription) usersSubscription();
+    
+    usersSubscription = db.collection("users").onSnapshot((snap) => {
+      if (!currentUser) return;
+      
+      const threads = [
+        {
+          id: "group-global",
+          name: "Nội Bộ Aladdin Group",
+          type: "group",
+          avatarInitials: "GT",
+          avatarBg: "var(--accent)",
+          membersCount: "Tất cả",
+          messages: []
+        }
+      ];
+
+      snap.forEach(doc => {
+        const u = doc.data();
+        const uid = doc.id;
+        if (u.email === currentUser.email) return;
+
+        const initials = u.name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+        // Generate standard sorted DM threadId
+        const sortedIds = [currentUser.uid || 'me', uid].sort();
+        const dmThreadId = `dm-${sortedIds[0]}-${sortedIds[1]}`;
+
+        threads.push({
+          id: dmThreadId,
+          name: u.name,
+          type: "direct",
+          avatarInitials: initials,
+          avatarBg: getAvatarBgColor(u.name),
+          membersCount: u.role === 'admin' ? 'Quản trị viên' : (u.role === 'student' ? 'Học viên' : 'Nhân viên'),
+          messages: []
+        });
+      });
+
+      chatThreads = threads;
+      
+      // Resubscribe to chat messages to populate the new threads
+      subscribeToChatMessages();
+    }, (error) => {
+      console.error("Failed to subscribe to users for chat threads:", error);
+    });
+  };
+
   // Real-time Chat Subscription Handler
   const subscribeToChatMessages = () => {
     if (chatSubscription) chatSubscription(); // Cancel active observer if any
     
     chatSubscription = db.collection("messages")
       .orderBy("createdAt", "asc")
-      .limitToLast(100)
+      .limitToLast(300)
       .onSnapshot((snapshot) => {
-        const messages = [];
+        const allMessages = [];
         snapshot.forEach((doc) => {
           const data = doc.data();
           let timeStr = "";
@@ -927,19 +1095,29 @@ document.addEventListener('DOMContentLoaded', () => {
             timeStr = `${pad(now.getHours(), 2)}:${pad(now.getMinutes(), 2)}`;
           }
 
-          messages.push({
+          allMessages.push({
+            id: doc.id,
+            threadId: data.threadId || "group-global",
             sender: `${data.senderName} (${data.senderRole})`,
+            senderName: data.senderName,
+            senderRole: data.senderRole,
+            senderEmail: data.senderEmail,
             content: data.content,
             image: data.image || null,
             file: data.file || null,
             fileName: data.fileName || null,
             fileSize: data.fileSize || null,
-            time: timeStr
+            time: timeStr,
+            isRecalled: data.isRecalled || false,
+            forwardedFrom: data.forwardedFrom || null
           });
         });
 
-        // Set local thread messages to Firestore real-time snapshot messages
-        chatThreads[0].messages = messages;
+        // Distribute messages to each thread locally
+        chatThreads.forEach(thread => {
+          const deletedIds = JSON.parse(localStorage.getItem('deletedMessageIds') || '[]');
+          thread.messages = allMessages.filter(m => m.threadId === thread.id && !deletedIds.includes(m.id));
+        });
 
         // Render Chat views
         renderThreadList();
@@ -973,6 +1151,7 @@ document.addEventListener('DOMContentLoaded', () => {
         senderName: currentUser.name,
         senderRole: roleLabel,
         senderEmail: currentUser.email,
+        threadId: activeThreadId || "group-global",
         createdAt: firebase.firestore.FieldValue.serverTimestamp()
       });
     } catch (e) {
@@ -1031,7 +1210,6 @@ document.addEventListener('DOMContentLoaded', () => {
       reader.onload = function(event) {
         const img = new Image();
         img.onload = function() {
-          // Downscale using HTML5 canvas to keep size small (<100KB is best for Firestore Base64)
           const maxDim = 400; // max width/height
           let width = img.width;
           let height = img.height;
@@ -1052,17 +1230,13 @@ document.addEventListener('DOMContentLoaded', () => {
           const ctx = canvas.getContext('2d');
           ctx.drawImage(img, 0, 0, width, height);
 
-          // Compress to JPEG with 0.6 quality
           const compressedBase64 = canvas.toDataURL('image/jpeg', 0.6);
-
-          // Send as message to Firestore
           sendImageMessage(compressedBase64);
         };
         img.src = event.target.result;
       };
       reader.readAsDataURL(file);
 
-      // Reset input
       newFileInput.value = '';
     });
   }
@@ -1081,6 +1255,7 @@ document.addEventListener('DOMContentLoaded', () => {
         senderName: currentUser.name,
         senderRole: roleLabel,
         senderEmail: currentUser.email,
+        threadId: activeThreadId || "group-global",
         createdAt: firebase.firestore.FieldValue.serverTimestamp()
       });
     } catch (e) {
@@ -1108,7 +1283,6 @@ document.addEventListener('DOMContentLoaded', () => {
       const file = e.target.files[0];
       if (!file) return;
 
-      // Limit file size to 1.5MB for Base64 in Firestore to prevent payload issues
       if (file.size > 1.5 * 1024 * 1024) {
         showToast("Tệp quá lớn! Vui lòng chọn tệp dưới 1.5MB.", "error");
         return;
@@ -1119,7 +1293,6 @@ document.addEventListener('DOMContentLoaded', () => {
       const reader = new FileReader();
       reader.onload = async function(event) {
         const base64Data = event.target.result;
-        // Format file size
         let sizeStr = `${(file.size / 1024).toFixed(1)} KB`;
         if (file.size > 1024 * 1024) {
           sizeStr = `${(file.size / (1024 * 1024)).toFixed(1)} MB`;
@@ -1129,7 +1302,6 @@ document.addEventListener('DOMContentLoaded', () => {
       };
       reader.readAsDataURL(file);
 
-      // Reset input
       newFileInput.value = '';
     });
   }
@@ -1150,6 +1322,7 @@ document.addEventListener('DOMContentLoaded', () => {
         senderName: currentUser.name,
         senderRole: roleLabel,
         senderEmail: currentUser.email,
+        threadId: activeThreadId || "group-global",
         createdAt: firebase.firestore.FieldValue.serverTimestamp()
       });
       showToast("Gửi tài liệu thành công!", "success");
@@ -1158,6 +1331,174 @@ document.addEventListener('DOMContentLoaded', () => {
       showToast("Lỗi gửi tài liệu!", "error");
     }
   };
+
+  /* ==========================================
+     NEW MESSAGE ACTIONS (DELETE, RECALL, FORWARD)
+     ========================================== */
+
+  // 1. Recall message (Thu hồi đối với mọi người)
+  const recallMessage = async (messageId) => {
+    if (confirm("Bạn có chắc chắn muốn thu hồi tin nhắn này đối với mọi người?")) {
+      try {
+        await db.collection("messages").doc(messageId).update({
+          content: "",
+          image: null,
+          file: null,
+          fileName: null,
+          fileSize: null,
+          isRecalled: true
+        });
+        showToast("Đã thu hồi tin nhắn thành công!", "success");
+      } catch (err) {
+        console.error("Failed to recall message:", err);
+        showToast("Lỗi khi thu hồi tin nhắn!", "error");
+      }
+    }
+  };
+
+  // 2. Delete message (Xóa phía tôi hoặc phía mọi người)
+  const deleteMessage = async (messageId, canEveryone) => {
+    let deleteForEveryone = false;
+    if (canEveryone) {
+      const choice = confirm("Nhấn OK để 'Xóa ở mọi người' (Xóa vĩnh viễn khỏi hệ thống), nhấn Hủy (Cancel) để 'Xóa chỉ ở phía tôi'?");
+      if (choice) {
+        deleteForEveryone = true;
+      } else {
+        const confirmMe = confirm("Bạn có muốn xóa tin nhắn này ở phía bạn không?");
+        if (!confirmMe) return;
+        deleteForEveryone = false;
+      }
+    } else {
+      const confirmMe = confirm("Bạn có chắc chắn muốn xóa tin nhắn này ở phía bạn?");
+      if (!confirmMe) return;
+    }
+
+    if (deleteForEveryone) {
+      try {
+        await db.collection("messages").doc(messageId).delete();
+        showToast("Đã xóa tin nhắn đối với mọi người!", "success");
+      } catch (err) {
+        console.error("Failed to delete message for everyone:", err);
+        showToast("Lỗi khi xóa tin nhắn!", "error");
+      }
+    } else {
+      const deletedIds = JSON.parse(localStorage.getItem('deletedMessageIds') || '[]');
+      if (!deletedIds.includes(messageId)) {
+        deletedIds.push(messageId);
+        localStorage.setItem('deletedMessageIds', JSON.stringify(deletedIds));
+      }
+      showToast("Đã xóa tin nhắn ở phía bạn!", "success");
+      
+      // Refresh local display instantly
+      subscribeToChatMessages();
+    }
+  };
+
+  // 3. Forward Message Modal operations
+  let forwardMsgId = null;
+
+  const openForwardModal = (messageId) => {
+    forwardMsgId = messageId;
+    const modal = document.getElementById('forwardMessageModal');
+    if (!modal) return;
+    
+    // Reset and render targets
+    const searchInput = document.getElementById('forwardSearchInput');
+    if (searchInput) searchInput.value = '';
+    renderForwardTargets();
+    
+    modal.style.display = 'flex';
+  };
+
+  const closeForwardModal = () => {
+    const modal = document.getElementById('forwardMessageModal');
+    if (modal) modal.style.display = 'none';
+    forwardMsgId = null;
+  };
+
+  const renderForwardTargets = (query = "") => {
+    const list = document.getElementById('forwardTargetsList');
+    if (!list) return;
+    list.innerHTML = '';
+    
+    const filteredThreads = chatThreads.filter(t => {
+      if (!query) return true;
+      return t.name.toLowerCase().includes(query.toLowerCase());
+    });
+    
+    filteredThreads.forEach(thread => {
+      const item = document.createElement('div');
+      item.className = 'forward-target-item';
+      item.innerHTML = `
+        <div class="avatar" style="background-color: ${thread.avatarBg}">${thread.avatarInitials}</div>
+        <span class="name">${thread.name}</span>
+        <span class="role">${thread.type === 'group' ? 'Nhóm chung' : thread.membersCount}</span>
+      `;
+      item.addEventListener('click', () => {
+        forwardMessageToThread(forwardMsgId, thread.id);
+        closeForwardModal();
+      });
+      list.appendChild(item);
+    });
+  };
+
+  const forwardMessageToThread = async (msgId, targetThreadId) => {
+    let originalMsg = null;
+    chatThreads.forEach(t => {
+      const m = t.messages.find(msg => msg.id === msgId);
+      if (m) originalMsg = m;
+    });
+    
+    if (!originalMsg) {
+      showToast("Không tìm thấy tin nhắn gốc!", "error");
+      return;
+    }
+    
+    try {
+      const roleLabel = currentUser.role === 'admin' ? 'quản trị viên' : 'nhân viên';
+      
+      const payload = {
+        content: originalMsg.content || "",
+        senderName: currentUser.name,
+        senderRole: roleLabel,
+        senderEmail: currentUser.email,
+        threadId: targetThreadId,
+        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+        forwardedFrom: originalMsg.senderName || originalMsg.sender.split(' (')[0]
+      };
+      
+      if (originalMsg.image) payload.image = originalMsg.image;
+      if (originalMsg.file) {
+        payload.file = originalMsg.file;
+        payload.fileName = originalMsg.fileName;
+        payload.fileSize = originalMsg.fileSize;
+      }
+      
+      await db.collection("messages").add(payload);
+      showToast("Đã chuyển tiếp tin nhắn thành công!", "success");
+      
+      // Automatically redirect to active thread and render
+      activeThreadId = targetThreadId;
+      renderThreadList();
+      renderMessages(activeThreadId);
+    } catch (err) {
+      console.error("Failed to forward message:", err);
+      showToast("Lỗi khi chuyển tiếp tin nhắn!", "error");
+    }
+  };
+
+  // Bind Forward modal listeners
+  const btnCloseForwardModal = document.getElementById('btnCloseForwardModal');
+  if (btnCloseForwardModal) {
+    btnCloseForwardModal.addEventListener('click', closeForwardModal);
+  }
+
+  const forwardSearchInput = document.getElementById('forwardSearchInput');
+  if (forwardSearchInput) {
+    forwardSearchInput.addEventListener('input', (e) => {
+      renderForwardTargets(e.target.value);
+    });
+  }
 
   /* ==========================================================================
      STUDENT MANAGEMENT MODULE (INTEGRATED WITH FIREBASE FIRESTORE)
@@ -2681,7 +3022,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (appRoot) appRoot.style.display = 'flex';
 
             // Subscribe to real-time chat updates
-            subscribeToChatMessages();
+            subscribeToChatThreads();
 
             // Subscribe to real-time students updates
             subscribeToStudents();
@@ -2701,6 +3042,10 @@ document.addEventListener('DOMContentLoaded', () => {
         if (chatSubscription) {
           chatSubscription();
           chatSubscription = null;
+        }
+        if (usersSubscription) {
+          usersSubscription();
+          usersSubscription = null;
         }
         if (studentsSubscription) {
           studentsSubscription();
