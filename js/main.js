@@ -62,22 +62,106 @@ document.addEventListener('DOMContentLoaded', () => {
      TELEGRAM-STYLE CHAT SYSTEM LOGIC & DATA (TRANSITIONED TO FIREBASE)
      ========================================================================== */
   
-  // Single Shared group chat thread
-  let chatThreads = [
-    {
+  // Dynamic chat threads cache
+  let chatThreads = [];
+
+  let activeThreadId = "group-global";
+  let chatSearchQuery = "";
+  let activeChatSearchQuery = ""; // Query for highlighting inside the conversation
+
+  // Global cache for users, contacts, and messages
+  let usersCache = {}; // Cache all users: { uid: userData }
+  let allUsersList = []; // List of all users for searching
+  let myContacts = []; // List of contact UIDs for current user
+  let contactsSubscription = null;
+  let usersSubscription = null;
+  let allLoadedMessages = []; // Cache of all loaded messages
+
+  // Get unique DM thread ID for two UIDs sorted alphabetically
+  const getDmThreadId = (uid1, uid2) => {
+    const sorted = [uid1, uid2].sort();
+    return `dm-${sorted[0]}-${sorted[1]}`;
+  };
+
+  // Rebuild all chat threads dynamically
+  const rebuildChatThreads = () => {
+    if (!currentUser || !auth.currentUser) return;
+    const myUid = auth.currentUser.uid;
+    const deletedIds = JSON.parse(localStorage.getItem('deletedMessageIds') || '[]');
+
+    // 1. Build Global Group Thread
+    const globalMessages = allLoadedMessages.filter(m => m.threadId === "group-global" && !deletedIds.includes(m.id));
+    const globalThread = {
       id: "group-global",
       name: "Nội Bộ Aladdin Group",
       type: "group",
       avatarInitials: "GT",
       avatarBg: "var(--accent)",
-      membersCount: "Tất cả",
-      messages: []
-    }
-  ];
+      membersCount: "Cập nhật thời gian thực",
+      messages: globalMessages
+    };
 
-  let activeThreadId = "group-global";
-  let chatSearchQuery = "";
-  let activeChatSearchQuery = ""; // Query for highlighting inside the conversation
+    // 2. Identify all other UIDs that should have DM threads
+    const dmUids = new Set();
+    
+    // Add all contact UIDs
+    myContacts.forEach(uid => {
+      if (uid !== myUid) {
+        dmUids.add(uid);
+      }
+    });
+
+    // Add UIDs from messages history
+    allLoadedMessages.forEach(m => {
+      if (m.threadId && m.threadId.startsWith('dm-')) {
+        const parts = m.threadId.split('-');
+        if (parts.length === 3) {
+          const uidA = parts[1];
+          const uidB = parts[2];
+          if (uidA === myUid && uidB !== myUid) {
+            dmUids.add(uidB);
+          } else if (uidB === myUid && uidA !== myUid) {
+            dmUids.add(uidA);
+          }
+        }
+      }
+    });
+
+    // 3. Build DM Threads
+    const dmThreads = [];
+    dmUids.forEach(contactUid => {
+      const contactUser = usersCache[contactUid];
+      if (!contactUser) return;
+
+      const threadId = getDmThreadId(myUid, contactUid);
+      const threadMessages = allLoadedMessages.filter(m => m.threadId === threadId && !deletedIds.includes(m.id));
+      
+      const initials = contactUser.name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+      const displayRole = contactUser.role === 'admin' ? 'Quản trị viên' : 'Nhân viên';
+
+      dmThreads.push({
+        id: threadId,
+        name: contactUser.name,
+        type: "dm",
+        avatarInitials: initials,
+        avatarBg: getAvatarBgColor(contactUser.name),
+        membersCount: displayRole,
+        messages: threadMessages,
+        contactUid: contactUid
+      });
+    });
+
+    // 4. Update the global chatThreads array
+    chatThreads = [globalThread, ...dmThreads];
+
+    // Render Chat views if on chat screen
+    renderThreadList();
+    const chatDashboard = document.getElementById('chat-dashboard');
+    if (chatDashboard && chatDashboard.style.display === 'block') {
+      renderMessages(activeThreadId);
+    }
+  };
+
 
   // Render Thread List Sidebar
   const renderThreadList = () => {
@@ -668,9 +752,18 @@ document.addEventListener('DOMContentLoaded', () => {
         chatSubscription = null;
       }
       if (usersSubscription) {
-        usersSubscription(); // Unsubscribe chat threads
+        usersSubscription(); // Unsubscribe users
         usersSubscription = null;
       }
+      if (contactsSubscription) {
+        contactsSubscription(); // Unsubscribe contacts
+        contactsSubscription = null;
+      }
+      usersCache = {};
+      allUsersList = [];
+      myContacts = [];
+      allLoadedMessages = [];
+      chatThreads = [];
       await auth.signOut();
       if (portalLoginForm) portalLoginForm.reset();
       showToast("Bạn đã đăng xuất tài khoản thành công!", "info");
@@ -1000,22 +1093,12 @@ document.addEventListener('DOMContentLoaded', () => {
   const subscribeToChatMessages = () => {
     if (chatSubscription) chatSubscription(); // Cancel active observer if any
     
-    activeThreadId = "group-global";
-    chatThreads = [
-      {
-        id: "group-global",
-        name: "Nội Bộ Aladdin Group",
-        type: "group",
-        avatarInitials: "GT",
-        avatarBg: "var(--accent)",
-        membersCount: "Tất cả",
-        messages: []
-      }
-    ];
+    allLoadedMessages = [];
+    rebuildChatThreads();
 
     chatSubscription = db.collection("messages")
       .orderBy("createdAt", "asc")
-      .limitToLast(150)
+      .limitToLast(200) // Increase limits to support more active DM flows
       .onSnapshot((snapshot) => {
         const allMessages = [];
         snapshot.forEach((doc) => {
@@ -1052,19 +1135,13 @@ document.addEventListener('DOMContentLoaded', () => {
           });
         });
 
-        const deletedIds = JSON.parse(localStorage.getItem('deletedMessageIds') || '[]');
-        chatThreads[0].messages = allMessages.filter(m => !deletedIds.includes(m.id));
-
-        // Render Chat views
-        renderThreadList();
-        const chatDashboard = document.getElementById('chat-dashboard');
-        if (chatDashboard && chatDashboard.style.display === 'block') {
-          renderMessages(activeThreadId);
-        }
+        allLoadedMessages = allMessages;
+        rebuildChatThreads();
       }, (error) => {
         console.error("Real-time messages observer failure:", error);
       });
   };
+
 
   // Send message hook (redirected to Firestore messages collection write)
   const handleSendMessage = async () => {
@@ -1435,6 +1512,206 @@ document.addEventListener('DOMContentLoaded', () => {
       renderForwardTargets(e.target.value);
     });
   }
+
+  // ==========================================
+  // FIND FRIENDS & ADD CONTACTS MODAL LOGIC
+  // ==========================================
+
+  const subscribeToUsersCache = () => {
+    if (usersSubscription) usersSubscription();
+    usersSubscription = db.collection("users")
+      .onSnapshot((snapshot) => {
+        allUsersList = [];
+        snapshot.forEach((doc) => {
+          const u = doc.data();
+          u.uid = doc.id;
+          usersCache[u.uid] = u;
+          allUsersList.push(u);
+        });
+        rebuildChatThreads();
+      }, (error) => {
+        console.error("Users cache observer failure:", error);
+      });
+  };
+
+  const subscribeToContacts = () => {
+    if (contactsSubscription) contactsSubscription();
+    myContacts = [];
+    contactsSubscription = db.collection("contacts")
+      .where("userUid", "==", auth.currentUser.uid)
+      .onSnapshot((snapshot) => {
+        myContacts = [];
+        snapshot.forEach((doc) => {
+          const data = doc.data();
+          myContacts.push(data.contactUid);
+        });
+        rebuildChatThreads();
+        
+        // Re-render search results inside modal if it's currently open
+        const modal = document.getElementById('findFriendsModal');
+        if (modal && modal.style.display === 'flex') {
+          const searchInput = document.getElementById('friendSearchInput');
+          renderFriendsSearchResults(searchInput ? searchInput.value : "");
+        }
+      }, (error) => {
+        console.error("Contacts observer failure:", error);
+      });
+  };
+
+  // Open / Close Find Friends Modal
+  const btnOpenFindFriends = document.getElementById('btnOpenFindFriends');
+  const findFriendsModal = document.getElementById('findFriendsModal');
+  const btnCloseFindFriendsModal = document.getElementById('btnCloseFindFriendsModal');
+  const friendSearchInput = document.getElementById('friendSearchInput');
+
+  if (btnOpenFindFriends && findFriendsModal) {
+    btnOpenFindFriends.addEventListener('click', () => {
+      findFriendsModal.style.display = 'flex';
+      if (friendSearchInput) {
+        friendSearchInput.value = '';
+        friendSearchInput.focus();
+      }
+      renderFriendsSearchResults("");
+    });
+  }
+
+  const closeFindFriendsModal = () => {
+    if (findFriendsModal) findFriendsModal.style.display = 'none';
+  };
+
+  if (btnCloseFindFriendsModal) {
+    btnCloseFindFriendsModal.addEventListener('click', closeFindFriendsModal);
+  }
+
+  if (findFriendsModal) {
+    findFriendsModal.addEventListener('click', (e) => {
+      if (e.target === findFriendsModal) closeFindFriendsModal();
+    });
+  }
+
+  if (friendSearchInput) {
+    friendSearchInput.addEventListener('input', (e) => {
+      renderFriendsSearchResults(e.target.value);
+    });
+  }
+
+  // Render search results inside Find Friends modal
+  const renderFriendsSearchResults = (query = "") => {
+    const list = document.getElementById('friendsSearchResultsList');
+    if (!list) return;
+    list.innerHTML = '';
+
+    if (!currentUser || !auth.currentUser) return;
+    const myUid = auth.currentUser.uid;
+    const q = query.trim().toLowerCase();
+
+    // Filter other users
+    const filteredUsers = allUsersList.filter(u => {
+      if (u.uid === myUid) return false; // exclude self
+      if (!q) return true;
+      return (u.name && u.name.toLowerCase().includes(q)) || 
+             (u.email && u.email.toLowerCase().includes(q));
+    });
+
+    if (filteredUsers.length === 0) {
+      list.innerHTML = `
+        <div style="padding: 2rem; text-align: center; color: var(--text-muted); font-size: 0.85rem;">
+          Không tìm thấy đồng nghiệp nào.
+        </div>
+      `;
+      return;
+    }
+
+    filteredUsers.forEach(user => {
+      const isFriend = myContacts.includes(user.uid);
+      const initials = user.name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+      const displayRole = user.role === 'admin' ? 'Quản trị viên' : 'Nhân viên';
+
+      const item = document.createElement('div');
+      item.className = 'forward-target-item';
+      item.style.display = 'flex';
+      item.style.alignItems = 'center';
+      item.style.gap = '1rem';
+      item.style.padding = '0.75rem 1rem';
+      item.style.borderRadius = 'var(--border-radius-md)';
+      item.style.cursor = 'default';
+
+      let rightContent = '';
+      if (isFriend) {
+        rightContent = `
+          <span class="badge-connected-friend">Đã kết bạn</span>
+          <button class="btn-connect-friend btn-chat-now" data-uid="${user.uid}" style="background: var(--accent); margin-left: 0.5rem;">Nhắn tin</button>
+        `;
+      } else {
+        rightContent = `
+          <button class="btn-connect-friend btn-add-friend-action" data-uid="${user.uid}" style="background: var(--text-main); margin-left: auto;">👤+ Kết bạn</button>
+          <button class="btn-connect-friend btn-chat-now" data-uid="${user.uid}" style="background: var(--accent); margin-left: 0.5rem;">Nhắn tin</button>
+        `;
+      }
+
+      item.innerHTML = `
+        <div class="avatar" style="background-color: ${getAvatarBgColor(user.name)}; width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 0.85rem;">${initials}</div>
+        <div style="display: flex; flex-direction: column; text-align: left; flex: 1;">
+          <span class="name" style="font-weight: 600; color: var(--text-main);">${user.name}</span>
+          <span class="role" style="font-size: 0.75rem; color: var(--text-muted);">${user.email} (${displayRole})</span>
+        </div>
+        <div style="display: flex; align-items: center; gap: 0.5rem; margin-left: auto;">
+          ${rightContent}
+        </div>
+      `;
+
+      // Bind Connect Friend click hook
+      const btnAdd = item.querySelector('.btn-add-friend-action');
+      if (btnAdd) {
+        btnAdd.addEventListener('click', async () => {
+          btnAdd.disabled = true;
+          btnAdd.textContent = 'Đang kết nối...';
+          try {
+            // Write 2-way friendship connections in contacts collection
+            await db.collection("contacts").add({
+              userUid: myUid,
+              contactUid: user.uid,
+              createdAt: firebase.firestore.FieldValue.serverTimestamp()
+            });
+            await db.collection("contacts").add({
+              userUid: user.uid,
+              contactUid: myUid,
+              createdAt: firebase.firestore.FieldValue.serverTimestamp()
+            });
+            showToast(`Đã kết bạn với ${user.name} thành công!`, 'success');
+          } catch (err) {
+            console.error("Failed to add friend:", err);
+            showToast("Lỗi khi kết bạn!", "error");
+            btnAdd.disabled = false;
+            btnAdd.textContent = '👤+ Kết bạn';
+          }
+        });
+      }
+
+      // Bind Chat Now click hook
+      const btnChat = item.querySelector('.btn-chat-now');
+      if (btnChat) {
+        btnChat.addEventListener('click', () => {
+          const threadId = getDmThreadId(myUid, user.uid);
+          activeThreadId = threadId;
+          
+          // Rebuild threads to make sure the DM thread is created
+          rebuildChatThreads();
+          
+          closeFindFriendsModal();
+          
+          // Focus chat input
+          const chatInput = document.getElementById('chatMessageInput');
+          if (chatInput) {
+            chatInput.focus();
+          }
+        });
+      }
+
+      list.appendChild(item);
+    });
+  };
+
 
   // Custom File Context Menu Logic
   let contextMenuFileMsg = null;
@@ -3020,6 +3297,10 @@ document.addEventListener('DOMContentLoaded', () => {
             if (loginContainer) loginContainer.style.display = 'none';
             if (appRoot) appRoot.style.display = 'flex';
 
+            // Subscribe to users and contacts cache updates
+            subscribeToUsersCache();
+            subscribeToContacts();
+
             // Subscribe to real-time chat updates
             subscribeToChatMessages();
 
@@ -3045,6 +3326,10 @@ document.addEventListener('DOMContentLoaded', () => {
         if (usersSubscription) {
           usersSubscription();
           usersSubscription = null;
+        }
+        if (contactsSubscription) {
+          contactsSubscription();
+          contactsSubscription = null;
         }
         if (studentsSubscription) {
           studentsSubscription();
