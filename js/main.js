@@ -201,16 +201,13 @@ document.addEventListener('DOMContentLoaded', () => {
         let displayFile = "";
         if (msg.file) {
           displayFile = `
-            <div class="chat-message-file-container" style="margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.75rem; background: var(--bg-primary); border: 1px solid var(--border); padding: 0.75rem 1rem; border-radius: 8px; max-width: 300px; cursor: pointer;">
+            <div class="chat-message-file-container" style="margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.75rem; background: var(--bg-primary); border: 1px solid var(--border); padding: 0.75rem 1rem; border-radius: 8px; max-width: 300px; cursor: pointer;" title="Nhấp chuột phải để tải xuống">
               <div style="width: 40px; height: 40px; border-radius: 6px; background: var(--accent-light); color: var(--accent); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
                 <svg viewBox="0 0 24 24" style="width: 24px; height: 24px; fill: currentColor;"><path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,20H18A2,2 0 0,0 20,18V8L14,2M12,18H6V16H12V18M16,14H6V12H16V14M16,10H6V8H16V10M14,8V3.5L18.5,8H14Z"/></svg>
               </div>
-              <div style="display: flex; flex-direction: column; overflow: hidden; text-align: left; max-width: 180px;">
+              <div style="display: flex; flex-direction: column; overflow: hidden; text-align: left;">
                 <span style="font-size: 0.85rem; font-weight: 600; color: var(--text-main); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${msg.fileName || 'Tài liệu'}">${msg.fileName || 'Tài liệu'}</span>
                 <span style="font-size: 0.7rem; color: var(--text-muted); font-weight: 500;">${msg.fileSize || 'Chưa rõ dung lượng'}</span>
-              </div>
-              <div style="margin-left: auto; color: var(--text-muted); display: flex; align-items: center; justify-content: center; opacity: 0.7;">
-                <svg viewBox="0 0 24 24" style="width: 18px; height: 18px; fill: currentColor;"><path d="M5,20H19V18H5M19,9H15V3H9V9H5L12,16L19,9Z"/></svg>
               </div>
             </div>
           `;
@@ -283,9 +280,10 @@ document.addEventListener('DOMContentLoaded', () => {
         });
       });
 
-      // Secure Base64 to Blob URL download handler
+      // Secure Base64 to Blob URL download handler (triggered only via Right-Click/Contextmenu)
       bubbleRow.querySelectorAll('.chat-message-file-container').forEach(container => {
-        container.addEventListener('click', () => {
+        container.addEventListener('contextmenu', (e) => {
+          e.preventDefault(); // Suppress the default browser text/file right-click menu
           if (!msg.file) return;
           try {
             const base64Data = msg.file;
