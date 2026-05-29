@@ -1,6 +1,6 @@
 @echo off
 echo =======================================================
-echo     TIEN HANH DONG BO VA PUSH CODE THINKEDU LEN GITHUB
+echo     TIEN HANH DONG BO VA PUSH CODE ALADIN GROUP LEN GITHUB
 echo =======================================================
 echo.
 git add .
