@@ -127,6 +127,17 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     });
 
+    // Safeguard: Add currently active DM thread contact UID if any
+    if (activeThreadId && activeThreadId.startsWith('dm-')) {
+      const parts = activeThreadId.split('-');
+      if (parts.length === 3) {
+        const uidA = parts[1];
+        const uidB = parts[2];
+        if (uidA === myUid) dmUids.add(uidB);
+        if (uidB === myUid) dmUids.add(uidA);
+      }
+    }
+
     // 3. Build DM Threads
     const dmThreads = [];
     dmUids.forEach(contactUid => {
@@ -169,50 +180,167 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!listContainer) return;
     listContainer.innerHTML = '';
 
+    if (!currentUser || !auth.currentUser) return;
+    const myUid = auth.currentUser.uid;
     const query = chatSearchQuery.trim().toLowerCase();
     
+    // 1. Filter Active Conversations
     const filteredThreads = chatThreads.filter(t => {
       if (!query) return true;
       return t.name.toLowerCase().includes(query) || 
              t.messages.some(m => m.content.toLowerCase().includes(query));
     });
 
-    if (filteredThreads.length === 0) {
+    // 2. Filter Other Staff (Directory)
+    // We only show users who do not have an active chat thread in chatThreads
+    const otherStaff = allUsersList.filter(user => {
+      if (user.uid === myUid) return false; // Exclude self
+      const hasActiveThread = chatThreads.some(t => t.type === 'dm' && t.contactUid === user.uid);
+      if (hasActiveThread) return false; // Already in active DMs list
+      
+      if (!query) return true;
+      return (user.name && user.name.toLowerCase().includes(query)) || 
+             (user.email && user.email.toLowerCase().includes(query));
+    });
+
+    if (filteredThreads.length === 0 && otherStaff.length === 0) {
       listContainer.innerHTML = `
         <div style="padding: 2rem; text-align: center; color: var(--text-muted); font-size: 0.85rem;">
-          Không tìm thấy hội thoại nào phù hợp.
+          Không tìm thấy kết quả phù hợp.
         </div>
       `;
       return;
     }
 
-    filteredThreads.forEach(thread => {
-      const activeClass = (thread.id === activeThreadId) ? 'active' : '';
-      const lastMsg = thread.messages.length > 0 ? thread.messages[thread.messages.length - 1] : { content: "Chưa có tin nhắn", time: "" };
-
-      const div = document.createElement('div');
-      div.className = `chat-thread-item ${activeClass}`;
-      div.innerHTML = `
-        <div class="avatar-circle" style="background-color: ${thread.avatarBg};">${thread.avatarInitials}</div>
-        <div class="chat-thread-details">
-          <div class="chat-thread-header">
-            <span class="title">${thread.name}</span>
-            <span class="time">${lastMsg.time}</span>
-          </div>
-          <div class="chat-thread-preview">
-            <span class="message">${lastMsg.sender ? lastMsg.sender + ': ' : ''}${lastMsg.content}</span>
-          </div>
-        </div>
+    // --- Render Section 1: ACTIVE CHATS ---
+    if (filteredThreads.length > 0) {
+      const secHeader = document.createElement('div');
+      secHeader.className = 'sidebar-section-header';
+      secHeader.style.cssText = 'font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--accent); padding: 1.25rem 1rem 0.5rem 1rem; border-bottom: 1px solid var(--border); margin-bottom: 0.5rem; display: flex; align-items: center; justify-content: space-between;';
+      secHeader.innerHTML = `
+        <span>Cuộc trò chuyện</span>
+        <span style="font-size: 0.65rem; color: var(--text-muted); font-weight: 500;">(${filteredThreads.length})</span>
       `;
+      listContainer.appendChild(secHeader);
 
-      div.addEventListener('click', () => {
-        activeThreadId = thread.id;
-        renderThreadList();
-        renderMessages(activeThreadId);
+      filteredThreads.forEach(thread => {
+        const activeClass = (thread.id === activeThreadId) ? 'active' : '';
+        const lastMsg = thread.messages.length > 0 ? thread.messages[thread.messages.length - 1] : { content: "Chưa có tin nhắn", time: "" };
+        const cleanSender = lastMsg.senderName ? `${lastMsg.senderName}: ` : lastMsg.sender ? `${lastMsg.sender.split(' (')[0]}: ` : '';
+
+        const div = document.createElement('div');
+        div.className = `chat-thread-item ${activeClass}`;
+        div.innerHTML = `
+          <div class="avatar-circle" style="background-color: ${thread.avatarBg};">${thread.avatarInitials}</div>
+          <div class="chat-thread-details">
+            <div class="chat-thread-header">
+              <span class="title">${thread.name}</span>
+              <span class="time">${lastMsg.time}</span>
+            </div>
+            <div class="chat-thread-preview">
+              <span class="message">${cleanSender}${lastMsg.content}</span>
+            </div>
+          </div>
+        `;
+
+        div.addEventListener('click', () => {
+          activeThreadId = thread.id;
+          renderThreadList();
+          renderMessages(activeThreadId);
+        });
+
+        listContainer.appendChild(div);
       });
+    }
 
-      listContainer.appendChild(div);
-    });
+    // --- Render Section 2: STAFF DIRECTORY ---
+    if (otherStaff.length > 0) {
+      const secHeader = document.createElement('div');
+      secHeader.className = 'sidebar-section-header';
+      secHeader.style.cssText = 'font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--accent); padding: 1.5rem 1rem 0.5rem 1rem; border-bottom: 1px solid var(--border); margin-bottom: 0.5rem; display: flex; align-items: center; justify-content: space-between;';
+      secHeader.innerHTML = `
+        <span>Danh bạ nhân viên</span>
+        <span style="font-size: 0.65rem; color: var(--text-muted); font-weight: 500;">(${otherStaff.length})</span>
+      `;
+      listContainer.appendChild(secHeader);
+
+      otherStaff.forEach(user => {
+        const isFriend = myContacts.includes(user.uid);
+        const initials = user.name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+        const displayRole = user.role === 'admin' ? 'Quản trị viên' : 'Nhân viên';
+
+        const div = document.createElement('div');
+        div.className = 'chat-thread-item';
+        div.style.position = 'relative';
+
+        let rightAction = '';
+        if (isFriend) {
+          rightAction = `
+            <span class="badge-connected-friend" style="margin-left: auto; font-size: 0.65rem; padding: 2px 6px; scale: 0.9;">Đã kết bạn</span>
+          `;
+        } else {
+          rightAction = `
+            <button class="action-icon-btn btn-sidebar-add-friend" data-uid="${user.uid}" title="Kết bạn" style="background: rgba(188, 158, 108, 0.15); border: none; border-radius: 50%; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; color: var(--accent); cursor: pointer; transition: var(--transition-fast); margin-left: auto; padding: 0; flex-shrink: 0; outline: none;">
+              <svg viewBox="0 0 24 24" style="width: 14px; height: 14px; fill: currentColor;"><path d="M15,14C12.33,14 7,15.33 7,18V20H23V18C23,15.33 17.67,14 15,14M6,8.17V5H4V8.17C2.78,8.58 2,9.7 2,11C2,12.3 2.78,13.42 4,13.83V17H6V13.83C7.22,13.42 8,12.3 8,11C8,9.7 7.22,8.58 6,8.17M15,12A4,4 0 0,0 19,8A4,4 0 0,0 15,4A4,4 0 0,0 11,8A4,4 0 0,0 15,12Z"/></svg>
+            </button>
+          `;
+        }
+
+        div.innerHTML = `
+          <div class="avatar-circle" style="background-color: ${getAvatarBgColor(user.name)};">${initials}</div>
+          <div class="chat-thread-details">
+            <div class="chat-thread-header">
+              <span class="title">${user.name}</span>
+            </div>
+            <div class="chat-thread-preview">
+              <span class="message">${user.email} (${displayRole})</span>
+            </div>
+          </div>
+          ${rightAction}
+        `;
+
+        // Direct DM open on clicking thread item
+        div.addEventListener('click', () => {
+          const threadId = getDmThreadId(myUid, user.uid);
+          activeThreadId = threadId;
+          rebuildChatThreads();
+          renderMessages(activeThreadId);
+          const chatInput = document.getElementById('chatMessageInput');
+          if (chatInput) chatInput.focus();
+        });
+
+        // Event listener for sidebar connect friend button
+        const btnAdd = div.querySelector('.btn-sidebar-add-friend');
+        if (btnAdd) {
+          btnAdd.addEventListener('click', async (e) => {
+            e.stopPropagation(); // Block chat-thread open trigger
+            btnAdd.disabled = true;
+            btnAdd.style.opacity = '0.5';
+            try {
+              // Reciprocal connection write in contacts collection
+              await db.collection("contacts").add({
+                userUid: myUid,
+                contactUid: user.uid,
+                createdAt: firebase.firestore.FieldValue.serverTimestamp()
+              });
+              await db.collection("contacts").add({
+                userUid: user.uid,
+                contactUid: myUid,
+                createdAt: firebase.firestore.FieldValue.serverTimestamp()
+              });
+              showToast(`Đã kết bạn với ${user.name} thành công!`, 'success');
+            } catch (err) {
+              console.error("Sidebar direct add friend failed:", err);
+              showToast("Lỗi khi kết bạn!", "error");
+              btnAdd.disabled = false;
+              btnAdd.style.opacity = '1';
+            }
+          });
+        }
+
+        listContainer.appendChild(div);
+      });
+    }
   };
 
   // Render Messages in active thread
