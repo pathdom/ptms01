@@ -280,42 +280,19 @@ document.addEventListener('DOMContentLoaded', () => {
         });
       });
 
-      // Secure Base64 to Blob URL download handler (triggered only via Right-Click/Contextmenu)
+      // Connect dynamic custom context menu for files on Right-Click
       bubbleRow.querySelectorAll('.chat-message-file-container').forEach(container => {
         container.addEventListener('contextmenu', (e) => {
-          e.preventDefault(); // Suppress the default browser text/file right-click menu
+          e.preventDefault(); // Suppress standard browser context menu
           if (!msg.file) return;
-          try {
-            const base64Data = msg.file;
-            const parts = base64Data.split(';base64,');
-            const contentType = parts[0].split(':')[1];
-            const raw = window.atob(parts[1]);
-            const rawLength = raw.length;
-            const uInt8Array = new Uint8Array(rawLength);
-            
-            for (let i = 0; i < rawLength; ++i) {
-              uInt8Array[i] = raw.charCodeAt(i);
-            }
-            
-            const blob = new Blob([uInt8Array], { type: contentType });
-            const blobUrl = URL.createObjectURL(blob);
-            
-            const a = document.createElement('a');
-            a.href = blobUrl;
-            a.download = msg.fileName || 'file';
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            
-            setTimeout(() => URL.revokeObjectURL(blobUrl), 100);
-          } catch (err) {
-            console.error("Blob URL download failed, falling back to direct data-uri click", err);
-            const a = document.createElement('a');
-            a.href = msg.file;
-            a.download = msg.fileName || 'file';
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
+          
+          contextMenuFileMsg = msg;
+          
+          const menu = document.getElementById('chatCustomContextMenu');
+          if (menu) {
+            menu.style.left = `${e.clientX}px`;
+            menu.style.top = `${e.clientY}px`;
+            menu.style.display = 'block';
           }
         });
       });
@@ -1458,6 +1435,69 @@ document.addEventListener('DOMContentLoaded', () => {
       renderForwardTargets(e.target.value);
     });
   }
+
+  // Custom File Context Menu Logic
+  let contextMenuFileMsg = null;
+
+  const btnDownloadFromContext = document.getElementById('btnDownloadFromContext');
+  if (btnDownloadFromContext) {
+    btnDownloadFromContext.addEventListener('click', () => {
+      const menu = document.getElementById('chatCustomContextMenu');
+      if (menu) menu.style.display = 'none';
+      
+      if (!contextMenuFileMsg || !contextMenuFileMsg.file) return;
+      
+      try {
+        const base64Data = contextMenuFileMsg.file;
+        const parts = base64Data.split(';base64,');
+        const contentType = parts[0].split(':')[1];
+        const raw = window.atob(parts[1]);
+        const rawLength = raw.length;
+        const uInt8Array = new Uint8Array(rawLength);
+        
+        for (let i = 0; i < rawLength; ++i) {
+          uInt8Array[i] = raw.charCodeAt(i);
+        }
+        
+        const blob = new Blob([uInt8Array], { type: contentType });
+        const blobUrl = URL.createObjectURL(blob);
+        
+        const a = document.createElement('a');
+        a.href = blobUrl;
+        a.download = contextMenuFileMsg.fileName || 'file';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        
+        setTimeout(() => URL.revokeObjectURL(blobUrl), 100);
+      } catch (err) {
+        console.error("Blob URL download failed, falling back to direct click", err);
+        const a = document.createElement('a');
+        a.href = contextMenuFileMsg.file;
+        a.download = contextMenuFileMsg.fileName || 'file';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+      }
+    });
+  }
+
+  // Dismiss context menu when clicking elsewhere
+  document.addEventListener('click', (e) => {
+    const menu = document.getElementById('chatCustomContextMenu');
+    if (menu && menu.style.display === 'block') {
+      if (!menu.contains(e.target)) {
+        menu.style.display = 'none';
+      }
+    }
+  });
+
+  document.addEventListener('contextmenu', (e) => {
+    const menu = document.getElementById('chatCustomContextMenu');
+    if (menu && !e.target.closest('.chat-message-file-container')) {
+      menu.style.display = 'none';
+    }
+  });
 
   /* ==========================================================================
      STUDENT MANAGEMENT MODULE (INTEGRATED WITH FIREBASE FIRESTORE)
