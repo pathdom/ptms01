@@ -117,10 +117,8 @@ document.addEventListener('DOMContentLoaded', () => {
   const getOrInitLastReadTime = (thread) => {
     let t = getLastReadTime(thread.id);
     if (t === null) {
-      // Initialize with the last message's timestamp, or now if no messages
-      const lastMsg = thread.messages.length > 0 ? thread.messages[thread.messages.length - 1] : null;
-      t = lastMsg && lastMsg.createdAt ? lastMsg.createdAt : Date.now();
-      setLastReadTime(thread.id, t);
+      // Default to 0 so all received messages in history are unread until the user clicks
+      t = 0;
     }
     return t;
   };
