@@ -682,6 +682,46 @@ button {
   text-overflow: ellipsis;
 }
 
+/* Unread Message Threads & Badges */
+.chat-thread-item.unread .chat-thread-header .title {
+  font-weight: 700 !important;
+  color: #000000 !important;
+}
+
+.chat-thread-item.unread .chat-thread-preview .message {
+  font-weight: 700 !important;
+  color: #111827 !important; /* Elegant deep-black */
+}
+
+.unread-badge {
+  background: #EF4444;
+  color: #ffffff !important;
+  font-size: 0.7rem;
+  font-weight: 700;
+  min-width: 18px;
+  height: 18px;
+  border-radius: 9px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 5px;
+  margin-left: 8px;
+  flex-shrink: 0;
+  box-shadow: 0 2px 4px rgba(239, 68, 68, 0.3);
+  animation: badgeAppear 0.22s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+@keyframes badgeAppear {
+  from {
+    transform: scale(0.6);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
 /* Chat Window Area (Right) */
 .chat-window {
   flex: 1;

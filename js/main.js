@@ -87,6 +87,44 @@ document.addEventListener('DOMContentLoaded', () => {
     return `dm-${sorted[0]}-${sorted[1]}`;
   };
 
+  // Get and set last read timestamps for threads, keyed by user UID
+  const getLastReadTime = (threadId) => {
+    if (!auth.currentUser) return Date.now();
+    const myUid = auth.currentUser.uid;
+    const storageKey = `lastReadTimestamps_${myUid}`;
+    try {
+      const timestamps = JSON.parse(localStorage.getItem(storageKey) || '{}');
+      return timestamps[threadId] !== undefined ? timestamps[threadId] : null;
+    } catch (e) {
+      console.error("Error reading lastReadTimestamps", e);
+      return null;
+    }
+  };
+
+  const setLastReadTime = (threadId, time = Date.now()) => {
+    if (!auth.currentUser) return;
+    const myUid = auth.currentUser.uid;
+    const storageKey = `lastReadTimestamps_${myUid}`;
+    try {
+      const timestamps = JSON.parse(localStorage.getItem(storageKey) || '{}');
+      timestamps[threadId] = time;
+      localStorage.setItem(storageKey, JSON.stringify(timestamps));
+    } catch (e) {
+      console.error("Error saving lastReadTimestamps", e);
+    }
+  };
+
+  const getOrInitLastReadTime = (thread) => {
+    let t = getLastReadTime(thread.id);
+    if (t === null) {
+      // Initialize with the last message's timestamp, or now if no messages
+      const lastMsg = thread.messages.length > 0 ? thread.messages[thread.messages.length - 1] : null;
+      t = lastMsg && lastMsg.createdAt ? lastMsg.createdAt : Date.now();
+      setLastReadTime(thread.id, t);
+    }
+    return t;
+  };
+
   // Rebuild all chat threads dynamically
   const rebuildChatThreads = () => {
     if (!currentUser || !auth.currentUser) return;
@@ -228,7 +266,31 @@ document.addEventListener('DOMContentLoaded', () => {
       listContainer.appendChild(secHeader);
 
       filteredThreads.forEach(thread => {
-        const activeClass = (thread.id === activeThreadId) ? 'active' : '';
+        const isCurrentActive = (thread.id === activeThreadId);
+        const activeClass = isCurrentActive ? 'active' : '';
+
+        // Update read status for active thread in real time
+        if (isCurrentActive) {
+          setLastReadTime(thread.id, Date.now());
+        }
+
+        const lastReadTime = getOrInitLastReadTime(thread);
+
+        // Calculate unread count (excluding messages sent by the user themselves or recalled)
+        let unreadCount = 0;
+        if (!isCurrentActive) {
+          const activeName = (currentUser && currentUser.name) ? `${currentUser.name} (${currentUser.role === 'admin' ? 'quản trị viên' : 'nhân viên'})` : "";
+          unreadCount = thread.messages.filter(msg => {
+            const isSentByMe = (msg.sender === activeName) || (currentUser && msg.senderEmail === currentUser.email);
+            if (isSentByMe) return false;
+            if (msg.isRecalled) return false;
+            
+            const msgTime = msg.createdAt || 0;
+            return msgTime > lastReadTime;
+          }).length;
+        }
+
+        const unreadClass = unreadCount > 0 ? 'unread' : '';
         const lastMsg = thread.messages.length > 0 ? thread.messages[thread.messages.length - 1] : { content: "Chưa có tin nhắn", time: "" };
         const cleanSender = lastMsg.senderName ? `${lastMsg.senderName}: ` : lastMsg.sender ? `${lastMsg.sender.split(' (')[0]}: ` : '';
 
@@ -248,7 +310,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         const div = document.createElement('div');
-        div.className = `chat-thread-item ${activeClass}`;
+        div.className = `chat-thread-item ${activeClass} ${unreadClass}`;
         div.style.position = 'relative';
         div.innerHTML = `
           <div class="avatar-circle" style="background-color: ${thread.avatarBg};">${thread.avatarInitials}</div>
@@ -259,6 +321,7 @@ document.addEventListener('DOMContentLoaded', () => {
             </div>
             <div class="chat-thread-preview">
               <span class="message">${cleanSender}${lastMsg.content}</span>
+              ${unreadCount > 0 ? `<span class="unread-badge">${unreadCount >= 100 ? '99+' : unreadCount}</span>` : ''}
             </div>
           </div>
           ${menuHtml}
@@ -1379,17 +1442,22 @@ document.addEventListener('DOMContentLoaded', () => {
         snapshot.forEach((doc) => {
           const data = doc.data();
           let timeStr = "";
+          let msgCreatedAt = Date.now();
+
           if (data.createdAt) {
             try {
               const date = data.createdAt.toDate();
               timeStr = `${pad(date.getHours(), 2)}:${pad(date.getMinutes(), 2)}`;
+              msgCreatedAt = date.getTime();
             } catch (e) {
               const now = new Date();
               timeStr = `${pad(now.getHours(), 2)}:${pad(now.getMinutes(), 2)}`;
+              msgCreatedAt = now.getTime();
             }
           } else {
             const now = new Date();
             timeStr = `${pad(now.getHours(), 2)}:${pad(now.getMinutes(), 2)}`;
+            msgCreatedAt = now.getTime();
           }
 
           allMessages.push({
@@ -1406,7 +1474,8 @@ document.addEventListener('DOMContentLoaded', () => {
             fileSize: data.fileSize || null,
             time: timeStr,
             isRecalled: data.isRecalled || false,
-            forwardedFrom: data.forwardedFrom || null
+            forwardedFrom: data.forwardedFrom || null,
+            createdAt: msgCreatedAt
           });
         });
 
