@@ -232,11 +232,27 @@ document.addEventListener('DOMContentLoaded', () => {
         const lastMsg = thread.messages.length > 0 ? thread.messages[thread.messages.length - 1] : { content: "Chưa có tin nhắn", time: "" };
         const cleanSender = lastMsg.senderName ? `${lastMsg.senderName}: ` : lastMsg.sender ? `${lastMsg.sender.split(' (')[0]}: ` : '';
 
+        let menuHtml = '';
+        if (thread.type === 'dm') {
+          menuHtml = `
+            <button class="thread-menu-btn" style="border: none; background: transparent; color: var(--text-muted); cursor: pointer; padding: 0.5rem; display: flex; align-items: center; justify-content: center; margin-left: auto; outline: none; z-index: 30; border-radius: 50%; width: 28px; height: 28px; transition: var(--transition-fast); position: relative;">
+              <svg viewBox="0 0 24 24" style="width: 16px; height: 16px; fill: currentColor;"><path d="M12,16A2,2 0 0,1 14,18A2,2 0 0,1 12,20A2,2 0 0,1 10,18A2,2 0 0,1 12,16M12,10A2,2 0 0,1 14,12A2,2 0 0,1 12,14A2,2 0 0,1 10,12A2,2 0 0,1 12,10M12,4A2,2 0 0,1 14,6A2,2 0 0,1 12,8A2,2 0 0,1 10,6A2,2 0 0,1 12,4Z"/></svg>
+            </button>
+            <div class="thread-dropdown-menu" style="display: none; position: absolute; right: 15px; top: 48px; background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--border-radius-sm); box-shadow: var(--shadow-md); z-index: 100; min-width: 160px; overflow: hidden; padding: 4px 0;">
+              <button class="btn-delete-thread" data-thread-id="${thread.id}" style="width: 100%; text-align: left; padding: 0.6rem 1rem; font-size: 0.8rem; color: #EF4444; display: flex; align-items: center; gap: 0.5rem; border: none; background: transparent; cursor: pointer; transition: var(--transition-fast);">
+                <svg viewBox="0 0 24 24" style="width: 14px; height: 14px; fill: currentColor;"><path d="M19,4H15.5L14.5,3H9.5L8.5,4H5V6H19M6,19A2,2 0 0,0 8,21H16A2,2 0 0,0 18,19V7H6V19Z"/></svg>
+                <span>Xóa đoạn chat</span>
+              </button>
+            </div>
+          `;
+        }
+
         const div = document.createElement('div');
         div.className = `chat-thread-item ${activeClass}`;
+        div.style.position = 'relative';
         div.innerHTML = `
           <div class="avatar-circle" style="background-color: ${thread.avatarBg};">${thread.avatarInitials}</div>
-          <div class="chat-thread-details">
+          <div class="chat-thread-details" style="${thread.type === 'dm' ? 'max-width: calc(100% - 85px);' : ''}">
             <div class="chat-thread-header">
               <span class="title">${thread.name}</span>
               <span class="time">${lastMsg.time}</span>
@@ -245,6 +261,7 @@ document.addEventListener('DOMContentLoaded', () => {
               <span class="message">${cleanSender}${lastMsg.content}</span>
             </div>
           </div>
+          ${menuHtml}
         `;
 
         div.addEventListener('click', () => {
@@ -252,6 +269,73 @@ document.addEventListener('DOMContentLoaded', () => {
           renderThreadList();
           renderMessages(activeThreadId);
         });
+
+        if (thread.type === 'dm') {
+          const menuBtn = div.querySelector('.thread-menu-btn');
+          const dropdown = div.querySelector('.thread-dropdown-menu');
+
+          if (menuBtn && dropdown) {
+            menuBtn.addEventListener('click', (e) => {
+              e.stopPropagation(); // Block thread selection trigger
+
+              // Close all other dropdowns first
+              document.querySelectorAll('.thread-dropdown-menu').forEach(el => {
+                if (el !== dropdown) el.style.display = 'none';
+              });
+              document.querySelectorAll('.thread-menu-btn').forEach(el => {
+                if (el !== menuBtn) el.classList.remove('active');
+              });
+
+              const isVisible = dropdown.style.display === 'block';
+              dropdown.style.display = isVisible ? 'none' : 'block';
+              menuBtn.classList.toggle('active', !isVisible);
+            });
+
+            const btnDelete = div.querySelector('.btn-delete-thread');
+            if (btnDelete) {
+              btnDelete.addEventListener('click', async (e) => {
+                e.stopPropagation(); // Block thread selection trigger
+                dropdown.style.display = 'none';
+                menuBtn.classList.remove('active');
+
+                const confirmMsg = `Xác nhận xóa đoạn chat với ${thread.name}? Bạn và người này sẽ không còn là bạn bè, đồng thời toàn bộ tin nhắn sẽ bị xóa vĩnh viễn.`;
+                if (confirm(confirmMsg)) {
+                  try {
+                    showToast("Đang xóa đoạn chat...", "info");
+
+                    // 1. Delete contacts reciprocal entries
+                    const contactsSnap1 = await db.collection("contacts")
+                      .where("userUid", "==", myUid)
+                      .where("contactUid", "==", thread.contactUid)
+                      .get();
+                    contactsSnap1.forEach(doc => doc.ref.delete());
+
+                    const contactsSnap2 = await db.collection("contacts")
+                      .where("userUid", "==", thread.contactUid)
+                      .where("contactUid", "==", myUid)
+                      .get();
+                    contactsSnap2.forEach(doc => doc.ref.delete());
+
+                    // 2. Delete all messages of this DM thread
+                    const messagesSnap = await db.collection("messages")
+                      .where("threadId", "==", thread.id)
+                      .get();
+                    messagesSnap.forEach(doc => doc.ref.delete());
+
+                    showToast(`Đã xóa đoạn chat với ${thread.name} thành công!`, "success");
+
+                    // 3. Switch back to global thread
+                    activeThreadId = "group-global";
+                    rebuildChatThreads();
+                  } catch (err) {
+                    console.error("Failed to delete chat thread:", err);
+                    showToast("Lỗi khi xóa đoạn chat!", "error");
+                  }
+                }
+              });
+            }
+          }
+        }
 
         listContainer.appendChild(div);
       });
@@ -2059,13 +2143,23 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // Dismiss context menu when clicking elsewhere
+  // Dismiss context menu and thread menus when clicking elsewhere
   document.addEventListener('click', (e) => {
     const menu = document.getElementById('chatCustomContextMenu');
     if (menu && menu.style.display === 'block') {
       if (!menu.contains(e.target)) {
         menu.style.display = 'none';
       }
+    }
+
+    // Dismiss thread dropdown menus if clicking outside of them
+    if (!e.target.closest('.thread-menu-btn') && !e.target.closest('.thread-dropdown-menu')) {
+      document.querySelectorAll('.thread-dropdown-menu').forEach(el => {
+        el.style.display = 'none';
+      });
+      document.querySelectorAll('.thread-menu-btn').forEach(el => {
+        el.classList.remove('active');
+      });
     }
   });
 

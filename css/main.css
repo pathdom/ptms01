@@ -1866,3 +1866,23 @@ body.dark-theme-crm .student-header-navbar {
   font-weight: 600;
   margin-left: auto;
 }
+
+/* Thread Menu dropdown styling */
+.thread-menu-btn {
+  opacity: 0;
+  transition: opacity 0.2s ease, background 0.2s ease, color 0.2s ease;
+}
+
+.chat-thread-item:hover .thread-menu-btn,
+.thread-menu-btn.active {
+  opacity: 1;
+}
+
+.thread-menu-btn:hover {
+  background: var(--border-light);
+  color: var(--text-main);
+}
+
+.btn-delete-thread:hover {
+  background: rgba(239, 68, 68, 0.08) !important;
+}
