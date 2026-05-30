@@ -850,7 +850,6 @@
       <nav class="student-nav-menu" style="display: flex; gap: 2.5rem; height: 100%;">
         <button class="student-nav-item active" data-tab="student-news-tab" style="font-family: var(--font-sans); font-size: 0.9rem; font-weight: 600; color: var(--text-main); height: 100%; border-bottom: 3px solid var(--accent); padding: 0 0.5rem; transition: var(--transition-fast);">BẢNG TIN TRUNG TÂM</button>
         <button class="student-nav-item" data-tab="student-academic-tab" style="font-family: var(--font-sans); font-size: 0.9rem; font-weight: 500; color: var(--text-muted); height: 100%; border-bottom: 3px solid transparent; padding: 0 0.5rem; transition: var(--transition-fast);">KÌ HỌC & LỘ TRÌNH</button>
-        <button class="student-nav-item" data-tab="student-financial-tab" style="font-family: var(--font-sans); font-size: 0.9rem; font-weight: 500; color: var(--text-muted); height: 100%; border-bottom: 3px solid transparent; padding: 0 0.5rem; transition: var(--transition-fast);">THÔNG TIN HỌC PHÍ</button>
       </nav>
 
       <!-- Student Profile Badge & Logout -->
@@ -1137,125 +1136,7 @@
         </div>
       </div>
 
-      <!-- ==========================================
-           STUDENT TAB 3: THÔNG TIN HỌC PHÍ
-           ========================================== -->
-      <div id="student-financial-tab" class="student-tab-content reveal reveal-scale" style="display: none;">
-        <div style="display: grid; grid-template-columns: 1.8fr 1fr; gap: 3rem; align-items: start;">
-          <!-- Left side: tuition summary & history -->
-          <div style="display: flex; flex-direction: column; gap: 2.5rem;">
-            <!-- Tuition Summary Cards -->
-            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem;">
-              <div style="background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--border-radius-md); padding: 1.5rem; border-left: 4px solid var(--accent); box-shadow: var(--shadow-sm);">
-                <span style="font-size: 0.7rem; text-transform: uppercase; color: var(--text-muted); font-weight: 600; display: block; margin-bottom: 0.5rem;">TỔNG HỌC PHÍ DỰ KIẾN</span>
-                <strong style="font-size: 1.3rem; color: var(--text-main); font-family: monospace;">185,000,000 ₫</strong>
-              </div>
-              <div style="background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--border-radius-md); padding: 1.5rem; border-left: 4px solid #10B981; box-shadow: var(--shadow-sm);">
-                <span style="font-size: 0.7rem; text-transform: uppercase; color: var(--text-muted); font-weight: 600; display: block; margin-bottom: 0.5rem;">SỐ TIỀN ĐÃ ĐÓNG</span>
-                <strong style="font-size: 1.3rem; color: #10B981; font-family: monospace;">110,000,000 ₫</strong>
-              </div>
-              <div style="background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--border-radius-md); padding: 1.5rem; border-left: 4px solid #EF4444; box-shadow: var(--shadow-sm);">
-                <span style="font-size: 0.7rem; text-transform: uppercase; color: var(--text-muted); font-weight: 600; display: block; margin-bottom: 0.5rem;">DƯ NỢ CẦN THANH TOÁN</span>
-                <strong style="font-size: 1.3rem; color: #EF4444; font-family: monospace;" id="remainingBalanceDisplay">75,000,000 ₫</strong>
-              </div>
-            </div>
 
-            <!-- Transaction History -->
-            <div style="background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--border-radius-lg); padding: 2.5rem; box-shadow: var(--shadow-sm);">
-              <h3 style="font-family: var(--font-serif); font-size: 1.3rem; font-weight: 500; color: var(--text-main); margin-bottom: 1.5rem; border-bottom: 1px solid var(--border); padding-bottom: 0.75rem; letter-spacing: 0.5px;">LỊCH SỬ NỘP HỌC PHÍ</h3>
-              
-              <div class="mini-table-container">
-                <table class="financial-table" style="width: 100%; border-collapse: collapse; text-align: left; font-size: 0.85rem;">
-                  <thead>
-                    <tr style="border-bottom: 2px solid var(--border);">
-                      <th style="padding: 0.75rem 0.5rem; color: var(--text-muted);">MÃ GIAO DỊCH</th>
-                      <th style="padding: 0.75rem 0.5rem; color: var(--text-muted);">NGÀY THANH TOÁN</th>
-                      <th style="padding: 0.75rem 0.5rem; color: var(--text-muted);">MÔ TẢ KHOẢN PHÍ</th>
-                      <th style="padding: 0.75rem 0.5rem; color: var(--text-muted);">SỐ TIỀN</th>
-                      <th style="padding: 0.75rem 0.5rem; color: var(--text-muted); text-align: center;">TRẠNG THÁI</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr style="border-bottom: 1px solid var(--border-light);">
-                      <td style="padding: 1rem 0.5rem; font-family: monospace; font-weight: 600;">TE-TX-90112</td>
-                      <td style="padding: 1rem 0.5rem;">15/03/2026</td>
-                      <td style="padding: 1rem 0.5rem;">Đợt 2: Phí dịch thuật hồ sơ & Luyện thi chứng chỉ</td>
-                      <td style="padding: 1rem 0.5rem; font-weight: 600;">50,000,000 ₫</td>
-                      <td style="padding: 1rem 0.5rem; text-align: center;"><span class="crm-badge badge-selected" style="background: rgba(16, 185, 129, 0.1); color: #10B981; font-size: 0.7rem; font-weight: 600; padding: 0.2rem 0.5rem; border-radius: var(--border-radius-sm);">THÀNH CÔNG</span></td>
-                    </tr>
-                    <tr style="border-bottom: 1px solid var(--border-light);">
-                      <td style="padding: 1rem 0.5rem; font-family: monospace; font-weight: 600;">TE-TX-90054</td>
-                      <td style="padding: 1rem 0.5rem;">02/01/2026</td>
-                      <td style="padding: 1rem 0.5rem;">Đợt 1: Phí ghi danh hồ sơ & Đặt cọc chọn trường</td>
-                      <td style="padding: 1rem 0.5rem; font-weight: 600;">60,000,000 ₫</td>
-                      <td style="padding: 1rem 0.5rem; text-align: center;"><span class="crm-badge badge-selected" style="background: rgba(16, 185, 129, 0.1); color: #10B981; font-size: 0.7rem; font-weight: 600; padding: 0.2rem 0.5rem; border-radius: var(--border-radius-sm);">THÀNH CÔNG</span></td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          </div>
-
-          <!-- Right side: Banking & QR Code -->
-          <div style="background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--border-radius-lg); padding: 2.5rem; box-shadow: var(--shadow-sm); display: flex; flex-direction: column; gap: 1.5rem;">
-            <h4 style="font-family: var(--font-serif); font-size: 1.15rem; font-weight: 500; color: var(--text-main); border-bottom: 1px solid var(--border); padding-bottom: 0.5rem; margin-bottom: 0.5rem;">HƯỚNG DẪN THANH TOÁN</h4>
-            
-            <div style="font-size: 0.85rem; display: flex; flex-direction: column; gap: 0.75rem;">
-              <div>
-                <span style="font-size: 0.7rem; text-transform: uppercase; color: var(--text-muted); font-weight: 600; display: block; margin-bottom: 0.15rem;">Ngân hàng thụ hưởng</span>
-                <strong style="color: var(--text-main);">Ngân hàng Vietcombank (VCB)</strong>
-              </div>
-              <div>
-                <span style="font-size: 0.7rem; text-transform: uppercase; color: var(--text-muted); font-weight: 600; display: block; margin-bottom: 0.15rem;">Số tài khoản</span>
-                <strong style="color: var(--accent); font-size: 1rem; font-family: monospace;">1023456789</strong>
-              </div>
-              <div>
-                  <span style="font-size: 0.7rem; text-transform: uppercase; color: var(--text-muted); font-weight: 600; display: block; margin-bottom: 0.15rem;">Tên tài khoản</span>
-                  <strong style="color: var(--text-main);">CONG TY CP GIAO DUC ALADDIN GROUP</strong>
-              </div>
-              <div>
-                <span style="font-size: 0.7rem; text-transform: uppercase; color: var(--text-muted); font-weight: 600; display: block; margin-bottom: 0.15rem;">Nội dung chuyển khoản mẫu</span>
-                <div style="background: var(--bg-primary); border: 1px dashed var(--accent); padding: 0.5rem; border-radius: var(--border-radius-sm); font-family: monospace; font-size: 0.75rem; font-weight: 600; color: var(--text-main); margin-top: 0.25rem;" id="transferSyntaxDisplay">
-                  Nop hoc phi - TE-2026-000 - [Ten hoc vien]
-                </div>
-              </div>
-            </div>
-
-            <!-- QR code container -->
-            <div style="border: 1px solid var(--border); border-radius: var(--border-radius-md); padding: 1.5rem; text-align: center; background: var(--bg-primary); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.75rem;">
-              <span style="font-size: 0.7rem; font-weight: 600; text-transform: uppercase; color: var(--text-muted); letter-spacing: 0.5px;">Quét Mã Thanh Toán VietQR</span>
-              <div style="width: 150px; height: 150px; background: #fff; padding: 10px; border-radius: var(--border-radius-sm); box-shadow: var(--shadow-sm); display: flex; align-items: center; justify-content: center; position: relative;">
-                <!-- Simulated QR elements -->
-                <div style="position: absolute; top: 10px; left: 10px; width: 30px; height: 30px; border: 4px solid var(--text-main); border-bottom: none; border-right: none;"></div>
-                <div style="position: absolute; top: 10px; right: 10px; width: 30px; height: 30px; border: 4px solid var(--text-main); border-bottom: none; border-left: none;"></div>
-                <div style="position: absolute; bottom: 10px; left: 10px; width: 30px; height: 30px; border: 4px solid var(--text-main); border-top: none; border-right: none;"></div>
-                <!-- Mini simulated blocks inside -->
-                <div style="width: 90px; height: 90px; display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px;">
-                  <div style="background: var(--accent); border-radius: 2px;"></div>
-                  <div style="background: var(--text-main); border-radius: 2px;"></div>
-                  <div style="background: transparent; border-radius: 2px;"></div>
-                  <div style="background: var(--text-main); border-radius: 2px;"></div>
-                  <div style="background: var(--text-main); border-radius: 2px;"></div>
-                  <div style="background: var(--accent); border-radius: 2px;"></div>
-                  <div style="background: var(--text-main); border-radius: 2px;"></div>
-                  <div style="background: transparent; border-radius: 2px;"></div>
-                  <div style="background: transparent; border-radius: 2px;"></div>
-                  <div style="background: var(--text-main); border-radius: 2px;"></div>
-                  <div style="background: var(--accent); border-radius: 2px;"></div>
-                  <div style="background: var(--text-main); border-radius: 2px;"></div>
-                  <div style="background: var(--text-main); border-radius: 2px;"></div>
-                  <div style="background: transparent; border-radius: 2px;"></div>
-                  <div style="background: var(--text-main); border-radius: 2px;"></div>
-                  <div style="background: var(--accent); border-radius: 2px;"></div>
-                </div>
-                <!-- Small logo in the center of QR -->
-                <div style="position: absolute; background: #fff; width: 34px; height: 20px; border-radius: 4px; box-shadow: var(--shadow-sm); display: flex; align-items: center; justify-content: center; font-size: 0.5rem; font-weight: 700; color: var(--accent); border: 1px solid var(--border);">AG</div>
-              </div>
-              <span style="font-size: 0.65rem; color: var(--text-muted); line-height: 1.4;">Tự động điền số tài khoản, số tiền và nội dung chuyển khoản</span>
-            </div>
-          </div>
-        </div>
-      </div>
     </main>
   </div>
 

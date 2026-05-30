@@ -1,4 +1,7 @@
 {
+  "scripts": {
+    "dev": "npx browser-sync start --server --files \"*.html, css/**/*.css, js/**/*.js\" --no-notify --port 3000"
+  },
   "dependencies": {
     "firebase": "^12.13.0"
   }
