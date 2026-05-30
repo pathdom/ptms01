@@ -1844,11 +1844,9 @@ document.addEventListener('DOMContentLoaded', () => {
       if (!badge) {
         badge = document.createElement('span');
         badge.className = 'friend-badge';
-        badge.style.cssText = 'position: absolute; top: -5px; right: -5px; background: #EF4444; color: white; border-radius: 50%; width: 18px; height: 18px; font-size: 0.65rem; font-weight: 700; display: flex; align-items: center; justify-content: center; border: 2px solid var(--bg-card); box-shadow: var(--shadow-sm); z-index: 10;';
         btn.appendChild(badge);
       }
       badge.textContent = count;
-      badge.style.display = 'flex';
     } else {
       if (badge) {
         badge.remove();

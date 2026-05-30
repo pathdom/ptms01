@@ -1886,3 +1886,23 @@ body.dark-theme-crm .student-header-navbar {
 .btn-delete-thread:hover {
   background: rgba(239, 68, 68, 0.08) !important;
 }
+
+/* Friend Requests Badge */
+.friend-badge {
+  position: absolute !important;
+  top: -5px !important;
+  right: -5px !important;
+  background: #EF4444 !important;
+  color: white !important;
+  border-radius: 50% !important;
+  width: 18px !important;
+  height: 18px !important;
+  font-size: 0.65rem !important;
+  font-weight: 700 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  border: 2px solid var(--bg-card) !important;
+  box-shadow: var(--shadow-sm) !important;
+  z-index: 99999 !important;
+}
