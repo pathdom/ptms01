@@ -279,7 +279,10 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!isCurrentActive) {
           const activeName = (currentUser && currentUser.name) ? `${currentUser.name} (${currentUser.role === 'admin' ? 'quản trị viên' : 'nhân viên'})` : "";
           unreadCount = thread.messages.filter(msg => {
-            const isSentByMe = (msg.sender === activeName) || (currentUser && msg.senderEmail === currentUser.email);
+            const isSentByMe = (msg.sender === activeName) || 
+                               (currentUser && msg.senderEmail && currentUser.email && msg.senderEmail.trim().toLowerCase() === currentUser.email.trim().toLowerCase()) ||
+                               (currentUser && msg.senderName && currentUser.name && msg.senderName.trim().toLowerCase() === currentUser.name.trim().toLowerCase()) ||
+                               (currentUser && msg.sender && currentUser.name && msg.sender.toLowerCase().includes(currentUser.name.toLowerCase()));
             if (isSentByMe) return false;
             if (msg.isRecalled) return false;
             
@@ -579,7 +582,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     filteredMessages.forEach(msg => {
       const activeName = (currentUser && currentUser.name) ? `${currentUser.name} (${currentUser.role === 'admin' ? 'quản trị viên' : 'nhân viên'})` : "";
-      const isSentByMe = (msg.sender === activeName);
+      const isSentByMe = (msg.sender === activeName) || 
+                         (currentUser && msg.senderEmail && currentUser.email && msg.senderEmail.trim().toLowerCase() === currentUser.email.trim().toLowerCase()) ||
+                         (currentUser && msg.senderName && currentUser.name && msg.senderName.trim().toLowerCase() === currentUser.name.trim().toLowerCase()) ||
+                         (currentUser && msg.sender && currentUser.name && msg.sender.toLowerCase().includes(currentUser.name.toLowerCase()));
       
       const bubbleRow = document.createElement('div');
       bubbleRow.className = `chat-bubble-row ${isSentByMe ? 'sent' : 'received'}`;
