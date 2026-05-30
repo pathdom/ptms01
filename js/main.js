@@ -341,6 +341,137 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     }
 
+    // --- Render Section 2: OTHER COLLEAGUES (Only when searching) ---
+    if (query && otherStaff.length > 0) {
+      const secHeader = document.createElement('div');
+      secHeader.className = 'sidebar-section-header';
+      secHeader.style.cssText = 'font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--accent); padding: 1.5rem 1rem 0.5rem 1rem; border-bottom: 1px solid var(--border); margin-bottom: 0.5rem; display: flex; align-items: center; justify-content: space-between;';
+      secHeader.innerHTML = `
+        <span>Đồng nghiệp khác</span>
+        <span style="font-size: 0.65rem; color: var(--text-muted); font-weight: 500;">(${otherStaff.length})</span>
+      `;
+      listContainer.appendChild(secHeader);
+
+      otherStaff.forEach(user => {
+        const initials = user.name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+        const displayRole = user.role === 'admin' ? 'Quản trị viên' : 'Nhân viên';
+
+        const isFriend = myContacts.includes(user.uid);
+        const sentRequest = mySentRequests.find(r => r.receiverUid === user.uid && r.status === 'pending');
+        const receivedRequest = myReceivedRequests.find(r => r.senderUid === user.uid && r.status === 'pending');
+
+        const div = document.createElement('div');
+        div.className = 'chat-thread-item';
+        div.style.position = 'relative';
+
+        let rightAction = '';
+        if (isFriend) {
+          rightAction = `
+            <span class="badge-connected-friend" style="margin-left: auto; font-size: 0.65rem; padding: 2px 6px; scale: 0.9;">Đã kết bạn</span>
+          `;
+        } else if (sentRequest) {
+          rightAction = `
+            <span style="margin-left: auto; font-size: 0.7rem; color: var(--text-muted); font-style: italic;">Đã gửi yêu cầu</span>
+          `;
+        } else if (receivedRequest) {
+          rightAction = `
+            <button class="action-icon-btn btn-sidebar-accept-friend" data-id="${receivedRequest.id}" title="Chấp nhận" style="background: var(--accent); border: none; border-radius: 4px; padding: 4px 8px; font-size: 0.7rem; color: white; cursor: pointer; transition: var(--transition-fast); margin-left: auto; flex-shrink: 0; outline: none;">
+              Chấp nhận
+            </button>
+          `;
+        } else {
+          rightAction = `
+            <button class="action-icon-btn btn-sidebar-add-friend" data-uid="${user.uid}" title="Kết bạn" style="background: rgba(63, 162, 246, 0.15); border: none; border-radius: 50%; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; color: var(--accent); cursor: pointer; transition: var(--transition-fast); margin-left: auto; padding: 0; flex-shrink: 0; outline: none;">
+              <svg viewBox="0 0 24 24" style="width: 14px; height: 14px; fill: currentColor;"><path d="M15,14C12.33,14 7,15.33 7,18V20H23V18C23,15.33 17.67,14 15,14M6,8.17V5H4V8.17C2.78,8.58 2,9.7 2,11C2,12.3 2.78,13.42 4,13.83V17H6V13.83C7.22,13.42 8,12.3 8,11C8,9.7 7.22,8.58 6,8.17M15,12A4,4 0 0,0 19,8A4,4 0 0,0 15,4A4,4 0 0,0 11,8A4,4 0 0,0 15,12Z"/></svg>
+            </button>
+          `;
+        }
+
+        div.innerHTML = `
+          <div class="avatar-circle" style="background-color: ${getAvatarBgColor(user.name)};">${initials}</div>
+          <div class="chat-thread-details" style="max-width: calc(100% - 100px);">
+            <div class="chat-thread-header">
+              <span class="title">${user.name}</span>
+            </div>
+            <div class="chat-thread-preview">
+              <span class="message">${user.email} (${displayRole})</span>
+            </div>
+          </div>
+          ${rightAction}
+        `;
+
+        // Direct DM open on clicking thread item
+        div.addEventListener('click', () => {
+          const threadId = getDmThreadId(myUid, user.uid);
+          activeThreadId = threadId;
+          rebuildChatThreads();
+          const chatInput = document.getElementById('chatMessageInput');
+          if (chatInput) chatInput.focus();
+        });
+
+        // Event listener for sidebar connect friend button
+        const btnAdd = div.querySelector('.btn-sidebar-add-friend');
+        if (btnAdd) {
+          btnAdd.addEventListener('click', async (e) => {
+            e.stopPropagation();
+            btnAdd.disabled = true;
+            btnAdd.style.opacity = '0.5';
+            try {
+              await db.collection("friend_requests").add({
+                senderUid: myUid,
+                senderName: currentUser.name,
+                senderEmail: currentUser.email,
+                receiverUid: user.uid,
+                receiverName: user.name,
+                receiverEmail: user.email,
+                status: "pending",
+                createdAt: firebase.firestore.FieldValue.serverTimestamp()
+              });
+              showToast(`Đã gửi yêu cầu kết bạn tới ${user.name}!`, 'success');
+              renderThreadList();
+            } catch (err) {
+              console.error("Sidebar add friend failed:", err);
+              showToast("Lỗi khi kết bạn!", "error");
+              btnAdd.disabled = false;
+              btnAdd.style.opacity = '1';
+            }
+          });
+        }
+
+        // Event listener for sidebar accept friend button
+        const btnAccept = div.querySelector('.btn-sidebar-accept-friend');
+        if (btnAccept) {
+          btnAccept.addEventListener('click', async (e) => {
+            e.stopPropagation();
+            btnAccept.disabled = true;
+            btnAccept.textContent = '...';
+            try {
+              await db.collection("contacts").add({
+                userUid: myUid,
+                contactUid: user.uid,
+                createdAt: firebase.firestore.FieldValue.serverTimestamp()
+              });
+              await db.collection("contacts").add({
+                userUid: user.uid,
+                contactUid: myUid,
+                createdAt: firebase.firestore.FieldValue.serverTimestamp()
+              });
+              await db.collection("friend_requests").doc(btnAccept.dataset.id).delete();
+              showToast(`Đã kết bạn với ${user.name} thành công!`, 'success');
+              renderThreadList();
+            } catch (err) {
+              console.error("Sidebar accept friend failed:", err);
+              showToast("Lỗi khi chấp nhận kết bạn!", "error");
+              btnAccept.disabled = false;
+              btnAccept.textContent = 'Chấp nhận';
+            }
+          });
+        }
+
+        listContainer.appendChild(div);
+      });
+    }
+
   };
 
   // Render Messages in active thread
@@ -369,7 +500,23 @@ document.addEventListener('DOMContentLoaded', () => {
     // Render bubbles
     container.innerHTML = '';
     
-    thread.messages.forEach(msg => {
+    const searchQ = activeChatSearchQuery.trim().toLowerCase();
+    const filteredMessages = thread.messages.filter(msg => {
+      if (!searchQ) return true;
+      if (msg.isRecalled) return false;
+      return msg.content && msg.content.toLowerCase().includes(searchQ);
+    });
+
+    if (searchQ && filteredMessages.length === 0) {
+      container.innerHTML = `
+        <div style="padding: 3rem 2rem; text-align: center; color: var(--text-muted); font-size: 0.9rem;">
+          Không tìm thấy tin nhắn nào có nội dung "${activeChatSearchQuery}".
+        </div>
+      `;
+      return;
+    }
+
+    filteredMessages.forEach(msg => {
       const activeName = (currentUser && currentUser.name) ? `${currentUser.name} (${currentUser.role === 'admin' ? 'quản trị viên' : 'nhân viên'})` : "";
       const isSentByMe = (msg.sender === activeName);
       
