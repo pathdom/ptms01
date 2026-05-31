@@ -3826,9 +3826,60 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
               });
 
-              // Map learningMonth to milestones (Tháng 1 -> Month 1 active, etc.)
-              let activeStepIndex = 1; // Default Month 1
-              const monthStr = profileData.learningMonth || "Tháng 1";
+              // Calculate progress from enrollment date (createdAt)
+              let enrollDate = new Date();
+              if (profileData.createdAt) {
+                if (typeof profileData.createdAt.toDate === 'function') {
+                  enrollDate = profileData.createdAt.toDate();
+                } else {
+                  enrollDate = new Date(profileData.createdAt);
+                }
+              }
+
+              const padZero = (n) => n < 10 ? '0' + n : n;
+              const enrollDateStr = `${padZero(enrollDate.getDate())}/${padZero(enrollDate.getMonth() + 1)}/${enrollDate.getFullYear()}`;
+              
+              const studentEnrollDateDisplay = document.getElementById('studentEnrollDateDisplay');
+              if (studentEnrollDateDisplay) {
+                studentEnrollDateDisplay.textContent = enrollDateStr;
+              }
+
+              // Calculate elapsed months since admission
+              const today = new Date();
+              const diffTime = Math.abs(today - enrollDate);
+              const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+              const elapsedMonths = Math.floor(diffDays / 30);
+              
+              let monthStr = "Tháng 1";
+              let activeTermLabel = "KÌ I";
+              
+              if (elapsedMonths <= 0) {
+                monthStr = "Tháng 1";
+                activeTermLabel = "KÌ I: NHẬP MÔN & PHẢN XẠ";
+              } else if (elapsedMonths === 1) {
+                monthStr = "Tháng 2";
+                activeTermLabel = "KÌ I: NHẬP MÔN & PHẢN XẠ";
+              } else if (elapsedMonths === 2) {
+                monthStr = "Tháng 3";
+                activeTermLabel = "KÌ II: NGỮ PHÁP & HỌC THUẬT";
+              } else if (elapsedMonths === 3) {
+                monthStr = "Tháng 4";
+                activeTermLabel = "KÌ II: NGỮ PHÁP & HỌC THUẬT";
+              } else if (elapsedMonths === 4) {
+                monthStr = "Tháng 5";
+                activeTermLabel = "KÌ III: LUYỆN ĐỀ & PHỎNG VẤN";
+              } else {
+                monthStr = "Tháng 6";
+                activeTermLabel = "KÌ III: LUYỆN ĐỀ & PHỎNG VẤN (KÌ CUỐI)";
+              }
+
+              const semesterHeader = document.getElementById('studentCurrentSemesterHeaderDisplay');
+              if (semesterHeader) {
+                semesterHeader.textContent = `KÌ HỌC HIỆN TẠI: ${activeTermLabel}`;
+              }
+
+              // Map calculated monthStr to milestones
+              let activeStepIndex = 1;
               if (monthStr === "Tháng 1") {
                 activeStepIndex = 1;
               } else if (monthStr === "Tháng 2") {
@@ -3842,7 +3893,7 @@ document.addEventListener('DOMContentLoaded', () => {
               } else if (monthStr === "Tháng 6") {
                 activeStepIndex = 6;
               } else if (monthStr === "Hoàn thành") {
-                activeStepIndex = 7; // All completed
+                activeStepIndex = 7;
               }
 
               // Update milestone steps from 1 to 6
