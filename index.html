@@ -15,6 +15,9 @@
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+
+  <!-- SheetJS Library for Excel import/export -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 </head>
 
 <body class="admin-portal-body">
@@ -723,12 +726,21 @@
               <div
                 style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem;">
                 <h3 style="margin-bottom: 0; border-bottom: none; padding-bottom: 0;">DANH SÁCH HỒ SƠ HỌC VIÊN</h3>
-                <div style="display: flex; gap: 1rem;">
+                <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+                  <button type="button" class="btn-submit-login" id="btnDownloadTemplateExcel"
+                    style="margin-top: 0; width: auto; padding: 0.75rem 1.5rem; background: transparent; border: 1px solid var(--border); color: var(--text-main);">
+                    MẪU NHẬP ĐIỂM
+                  </button>
+                  <button type="button" class="btn-submit-login" id="btnImportExcel"
+                    style="margin-top: 0; width: auto; padding: 0.75rem 1.5rem; background: #10B981; border-color: #10B981; color: white;">
+                    NHẬP ĐIỂM EXCEL
+                  </button>
                   <button type="button" class="btn-submit-login" id="btnExportExcel"
                     style="margin-top: 0; width: auto; padding: 0.75rem 1.5rem; background: var(--accent); border-color: var(--accent);">XUẤT
                     EXCEL</button>
                   <button type="button" class="btn-submit-login" id="btnOpenAddStudentModal"
                     style="margin-top: 0; width: auto; padding: 0.75rem 1.5rem;">+ THÊM HỌC VIÊN MỚI</button>
+                  <input type="file" id="scorecardExcelFileInput" accept=".xlsx, .xls, .csv" style="display: none;">
                 </div>
               </div>
 

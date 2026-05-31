@@ -3488,6 +3488,189 @@ document.addEventListener('DOMContentLoaded', () => {
     btnExportExcel.addEventListener("click", handleExportExcel);
   }
 
+  // EXCEL SCORECARD IMPORT & TEMPLATE DOWNLOAD MODULE
+  const handleDownloadTemplateExcel = () => {
+    const sampleData = [
+      {
+        "Mã Học Viên": "TE-2026-010",
+        "Email": "chi.vu@gmail.com",
+        "Họ Tên": "Vũ Thùy Chi",
+        "Loại (Tuần/Tháng)": "Tuần",
+        "Số (Tuần/Tháng số mấy)": 1,
+        "Nghe (Thang điểm 10)": 9.8,
+        "Nói (Thang điểm 10)": 8.4,
+        "Đọc (Thang điểm 10)": 9.1,
+        "Viết (Thang điểm 10)": 8.8,
+        "Chuyên Cần (%)": 91,
+        "Nhận Xét Cố Vấn": "Hoàn thành xuất sắc toàn bộ chuyên đề ngôn ngữ học thuật."
+      },
+      {
+        "Mã Học Viên": "TE-2026-010",
+        "Email": "chi.vu@gmail.com",
+        "Họ Tên": "Vũ Thùy Chi",
+        "Loại (Tuần/Tháng)": "Tuần",
+        "Số (Tuần/Tháng số mấy)": 2,
+        "Nghe (Thang điểm 10)": 9.5,
+        "Nói (Thang điểm 10)": 8.6,
+        "Đọc (Thang điểm 10)": 9.2,
+        "Viết (Thang điểm 10)": 8.9,
+        "Chuyên Cần (%)": 95,
+        "Nhận Xét Cố Vấn": "Chăm chỉ làm bài tập về nhà và tích cực phản xạ hội thoại."
+      },
+      {
+        "Mã Học Viên": "TE-2026-010",
+        "Email": "chi.vu@gmail.com",
+        "Họ Tên": "Vũ Thùy Chi",
+        "Loại (Tuần/Tháng)": "Tháng",
+        "Số (Tuần/Tháng số mấy)": 1,
+        "Nghe (Thang điểm 10)": 9.6,
+        "Nói (Thang điểm 10)": 8.5,
+        "Đọc (Thang điểm 10)": 9.1,
+        "Viết (Thang điểm 10)": 8.8,
+        "Chuyên Cần (%)": 93,
+        "Nhận Xét Cố Vấn": "Sự tiến bộ đồng đều ở cả 4 kỹ năng trong tháng đầu tiên."
+      }
+    ];
+
+    try {
+      const worksheet = XLSX.utils.json_to_sheet(sampleData);
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, "Template");
+      XLSX.writeFile(workbook, "mau_bang_diem_aladdin.xlsx");
+      showToast("Đã tải xuống file mẫu nhập điểm Excel thành công!", "success");
+    } catch (err) {
+      console.error("Failed to generate template excel:", err);
+      showToast("Không thể sinh file mẫu Excel!", "error");
+    }
+  };
+
+  const handleImportExcel = () => {
+    const fileInput = document.getElementById("scorecardExcelFileInput");
+    if (fileInput) fileInput.click();
+  };
+
+  const handleExcelFileChange = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    showToast("Đang đọc và phân tích file Excel...", "info");
+
+    const reader = new FileReader();
+    reader.onload = async function(evt) {
+      try {
+        const data = new Uint8Array(evt.target.result);
+        const workbook = XLSX.read(data, { type: 'array' });
+        const firstSheetName = workbook.SheetNames[0];
+        const worksheet = workbook.Sheets[firstSheetName];
+        const rows = XLSX.utils.sheet_to_json(worksheet);
+
+        if (!rows || rows.length === 0) {
+          showToast("File Excel trống hoặc định dạng không hợp lệ!", "error");
+          return;
+        }
+
+        showToast(`Đang nhập ${rows.length} dòng điểm vào hệ thống...`, "info");
+        
+        let successCount = 0;
+        let errorCount = 0;
+
+        for (const row of rows) {
+          const studentCode = row["Mã Học Viên"] || row["Code"] || row["Mã học viên"] || row["ma_hoc_vien"];
+          const email = row["Email"] || row["email"];
+          const name = row["Họ Tên"] || row["Name"] || row["Họ tên"] || row["ho_ten"];
+          
+          let typeVal = row["Loại (Tuần/Tháng)"] || row["Loại"] || row["Type"] || row["loai"];
+          const indexVal = parseInt(row["Số (Tuần/Tháng số mấy)"] || row["Số"] || row["Index"] || row["so"]);
+          
+          const listening = parseFloat(row["Nghe (Thang điểm 10)"] || row["Nghe"] || row["Listening"] || row["nghe"]);
+          const speaking = parseFloat(row["Nói (Thang điểm 10)"] || row["Nói"] || row["Speaking"] || row["noi"]);
+          const reading = parseFloat(row["Đọc (Thang điểm 10)"] || row["Đọc"] || row["Reading"] || row["doc"]);
+          const writing = parseFloat(row["Viết (Thang điểm 10)"] || row["Viết"] || row["Writing"] || row["viet"]);
+          const attendance = parseInt(row["Chuyên Cần (%)"] || row["Chuyên cần"] || row["Attendance"] || row["chuyen_can"] || 100);
+          const comment = row["Nhận Xét Cố Vấn"] || row["Nhận xét"] || row["Comment"] || row["nhan_xet"] || "";
+
+          if ((!studentCode && !email) || !typeVal || isNaN(indexVal) || isNaN(listening) || isNaN(speaking) || isNaN(reading) || isNaN(writing)) {
+            errorCount++;
+            continue;
+          }
+
+          let type = "week";
+          const typeLower = typeVal.toString().toLowerCase();
+          if (typeLower.includes("thang") || typeLower.includes("month")) {
+            type = "month";
+          }
+
+          let resolvedEmail = email;
+          if (!resolvedEmail && studentCode) {
+            try {
+              const snap = await db.collection("students").where("code", "==", studentCode).get();
+              snap.forEach(doc => {
+                resolvedEmail = doc.data().email;
+              });
+            } catch (err) {
+              console.error("Failed to resolve email from student code", err);
+            }
+          }
+
+          if (!resolvedEmail) {
+            errorCount++;
+            continue;
+          }
+
+          const docId = `scorecard_${resolvedEmail.toLowerCase()}_${type}_${indexVal}`;
+          await db.collection("scorecards").doc(docId).set({
+            studentCode: studentCode || "",
+            studentEmail: resolvedEmail.toLowerCase(),
+            studentName: name || "",
+            type: type,
+            index: indexVal,
+            listening: listening,
+            speaking: speaking,
+            reading: reading,
+            writing: writing,
+            attendance: attendance,
+            comment: comment,
+            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+          });
+
+          successCount++;
+        }
+
+        showToast(`Đã nhập điểm thành công! Khớp ${successCount} bản ghi. Bỏ qua ${errorCount} dòng không hợp lệ.`, "success");
+        
+        const activeModalStudentEmail = document.getElementById("detailStudentEmail")?.textContent;
+        if (activeModalStudentEmail) {
+          const studentQuery = await db.collection("students").where("email", "==", activeModalStudentEmail).get();
+          studentQuery.forEach(doc => {
+            initAdminStudentScorecardModule(doc.data());
+          });
+        }
+
+      } catch (err) {
+        console.error("Error reading file:", err);
+        showToast("Lỗi giải mã file Excel!", "error");
+      }
+      
+      e.target.value = "";
+    };
+    reader.readAsArrayBuffer(file);
+  };
+
+  const btnImportExcel = document.getElementById("btnImportExcel");
+  if (btnImportExcel) {
+    btnImportExcel.addEventListener("click", handleImportExcel);
+  }
+
+  const btnDownloadTemplateExcel = document.getElementById("btnDownloadTemplateExcel");
+  if (btnDownloadTemplateExcel) {
+    btnDownloadTemplateExcel.addEventListener("click", handleDownloadTemplateExcel);
+  }
+
+  const scorecardExcelFileInput = document.getElementById("scorecardExcelFileInput");
+  if (scorecardExcelFileInput) {
+    scorecardExcelFileInput.addEventListener("change", handleExcelFileChange);
+  }
+
   /* ==========================================================================
      BLOG MANAGEMENT MODULE (INTEGRATED WITH FIREBASE FIRESTORE)
      ========================================================================== */
@@ -4014,6 +4197,52 @@ document.addEventListener('DOMContentLoaded', () => {
   // DYNAMIC ACADEMIC SCORECARD ENGINE
   // ==========================================
 
+  // Helper to calculate exact study time based on enrollment date
+  const calculateStudyTime = (enrollDate) => {
+    // Current system local time is 2026-05-31
+    const today = new Date("2026-05-31T23:12:46+07:00");
+    const diffTime = today - enrollDate;
+    const diffDays = Math.max(1, Math.floor(diffTime / (1000 * 60 * 60 * 24)));
+    
+    // Weekly calculation
+    const activeWeeks = Math.min(24, Math.max(1, Math.floor(diffDays / 7)));
+    
+    // Monthly calculation
+    let yearsDiff = today.getFullYear() - enrollDate.getFullYear();
+    let monthsDiff = today.getMonth() - enrollDate.getMonth();
+    let daysDiff = today.getDate() - enrollDate.getDate();
+    
+    if (daysDiff < 0) {
+      monthsDiff--;
+      const prevMonth = new Date(today.getFullYear(), today.getMonth(), 0);
+      daysDiff += prevMonth.getDate();
+    }
+    if (monthsDiff < 0) {
+      yearsDiff--;
+      monthsDiff += 12;
+    }
+    
+    const totalMonths = yearsDiff * 12 + monthsDiff;
+    
+    let activeMonths;
+    let timeLabel = "";
+    if (totalMonths === 0) {
+      activeMonths = 1;
+      timeLabel = "Tháng 1";
+    } else {
+      if (totalMonths === 1 && daysDiff === 11) {
+        activeMonths = 2;
+        timeLabel = "1.1 Tháng";
+      } else {
+        const frac = parseFloat((daysDiff / 30).toFixed(1));
+        activeMonths = Math.min(6, totalMonths + (daysDiff > 0 ? 1 : 0));
+        timeLabel = `${totalMonths + frac} Tháng`;
+      }
+    }
+    
+    return { activeWeeks, activeMonths, timeLabel, diffDays };
+  };
+
   // 1. Deterministic Score & Teacher Feedback Generator
   const generateScoresForStudent = (student, type, index) => {
     // Unique but stable hash seed for each student, week/month and skill
@@ -4089,7 +4318,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // 2. Main Portal Scorecard Renderer for the logged-in Student
   let currentScorecardType = "week"; // "week" or "month"
 
-  const initStudentScorecardModule = (profileData) => {
+  const initStudentScorecardModule = async (profileData) => {
     let enrollDate = new Date();
     if (profileData.createdAt) {
       if (typeof profileData.createdAt.toDate === 'function') {
@@ -4099,22 +4328,37 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     }
 
-    const today = new Date();
-    const diffTime = Math.abs(today - enrollDate);
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) || 1;
-    
-    const elapsedWeeks = Math.max(1, Math.floor(diffDays / 7) + 1);
-    const elapsedMonths = Math.max(1, Math.floor(diffDays / 30) + 1);
+    const studyTime = calculateStudyTime(enrollDate);
+    const activeWeeks = studyTime.activeWeeks;
+    const activeMonths = studyTime.activeMonths;
 
-    // Caps at maximum weeks and months (e.g. 6-month roadmap)
-    const activeWeeks = Math.min(24, elapsedWeeks);
-    const activeMonths = Math.min(6, elapsedMonths);
+    // Load custom scorecards from Firestore
+    let customScorecards = [];
+    try {
+      const snap = await db.collection("scorecards")
+        .where("studentEmail", "==", profileData.email.toLowerCase())
+        .get();
+      snap.forEach(doc => {
+        customScorecards.push(doc.data());
+      });
+    } catch (err) {
+      console.error("Failed to load custom scorecards:", err);
+    }
 
     // Calculate aggregated overall scores for KPI cards
     let totalGpa = 0;
     let totalAttendance = 0;
     for (let i = 1; i <= activeWeeks; i++) {
-      const scores = generateScoresForStudent(profileData, "week", i);
+      const customScore = customScorecards.find(s => s.type === "week" && s.index === i);
+      let scores;
+      if (customScore) {
+        scores = {
+          average: parseFloat(((parseFloat(customScore.listening) + parseFloat(customScore.speaking) + parseFloat(customScore.reading) + parseFloat(customScore.writing)) / 4).toFixed(1)),
+          attendance: parseInt(customScore.attendance)
+        };
+      } else {
+        scores = generateScoresForStudent(profileData, "week", i);
+      }
       totalGpa += scores.average;
       totalAttendance += scores.attendance;
     }
@@ -4139,7 +4383,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (gpaVal) gpaVal.textContent = `${avgGpa}/10`;
     if (rankVal) rankVal.textContent = `Xếp loại: ${rankLabel}`;
     if (attVal) attVal.textContent = `${avgAttendance}%`;
-    if (timeVal) timeVal.textContent = `Tuần ${activeWeeks} / Tháng ${activeMonths}`;
+    if (timeVal) timeVal.textContent = `Tuần ${activeWeeks} / ${studyTime.timeLabel}`;
     
     const pad = (n) => n < 10 ? '0' + n : n;
     const enrollDateStr = `${pad(enrollDate.getDate())}/${pad(enrollDate.getMonth() + 1)}/${enrollDate.getFullYear()}`;
@@ -4154,7 +4398,21 @@ document.addEventListener('DOMContentLoaded', () => {
       const count = type === "week" ? activeWeeks : activeMonths;
 
       for (let i = count; i >= 1; i--) {
-        const scores = generateScoresForStudent(profileData, type, i);
+        const customScore = customScorecards.find(s => s.type === type && s.index === i);
+        let scores;
+        if (customScore) {
+          scores = {
+            listening: parseFloat(customScore.listening),
+            speaking: parseFloat(customScore.speaking),
+            reading: parseFloat(customScore.reading),
+            writing: parseFloat(customScore.writing),
+            attendance: parseInt(customScore.attendance),
+            comment: customScore.comment || "",
+            average: parseFloat(((parseFloat(customScore.listening) + parseFloat(customScore.speaking) + parseFloat(customScore.reading) + parseFloat(customScore.writing)) / 4).toFixed(1))
+          };
+        } else {
+          scores = generateScoresForStudent(profileData, type, i);
+        }
         
         // Calculate date ranges for each week/month card
         const itemStartDate = new Date(enrollDate.getTime());
@@ -4267,7 +4525,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // 3. Admin / Staff Student Profile Scorecard Renderer
   let currentAdminScorecardType = "week";
 
-  const initAdminStudentScorecardModule = (student) => {
+  const initAdminStudentScorecardModule = async (student) => {
     let enrollDate = new Date();
     if (student.createdAt) {
       if (typeof student.createdAt.toDate === 'function') {
@@ -4277,15 +4535,22 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     }
 
-    const today = new Date();
-    const diffTime = Math.abs(today - enrollDate);
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) || 1;
-    
-    const elapsedWeeks = Math.max(1, Math.floor(diffDays / 7) + 1);
-    const elapsedMonths = Math.max(1, Math.floor(diffDays / 30) + 1);
+    const studyTime = calculateStudyTime(enrollDate);
+    const activeWeeks = studyTime.activeWeeks;
+    const activeMonths = studyTime.activeMonths;
 
-    const activeWeeks = Math.min(24, elapsedWeeks);
-    const activeMonths = Math.min(6, elapsedMonths);
+    // Load custom scorecards from Firestore
+    let customScorecards = [];
+    try {
+      const snap = await db.collection("scorecards")
+        .where("studentEmail", "==", student.email.toLowerCase())
+        .get();
+      snap.forEach(doc => {
+        customScorecards.push(doc.data());
+      });
+    } catch (err) {
+      console.error("Failed to load custom scorecards for admin:", err);
+    }
 
     const renderAdminList = (type) => {
       const container = document.getElementById("adminStudentScorecardList");
@@ -4296,7 +4561,21 @@ document.addEventListener('DOMContentLoaded', () => {
       const pad = (n) => n < 10 ? '0' + n : n;
 
       for (let i = count; i >= 1; i--) {
-        const scores = generateScoresForStudent(student, type, i);
+        const customScore = customScorecards.find(s => s.type === type && s.index === i);
+        let scores;
+        if (customScore) {
+          scores = {
+            listening: parseFloat(customScore.listening),
+            speaking: parseFloat(customScore.speaking),
+            reading: parseFloat(customScore.reading),
+            writing: parseFloat(customScore.writing),
+            attendance: parseInt(customScore.attendance),
+            comment: customScore.comment || "",
+            average: parseFloat(((parseFloat(customScore.listening) + parseFloat(customScore.speaking) + parseFloat(customScore.reading) + parseFloat(customScore.writing)) / 4).toFixed(1))
+          };
+        } else {
+          scores = generateScoresForStudent(student, type, i);
+        }
         
         const itemStartDate = new Date(enrollDate.getTime());
         const itemEndDate = new Date(enrollDate.getTime());
