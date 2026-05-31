@@ -3324,6 +3324,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     document.getElementById("detailStudentNotes").textContent = student.notes || "Chưa có ghi chú nào.";
 
+    // Trigger admin student scorecard list render
+    initAdminStudentScorecardModule(student);
+
     // Bind Edit button inside View details modal
     const btnEdit = document.getElementById("btnEditDetailStudent");
     if (btnEdit) {
@@ -4007,6 +4010,359 @@ document.addEventListener('DOMContentLoaded', () => {
     btn.addEventListener('click', handlePortalLogout);
   });
 
+  // ==========================================
+  // DYNAMIC ACADEMIC SCORECARD ENGINE
+  // ==========================================
+
+  // 1. Deterministic Score & Teacher Feedback Generator
+  const generateScoresForStudent = (student, type, index) => {
+    // Unique but stable hash seed for each student, week/month and skill
+    const seedString = `${student.code || 'TE-000'}-${type}-${index}`;
+    let hash = 0;
+    for (let i = 0; i < seedString.length; i++) {
+      hash = seedString.charCodeAt(i) + ((hash << 5) - hash);
+    }
+    
+    const getValBetween = (min, max, offset) => {
+      const currentHash = Math.abs(hash + offset);
+      return parseFloat((min + (currentHash % ((max - min) * 10)) / 10).toFixed(1));
+    };
+
+    const targetCountry = student.country || "Nhật";
+    const baseOffset = index * 3;
+    
+    // Skills scores: Listening, Speaking, Reading, Writing (scaled out of 10.0)
+    const listening = getValBetween(7.5, 9.8, baseOffset + 1);
+    const speaking = getValBetween(7.0, 9.5, baseOffset + 2);
+    const reading = getValBetween(7.8, 9.8, baseOffset + 3);
+    const writing = getValBetween(6.8, 9.2, baseOffset + 4);
+    
+    // Attendance rate (90% - 100%)
+    const attendance = Math.round(getValBetween(90, 100, baseOffset + 5));
+
+    // Custom Vietnamese teacher feedback comments based on country
+    const commentsJP = [
+      "Học tập chăm chỉ, từ vựng Hiragana/Katakana vững chắc.",
+      "Phản xạ đàm thoại cơ bản khá nhạy bén, phát âm âm ngắt tốt.",
+      "Tiến bộ rõ rệt ở kỹ năng đọc hiểu ngữ pháp Minna no Nihongo.",
+      "Có tư duy tốt khi viết đoạn văn, cần cải thiện tốc độ nghe.",
+      "Kỹ năng nghe hiểu hội thoại trung cấp N3 tiến bộ vượt bậc.",
+      "Luyện đề tích cực, điểm số ổn định, sẵn sàng phỏng vấn COE.",
+      "Hoàn thành xuất sắc toàn bộ chuyên đề ngôn ngữ học thuật."
+    ];
+    
+    const commentsCN = [
+      "Làm quen nhanh với bính âm Pinyin, phát âm chuẩn 4 thanh điệu.",
+      "Học từ vựng nhanh, có năng khiếu giao tiếp tự nhiên.",
+      "Đọc hiểu chữ Hán phồn thể tiến bộ rõ rệt qua từng bài học.",
+      "Kỹ năng viết luận TOCFL tiến bộ tốt, hành văn khá tự nhiên.",
+      "Luyện nghe hội thoại trung cấp đạt kết quả cao, phản xạ nhanh.",
+      "Giải đề thi thử TOCFL Band B đạt điểm số xuất sắc, tự tin.",
+      "Kỹ năng phỏng vấn học bổng xuất sắc, thần thái tự tin."
+    ];
+    
+    const commentsKR = [
+      "Thuộc bảng chữ cái Hangeul nhanh, phát âm chuẩn nối âm.",
+      "Phản xạ đàm thoại cuộc sống nhanh, chủ động trong bài học.",
+      "Đọc hiểu cấu trúc kính ngữ và đuôi câu tiếng Hàn vững chắc.",
+      "Học tập chuyên cần, viết đoạn văn TOPIK mạch lạc và đủ ý.",
+      "Điểm số nghe hiểu các bài hội thoại thực tế tăng trưởng tốt.",
+      "Luyện đề thi thử TOPIK II có chiến thuật quản lý thời gian tốt.",
+      "Kỹ năng thuyết trình giới thiệu bản thân xuất sắc, lưu loát."
+    ];
+
+    const commentList = targetCountry === "Nhật" ? commentsJP : (targetCountry === "Đài" ? commentsCN : commentsKR);
+    const commentIdx = Math.abs(hash) % commentList.length;
+    const comment = commentList[commentIdx];
+
+    return {
+      listening,
+      speaking,
+      reading,
+      writing,
+      attendance,
+      comment,
+      average: parseFloat(((listening + speaking + reading + writing) / 4).toFixed(1))
+    };
+  };
+
+  // 2. Main Portal Scorecard Renderer for the logged-in Student
+  let currentScorecardType = "week"; // "week" or "month"
+
+  const initStudentScorecardModule = (profileData) => {
+    let enrollDate = new Date();
+    if (profileData.createdAt) {
+      if (typeof profileData.createdAt.toDate === 'function') {
+        enrollDate = profileData.createdAt.toDate();
+      } else {
+        enrollDate = new Date(profileData.createdAt);
+      }
+    }
+
+    const today = new Date();
+    const diffTime = Math.abs(today - enrollDate);
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) || 1;
+    
+    const elapsedWeeks = Math.max(1, Math.floor(diffDays / 7) + 1);
+    const elapsedMonths = Math.max(1, Math.floor(diffDays / 30) + 1);
+
+    // Caps at maximum weeks and months (e.g. 6-month roadmap)
+    const activeWeeks = Math.min(24, elapsedWeeks);
+    const activeMonths = Math.min(6, elapsedMonths);
+
+    // Calculate aggregated overall scores for KPI cards
+    let totalGpa = 0;
+    let totalAttendance = 0;
+    for (let i = 1; i <= activeWeeks; i++) {
+      const scores = generateScoresForStudent(profileData, "week", i);
+      totalGpa += scores.average;
+      totalAttendance += scores.attendance;
+    }
+
+    const avgGpa = parseFloat((totalGpa / activeWeeks).toFixed(1)) || 8.2;
+    const avgAttendance = Math.round(totalAttendance / activeWeeks) || 95;
+
+    let rankLabel = "Khá";
+    if (avgGpa >= 9.0) rankLabel = "Xuất sắc";
+    else if (avgGpa >= 8.0) rankLabel = "Giỏi";
+    else if (avgGpa >= 6.5) rankLabel = "Khá";
+    else if (avgGpa >= 5.0) rankLabel = "Trung bình";
+    else rankLabel = "Yếu";
+
+    // Set KPI Labels in Student view
+    const gpaVal = document.getElementById("scorecardGpaVal");
+    const rankVal = document.getElementById("scorecardRankVal");
+    const attVal = document.getElementById("scorecardAttendanceVal");
+    const timeVal = document.getElementById("scorecardTimeVal");
+    const timeSub = document.getElementById("scorecardTimeSubtext");
+
+    if (gpaVal) gpaVal.textContent = `${avgGpa}/10`;
+    if (rankVal) rankVal.textContent = `Xếp loại: ${rankLabel}`;
+    if (attVal) attVal.textContent = `${avgAttendance}%`;
+    if (timeVal) timeVal.textContent = `Tuần ${activeWeeks} / Tháng ${activeMonths}`;
+    
+    const pad = (n) => n < 10 ? '0' + n : n;
+    const enrollDateStr = `${pad(enrollDate.getDate())}/${pad(enrollDate.getMonth() + 1)}/${enrollDate.getFullYear()}`;
+    if (timeSub) timeSub.textContent = `Nhập học ngày ${enrollDateStr}`;
+
+    // List rendering
+    const renderList = (type) => {
+      const listContainer = document.getElementById("studentScorecardList");
+      if (!listContainer) return;
+      listContainer.innerHTML = "";
+
+      const count = type === "week" ? activeWeeks : activeMonths;
+
+      for (let i = count; i >= 1; i--) {
+        const scores = generateScoresForStudent(profileData, type, i);
+        
+        // Calculate date ranges for each week/month card
+        const itemStartDate = new Date(enrollDate.getTime());
+        const itemEndDate = new Date(enrollDate.getTime());
+        
+        if (type === "week") {
+          itemStartDate.setDate(enrollDate.getDate() + (i - 1) * 7);
+          itemEndDate.setDate(enrollDate.getDate() + i * 7 - 1);
+        } else {
+          itemStartDate.setMonth(enrollDate.getMonth() + (i - 1));
+          itemEndDate.setMonth(enrollDate.getMonth() + i);
+          itemEndDate.setDate(itemEndDate.getDate() - 1);
+        }
+
+        const dateRangeStr = `${pad(itemStartDate.getDate())}/${pad(itemStartDate.getMonth() + 1)} - ${pad(itemEndDate.getDate())}/${pad(itemEndDate.getMonth() + 1)}/${itemEndDate.getFullYear()}`;
+
+        const card = document.createElement("div");
+        card.className = "scorecard-card-item";
+        card.innerHTML = `
+          <div class="scorecard-item-left">
+            <h4 class="scorecard-item-title">${type === "week" ? "Tuần " + i : "Tháng " + i}</h4>
+            <span class="scorecard-item-subtitle">${dateRangeStr}</span>
+            <div class="scorecard-average-badge">
+              <span class="scorecard-avg-val">${scores.average}</span>
+              <span class="scorecard-avg-lbl">ĐIỂM TB</span>
+            </div>
+          </div>
+          <div class="scorecard-item-right">
+            <div class="score-bars-container">
+              <div class="score-bar-row">
+                <div class="score-bar-header">
+                  <span class="score-bar-label">🎧 NGHE</span>
+                  <span class="score-bar-value">${scores.listening}</span>
+                </div>
+                <div class="score-bar-progress">
+                  <div class="score-bar-fill" style="width: ${scores.listening * 10}%;"></div>
+                </div>
+              </div>
+              <div class="score-bar-row">
+                <div class="score-bar-header">
+                  <span class="score-bar-label">🗣️ NÓI</span>
+                  <span class="score-bar-value">${scores.speaking}</span>
+                </div>
+                <div class="score-bar-progress">
+                  <div class="score-bar-fill" style="width: ${scores.speaking * 10}%; background-color: #10B981;"></div>
+                </div>
+              </div>
+              <div class="score-bar-row">
+                <div class="score-bar-header">
+                  <span class="score-bar-label">📖 ĐỌC</span>
+                  <span class="score-bar-value">${scores.reading}</span>
+                </div>
+                <div class="score-bar-progress">
+                  <div class="score-bar-fill" style="width: ${scores.reading * 10}%; background-color: #F5A623;"></div>
+                </div>
+              </div>
+              <div class="score-bar-row">
+                <div class="score-bar-header">
+                  <span class="score-bar-label">✍️ VIẾT</span>
+                  <span class="score-bar-value">${scores.writing}</span>
+                </div>
+                <div class="score-bar-progress">
+                  <div class="score-bar-fill" style="width: ${scores.writing * 10}%; background-color: #EF4444;"></div>
+                </div>
+              </div>
+            </div>
+            <div class="scorecard-feedback">
+              <strong>Chuyên cần: ${scores.attendance}% • Nhận xét từ cố vấn học tập</strong>
+              <span>${scores.comment}</span>
+            </div>
+          </div>
+        `;
+        listContainer.appendChild(card);
+      }
+    };
+
+    // Sub-tab toggling bindings
+    const btnWeek = document.getElementById("btnScorecardWeekToggle");
+    const btnMonth = document.getElementById("btnScorecardMonthToggle");
+
+    if (btnWeek && btnMonth) {
+      btnWeek.replaceWith(btnWeek.cloneNode(true));
+      btnMonth.replaceWith(btnMonth.cloneNode(true));
+      
+      const newBtnWeek = document.getElementById("btnScorecardWeekToggle");
+      const newBtnMonth = document.getElementById("btnScorecardMonthToggle");
+
+      newBtnWeek.addEventListener("click", () => {
+        newBtnWeek.classList.add("active");
+        newBtnMonth.classList.remove("active");
+        currentScorecardType = "week";
+        renderList("week");
+      });
+
+      newBtnMonth.addEventListener("click", () => {
+        newBtnMonth.classList.add("active");
+        newBtnWeek.classList.remove("active");
+        currentScorecardType = "month";
+        renderList("month");
+      });
+      
+      // Keep state highlight consistent
+      newBtnWeek.classList.toggle("active", currentScorecardType === "week");
+      newBtnMonth.classList.toggle("active", currentScorecardType === "month");
+    }
+
+    renderList(currentScorecardType);
+  };
+
+  // 3. Admin / Staff Student Profile Scorecard Renderer
+  let currentAdminScorecardType = "week";
+
+  const initAdminStudentScorecardModule = (student) => {
+    let enrollDate = new Date();
+    if (student.createdAt) {
+      if (typeof student.createdAt.toDate === 'function') {
+        enrollDate = student.createdAt.toDate();
+      } else {
+        enrollDate = new Date(student.createdAt);
+      }
+    }
+
+    const today = new Date();
+    const diffTime = Math.abs(today - enrollDate);
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) || 1;
+    
+    const elapsedWeeks = Math.max(1, Math.floor(diffDays / 7) + 1);
+    const elapsedMonths = Math.max(1, Math.floor(diffDays / 30) + 1);
+
+    const activeWeeks = Math.min(24, elapsedWeeks);
+    const activeMonths = Math.min(6, elapsedMonths);
+
+    const renderAdminList = (type) => {
+      const container = document.getElementById("adminStudentScorecardList");
+      if (!container) return;
+      container.innerHTML = "";
+
+      const count = type === "week" ? activeWeeks : activeMonths;
+      const pad = (n) => n < 10 ? '0' + n : n;
+
+      for (let i = count; i >= 1; i--) {
+        const scores = generateScoresForStudent(student, type, i);
+        
+        const itemStartDate = new Date(enrollDate.getTime());
+        const itemEndDate = new Date(enrollDate.getTime());
+        
+        if (type === "week") {
+          itemStartDate.setDate(enrollDate.getDate() + (i - 1) * 7);
+          itemEndDate.setDate(enrollDate.getDate() + i * 7 - 1);
+        } else {
+          itemStartDate.setMonth(enrollDate.getMonth() + (i - 1));
+          itemEndDate.setMonth(enrollDate.getMonth() + i);
+          itemEndDate.setDate(itemEndDate.getDate() - 1);
+        }
+
+        const dateRangeStr = `${pad(itemStartDate.getDate())}/${pad(itemStartDate.getMonth() + 1)} - ${pad(itemEndDate.getDate())}/${pad(itemEndDate.getMonth() + 1)}`;
+
+        const card = document.createElement("div");
+        card.style.cssText = "background: var(--bg-primary); border: 1px solid var(--border); padding: 1rem; border-radius: var(--border-radius-sm); display: flex; flex-direction: column; gap: 0.5rem; transition: var(--transition-fast);";
+        card.innerHTML = `
+          <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px dashed var(--border-light); padding-bottom: 0.35rem;">
+            <strong style="color: var(--text-main); font-size: 0.8rem;">${type === "week" ? "Tuần " + i : "Tháng " + i} (${dateRangeStr})</strong>
+            <span style="background: var(--accent); color: white; padding: 2px 6px; border-radius: 10px; font-size: 0.65rem; font-weight: 700;">Avg: ${scores.average}</span>
+          </div>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.35rem; font-size: 0.75rem;">
+            <div>Nghe: <strong>${scores.listening}</strong> | Nói: <strong>${scores.speaking}</strong></div>
+            <div>Đọc: <strong>${scores.reading}</strong> | Viết: <strong>${scores.writing}</strong></div>
+          </div>
+          <div style="font-size: 0.72rem; color: var(--text-muted); line-height: 1.4; border-top: 1px solid var(--border-light); padding-top: 0.35rem;">
+            Chuyên cần: <strong>${scores.attendance}%</strong> • Nhận xét: <em>${scores.comment}</em>
+          </div>
+        `;
+        container.appendChild(card);
+      }
+    };
+
+    // Sub-tab toggling bindings
+    const btnWeek = document.getElementById("btnAdminScorecardWeekToggle");
+    const btnMonth = document.getElementById("btnAdminScorecardMonthToggle");
+
+    if (btnWeek && btnMonth) {
+      btnWeek.replaceWith(btnWeek.cloneNode(true));
+      btnMonth.replaceWith(btnMonth.cloneNode(true));
+      
+      const newBtnWeek = document.getElementById("btnAdminScorecardWeekToggle");
+      const newBtnMonth = document.getElementById("btnAdminScorecardMonthToggle");
+
+      newBtnWeek.addEventListener("click", () => {
+        newBtnWeek.classList.add("active");
+        newBtnMonth.classList.remove("active");
+        currentAdminScorecardType = "week";
+        renderAdminList("week");
+      });
+
+      newBtnMonth.addEventListener("click", () => {
+        newBtnMonth.classList.add("active");
+        newBtnWeek.classList.remove("active");
+        currentAdminScorecardType = "month";
+        renderAdminList("month");
+      });
+      
+      newBtnWeek.classList.toggle("active", currentAdminScorecardType === "week");
+      newBtnMonth.classList.toggle("active", currentAdminScorecardType === "month");
+    }
+
+    renderAdminList(currentAdminScorecardType);
+  };
+
   // Startup and Reload Session Handler
   const checkPortalSession = () => {
     // 2. Setup Auth state changed listener
@@ -4253,6 +4609,9 @@ document.addEventListener('DOMContentLoaded', () => {
                   remainingDisplay.textContent = "75,000,000 ₫";
                 }
               }
+
+              // Load weekly and monthly scorecard details!
+              initStudentScorecardModule(profileData);
 
             } catch (err) {
               console.error("Error loading student profile details:", err);

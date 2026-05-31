@@ -1946,3 +1946,312 @@ body.dark-theme-crm .student-header-navbar {
   box-shadow: var(--shadow-sm) !important;
   z-index: 99999 !important;
 }
+
+/* ==========================================================================
+   5. ACADEMIC SCORECARD SYSTEM
+   ========================================================================== */
+.scorecard-kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 2.5rem;
+}
+
+.scorecard-kpi-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--border-radius-lg);
+  padding: 1.5rem 2rem;
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  transition: var(--transition-smooth);
+}
+
+.scorecard-kpi-card:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-md);
+  border-color: var(--accent);
+}
+
+.scorecard-kpi-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: var(--accent-light);
+  color: var(--accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.scorecard-kpi-icon svg {
+  width: 24px;
+  height: 24px;
+  fill: currentColor;
+}
+
+.scorecard-kpi-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.scorecard-kpi-label {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  margin-bottom: 0.25rem;
+}
+
+.scorecard-kpi-value {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--text-main);
+  line-height: 1.2;
+}
+
+.scorecard-kpi-subtext {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  margin-top: 0.15rem;
+}
+
+/* Scorecard Tab Toggler */
+.scorecard-toggle-group {
+  display: inline-flex;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  padding: 4px;
+  border-radius: 30px;
+  margin-bottom: 2rem;
+  box-shadow: var(--shadow-sm);
+}
+
+.scorecard-toggle-btn {
+  padding: 0.6rem 1.8rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  border-radius: 25px;
+  transition: var(--transition-fast);
+  cursor: pointer;
+  border: none;
+  background: none;
+}
+
+.scorecard-toggle-btn:hover {
+  color: var(--text-main);
+}
+
+.scorecard-toggle-btn.active {
+  background: var(--accent);
+  color: #FFFFFF;
+  box-shadow: 0 4px 10px rgba(63, 162, 246, 0.2);
+}
+
+/* Scorecard Cards List */
+.scorecard-list {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.5rem;
+}
+
+.scorecard-card-item {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--border-radius-lg);
+  padding: 2rem;
+  box-shadow: var(--shadow-sm);
+  display: grid;
+  grid-template-columns: 240px 1fr;
+  gap: 2.5rem;
+  transition: var(--transition-smooth);
+  animation: fadeInFast 0.3s ease;
+}
+
+.scorecard-card-item:hover {
+  border-color: var(--accent);
+  box-shadow: var(--shadow-md);
+}
+
+.scorecard-item-left {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  border-right: 1px solid var(--border-light);
+  padding-right: 2rem;
+  text-align: center;
+}
+
+.scorecard-item-title {
+  font-family: var(--font-serif);
+  font-size: 1.3rem;
+  font-weight: 600;
+  color: var(--text-main);
+  margin-bottom: 0.5rem;
+}
+
+.scorecard-item-subtitle {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  margin-bottom: 1.5rem;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+}
+
+.scorecard-average-badge {
+  width: 90px;
+  height: 90px;
+  border-radius: 50%;
+  border: 6px solid var(--accent-light);
+  background: var(--bg-primary);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  box-shadow: var(--shadow-sm);
+  transition: var(--transition-smooth);
+}
+
+.scorecard-card-item:hover .scorecard-average-badge {
+  border-color: var(--accent);
+  transform: scale(1.05);
+}
+
+.scorecard-avg-val {
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: var(--text-main);
+  line-height: 1;
+}
+
+.scorecard-avg-lbl {
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  font-weight: 600;
+  margin-top: 0.15rem;
+}
+
+.scorecard-item-right {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+/* Skills list progress bars */
+.score-bars-container {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.25rem 2rem;
+  margin-bottom: 1.25rem;
+}
+
+.score-bar-row {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.score-bar-header {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-main);
+}
+
+.score-bar-label {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.score-bar-progress {
+  height: 8px;
+  background: var(--bg-primary);
+  border-radius: 4px;
+  overflow: hidden;
+  position: relative;
+}
+
+.score-bar-fill {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+  background: var(--accent);
+}
+
+.score-bar-value {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--accent);
+}
+
+.scorecard-feedback {
+  background: var(--bg-primary);
+  border-left: 3px solid var(--accent);
+  padding: 0.85rem 1.2rem;
+  border-radius: 0 var(--border-radius-sm) var(--border-radius-sm) 0;
+  font-size: 0.82rem;
+  line-height: 1.5;
+  color: var(--text-main);
+}
+
+.scorecard-feedback strong {
+  color: var(--text-muted);
+  font-weight: 700;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  display: block;
+  margin-bottom: 0.2rem;
+  letter-spacing: 0.5px;
+}
+
+/* Responsive adjustment */
+@media (max-width: 900px) {
+  .scorecard-card-item {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+  
+  .scorecard-item-left {
+    border-right: none;
+    border-bottom: 1px solid var(--border-light);
+    padding-right: 0;
+    padding-bottom: 1.5rem;
+  }
+  
+  .score-bars-container {
+    grid-template-columns: 1fr;
+  }
+}
+
+.scorecard-empty {
+  text-align: center;
+  padding: 4rem 2rem;
+  background: var(--bg-card);
+  border: 1px dashed var(--border);
+  border-radius: var(--border-radius-lg);
+  color: var(--text-muted);
+}
+
+.scorecard-empty svg {
+  width: 48px;
+  height: 48px;
+  fill: var(--text-muted);
+  opacity: 0.4;
+  margin-bottom: 1rem;
+}
+
+.scorecard-empty h4 {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--text-main);
+  margin-bottom: 0.5rem;
+}
