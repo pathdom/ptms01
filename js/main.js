@@ -1308,10 +1308,15 @@ document.addEventListener('DOMContentLoaded', () => {
         else if (status === "Đã trúng tuyển") badgeClass = "badge-selected";
         else if (status === "Đang làm hồ sơ") badgeClass = "badge-processing";
 
+        const passwordDisplay = user.passwordChanged ? 
+          `<span style="color: #10B981; font-weight: 600; font-size: 0.75rem; background: rgba(16, 185, 129, 0.1); padding: 0.2rem 0.5rem; border-radius: 4px;">Đã đổi MK</span>` : 
+          `<span class="font-mono" style="font-weight: 600; color: var(--text-main); font-size: 0.8rem;">${user.defaultPassword || "123456"}</span>`;
+
         const tr = document.createElement('tr');
         tr.innerHTML = `
           <td style="text-align: center;"><strong>${user.name}</strong><br><span style="font-size:0.75rem; font-family: monospace; color:var(--accent); font-weight: 600;">${code}</span></td>
           <td style="text-align: center;"><span class="font-mono" style="font-weight:500;">${user.email}</span></td>
+          <td style="text-align: center;">${passwordDisplay}</td>
           <td style="text-align: center;"><strong>${country}</strong></td>
           <td style="text-align: center;"><span class="crm-badge ${badgeClass}">${status}</span></td>
           <td style="text-align: center;">
@@ -1364,6 +1369,8 @@ document.addEventListener('DOMContentLoaded', () => {
         name: name,
         email: email,
         role: "student",
+        defaultPassword: password,
+        passwordChanged: false,
         createdAt: firebase.firestore.FieldValue.serverTimestamp()
       });
 
@@ -1430,6 +1437,63 @@ document.addEventListener('DOMContentLoaded', () => {
       }
 
       handleCreateStudentUser(newEmail, newPassword, newName, newCode, newPhone, newCountry, newStatus, newLearningMonth, newNotes);
+    });
+  }
+
+  // Bind Submit Reset Student Password Form
+  const resetStudentPasswordForm = document.getElementById('resetStudentPasswordForm');
+  if (resetStudentPasswordForm) {
+    resetStudentPasswordForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      const email = document.getElementById('resetStudentEmail').value.trim().toLowerCase();
+      const newDefaultPassword = document.getElementById('resetStudentNewPassword').value;
+
+      if (!email || !newDefaultPassword) {
+        showToast("Vui lòng nhập đầy đủ email và mật khẩu mặc định mới!", "error");
+        return;
+      }
+
+      if (newDefaultPassword.length < 6) {
+        showToast("Mật khẩu mới phải tối thiểu 6 ký tự!", "error");
+        return;
+      }
+
+      try {
+        showToast("Đang thực hiện reset mật khẩu...", "info");
+
+        // 1. Verify user exists and is a student
+        const userSnap = await db.collection("users")
+          .where("email", "==", email)
+          .where("role", "==", "student")
+          .get();
+
+        if (userSnap.empty) {
+          showToast("Không tìm thấy tài khoản học viên với email này!", "error");
+          return;
+        }
+
+        let userDocId = "";
+        userSnap.forEach(doc => {
+          userDocId = doc.id;
+        });
+
+        // 2. Send Password Reset Email in Firebase Authentication
+        await auth.sendPasswordResetEmail(email);
+
+        // 3. Reset the status in Firestore (so defaultPassword is newDefaultPassword and passwordChanged is false)
+        await db.collection("users").doc(userDocId).update({
+          defaultPassword: newDefaultPassword,
+          passwordChanged: false
+        });
+
+        showToast(`Đã gửi email khôi phục mật khẩu và cập nhật mật khẩu mặc định mới cho học viên!`, "success");
+        resetStudentPasswordForm.reset();
+        renderStudentUsersList();
+      } catch (err) {
+        console.error("Reset student password error:", err);
+        showToast("Lỗi khi reset mật khẩu: " + err.message, "error");
+      }
     });
   }
 
@@ -4031,6 +4095,72 @@ document.addEventListener('DOMContentLoaded', () => {
               btnStudentLogout.replaceWith(btnStudentLogout.cloneNode(true));
               const newBtnStudentLogout = document.getElementById('btnStudentLogout');
               newBtnStudentLogout.addEventListener('click', handlePortalLogout);
+            }
+
+            // Bind Student Change Password Modal
+            const btnStudentChangePassword = document.getElementById('btnStudentChangePassword');
+            const studentChangePasswordModal = document.getElementById('studentChangePasswordModal');
+            const btnCloseChangePasswordModal = document.getElementById('btnCloseChangePasswordModal');
+            const studentChangePasswordForm = document.getElementById('studentChangePasswordForm');
+
+            if (btnStudentChangePassword && studentChangePasswordModal) {
+              btnStudentChangePassword.replaceWith(btnStudentChangePassword.cloneNode(true));
+              const newBtnStudentChangePassword = document.getElementById('btnStudentChangePassword');
+              newBtnStudentChangePassword.addEventListener('click', () => {
+                studentChangePasswordModal.style.display = 'flex';
+              });
+            }
+
+            if (btnCloseChangePasswordModal && studentChangePasswordModal) {
+              btnCloseChangePasswordModal.addEventListener('click', () => {
+                studentChangePasswordModal.style.display = 'none';
+                if (studentChangePasswordForm) studentChangePasswordForm.reset();
+              });
+            }
+
+            if (studentChangePasswordForm) {
+              studentChangePasswordForm.replaceWith(studentChangePasswordForm.cloneNode(true));
+              const newPasswordForm = document.getElementById('studentChangePasswordForm');
+              newPasswordForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const currentPassword = document.getElementById('studentCurrentPasswordInput').value;
+                const newPassword = document.getElementById('studentNewPasswordInput').value;
+                const confirmPassword = document.getElementById('studentConfirmPasswordInput').value;
+
+                if (newPassword.length < 6) {
+                  showToast("Mật khẩu mới phải tối thiểu 6 ký tự!", "error");
+                  return;
+                }
+
+                if (newPassword !== confirmPassword) {
+                  showToast("Mật khẩu xác nhận không trùng khớp!", "error");
+                  return;
+                }
+
+                try {
+                  showToast("Đang xác thực và cập nhật mật khẩu...", "info");
+                  const user = auth.currentUser;
+                  if (!user) {
+                    showToast("Lỗi: Học viên chưa đăng nhập!", "error");
+                    return;
+                  }
+
+                  const credential = firebase.auth.EmailAuthProvider.credential(user.email, currentPassword);
+                  await user.reauthenticateWithCredential(credential);
+                  await user.updatePassword(newPassword);
+
+                  await db.collection("users").doc(user.uid).update({
+                    passwordChanged: true
+                  });
+
+                  showToast("Cập nhật mật khẩu thành công!", "success");
+                  studentChangePasswordModal.style.display = 'none';
+                  newPasswordForm.reset();
+                } catch (err) {
+                  console.error("Change password error:", err);
+                  showToast("Lỗi xác thực hoặc cập nhật: " + err.message, "error");
+                }
+              });
             }
 
             // Subscribe to real-time blogs updates
