@@ -1186,8 +1186,8 @@ document.addEventListener('DOMContentLoaded', () => {
       snapshot.forEach(doc => {
         const user = doc.data();
         user.uid = doc.id;
-        // Do not list default admin in user creation list to avoid accidental self-deletion
-        if (user.email !== 'admin@domain.com') {
+        // Only list users with role === 'staff' (and ensure it's not the admin)
+        if (user.role === 'staff' && user.email !== 'admin@domain.com') {
           staffMembers.push(user);
         }
       });
