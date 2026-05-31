@@ -980,6 +980,38 @@ document.addEventListener('DOMContentLoaded', () => {
     } catch (error) {
       console.error("Login failed:", error);
       
+      // Auto-create student portal user on-the-fly if they log in with default password "123456" and exist in the "students" collection
+      if (error.code === 'auth/user-not-found' && password === '123456') {
+        try {
+          const studentQuery = await db.collection("students").where("email", "==", email).get();
+          if (!studentQuery.empty) {
+            showToast("Đang tự động kích hoạt tài khoản học viên...", "info");
+            const studentDoc = studentQuery.docs[0];
+            const studentData = studentDoc.data();
+            
+            // Create user account in Firebase Auth
+            const userCredential = await auth.createUserWithEmailAndPassword(email, password);
+            const uid = userCredential.user.uid;
+            
+            // Save to users collection
+            await db.collection("users").doc(uid).set({
+              name: studentData.name,
+              email: email,
+              role: "student",
+              defaultPassword: "123456",
+              passwordChanged: false,
+              createdAt: firebase.firestore.FieldValue.serverTimestamp()
+            });
+            
+            showToast("Kích hoạt tài khoản học viên thành công! Đang tự động đăng nhập...", "success");
+            // Firebase automatically signs in the user upon creation. We sync session naturally.
+            return;
+          }
+        } catch (createErr) {
+          console.error("Failed to auto-create student user during login:", createErr);
+        }
+      }
+
       // Auto-create admin if logging in with admin@domain.com for the first time
       if (email === 'admin@domain.com' && error.code === 'auth/user-not-found') {
         try {
@@ -1326,7 +1358,7 @@ document.addEventListener('DOMContentLoaded', () => {
             </button>
           `;
         } else {
-          passwordDisplay = `<span style="color: var(--text-muted); font-weight: 600; font-size: 0.75rem; background: var(--bg-primary); border: 1px solid var(--border); padding: 0.2rem 0.5rem; border-radius: 4px;">Chưa tạo TK</span>`;
+          passwordDisplay = `<span class="font-mono" style="font-weight: 600; color: var(--text-muted); font-size: 0.8rem;">123456</span> <span style="font-size: 0.7rem; color: var(--text-muted); background: var(--bg-primary); border: 1px solid var(--border); padding: 0.1rem 0.3rem; border-radius: 3px; margin-left: 4px;">Mặc định</span>`;
           actionBtn = `
             <button class="action-icon-btn btn-delete-student-profile-only" data-id="${student.id}" title="Xóa hồ sơ" style="color:#EF4444; background:none; border:none; cursor:pointer; padding:6px; border-radius:50%;">
               <svg viewBox="0 0 24 24" style="width: 18px; height: 18px; fill: currentColor;"><path d="M19,4H15.5L14.5,3H9.5L8.5,4H5V6H19M6,19A2,2 0 0,0 8,21H16A2,2 0 0,0 18,19V7H6V19Z"/></svg>
@@ -2843,12 +2875,40 @@ document.addEventListener('DOMContentLoaded', () => {
   let currentPage = 1;
   const itemsPerPage = 8;
 
-  const subscribeToStudents = () => {
+  const subscribeToStudents = async () => {
     if (studentsSubscription) studentsSubscription();
 
+    // 1. One-time check and pre-populate missing default students to avoid onSnapshot race conditions
+    try {
+      const snapshot = await db.collection("students").get();
+      const existingEmails = new Set();
+      snapshot.forEach(doc => {
+        const data = doc.data();
+        if (data.email) {
+          existingEmails.add(data.email.toLowerCase().trim());
+        }
+      });
+
+      // Find missing default students
+      const missingStudents = defaultStudents.filter(s => s.email && !existingEmails.has(s.email.toLowerCase().trim()));
+
+      if (missingStudents.length > 0) {
+        console.log(`Pre-populating ${missingStudents.length} missing default students...`);
+        for (const s of missingStudents) {
+          const studentCopy = { ...s };
+          studentCopy.createdAt = firebase.firestore.FieldValue.serverTimestamp();
+          studentCopy.learningMonth = "Tháng 1";
+          await db.collection("students").add(studentCopy);
+        }
+      }
+    } catch (err) {
+      console.error("Error pre-populating missing default students:", err);
+    }
+
+    // 2. Start the real-time observer
     studentsSubscription = db.collection("students")
       .orderBy("code", "asc")
-      .onSnapshot(async (snapshot) => {
+      .onSnapshot((snapshot) => {
         // Real-time migration: delete old mock students containing other countries
         snapshot.forEach((doc) => {
           const data = doc.data();
@@ -2857,37 +2917,12 @@ document.addEventListener('DOMContentLoaded', () => {
           }
         });
 
-        // If empty, auto-populate default student profiles to show a live demo
-        if (snapshot.empty) {
-          console.log("Pre-populating Firestore students database...");
-          for (const s of defaultStudents) {
-            s.createdAt = firebase.firestore.FieldValue.serverTimestamp();
-            s.learningMonth = "Tháng 1";
-            await db.collection("students").add(s);
-          }
-          return;
-        }
-
         students = [];
         snapshot.forEach((doc) => {
           const data = doc.data();
           data.id = doc.id;
           students.push(data);
         });
-
-        // Migration: Auto-populate 30 more students once if only 5 exist
-        if (students.length === 5 && !localStorage.getItem('thinkedu_populated_30_v3')) {
-          console.log("Auto-populating 30 more students into Firestore...");
-          localStorage.setItem('thinkedu_populated_30_v3', 'true');
-          const extraStudents = defaultStudents.slice(5);
-          for (const s of extraStudents) {
-            s.createdAt = firebase.firestore.FieldValue.serverTimestamp();
-            s.learningMonth = "Tháng 1";
-            await db.collection("students").add(s);
-          }
-          showToast("Đang tự động khởi tạo thêm 30 hồ sơ học viên mẫu...", "info");
-          return;
-        }
 
         // Trigger render
         applyStudentFiltersAndRender();
