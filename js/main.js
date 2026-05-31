@@ -4210,28 +4210,36 @@ document.addEventListener('DOMContentLoaded', () => {
     const today = new Date("2026-05-31T23:12:46+07:00");
     const emailLower = (email || "").toLowerCase();
     
+    // Explicit override for our main test student Vũ Thùy Chi to keep it exactly 2 weeks (15/05/2026)
     if (emailLower === "chi.vu@gmail.com") {
-      // 15/05/2026 -> 16 days elapsed -> 2 weeks, Month 1
       return new Date("2026-05-15T08:00:00+07:00");
-    } else if (emailLower === "chi.nguyen@ptms.hv") {
-      // 20/04/2026 -> 41 days elapsed -> 5 weeks, 1.1 months
-      return new Date("2026-04-20T08:00:00+07:00");
-    } else if (emailLower === "hoang.tran@ptms.hv") {
-      // 28/05/2026 -> 3 days elapsed -> 1 week, Month 1
-      return new Date("2026-05-28T08:00:00+07:00");
-    } else if (emailLower === "anh.pham@ptms.hv") {
-      // 01/03/2026 -> 91 days elapsed -> 13 weeks, 3.0 months
-      return new Date("2026-03-01T08:00:00+07:00");
     }
     
-    // Fallback: original createdAt or 1 week ago
-    if (originalCreatedAt) {
-      if (typeof originalCreatedAt.toDate === 'function') {
-        return originalCreatedAt.toDate();
-      }
-      return new Date(originalCreatedAt);
+    // Calculate a stable index based on email hashing
+    let hash = 0;
+    for (let i = 0; i < emailLower.length; i++) {
+      hash = emailLower.charCodeAt(i) + ((hash << 5) - hash);
     }
-    return new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000); // 1 week ago
+    const groupIdx = Math.abs(hash) % 5; // Partition 35 students into 5 equal groups of 7
+    
+    // 5 different fixed dates representing different study times:
+    // Group 0: 28/05/2026 -> trôi qua 3 ngày -> 1 tuần, Tháng 1
+    // Group 1: 15/05/2026 -> trôi qua 16 ngày -> 2 tuần, Tháng 1
+    // Group 2: 20/04/2026 -> trôi qua 41 ngày -> 5 tuần, 1.1 tháng
+    // Group 3: 01/03/2026 -> trôi qua 91 ngày -> 13 tuần, 3.0 tháng
+    // Group 4: 15/02/2026 -> trôi qua 105 ngày -> 15 tuần, 3.5 tháng
+    
+    if (groupIdx === 0) {
+      return new Date("2026-05-28T08:00:00+07:00");
+    } else if (groupIdx === 1) {
+      return new Date("2026-05-15T08:00:00+07:00");
+    } else if (groupIdx === 2) {
+      return new Date("2026-04-20T08:00:00+07:00");
+    } else if (groupIdx === 3) {
+      return new Date("2026-03-01T08:00:00+07:00");
+    } else {
+      return new Date("2026-02-15T08:00:00+07:00");
+    }
   };
 
   // Helper to calculate exact study time based on enrollment date
