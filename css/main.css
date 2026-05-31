@@ -559,6 +559,25 @@ button {
   color: var(--text-main);
 }
 
+/* Student Portal Dropdown Menu Styles */
+.student-profile-dropdown:hover .student-dropdown-menu {
+  display: flex !important;
+}
+
+.student-profile-dropdown:hover {
+  background: var(--bg-primary);
+  border-color: var(--border) !important;
+}
+
+.student-profile-dropdown:hover svg {
+  transform: rotate(180deg);
+  fill: var(--accent) !important;
+}
+
+.student-profile-dropdown {
+  border: 1px solid transparent;
+}
+
 .profile-info-desktop .role {
   font-size: 0.7rem;
   color: var(--text-muted);
