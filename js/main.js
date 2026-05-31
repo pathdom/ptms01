@@ -3791,6 +3791,21 @@ document.addEventListener('DOMContentLoaded', () => {
                 studentAvatar.style.backgroundColor = getAvatarBgColor(profileData.name);
               }
 
+              // Dynamic Prep Course Display based on country
+              const studentPrepCourseDisplay = document.getElementById('studentPrepCourseDisplay');
+              if (studentPrepCourseDisplay) {
+                const targetCountry = profileData.country || "Nhật";
+                if (targetCountry === "Nhật") {
+                  studentPrepCourseDisplay.textContent = "Khóa đào tạo tiếng Nhật du học cấp tốc (N5 - N3)";
+                } else if (targetCountry === "Đài") {
+                  studentPrepCourseDisplay.textContent = "Khóa đào tạo tiếng Trung TOCFL du học cấp tốc";
+                } else if (targetCountry === "Hàn") {
+                  studentPrepCourseDisplay.textContent = "Khóa đào tạo tiếng Hàn du học cấp tốc (TOPIK II)";
+                } else {
+                  studentPrepCourseDisplay.textContent = "Khóa đào tạo ngôn ngữ du học cấp tốc";
+                }
+              }
+
               // Update Timeline Milestones based on country & status
               const milestoneSteps = document.querySelectorAll('.milestone-timeline .milestone-step');
               milestoneSteps.forEach(step => {
