@@ -1270,82 +1270,114 @@ document.addEventListener('DOMContentLoaded', () => {
     tableBody.innerHTML = '';
 
     try {
-      const snapshot = await db.collection("users").where("role", "==", "student").get();
-      const studentUsers = [];
-      snapshot.forEach(doc => {
-        const user = doc.data();
-        user.uid = doc.id;
-        studentUsers.push(user);
+      // 1. Fetch all student profiles from "students" collection
+      const studentsSnapshot = await db.collection("students").get();
+      const studentsList = [];
+      studentsSnapshot.forEach(doc => {
+        const student = doc.data();
+        student.id = doc.id; // student profile document ID
+        studentsList.push(student);
       });
 
-      if (studentUsers.length === 0) {
+      // 2. Fetch all student user accounts from "users" collection
+      const usersSnapshot = await db.collection("users").where("role", "==", "student").get();
+      const usersMap = {};
+      usersSnapshot.forEach(doc => {
+        const u = doc.data();
+        u.uid = doc.id; // user account document ID
+        usersMap[u.email.toLowerCase()] = u;
+      });
+
+      if (studentsList.length === 0) {
         tableBody.innerHTML = `
           <tr>
-            <td colspan="5" style="text-align:center; padding: 2rem; color:var(--text-muted); font-size:0.85rem;">
-              Chưa có tài khoản học viên nào được tạo.
+            <td colspan="6" style="text-align:center; padding: 2rem; color:var(--text-muted); font-size:0.85rem;">
+              Chưa có học viên nào trong danh sách.
             </td>
           </tr>
         `;
         return;
       }
 
-      // Query student profiles to match code/details
-      const profilesSnapshot = await db.collection("students").get();
-      const profilesMap = {};
-      profilesSnapshot.forEach(doc => {
-        const p = doc.data();
-        profilesMap[p.email.toLowerCase()] = p;
-      });
+      studentsList.forEach(student => {
+        const emailKey = student.email ? student.email.toLowerCase() : "";
+        const userAccount = usersMap[emailKey];
 
-      studentUsers.forEach(user => {
-        const profile = profilesMap[user.email.toLowerCase()] || {};
-        const code = profile.code || "TE-Chưa rõ";
-        const country = profile.country || "Chưa rõ";
-        const status = profile.status || "Đang học";
+        const code = student.code || "TE-Chưa rõ";
+        const country = student.country || "Chưa rõ";
+        const status = student.status || "Đang học";
 
         let badgeClass = "badge-danghoc";
         if (status === "Chờ phỏng vấn") badgeClass = "badge-waiting";
         else if (status === "Đã trúng tuyển") badgeClass = "badge-selected";
         else if (status === "Đang làm hồ sơ") badgeClass = "badge-processing";
 
-        const passwordDisplay = user.passwordChanged ? 
-          `<span style="color: #10B981; font-weight: 600; font-size: 0.75rem; background: rgba(16, 185, 129, 0.1); padding: 0.2rem 0.5rem; border-radius: 4px;">Đã đổi MK</span>` : 
-          `<span class="font-mono" style="font-weight: 600; color: var(--text-main); font-size: 0.8rem;">${user.defaultPassword || "123456"}</span>`;
+        let passwordDisplay = "";
+        let actionBtn = "";
+
+        if (userAccount) {
+          passwordDisplay = userAccount.passwordChanged ? 
+            `<span style="color: #10B981; font-weight: 600; font-size: 0.75rem; background: rgba(16, 185, 129, 0.1); padding: 0.2rem 0.5rem; border-radius: 4px;">Đã đổi MK</span>` : 
+            `<span class="font-mono" style="font-weight: 600; color: var(--text-main); font-size: 0.8rem;">${userAccount.defaultPassword || "123456"}</span>`;
+
+          actionBtn = `
+            <button class="action-icon-btn btn-delete-student-user" data-uid="${userAccount.uid}" data-email="${student.email}" title="Xóa tài khoản" style="color:#EF4444; background:none; border:none; cursor:pointer; padding:6px; border-radius:50%;">
+              <svg viewBox="0 0 24 24" style="width: 18px; height: 18px; fill: currentColor;"><path d="M19,4H15.5L14.5,3H9.5L8.5,4H5V6H19M6,19A2,2 0 0,0 8,21H16A2,2 0 0,0 18,19V7H6V19Z"/></svg>
+            </button>
+          `;
+        } else {
+          passwordDisplay = `<span style="color: var(--text-muted); font-weight: 600; font-size: 0.75rem; background: var(--bg-primary); border: 1px solid var(--border); padding: 0.2rem 0.5rem; border-radius: 4px;">Chưa tạo TK</span>`;
+          actionBtn = `
+            <button class="action-icon-btn btn-delete-student-profile-only" data-id="${student.id}" title="Xóa hồ sơ" style="color:#EF4444; background:none; border:none; cursor:pointer; padding:6px; border-radius:50%;">
+              <svg viewBox="0 0 24 24" style="width: 18px; height: 18px; fill: currentColor;"><path d="M19,4H15.5L14.5,3H9.5L8.5,4H5V6H19M6,19A2,2 0 0,0 8,21H16A2,2 0 0,0 18,19V7H6V19Z"/></svg>
+            </button>
+          `;
+        }
 
         const tr = document.createElement('tr');
         tr.innerHTML = `
-          <td style="text-align: center;"><strong>${user.name}</strong><br><span style="font-size:0.75rem; font-family: monospace; color:var(--accent); font-weight: 600;">${code}</span></td>
-          <td style="text-align: center;"><span class="font-mono" style="font-weight:500;">${user.email}</span></td>
+          <td style="text-align: center;"><strong>${student.name}</strong><br><span style="font-size:0.75rem; font-family: monospace; color:var(--accent); font-weight: 600;">${code}</span></td>
+          <td style="text-align: center;"><span class="font-mono" style="font-weight:500;">${student.email}</span></td>
           <td style="text-align: center;">${passwordDisplay}</td>
           <td style="text-align: center;"><strong>${country}</strong></td>
           <td style="text-align: center;"><span class="crm-badge ${badgeClass}">${status}</span></td>
           <td style="text-align: center;">
-            <button class="action-icon-btn btn-delete-student-user" data-uid="${user.uid}" data-email="${user.email}" title="Xóa tài khoản" style="color:#EF4444; background:none; border:none; cursor:pointer; padding:6px; border-radius:50%;">
-              <svg viewBox="0 0 24 24" style="width: 18px; height: 18px; fill: currentColor;"><path d="M19,4H15.5L14.5,3H9.5L8.5,4H5V6H19M6,19A2,2 0 0,0 8,21H16A2,2 0 0,0 18,19V7H6V19Z"/></svg>
-            </button>
+            ${actionBtn}
           </td>
         `;
 
-        tr.querySelector('.btn-delete-student-user').addEventListener('click', async () => {
-          if (confirm(`Bạn có chắc chắn muốn xóa tài khoản học viên ${user.name} (${user.email})? Thao tác này cũng sẽ xóa hồ sơ tư vấn tương ứng.`)) {
-            try {
-              // Delete from users collection
-              await db.collection("users").doc(user.uid).delete();
-              
-              // Find and delete from students collection
-              const pSnap = await db.collection("students").where("email", "==", user.email).get();
-              pSnap.forEach(async (pDoc) => {
-                await db.collection("students").doc(pDoc.id).delete();
-              });
+        if (userAccount) {
+          tr.querySelector('.btn-delete-student-user').addEventListener('click', async () => {
+            if (confirm(`Bạn có chắc chắn muốn xóa tài khoản học viên ${student.name} (${student.email})? Thao tác này cũng sẽ xóa hồ sơ tư vấn tương ứng.`)) {
+              try {
+                // Delete from users collection
+                await db.collection("users").doc(userAccount.uid).delete();
+                
+                // Find and delete from students collection
+                await db.collection("students").doc(student.id).delete();
 
-              showToast(`Đã xóa tài khoản học viên ${user.name} thành công!`, "warning");
-              renderStudentUsersList();
-            } catch (err) {
-              console.error("Failed to delete student user:", err);
-              showToast("Lỗi khi xóa tài khoản học viên!", "error");
+                showToast(`Đã xóa tài khoản học viên ${student.name} thành công!`, "warning");
+                renderStudentUsersList();
+              } catch (err) {
+                console.error("Failed to delete student user:", err);
+                showToast("Lỗi khi xóa tài khoản học viên!", "error");
+              }
             }
-          }
-        });
+          });
+        } else {
+          tr.querySelector('.btn-delete-student-profile-only').addEventListener('click', async () => {
+            if (confirm(`Học viên ${student.name} chưa có tài khoản portal. Bạn có chắc chắn muốn xóa hồ sơ tư vấn của học viên này?`)) {
+              try {
+                await db.collection("students").doc(student.id).delete();
+                showToast(`Đã xóa hồ sơ học viên ${student.name} thành công!`, "warning");
+                renderStudentUsersList();
+              } catch (err) {
+                console.error("Failed to delete student profile:", err);
+                showToast("Lỗi khi xóa hồ sơ học viên!", "error");
+              }
+            }
+          });
+        }
 
         tableBody.appendChild(tr);
       });
