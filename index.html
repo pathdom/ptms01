@@ -101,35 +101,11 @@
           style="width: 100%; max-width: 110px; height: auto; object-fit: contain;">
       </div>
 
-      <!-- Logged-in Account Card Wrapper with Dropdown -->
-      <div class="sidebar-user-wrapper" style="position: relative; margin-bottom: 2rem;">
-        <div class="sidebar-user-badge" style="margin-bottom: 0; cursor: pointer;">
-          <div class="avatar" id="portalUserAvatar">DM</div>
-          <div class="info">
-            <h4 id="portalUserName">Đang tải...</h4>
-            <span id="portalUserRole">Nhân viên</span>
-          </div>
-        </div>
-        <!-- Dropdown Menu (reveals on hover) -->
-        <div class="sidebar-user-dropdown"
-          style="display: none; position: absolute; top: 100%; left: 0; width: 100%; background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--border-radius-md); box-shadow: var(--shadow-lg); z-index: 100; margin-top: 0.5rem; overflow: hidden; padding: 0.5rem 0;">
-          <button class="footer-btn" id="btnOpenProfileModal"
-            style="border: none; padding: 0.75rem 1.2rem; border-radius: 0; margin-top: 0;">
-            <svg viewBox="0 0 24 24" style="width:16px; height:16px; fill:currentColor; margin-right: 8px;">
-              <path
-                d="M12,4A4,4 0 0,1 16,8A4,4 0 0,1 12,12A4,4 0 0,1 8,8A4,4 0 0,1 12,4M12,14C16.42,14 20,15.79 20,18V20H4V18C4,15.79 7.58,14 12,14Z" />
-            </svg>
-            <span>Cập nhật hồ sơ</span>
-          </button>
-          <button class="footer-btn btn-logout-app-portal" id="btnLogoutDropdown"
-            style="border: none; padding: 0.75rem 1.2rem; border-radius: 0; margin-top: 0; color: #EF4444;">
-            <svg viewBox="0 0 24 24" style="width:16px; height:16px; fill:currentColor; margin-right: 8px;">
-              <path
-                d="M16,17V14H9V10H16V7L21,12L16,17M14,2A2,2 0 0,1 16,4V6H14V4H5V20H14V18H16V20A2,2 0 0,1 14,22H5A2,2 0 0,1 3,20V4A2,2 0 0,1 5,2H14Z" />
-            </svg>
-            <span>Đăng xuất</span>
-          </button>
-        </div>
+      <!-- Hidden elements for state compatibility -->
+      <div style="display: none;">
+        <div id="portalUserAvatar">DM</div>
+        <h4 id="portalUserName">Đang tải...</h4>
+        <span id="portalUserRole">Nhân viên</span>
       </div>
 
       <!-- Menu Navigation -->
@@ -177,7 +153,13 @@
 
       <!-- Sidebar Footer Controls -->
       <div class="sidebar-footer">
-        <button class="footer-btn dark-mode-toggle-sidebar" id="darkModeTogglePortal" title="Chuyển giao diện">
+        <button class="footer-btn" id="btnOpenProfileModal" title="Hồ sơ cá nhân">
+          <svg viewBox="0 0 24 24" style="width:16px; height:16px; fill:currentColor;">
+            <path d="M12,4A4,4 0 0,1 16,8A4,4 0 0,1 12,12A4,4 0 0,1 8,8A4,4 0 0,1 12,4M12,14C16.42,14 20,15.79 20,18V20H4V18C4,15.79 7.58,14 12,14Z" />
+          </svg>
+          <span>Hồ sơ cá nhân</span>
+        </button>
+        <button class="footer-btn dark-mode-toggle-sidebar" id="darkModeTogglePortal" title="Đổi giao diện">
           <svg viewBox="0 0 24 24" class="theme-icon">
             <path
               d="M12,18C11.11,18 10.26,17.8 9.5,17.45C11.56,16.5 13,14.42 13,12C13,9.58 11.56,7.5 9.5,6.55C10.26,6.2 11.11,6 12,6A6,6 0 0,1 18,12A6,6 0 0,1 12,18M20,8.69V4H15.31L12,0.69L8.69,4H4V8.69L0.69,12L4,15.31V20H8.69L12,23.31L15.31,20H20V15.31L23.31,12L20,8.69Z" />
