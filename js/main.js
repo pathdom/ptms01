@@ -981,31 +981,36 @@ document.addEventListener('DOMContentLoaded', () => {
       console.error("Login failed:", error);
       
       // Auto-create student portal user on-the-fly if they log in with default password "123456" and exist in the "students" collection
-      if (error.code === 'auth/user-not-found' && password === '123456') {
+      // Firebase modern auth projects might return 'auth/invalid-credential' instead of 'auth/user-not-found' when email enumeration protection is active.
+      if ((error.code === 'auth/user-not-found' || error.code === 'auth/invalid-credential') && password === '123456') {
         try {
           const studentQuery = await db.collection("students").where("email", "==", email).get();
           if (!studentQuery.empty) {
-            showToast("Đang tự động kích hoạt tài khoản học viên...", "info");
-            const studentDoc = studentQuery.docs[0];
-            const studentData = studentDoc.data();
-            
-            // Create user account in Firebase Auth
-            const userCredential = await auth.createUserWithEmailAndPassword(email, password);
-            const uid = userCredential.user.uid;
-            
-            // Save to users collection
-            await db.collection("users").doc(uid).set({
-              name: studentData.name,
-              email: email,
-              role: "student",
-              defaultPassword: "123456",
-              passwordChanged: false,
-              createdAt: firebase.firestore.FieldValue.serverTimestamp()
-            });
-            
-            showToast("Kích hoạt tài khoản học viên thành công! Đang tự động đăng nhập...", "success");
-            // Firebase automatically signs in the user upon creation. We sync session naturally.
-            return;
+            // Check if the user document already exists in users collection to avoid duplicate creation
+            const userQuery = await db.collection("users").where("email", "==", email).get();
+            if (userQuery.empty) {
+              showToast("Đang tự động kích hoạt tài khoản học viên...", "info");
+              const studentDoc = studentQuery.docs[0];
+              const studentData = studentDoc.data();
+              
+              // Create user account in Firebase Auth
+              const userCredential = await auth.createUserWithEmailAndPassword(email, password);
+              const uid = userCredential.user.uid;
+              
+              // Save to users collection
+              await db.collection("users").doc(uid).set({
+                name: studentData.name,
+                email: email,
+                role: "student",
+                defaultPassword: "123456",
+                passwordChanged: false,
+                createdAt: firebase.firestore.FieldValue.serverTimestamp()
+              });
+              
+              showToast("Kích hoạt tài khoản học viên thành công! Đang tự động đăng nhập...", "success");
+              // Firebase automatically signs in the user upon creation. We sync session naturally.
+              return;
+            }
           }
         } catch (createErr) {
           console.error("Failed to auto-create student user during login:", createErr);
@@ -1013,20 +1018,23 @@ document.addEventListener('DOMContentLoaded', () => {
       }
 
       // Auto-create admin if logging in with admin@domain.com for the first time
-      if (email === 'admin@domain.com' && error.code === 'auth/user-not-found') {
+      if (email === 'admin@domain.com' && (error.code === 'auth/user-not-found' || error.code === 'auth/invalid-credential')) {
         try {
-          showToast("Đang tự động khởi tạo tài khoản Admin...", "info");
-          const userCredential = await auth.createUserWithEmailAndPassword(email, password);
-          const uid = userCredential.user.uid;
-          await db.collection("users").doc(uid).set({
-            name: "Admin Aladdin Group",
-            email: "admin@domain.com",
-            role: "admin",
-            createdAt: firebase.firestore.FieldValue.serverTimestamp()
-          });
-          showToast("Khởi tạo tài khoản Admin thành công! Đang tự động đăng nhập...", "success");
-          // Firebase automatically signs in the user upon creation. We sync session naturally.
-          return;
+          const userQuery = await db.collection("users").where("email", "==", email).get();
+          if (userQuery.empty) {
+            showToast("Đang tự động khởi tạo tài khoản Admin...", "info");
+            const userCredential = await auth.createUserWithEmailAndPassword(email, password);
+            const uid = userCredential.user.uid;
+            await db.collection("users").doc(uid).set({
+              name: "Admin Aladdin Group",
+              email: "admin@domain.com",
+              role: "admin",
+              createdAt: firebase.firestore.FieldValue.serverTimestamp()
+            });
+            showToast("Khởi tạo tài khoản Admin thành công! Đang tự động đăng nhập...", "success");
+            // Firebase automatically signs in the user upon creation. We sync session naturally.
+            return;
+          }
         } catch (createErr) {
           console.error("Failed to auto-create admin:", createErr);
           if (createErr.code === 'auth/operation-not-allowed') {
@@ -1043,8 +1051,8 @@ document.addEventListener('DOMContentLoaded', () => {
         errorMsg = "LỖI HỆ THỐNG: Đăng nhập bằng Email/Mật khẩu chưa được kích hoạt trên Firebase Console của bạn. Vui lòng vào Console -> Authentication -> Sign-in method -> bật 'Email/Password'!";
       } else if (error.code === 'auth/invalid-email') {
         errorMsg = "Địa chỉ email không hợp lệ!";
-      } else if (error.code === 'auth/user-not-found') {
-        errorMsg = "Không tìm thấy tài khoản đăng ký với email này!";
+      } else if (error.code === 'auth/user-not-found' || error.code === 'auth/invalid-credential') {
+        errorMsg = "Tên đăng nhập hoặc mật khẩu không chính xác!";
       } else if (error.code === 'auth/wrong-password') {
         errorMsg = "Mật khẩu không chính xác!";
       } else {
