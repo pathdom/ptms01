@@ -4683,12 +4683,29 @@ document.addEventListener('DOMContentLoaded', () => {
           if (doc.exists) {
             currentUser = doc.data();
           } else {
-            // Fallback default admin profile in case of delay
-            currentUser = {
-              name: "Admin ThinkEdu",
-              email: user.email,
-              role: user.email === 'admin@domain.com' ? 'admin' : 'staff'
-            };
+            // Self-healing database recovery: check if user is a student in students collection
+            const studentQuery = await db.collection("students").where("email", "==", user.email).get();
+            if (!studentQuery.empty) {
+              const studentData = studentQuery.docs[0].data();
+              currentUser = {
+                name: studentData.name,
+                email: user.email,
+                role: "student",
+                defaultPassword: "123456",
+                passwordChanged: false,
+                createdAt: firebase.firestore.FieldValue.serverTimestamp()
+              };
+              // Auto-restore missing user document
+              await db.collection("users").doc(user.uid).set(currentUser);
+              console.log(`Self-healed: restored users document for student ${user.email}`);
+            } else {
+              // Fallback default admin or staff profile in case of delay
+              currentUser = {
+                name: user.email === 'admin@domain.com' ? "Admin Aladdin Group" : "Nhân viên Aladdin",
+                email: user.email,
+                role: user.email === 'admin@domain.com' ? 'admin' : 'staff'
+              };
+            }
           }
 
           // Sync credentials to UI headers
