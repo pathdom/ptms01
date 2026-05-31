@@ -405,43 +405,74 @@
           </div>
 
           <!-- Main Dashboard Canvas -->
-          <div class="dashboard-canvas">
-            <div class="users-split-grid">
-              <!-- Create User Form (Left) -->
-              <div class="user-form-card">
-                <h3>+ TẠO TÀI KHOẢN MỚI</h3>
-                <form id="createStaffUserForm">
-                  <div class="form-group-login">
-                    <label for="newStaffName">Họ và tên nhân viên *</label>
-                    <input type="text" id="newStaffName" placeholder="Nhập tên nhân viên (ví dụ: Nguyễn Văn A)"
-                      required>
-                  </div>
-                  <div class="form-group-login">
-                    <label for="newStaffEmail">Địa chỉ Email nhân viên *</label>
-                    <input type="email" id="newStaffEmail" placeholder="Nhập địa chỉ email (ví dụ: nhanvien@domain.com)"
-                      required>
-                  </div>
-                  <div class="form-group-login">
-                    <label for="newStaffPassword">Mật khẩu ban đầu *</label>
-                    <input type="password" id="newStaffPassword" placeholder="Nhập mật khẩu (ví dụ: Staff123@)"
-                      required>
-                  </div>
-                  <button type="submit" class="btn-submit-login">TẠO TÀI KHOẢN NHÂN VIÊN</button>
-                </form>
+          <div class="dashboard-canvas" style="padding: 2rem; overflow-y: auto; flex: 1;">
+            <div class="users-split-grid"
+              style="display: grid; grid-template-columns: 1fr 1.5fr; gap: 2rem; align-items: start;">
+              <!-- Left Column: Forms Wrapper -->
+              <div style="display: flex; flex-direction: column; gap: 1.5rem; width: 100%;">
+                <!-- Create User Form (Left) -->
+                <div class="user-form-card"
+                  style="background: var(--bg-card); padding: 2rem; border-radius: var(--border-radius-lg); border: 1px solid var(--border); box-shadow: var(--shadow-sm);">
+                  <h3
+                    style="font-family: var(--font-serif); font-size: 1.1rem; border-bottom: 1px solid var(--border); padding-bottom: 0.75rem; margin-bottom: 1.5rem; letter-spacing: 0.5px; color: var(--text-main);">
+                    + TẠO TÀI KHOẢN MỚI</h3>
+                  <form id="createStaffUserForm">
+                    <div class="form-group-login" style="margin-bottom: 1rem;">
+                      <label for="newStaffName">Họ và tên nhân viên *</label>
+                      <input type="text" id="newStaffName" placeholder="Nhập tên nhân viên (ví dụ: Nguyễn Văn A)" required
+                        style="padding: 0.75rem 1rem; border-radius: var(--border-radius-md); border: 1px solid var(--border); background: var(--bg-primary); color: var(--text-main); font-family: inherit; font-size: inherit; width: 100%;">
+                    </div>
+                    <div class="form-group-login" style="margin-bottom: 1rem;">
+                      <label for="newStaffEmail">Địa chỉ Email nhân viên *</label>
+                      <input type="email" id="newStaffEmail" placeholder="Nhập địa chỉ email (ví dụ: nhanvien@domain.com)" required
+                        style="padding: 0.75rem 1rem; border-radius: var(--border-radius-md); border: 1px solid var(--border); background: var(--bg-primary); color: var(--text-main); font-family: inherit; font-size: inherit; width: 100%;">
+                    </div>
+                    <div class="form-group-login" style="margin-bottom: 1.5rem;">
+                      <label for="newStaffPassword">Mật khẩu ban đầu *</label>
+                      <input type="password" id="newStaffPassword" value="123456" placeholder="Nhập mật khẩu" required
+                        style="padding: 0.75rem 1rem; border-radius: var(--border-radius-md); border: 1px solid var(--border); background: var(--bg-primary); color: var(--text-main); font-family: inherit; font-size: inherit; width: 100%;">
+                    </div>
+                    <button type="submit" class="btn-submit-login" style="margin-top: 0; width: 100%;">TẠO TÀI KHOẢN NHÂN VIÊN</button>
+                  </form>
+                </div>
+
+                <!-- Reset Password Card (Left Column - Stacked & Compact) -->
+                <div class="user-form-card"
+                  style="background: var(--bg-card); padding: 1.25rem; border-radius: var(--border-radius-lg); border: 1px solid var(--border); box-shadow: var(--shadow-sm); margin-top: 0;">
+                  <h3
+                    style="font-family: var(--font-serif); font-size: 0.95rem; border-bottom: 1px solid var(--border); padding-bottom: 0.5rem; margin-bottom: 1rem; letter-spacing: 0.5px; color: var(--text-main);">
+                    🔄 KHÔI PHỤC MẬT KHẨU</h3>
+                  <form id="resetStaffPasswordForm">
+                    <div class="form-group-login" style="margin-bottom: 0.75rem;">
+                      <label for="resetStaffEmail" style="font-size: 0.75rem; margin-bottom: 0.25rem; display: block; font-weight: 600; color: var(--text-muted);">Email nhân viên cần khôi phục *</label>
+                      <input type="email" id="resetStaffEmail" placeholder="Nhập email nhân viên..." required
+                        style="padding: 0.5rem 0.75rem; border-radius: var(--border-radius-md); border: 1px solid var(--border); background: var(--bg-primary); color: var(--text-main); font-family: inherit; font-size: 0.8rem; width: 100%; outline: none; height: 36px;">
+                    </div>
+                    <div class="form-group-login" style="margin-bottom: 1rem;">
+                      <label for="resetStaffNewPassword" style="font-size: 0.75rem; margin-bottom: 0.25rem; display: block; font-weight: 600; color: var(--text-muted);">Mật khẩu mặc định mới *</label>
+                      <input type="password" id="resetStaffNewPassword" placeholder="Nhập mật khẩu mặc định mới..." required
+                        style="padding: 0.5rem 0.75rem; border-radius: var(--border-radius-md); border: 1px solid var(--border); background: var(--bg-primary); color: var(--text-main); font-family: inherit; font-size: 0.8rem; width: 100%; outline: none; height: 36px;">
+                    </div>
+                    <button type="submit" class="btn-submit-login" style="width: 100%; margin-top: 0; padding: 0.6rem; font-size: 0.8rem; height: auto; background: var(--text-main);">RESET MẬT KHẨU</button>
+                  </form>
+                </div>
               </div>
 
               <!-- Users list Table (Right) -->
-              <div class="user-list-card">
-                <h3>DANH SÁCH TÀI KHOẢN NHÂN VIÊN</h3>
-                <div class="mini-table-container">
-                  <table class="financial-table">
+              <div class="user-list-card"
+                style="background: var(--bg-card); padding: 2rem; border-radius: var(--border-radius-lg); border: 1px solid var(--border); box-shadow: var(--shadow-sm); overflow: hidden;">
+                <h3
+                  style="font-family: var(--font-serif); font-size: 1.1rem; border-bottom: 1px solid var(--border); padding-bottom: 0.75rem; margin-bottom: 1.5rem; letter-spacing: 0.5px; color: var(--text-main);">
+                  DANH SÁCH TÀI KHOẢN NHÂN VIÊN</h3>
+                <div class="mini-table-container" style="max-height: 500px; overflow-y: auto;">
+                  <table class="financial-table" style="width: 100%; border-collapse: collapse;">
                     <thead>
-                      <tr>
-                        <th>HỌ VÀ TÊN</th>
-                        <th>TÀI KHOẢN (EMAIL)</th>
-                        <th>MẬT KHẨU</th>
-                        <th>VAI TRÒ</th>
-                        <th style="text-align: center;">XÓA</th>
+                      <tr style="border-bottom: 2px solid var(--border);">
+                        <th style="padding: 0.75rem 0.5rem; font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted);">HỌ VÀ TÊN</th>
+                        <th style="padding: 0.75rem 0.5rem; font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted);">TÀI KHOẢN (EMAIL)</th>
+                        <th style="padding: 0.75rem 0.5rem; font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted);">MẬT KHẨU</th>
+                        <th style="padding: 0.75rem 0.5rem; font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted);">VAI TRÒ</th>
+                        <th style="text-align: center; padding: 0.75rem 0.5rem; font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted);">XÓA</th>
                       </tr>
                     </thead>
                     <tbody id="staffUsersTableBody">

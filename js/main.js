@@ -1197,10 +1197,17 @@ document.addEventListener('DOMContentLoaded', () => {
           } catch(e) {}
         }
         
+        let passwordDisplay = "";
+        if (user.passwordChanged) {
+          passwordDisplay = `<span style="color: #10B981; font-weight: 600; font-size: 0.75rem; background: rgba(16, 185, 129, 0.1); padding: 0.2rem 0.5rem; border-radius: 4px;">Đã đổi MK</span>`;
+        } else {
+          passwordDisplay = `<span class="font-mono" style="font-weight: 600; color: var(--text-muted); font-size: 0.8rem;">${user.defaultPassword || "123456"}</span>`;
+        }
+
         tr.innerHTML = `
           <td style="text-align: center;"><strong>${user.name}</strong><br><span style="font-size:0.7rem; color:var(--text-muted);">Tạo ngày: ${dateString}</span></td>
           <td style="text-align: center;"><span class="font-mono" style="font-weight:500;">${user.email}</span></td>
-          <td style="text-align: center;"><span class="font-mono" style="color:var(--text-muted); font-weight:500;">********</span></td>
+          <td style="text-align: center;">${passwordDisplay}</td>
           <td style="text-align: center;"><span class="crm-badge badge-danghoc">Nhân viên</span></td>
           <td style="text-align: center;">
             <button class="action-icon-btn btn-delete-staff" data-uid="${user.uid}" title="Xóa tài khoản" style="color:#EF4444; background:none; border:none; cursor:pointer; padding:6px; border-radius:50%;">
@@ -1246,6 +1253,8 @@ document.addEventListener('DOMContentLoaded', () => {
         name: name,
         email: email,
         role: "staff",
+        defaultPassword: password,
+        passwordChanged: false,
         createdAt: firebase.firestore.FieldValue.serverTimestamp()
       });
 
@@ -1358,7 +1367,7 @@ document.addEventListener('DOMContentLoaded', () => {
             </button>
           `;
         } else {
-          passwordDisplay = `<span class="font-mono" style="font-weight: 600; color: var(--text-muted); font-size: 0.8rem;">123456</span> <span style="font-size: 0.7rem; color: var(--text-muted); background: var(--bg-primary); border: 1px solid var(--border); padding: 0.1rem 0.3rem; border-radius: 3px; margin-left: 4px;">Mặc định</span>`;
+          passwordDisplay = `<span class="font-mono" style="font-weight: 600; color: var(--text-muted); font-size: 0.8rem;">123456</span>`;
           actionBtn = `
             <button class="action-icon-btn btn-delete-student-profile-only" data-id="${student.id}" title="Xóa hồ sơ" style="color:#EF4444; background:none; border:none; cursor:pointer; padding:6px; border-radius:50%;">
               <svg viewBox="0 0 24 24" style="width: 18px; height: 18px; fill: currentColor;"><path d="M19,4H15.5L14.5,3H9.5L8.5,4H5V6H19M6,19A2,2 0 0,0 8,21H16A2,2 0 0,0 18,19V7H6V19Z"/></svg>
@@ -1557,6 +1566,63 @@ document.addEventListener('DOMContentLoaded', () => {
       } catch (err) {
         console.error("Reset student password error:", err);
         showToast("Lỗi khi reset mật khẩu: " + err.message, "error");
+      }
+    });
+  }
+
+  // Bind Submit Reset Staff Password Form
+  const resetStaffPasswordForm = document.getElementById('resetStaffPasswordForm');
+  if (resetStaffPasswordForm) {
+    resetStaffPasswordForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      const email = document.getElementById('resetStaffEmail').value.trim().toLowerCase();
+      const newDefaultPassword = document.getElementById('resetStaffNewPassword').value;
+
+      if (!email || !newDefaultPassword) {
+        showToast("Vui lòng nhập đầy đủ email và mật khẩu mặc định mới!", "error");
+        return;
+      }
+
+      if (newDefaultPassword.length < 6) {
+        showToast("Mật khẩu mới phải tối thiểu 6 ký tự!", "error");
+        return;
+      }
+
+      try {
+        showToast("Đang thực hiện reset mật khẩu nhân viên...", "info");
+
+        // 1. Verify user exists and is staff
+        const userSnap = await db.collection("users")
+          .where("email", "==", email)
+          .where("role", "==", "staff")
+          .get();
+
+        if (userSnap.empty) {
+          showToast("Không tìm thấy tài khoản nhân viên với email này!", "error");
+          return;
+        }
+
+        let userDocId = "";
+        userSnap.forEach(doc => {
+          userDocId = doc.id;
+        });
+
+        // 2. Send Password Reset Email in Firebase Authentication
+        await auth.sendPasswordResetEmail(email);
+
+        // 3. Reset the status in Firestore (so defaultPassword is newDefaultPassword and passwordChanged is false)
+        await db.collection("users").doc(userDocId).update({
+          defaultPassword: newDefaultPassword,
+          passwordChanged: false
+        });
+
+        showToast(`Đã gửi email khôi phục mật khẩu và cập nhật mật khẩu mặc định mới cho nhân viên!`, "success");
+        resetStaffPasswordForm.reset();
+        renderStaffUsersList();
+      } catch (err) {
+        console.error("Reset staff password error:", err);
+        showToast("Lỗi khi reset mật khẩu nhân viên: " + err.message, "error");
       }
     });
   }
