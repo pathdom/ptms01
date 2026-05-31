@@ -1349,7 +1349,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   };
 
-  const handleCreateStudentUser = async (email, password, name, code, phone, country, status, notes) => {
+  const handleCreateStudentUser = async (email, password, name, code, phone, country, status, learningMonth, notes) => {
     const secondaryAppName = "secondary_student_" + Math.random().toString(36).substring(7);
     const secondaryApp = firebase.initializeApp(firebaseConfig, secondaryAppName);
     const secondaryAuth = secondaryApp.auth();
@@ -1375,6 +1375,7 @@ document.addEventListener('DOMContentLoaded', () => {
         phone: phone,
         country: country,
         status: status,
+        learningMonth: learningMonth,
         notes: notes,
         createdAt: firebase.firestore.FieldValue.serverTimestamp(),
         updatedAt: firebase.firestore.FieldValue.serverTimestamp()
@@ -1415,6 +1416,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const newCountry = document.getElementById('newStudentCountry').value;
       const newPassword = document.getElementById('newStudentPassword').value;
       const newStatus = document.getElementById('newStudentStatus').value;
+      const newLearningMonth = document.getElementById('newStudentLearningMonth').value;
       const newNotes = document.getElementById('newStudentNotes').value.trim();
 
       if (!newName || !newCode || !newEmail || !newPhone || !newPassword) {
@@ -1427,7 +1429,7 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
       }
 
-      handleCreateStudentUser(newEmail, newPassword, newName, newCode, newPhone, newCountry, newStatus, newNotes);
+      handleCreateStudentUser(newEmail, newPassword, newName, newCode, newPhone, newCountry, newStatus, newLearningMonth, newNotes);
     });
   }
 
@@ -2764,6 +2766,7 @@ document.addEventListener('DOMContentLoaded', () => {
           console.log("Pre-populating Firestore students database...");
           for (const s of defaultStudents) {
             s.createdAt = firebase.firestore.FieldValue.serverTimestamp();
+            s.learningMonth = "Tháng 1";
             await db.collection("students").add(s);
           }
           return;
@@ -2783,6 +2786,7 @@ document.addEventListener('DOMContentLoaded', () => {
           const extraStudents = defaultStudents.slice(5);
           for (const s of extraStudents) {
             s.createdAt = firebase.firestore.FieldValue.serverTimestamp();
+            s.learningMonth = "Tháng 1";
             await db.collection("students").add(s);
           }
           showToast("Đang tự động khởi tạo thêm 30 hồ sơ học viên mẫu...", "info");
@@ -3031,6 +3035,7 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById("detailStudentEmail").textContent = student.email;
     document.getElementById("detailStudentPhone").textContent = student.phone;
     document.getElementById("detailStudentCountry").textContent = student.country;
+    document.getElementById("detailStudentLearningMonth").textContent = student.learningMonth || "Tháng 1";
 
     // Badge styling
     const badge = document.getElementById("detailStudentStatus");
@@ -3070,6 +3075,7 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById("studentPhone").value = student.phone;
     document.getElementById("studentCountry").value = student.country;
     document.getElementById("studentStatus").value = student.status;
+    document.getElementById("studentLearningMonth").value = student.learningMonth || "Tháng 1";
     document.getElementById("studentNotes").value = student.notes || "";
 
     studentModal.style.display = "flex";
@@ -3100,6 +3106,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const phone = document.getElementById("studentPhone").value.trim();
       const country = document.getElementById("studentCountry").value;
       const status = document.getElementById("studentStatus").value;
+      const learningMonth = document.getElementById("studentLearningMonth").value;
       const notes = document.getElementById("studentNotes").value.trim();
 
       if (!name || !code || !email || !phone) {
@@ -3114,6 +3121,7 @@ document.addEventListener('DOMContentLoaded', () => {
         phone,
         country,
         status,
+        learningMonth,
         notes,
         updatedAt: firebase.firestore.FieldValue.serverTimestamp()
       };
@@ -3174,11 +3182,12 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // CSV Generation with UTF-8 BOM
-    let csvContent = "MÃ HỌC VIÊN,HỌ VÀ TÊN,EMAIL,SỐ ĐIỆN THOẠI,QUỐC GIA ĐẾN,TRẠNG THÁI HỒ SƠ,GHI CHÚ\n";
+    let csvContent = "MÃ HỌC VIÊN,HỌ VÀ TÊN,EMAIL,SỐ ĐIỆN THOẠI,QUỐC GIA ĐẾN,TRẠNG THÁI HỒ SƠ,LỘ TRÌNH HỌC TẬP,GHI CHÚ\n";
 
     filtered.forEach((s) => {
       const notesClean = (s.notes || "").replace(/"/g, '""').replace(/\n/g, ' ');
-      csvContent += `"${s.code}","${s.name}","${s.email}","${s.phone}","${s.country}","${s.status}","${notesClean}"\n`;
+      const lMonth = s.learningMonth || "Tháng 1";
+      csvContent += `"${s.code}","${s.name}","${s.email}","${s.phone}","${s.country}","${s.status}","${lMonth}","${notesClean}"\n`;
     });
 
     // Create download anchor with UTF-8 BOM (0xEF, 0xBB, 0xBF)
@@ -3802,19 +3811,27 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
               });
 
-              // Map status to milestones
-              let activeStepIndex = 1; // Default
-              if (profileData.status === "Đang học") {
+              // Map learningMonth to milestones (Tháng 1 -> Month 1 active, etc.)
+              let activeStepIndex = 1; // Default Month 1
+              const monthStr = profileData.learningMonth || "Tháng 1";
+              if (monthStr === "Tháng 1") {
+                activeStepIndex = 1;
+              } else if (monthStr === "Tháng 2") {
                 activeStepIndex = 2;
-              } else if (profileData.status === "Đang làm hồ sơ") {
+              } else if (monthStr === "Tháng 3") {
                 activeStepIndex = 3;
-              } else if (profileData.status === "Chờ phỏng vấn") {
+              } else if (monthStr === "Tháng 4") {
                 activeStepIndex = 4;
-              } else if (profileData.status === "Đã trúng tuyển") {
+              } else if (monthStr === "Tháng 5") {
                 activeStepIndex = 5;
+              } else if (monthStr === "Tháng 6") {
+                activeStepIndex = 6;
+              } else if (monthStr === "Hoàn thành") {
+                activeStepIndex = 7; // All completed
               }
 
-              for (let i = 1; i <= 5; i++) {
+              // Update milestone steps from 1 to 6
+              for (let i = 1; i <= 6; i++) {
                 const step = document.getElementById(`milestone-step-${i}`);
                 if (!step) continue;
                 
@@ -3828,6 +3845,18 @@ document.addEventListener('DOMContentLoaded', () => {
                     dot.className = 'milestone-dot completed';
                     dot.style.background = 'var(--accent)';
                     dot.style.border = '4px solid var(--accent-light)';
+                    
+                    // Securely insert completed checkmark SVG
+                    dot.replaceChildren();
+                    const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+                    svg.setAttribute("viewBox", "0 0 24 24");
+                    svg.style.width = "12px";
+                    svg.style.height = "12px";
+                    svg.style.fill = "#fff";
+                    const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+                    path.setAttribute("d", "M21,7L9,19L3.5,13.5L4.91,12.09L9,16.17L19.59,5.59L21,7Z");
+                    svg.appendChild(path);
+                    dot.appendChild(svg);
                   }
                   if (badge) {
                     badge.textContent = 'ĐÃ HOÀN THÀNH';
@@ -3842,12 +3871,28 @@ document.addEventListener('DOMContentLoaded', () => {
                     dot.className = 'milestone-dot active';
                     dot.style.background = '#FAF9F6';
                     dot.style.border = '5px solid var(--accent)';
+                    dot.replaceChildren();
                   }
                   if (badge) {
-                    badge.textContent = 'ĐANG THỰC HIỆN';
-                    badge.style.background = 'var(--border)';
-                    badge.style.color = 'var(--text-main)';
+                    badge.textContent = 'ĐANG HỌC';
+                    badge.style.background = 'var(--accent)';
+                    badge.style.color = '#fff';
                     badge.style.border = 'none';
+                  }
+                } else {
+                  // Pending
+                  step.style.opacity = '0.7';
+                  if (dot) {
+                    dot.className = 'milestone-dot';
+                    dot.style.background = 'var(--border)';
+                    dot.style.border = '4px solid var(--bg-card)';
+                    dot.replaceChildren();
+                  }
+                  if (badge) {
+                    badge.textContent = 'CHƯA BẮT ĐẦU';
+                    badge.style.background = 'transparent';
+                    badge.style.color = 'var(--text-muted)';
+                    badge.style.border = '1px solid var(--border)';
                   }
                 }
               }
