@@ -3084,7 +3084,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (filteredList.length === 0) {
       tableBody.innerHTML = `
         <tr>
-          <td colspan="6" style="text-align:center; padding: 3rem; color:var(--text-muted); font-size:0.85rem;">
+          <td colspan="7" style="text-align:center; padding: 3rem; color:var(--text-muted); font-size:0.85rem;">
             Không tìm thấy hồ sơ học viên nào phù hợp.
           </td>
         </tr>
@@ -3101,6 +3101,18 @@ document.addEventListener('DOMContentLoaded', () => {
       else if (student.status === "Đã trúng tuyển") badgeClass = "badge-selected";
       else if (student.status === "Đang làm hồ sơ") badgeClass = "badge-processing";
 
+      // Parse enrollment date
+      let enrollDate = new Date();
+      if (student.createdAt) {
+        if (typeof student.createdAt.toDate === 'function') {
+          enrollDate = student.createdAt.toDate();
+        } else {
+          enrollDate = new Date(student.createdAt);
+        }
+      }
+      const padZero = (n) => n < 10 ? '0' + n : n;
+      const enrollDateStr = `${padZero(enrollDate.getDate())}/${padZero(enrollDate.getMonth() + 1)}/${enrollDate.getFullYear()}`;
+
       tr.innerHTML = `
         <td style="text-align: center;"><span class="font-mono" style="font-weight:600; color:var(--accent);">${student.code}</span></td>
         <td style="text-align: center;"><strong>${student.name}</strong></td>
@@ -3110,6 +3122,10 @@ document.addEventListener('DOMContentLoaded', () => {
         </td>
         <td style="text-align: center;"><strong>${student.country}</strong></td>
         <td style="text-align: center;"><span class="crm-badge ${badgeClass}">${student.status}</span></td>
+        <td style="text-align: center;">
+          <span style="font-size:0.8rem; display:block; text-align: center; font-weight: 500;">${enrollDateStr}</span>
+          <span style="font-size:0.72rem; color:var(--text-muted); display:block; text-align: center;">Khóa 6 tháng</span>
+        </td>
         <td style="text-align: center;">
           <div style="display: flex; gap: 0.5rem; justify-content: center; align-items: center;">
             <button class="action-icon-btn btn-view-student" data-id="${student.id}" title="Chi tiết" style="padding: 6px; color: var(--accent); background:none; border:none; cursor:pointer;">
