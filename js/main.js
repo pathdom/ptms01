@@ -1058,8 +1058,15 @@ document.addEventListener('DOMContentLoaded', () => {
   if (portalLoginForm) {
     portalLoginForm.addEventListener('submit', (e) => {
       e.preventDefault();
-      const emailVal = document.getElementById('loginUsername').value.trim();
+      let emailVal = document.getElementById('loginUsername').value.trim().toLowerCase();
       const passwordVal = document.getElementById('loginPassword').value;
+      
+      // Auto-append @ptms.hv domain for non-admin accounts if not explicitly typed by the user
+      if (emailVal !== 'admin@domain.com' && !emailVal.endsWith('@ptms.hv')) {
+        const parts = emailVal.split('@');
+        emailVal = parts[0] + '@ptms.hv';
+      }
+      
       handlePortalLogin(emailVal, passwordVal);
     });
   }
@@ -1287,7 +1294,11 @@ document.addEventListener('DOMContentLoaded', () => {
       e.preventDefault();
       
       const newName = document.getElementById('newStaffName').value.trim();
-      const newEmail = document.getElementById('newStaffEmail').value.trim().toLowerCase();
+      let newEmail = document.getElementById('newStaffEmail').value.trim().toLowerCase();
+      if (newEmail && !newEmail.endsWith('@ptms.hv')) {
+        const parts = newEmail.split('@');
+        newEmail = parts[0] + '@ptms.hv';
+      }
       const newPassword = document.getElementById('newStaffPassword').value;
 
       if (!newName || !newEmail || !newPassword) {
@@ -1491,7 +1502,11 @@ document.addEventListener('DOMContentLoaded', () => {
       
       const newName = document.getElementById('newStudentName').value.trim();
       const newCode = document.getElementById('newStudentCode').value.trim().toUpperCase();
-      const newEmail = document.getElementById('newStudentEmail').value.trim().toLowerCase();
+      let newEmail = document.getElementById('newStudentEmail').value.trim().toLowerCase();
+      if (newEmail && !newEmail.endsWith('@ptms.hv')) {
+        const parts = newEmail.split('@');
+        newEmail = parts[0] + '@ptms.hv';
+      }
       const newPhone = document.getElementById('newStudentPhone').value.trim();
       const newCountry = document.getElementById('newStudentCountry').value;
       const newPassword = document.getElementById('newStudentPassword').value;
@@ -1519,7 +1534,11 @@ document.addEventListener('DOMContentLoaded', () => {
     resetStudentPasswordForm.addEventListener('submit', async (e) => {
       e.preventDefault();
       
-      const email = document.getElementById('resetStudentEmail').value.trim().toLowerCase();
+      let email = document.getElementById('resetStudentEmail').value.trim().toLowerCase();
+      if (email && !email.endsWith('@ptms.hv')) {
+        const parts = email.split('@');
+        email = parts[0] + '@ptms.hv';
+      }
       const newDefaultPassword = document.getElementById('resetStudentNewPassword').value;
 
       if (!email || !newDefaultPassword) {
@@ -1576,7 +1595,11 @@ document.addEventListener('DOMContentLoaded', () => {
     resetStaffPasswordForm.addEventListener('submit', async (e) => {
       e.preventDefault();
       
-      const email = document.getElementById('resetStaffEmail').value.trim().toLowerCase();
+      let email = document.getElementById('resetStaffEmail').value.trim().toLowerCase();
+      if (email && !email.endsWith('@ptms.hv')) {
+        const parts = email.split('@');
+        email = parts[0] + '@ptms.hv';
+      }
       const newDefaultPassword = document.getElementById('resetStaffNewPassword').value;
 
       if (!email || !newDefaultPassword) {
@@ -2935,7 +2958,13 @@ document.addEventListener('DOMContentLoaded', () => {
       status: "Đang học",
       notes: "Đang hoàn tất các thủ tục khám sức khỏe lao phổi chuẩn bị xin visa du học Hàn Quốc."
     }
-  ];
+  ].map(s => {
+    if (s.email) {
+      const parts = s.email.split('@');
+      s.email = parts[0] + "@ptms.hv";
+    }
+    return s;
+  });
 
   // Setup Student Database real-time observer
   let currentPage = 1;
@@ -2947,8 +2976,49 @@ document.addEventListener('DOMContentLoaded', () => {
     // 1. One-time check and pre-populate missing default students to avoid onSnapshot race conditions
     try {
       const snapshot = await db.collection("students").get();
+      
+      // Perform migration to update all existing student emails in Firestore to end in @ptms.hv
+      for (const doc of snapshot.docs) {
+        const studentData = doc.data();
+        if (studentData.email && !studentData.email.toLowerCase().endsWith("@ptms.hv")) {
+          const parts = studentData.email.split('@');
+          const newEmail = parts[0].toLowerCase().trim() + "@ptms.hv";
+          console.log(`Migrating student email from ${studentData.email} to ${newEmail}`);
+          
+          // Update in students collection
+          await db.collection("students").doc(doc.id).update({
+            email: newEmail
+          });
+
+          // Also check and update the corresponding user account in users collection if it exists
+          const userQuery = await db.collection("users").where("email", "==", studentData.email).get();
+          for (const userDoc of userQuery.docs) {
+            await db.collection("users").doc(userDoc.id).update({
+              email: newEmail
+            });
+            console.log(`Migrating user account email from ${studentData.email} to ${newEmail}`);
+          }
+        }
+      }
+
+      // Also migrate existing staff user emails in users collection to end in @ptms.hv
+      const staffQuery = await db.collection("users").where("role", "==", "staff").get();
+      for (const doc of staffQuery.docs) {
+        const userData = doc.data();
+        if (userData.email && !userData.email.toLowerCase().endsWith("@ptms.hv")) {
+          const parts = userData.email.split('@');
+          const newEmail = parts[0].toLowerCase().trim() + "@ptms.hv";
+          await db.collection("users").doc(doc.id).update({
+            email: newEmail
+          });
+          console.log(`Migrating staff email from ${userData.email} to ${newEmail}`);
+        }
+      }
+
+      // Re-fetch to ensure the existingEmails set is 100% accurate
+      const updatedSnapshot = await db.collection("students").get();
       const existingEmails = new Set();
-      snapshot.forEach(doc => {
+      updatedSnapshot.forEach(doc => {
         const data = doc.data();
         if (data.email) {
           existingEmails.add(data.email.toLowerCase().trim());
@@ -2968,7 +3038,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
       }
     } catch (err) {
-      console.error("Error pre-populating missing default students:", err);
+      console.error("Error pre-populating missing default students & migration:", err);
     }
 
     // 2. Start the real-time observer
