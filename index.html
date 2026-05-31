@@ -490,104 +490,107 @@
           <div class="dashboard-canvas" style="padding: 2rem; overflow-y: auto; flex: 1;">
             <div class="users-split-grid"
               style="display: grid; grid-template-columns: 1fr 1.5fr; gap: 2rem; align-items: start;">
-              <!-- Create User Form (Left) -->
-              <div class="user-form-card"
-                style="background: var(--bg-card); padding: 2rem; border-radius: var(--border-radius-lg); border: 1px solid var(--border); box-shadow: var(--shadow-sm);">
-                <h3
-                  style="font-family: var(--font-serif); font-size: 1.1rem; border-bottom: 1px solid var(--border); padding-bottom: 0.75rem; margin-bottom: 1.5rem; letter-spacing: 0.5px; color: var(--text-main);">
-                  + TẠO TÀI KHOẢN HỌC VIÊN</h3>
-                <form id="createStudentUserForm">
-                  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
-                    <div class="form-group-login" style="margin-bottom: 1rem;">
-                      <label for="newStudentName">Họ và tên *</label>
-                      <input type="text" id="newStudentName" placeholder="Nguyễn Văn A" required
-                        style="padding: 0.75rem 1rem; border-radius: var(--border-radius-md); border: 1px solid var(--border); background: var(--bg-primary); color: var(--text-main); font-family: inherit; font-size: inherit;">
+              <!-- Left Column: Forms Wrapper -->
+              <div style="display: flex; flex-direction: column; gap: 1.5rem; width: 100%;">
+                <!-- Create User Form (Left) -->
+                <div class="user-form-card"
+                  style="background: var(--bg-card); padding: 2rem; border-radius: var(--border-radius-lg); border: 1px solid var(--border); box-shadow: var(--shadow-sm);">
+                  <h3
+                    style="font-family: var(--font-serif); font-size: 1.1rem; border-bottom: 1px solid var(--border); padding-bottom: 0.75rem; margin-bottom: 1.5rem; letter-spacing: 0.5px; color: var(--text-main);">
+                    + TẠO TÀI KHỎAN HỌC VIÊN</h3>
+                  <form id="createStudentUserForm">
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                      <div class="form-group-login" style="margin-bottom: 1rem;">
+                        <label for="newStudentName">Họ và tên *</label>
+                        <input type="text" id="newStudentName" placeholder="Nguyễn Văn A" required
+                          style="padding: 0.75rem 1rem; border-radius: var(--border-radius-md); border: 1px solid var(--border); background: var(--bg-primary); color: var(--text-main); font-family: inherit; font-size: inherit;">
+                      </div>
+                      <div class="form-group-login" style="margin-bottom: 1rem;">
+                        <label for="newStudentCode">Mã học viên *</label>
+                        <input type="text" id="newStudentCode" placeholder="TE-2026-001" required
+                          style="padding: 0.75rem 1rem; border-radius: var(--border-radius-md); border: 1px solid var(--border); background: var(--bg-primary); color: var(--text-main); font-family: inherit; font-size: inherit;">
+                      </div>
                     </div>
                     <div class="form-group-login" style="margin-bottom: 1rem;">
-                      <label for="newStudentCode">Mã học viên *</label>
-                      <input type="text" id="newStudentCode" placeholder="TE-2026-001" required
+                      <label for="newStudentEmail">Địa chỉ Email học viên *</label>
+                      <input type="email" id="newStudentEmail" placeholder="hocvien@gmail.com" required
                         style="padding: 0.75rem 1rem; border-radius: var(--border-radius-md); border: 1px solid var(--border); background: var(--bg-primary); color: var(--text-main); font-family: inherit; font-size: inherit;">
                     </div>
-                  </div>
-                  <div class="form-group-login" style="margin-bottom: 1rem;">
-                    <label for="newStudentEmail">Địa chỉ Email học viên *</label>
-                    <input type="email" id="newStudentEmail" placeholder="hocvien@gmail.com" required
-                      style="padding: 0.75rem 1rem; border-radius: var(--border-radius-md); border: 1px solid var(--border); background: var(--bg-primary); color: var(--text-main); font-family: inherit; font-size: inherit;">
-                  </div>
-                  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
-                    <div class="form-group-login" style="margin-bottom: 1rem;">
-                      <label for="newStudentPhone">Số điện thoại *</label>
-                      <input type="text" id="newStudentPhone" placeholder="0912345678" required
-                        style="padding: 0.75rem 1rem; border-radius: var(--border-radius-md); border: 1px solid var(--border); background: var(--bg-primary); color: var(--text-main); font-family: inherit; font-size: inherit;">
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                      <div class="form-group-login" style="margin-bottom: 1rem;">
+                        <label for="newStudentPhone">Số điện thoại *</label>
+                        <input type="text" id="newStudentPhone" placeholder="0912345678" required
+                          style="padding: 0.75rem 1rem; border-radius: var(--border-radius-md); border: 1px solid var(--border); background: var(--bg-primary); color: var(--text-main); font-family: inherit; font-size: inherit;">
+                      </div>
+                      <div class="form-group-login" style="margin-bottom: 1rem;">
+                        <label for="newStudentCountry">Quốc gia du học *</label>
+                        <select id="newStudentCountry" required
+                          style="padding: 0.75rem 1rem; border-radius: var(--border-radius-md); border: 1px solid var(--border); background: var(--bg-primary); color: var(--text-main); height: 42px; outline: none; font-family: inherit; font-size: inherit;">
+                          <option value="Nhật">Nhật</option>
+                          <option value="Đài">Đài</option>
+                          <option value="Hàn">Hàn</option>
+                        </select>
+                      </div>
                     </div>
-                    <div class="form-group-login" style="margin-bottom: 1rem;">
-                      <label for="newStudentCountry">Quốc gia du học *</label>
-                      <select id="newStudentCountry" required
-                        style="padding: 0.75rem 1rem; border-radius: var(--border-radius-md); border: 1px solid var(--border); background: var(--bg-primary); color: var(--text-main); height: 42px; outline: none; font-family: inherit; font-size: inherit;">
-                        <option value="Nhật">Nhật</option>
-                        <option value="Đài">Đài</option>
-                        <option value="Hàn">Hàn</option>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                      <div class="form-group-login" style="margin-bottom: 1rem;">
+                        <label for="newStudentPassword">Mật khẩu đăng nhập *</label>
+                        <input type="password" id="newStudentPassword" placeholder="Hocvien123@" required
+                          style="padding: 0.75rem 1rem; border-radius: var(--border-radius-md); border: 1px solid var(--border); background: var(--bg-primary); color: var(--text-main); font-family: inherit; font-size: inherit;">
+                      </div>
+                      <div class="form-group-login" style="margin-bottom: 1rem;">
+                        <label for="newStudentStatus">Trạng thái hồ sơ *</label>
+                        <select id="newStudentStatus" required
+                          style="padding: 0.75rem 1rem; border-radius: var(--border-radius-md); border: 1px solid var(--border); background: var(--bg-primary); color: var(--text-main); height: 42px; outline: none; font-family: inherit; font-size: inherit;">
+                          <option value="Đang học">Đang học</option>
+                          <option value="Chờ phỏng vấn">Chờ phỏng vấn</option>
+                          <option value="Đã trúng tuyển">Đã trúng tuyển</option>
+                          <option value="Đang làm hồ sơ">Đang làm hồ sơ</option>
+                        </select>
+                      </div>
+                    </div>
+                    <div class="form-group-login" style="margin-bottom: 1.25rem;">
+                      <label for="newStudentLearningMonth">Tháng học tập hiện tại *</label>
+                      <select id="newStudentLearningMonth" required
+                        style="padding: 0.75rem 1rem; border-radius: var(--border-radius-md); border: 1px solid var(--border); background: var(--bg-primary); color: var(--text-main); height: 42px; outline: none; font-family: inherit; font-size: inherit; width: 100%;">
+                        <option value="Tháng 1">Tháng 1: Xây Dựng Nền Tảng</option>
+                        <option value="Tháng 2">Tháng 2: Phát Triển Phản Xạ</option>
+                        <option value="Tháng 3">Tháng 3: Làm Quen Học Thuật</option>
+                        <option value="Tháng 4">Tháng 4: Tăng Tốc Học Thuật</option>
+                        <option value="Tháng 5">Tháng 5: Luyện Đề Chuyên Sâu</option>
+                        <option value="Tháng 6">Tháng 6: Tổng Ôn & Mô Phỏng</option>
+                        <option value="Hoàn thành">Đã hoàn thành lộ trình</option>
                       </select>
                     </div>
-                  </div>
-                  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
-                    <div class="form-group-login" style="margin-bottom: 1rem;">
-                      <label for="newStudentPassword">Mật khẩu đăng nhập *</label>
-                      <input type="password" id="newStudentPassword" placeholder="Hocvien123@" required
-                        style="padding: 0.75rem 1rem; border-radius: var(--border-radius-md); border: 1px solid var(--border); background: var(--bg-primary); color: var(--text-main); font-family: inherit; font-size: inherit;">
+                    <div class="form-group-login" style="margin-bottom: 1.5rem;">
+                      <label for="newStudentNotes">Ghi chú ban đầu</label>
+                      <textarea id="newStudentNotes" placeholder="Nhập ghi chú hoặc lộ trình..."
+                        style="padding: 0.75rem 1rem; border-radius: var(--border-radius-md); border: 1px solid var(--border); background: var(--bg-primary); color: var(--text-main); resize: vertical; min-height: 80px; font-family: inherit; font-size: inherit; outline: none;"></textarea>
                     </div>
-                    <div class="form-group-login" style="margin-bottom: 1rem;">
-                      <label for="newStudentStatus">Trạng thái hồ sơ *</label>
-                      <select id="newStudentStatus" required
-                        style="padding: 0.75rem 1rem; border-radius: var(--border-radius-md); border: 1px solid var(--border); background: var(--bg-primary); color: var(--text-main); height: 42px; outline: none; font-family: inherit; font-size: inherit;">
-                        <option value="Đang học">Đang học</option>
-                        <option value="Chờ phỏng vấn">Chờ phỏng vấn</option>
-                        <option value="Đã trúng tuyển">Đã trúng tuyển</option>
-                        <option value="Đang làm hồ sơ">Đang làm hồ sơ</option>
-                      </select>
-                    </div>
-                  </div>
-                  <div class="form-group-login" style="margin-bottom: 1.25rem;">
-                    <label for="newStudentLearningMonth">Tháng học tập hiện tại *</label>
-                    <select id="newStudentLearningMonth" required
-                      style="padding: 0.75rem 1rem; border-radius: var(--border-radius-md); border: 1px solid var(--border); background: var(--bg-primary); color: var(--text-main); height: 42px; outline: none; font-family: inherit; font-size: inherit; width: 100%;">
-                      <option value="Tháng 1">Tháng 1: Xây Dựng Nền Tảng</option>
-                      <option value="Tháng 2">Tháng 2: Phát Triển Phản Xạ</option>
-                      <option value="Tháng 3">Tháng 3: Làm Quen Học Thuật</option>
-                      <option value="Tháng 4">Tháng 4: Tăng Tốc Học Thuật</option>
-                      <option value="Tháng 5">Tháng 5: Luyện Đề Chuyên Sâu</option>
-                      <option value="Tháng 6">Tháng 6: Tổng Ôn & Mô Phỏng</option>
-                      <option value="Hoàn thành">Đã hoàn thành lộ trình</option>
-                    </select>
-                  </div>
-                  <div class="form-group-login" style="margin-bottom: 1.5rem;">
-                    <label for="newStudentNotes">Ghi chú ban đầu</label>
-                    <textarea id="newStudentNotes" placeholder="Nhập ghi chú hoặc lộ trình..."
-                      style="padding: 0.75rem 1rem; border-radius: var(--border-radius-md); border: 1px solid var(--border); background: var(--bg-primary); color: var(--text-main); resize: vertical; min-height: 80px; font-family: inherit; font-size: inherit; outline: none;"></textarea>
-                  </div>
-                  <button type="submit" class="btn-submit-login" style="margin-top: 0;">TẠO TÀI KHOẢN HỌC VIÊN</button>
-                </form>
-              </div>
+                    <button type="submit" class="btn-submit-login" style="margin-top: 0;">TẠO TÀI KHOẢN HỌC VIÊN</button>
+                  </form>
+                </div>
 
-              <!-- Reset Password Card (Left Column - Stacked) -->
-              <div class="user-form-card"
-                style="background: var(--bg-card); padding: 2rem; border-radius: var(--border-radius-lg); border: 1px solid var(--border); box-shadow: var(--shadow-sm); margin-top: 1.5rem;">
-                <h3
-                  style="font-family: var(--font-serif); font-size: 1.1rem; border-bottom: 1px solid var(--border); padding-bottom: 0.75rem; margin-bottom: 1.5rem; letter-spacing: 0.5px; color: var(--text-main);">
-                  🔄 KHÔI PHỤC MẬT KHẨU</h3>
-                <form id="resetStudentPasswordForm">
-                  <div class="form-group-login" style="margin-bottom: 1.25rem;">
-                    <label for="resetStudentEmail">Email học viên cần khôi phục *</label>
-                    <input type="email" id="resetStudentEmail" placeholder="Nhập email học viên..." required
-                      style="padding: 0.75rem 1rem; border-radius: var(--border-radius-md); border: 1px solid var(--border); background: var(--bg-primary); color: var(--text-main); font-family: inherit; font-size: inherit; width: 100%; outline: none;">
-                  </div>
-                  <div class="form-group-login" style="margin-bottom: 1.5rem;">
-                    <label for="resetStudentNewPassword">Mật khẩu mặc định mới *</label>
-                    <input type="password" id="resetStudentNewPassword" placeholder="Nhập mật khẩu mặc định mới..." required
-                      style="padding: 0.75rem 1rem; border-radius: var(--border-radius-md); border: 1px solid var(--border); background: var(--bg-primary); color: var(--text-main); font-family: inherit; font-size: inherit; width: 100%; outline: none;">
-                  </div>
-                  <button type="submit" class="btn-submit-login" style="width: 100%; margin-top: 0; background: var(--text-main);">RESET MẬT KHẨU</button>
-                </form>
+                <!-- Reset Password Card (Left Column - Stacked & Compact) -->
+                <div class="user-form-card"
+                  style="background: var(--bg-card); padding: 1.25rem; border-radius: var(--border-radius-lg); border: 1px solid var(--border); box-shadow: var(--shadow-sm); margin-top: 0;">
+                  <h3
+                    style="font-family: var(--font-serif); font-size: 0.95rem; border-bottom: 1px solid var(--border); padding-bottom: 0.5rem; margin-bottom: 1rem; letter-spacing: 0.5px; color: var(--text-main);">
+                    🔄 KHÔI PHỤC MẬT KHẨU</h3>
+                  <form id="resetStudentPasswordForm">
+                    <div class="form-group-login" style="margin-bottom: 0.75rem;">
+                      <label for="resetStudentEmail" style="font-size: 0.75rem; margin-bottom: 0.25rem; display: block; font-weight: 600; color: var(--text-muted);">Email học viên cần khôi phục *</label>
+                      <input type="email" id="resetStudentEmail" placeholder="Nhập email học viên..." required
+                        style="padding: 0.5rem 0.75rem; border-radius: var(--border-radius-md); border: 1px solid var(--border); background: var(--bg-primary); color: var(--text-main); font-family: inherit; font-size: 0.8rem; width: 100%; outline: none; height: 36px;">
+                    </div>
+                    <div class="form-group-login" style="margin-bottom: 1rem;">
+                      <label for="resetStudentNewPassword" style="font-size: 0.75rem; margin-bottom: 0.25rem; display: block; font-weight: 600; color: var(--text-muted);">Mật khẩu mặc định mới *</label>
+                      <input type="password" id="resetStudentNewPassword" placeholder="Nhập mật khẩu mặc định mới..." required
+                        style="padding: 0.5rem 0.75rem; border-radius: var(--border-radius-md); border: 1px solid var(--border); background: var(--bg-primary); color: var(--text-main); font-family: inherit; font-size: 0.8rem; width: 100%; outline: none; height: 36px;">
+                    </div>
+                    <button type="submit" class="btn-submit-login" style="width: 100%; margin-top: 0; padding: 0.6rem; font-size: 0.8rem; height: auto; background: var(--text-main);">RESET MẬT KHẨU</button>
+                  </form>
+                </div>
               </div>
 
 
