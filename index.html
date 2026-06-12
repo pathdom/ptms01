@@ -258,6 +258,12 @@
               </svg>
               <span>Tạo tài khoản HV</span>
             </li>
+            <li class="menu-item" data-target="hrm-dashboard" id="menuItemHRM">
+              <svg viewBox="0 0 24 24" style="width: 20px; height: 20px; fill: currentColor">
+                <path d="M10,2H14A2,2 0 0,1 16,4V6H20A2,2 0 0,1 22,8V19A2,2 0 0,1 20,21H4A2,2 0 0,1 2,19V8A2,2 0 0,1 4,6H8V4A2,2 0 0,1 10,2M14,6V4H10V6H14Z" />
+              </svg>
+              <span>Quản lý HRM</span>
+            </li>
           </ul>
         </nav>
 
@@ -2449,6 +2455,165 @@
                       </thead>
                       <tbody id="adminBlogsTableBody">
                         <!-- Populated dynamically via Firestore -->
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ==========================================
+           TAB HRM. HUMAN RESOURCE MANAGEMENT DASHBOARD
+           ========================================== -->
+        <div id="hrm-dashboard" class="dashboard-wrapper hrm-page-wrapper" style="display: none">
+          <div class="dashboard-container">
+            <!-- Topbar Header -->
+            <div class="dashboard-topbar">
+              <div class="topbar-left">
+                <div class="topbar-title-group">
+                  <h2>Quản Lý Nhân Sự (HRM)</h2>
+                  <div class="breadcrumbs">
+                    <span class="portal-breadcrumb-home">Cổng thông tin</span>
+                    <span class="sep">/</span>
+                    <span class="active-crumb">HRM</span>
+                  </div>
+                </div>
+              </div>
+              <div class="topbar-right">
+                <div class="topbar-user-wrapper" style="position: relative">
+                  <div class="user-profile-badge-inline" style="cursor: pointer; padding: 0.5rem 0.8rem; border-radius: var(--border-radius-md); transition: var(--transition-fast); display: flex; align-items: center; gap: 0.75rem;">
+                    <div class="profile-avatar" id="miniHrmAvatar">DM</div>
+                    <div class="profile-info-desktop">
+                      <span class="name" id="miniHrmName">Đang tải...</span>
+                      <span class="role" id="miniHrmRole">Nhân viên</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- HRM Sub-tabs -->
+            <div class="hrm-subtabs">
+              <button class="hrm-subtab active" data-tab="hrm-staff-tab">👥 Nhân sự & KPI</button>
+              <button class="hrm-subtab" data-tab="hrm-projects-tab">📋 Quản trị Dự án</button>
+              <button class="hrm-subtab" data-tab="hrm-payments-tab">💳 Quy trình Thanh toán</button>
+            </div>
+
+            <!-- ===== TAB 1: STAFF & KPI ===== -->
+            <div id="hrm-staff-tab" class="hrm-tab-content" style="display: block">
+              <!-- KPI Summary -->
+              <div class="hrm-section-header">
+                <span class="hrm-section-title">TỔNG QUAN KPI THEO PHÒNG BAN</span>
+              </div>
+              <div class="hrm-kpi-grid" id="hrmKpiGrid">
+                <!-- Rendered via JS -->
+              </div>
+
+              <!-- Staff List -->
+              <div class="hrm-section-header">
+                <span class="hrm-section-title">DANH SÁCH NHÂN SỰ NỘI BỘ</span>
+                <button type="button" class="btn-submit-login" id="btnOpenHrmStaffModal" style="margin-top:0; width:auto; padding: 0.6rem 1.2rem; font-size: 0.8rem;">+ THÊM NHÂN SỰ</button>
+              </div>
+              <div class="hrm-staff-container">
+                <div class="hrm-filter-bar">
+                  <input type="text" id="hrmStaffSearch" placeholder="Tìm theo tên, email, chức vụ..." />
+                  <select id="hrmStaffDeptFilter">
+                    <option value="All">Tất cả phòng ban</option>
+                    <option value="Tuyển dụng">Tuyển dụng</option>
+                    <option value="Đào tạo">Đào tạo</option>
+                    <option value="Hành chính">Hành chính</option>
+                    <option value="Tư vấn Visa">Tư vấn Visa</option>
+                    <option value="Ban Giám đốc">Ban Giám đốc</option>
+                  </select>
+                </div>
+                <div class="mini-table-container" style="max-height: 500px; overflow-y: auto">
+                  <table class="hrm-table">
+                    <thead>
+                      <tr>
+                        <th>NHÂN VIÊN</th>
+                        <th>PHÒNG BAN</th>
+                        <th>CHỨC VỤ</th>
+                        <th>NGÀY VÀO LÀM</th>
+                        <th>TRẠNG THÁI</th>
+                        <th style="text-align: center">HÀNH ĐỘNG</th>
+                      </tr>
+                    </thead>
+                    <tbody id="hrmStaffTableBody">
+                      <!-- Populated dynamically via JS -->
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+
+            <!-- ===== TAB 2: PROJECTS ===== -->
+            <div id="hrm-projects-tab" class="hrm-tab-content" style="display: none">
+              <div class="hrm-section-header">
+                <span class="hrm-section-title">DANH SÁCH DỰ ÁN VẬN HÀNH</span>
+                <button type="button" class="btn-submit-login" id="btnOpenHrmProjectModal" style="margin-top:0; width:auto; padding: 0.6rem 1.2rem; font-size: 0.8rem;">+ THÊM DỰ ÁN MỚI</button>
+              </div>
+              <div class="hrm-projects-grid" id="hrmProjectsGrid">
+                <!-- Rendered via JS -->
+              </div>
+            </div>
+
+            <!-- ===== TAB 3: PAYMENTS ===== -->
+            <div id="hrm-payments-tab" class="hrm-tab-content" style="display: none">
+              <div class="hrm-section-header">
+                <span class="hrm-section-title">QUY TRÌNH ĐỀ XUẤT THANH TOÁN</span>
+              </div>
+              <div class="hrm-payments-layout">
+                <!-- Payment Request Form -->
+                <div class="hrm-payment-form-card">
+                  <h3>+ TẠO ĐỀ XUẤT THANH TOÁN</h3>
+                  <form id="hrmPaymentForm" class="hrm-modal-form">
+                    <div class="form-group-login"><label for="hrmPayPurpose">Mục đích thanh toán *</label><input type="text" id="hrmPayPurpose" placeholder="Ví dụ: Chi phí tổ chức sự kiện..." required /></div>
+                    <div class="hrm-form-row">
+                      <div class="form-group-login"><label for="hrmPayCategory">Danh mục chi phí *</label>
+                        <select id="hrmPayCategory" required>
+                          <option value="Vận hành">Vận hành</option>
+                          <option value="Marketing">Marketing</option>
+                          <option value="Nhân sự">Nhân sự</option>
+                          <option value="Đào tạo">Đào tạo</option>
+                          <option value="Thiết bị">Thiết bị</option>
+                          <option value="Khác">Khác</option>
+                        </select>
+                      </div>
+                      <div class="form-group-login"><label for="hrmPayAmount">Số tiền (VNĐ) *</label><input type="number" id="hrmPayAmount" placeholder="0" required min="1000" /></div>
+                    </div>
+                    <div class="form-group-login"><label for="hrmPayDept">Phòng ban đề xuất *</label>
+                      <select id="hrmPayDept" required>
+                        <option value="Tuyển dụng">Tuyển dụng</option>
+                        <option value="Đào tạo">Đào tạo</option>
+                        <option value="Hành chính">Hành chính</option>
+                        <option value="Tư vấn Visa">Tư vấn Visa</option>
+                        <option value="Ban Giám đốc">Ban Giám đốc</option>
+                      </select>
+                    </div>
+                    <div class="form-group-login"><label for="hrmPayNotes">Ghi chú bổ sung</label><textarea id="hrmPayNotes" placeholder="Nhập ghi chú bổ sung (nếu có)..."></textarea></div>
+                    <button type="submit" class="btn-submit-login" style="margin-top: 0; width: 100%;">GỬI ĐỀ XUẤT THANH TOÁN</button>
+                  </form>
+                </div>
+
+                <!-- Payment History -->
+                <div class="hrm-payment-history-card">
+                  <h3>LỊCH SỬ ĐỀ XUẤT THANH TOÁN</h3>
+                  <div class="mini-table-container" style="max-height: 500px; overflow-y: auto">
+                    <table class="hrm-table">
+                      <thead>
+                        <tr>
+                          <th>NGƯỜI ĐỀ XUẤT</th>
+                          <th>MỤC ĐÍCH</th>
+                          <th>DANH MỤC</th>
+                          <th>SỐ TIỀN</th>
+                          <th>TRẠNG THÁI</th>
+                          <th style="text-align: center">HÀNH ĐỘNG</th>
+                        </tr>
+                      </thead>
+                      <tbody id="hrmPaymentsTableBody">
+                        <!-- Populated dynamically via JS -->
                       </tbody>
                     </table>
                   </div>
@@ -6207,6 +6372,77 @@
             <!-- Kết quả tìm kiếm hiển thị động qua JS -->
           </div>
         </div>
+      </div>
+    </div>
+
+    <!-- HRM Staff Modal -->
+    <div class="modal-overlay" id="hrmStaffModal" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.5); z-index: 1000; justify-content: center; align-items: center; padding: 2rem; backdrop-filter: blur(4px);">
+      <div class="login-card" style="max-width: 550px; padding: 2.5rem; width: 100%; border-radius: var(--border-radius-lg); box-shadow: var(--shadow-lg);">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+          <h3 id="hrmStaffModalTitle" style="font-family: var(--font-serif); font-size: 1.3rem; font-weight: 500; color: var(--text-main);">+ THÊM NHÂN SỰ MỚI</h3>
+          <button type="button" id="btnCloseHrmStaffModal" style="font-size: 1.5rem; color: var(--text-muted); cursor: pointer;">&times;</button>
+        </div>
+        <form id="hrmStaffForm" class="hrm-modal-form">
+          <input type="hidden" id="hrmStaffEditId" />
+          <div class="hrm-form-row">
+            <div class="form-group-login"><label for="hrmStaffName">Họ và tên *</label><input type="text" id="hrmStaffName" placeholder="Nguyễn Văn A" required /></div>
+            <div class="form-group-login"><label for="hrmStaffEmail">Email *</label><input type="email" id="hrmStaffEmail" placeholder="nhanvien@aladdin.vn" required /></div>
+          </div>
+          <div class="hrm-form-row">
+            <div class="form-group-login"><label for="hrmStaffDept">Phòng ban *</label>
+              <select id="hrmStaffDept" required>
+                <option value="Tuyển dụng">Tuyển dụng</option>
+                <option value="Đào tạo">Đào tạo</option>
+                <option value="Hành chính">Hành chính</option>
+                <option value="Tư vấn Visa">Tư vấn Visa</option>
+                <option value="Ban Giám đốc">Ban Giám đốc</option>
+              </select>
+            </div>
+            <div class="form-group-login"><label for="hrmStaffPosition">Chức vụ *</label><input type="text" id="hrmStaffPosition" placeholder="Nhân viên / Trưởng phòng" required /></div>
+          </div>
+          <div class="hrm-form-row">
+            <div class="form-group-login"><label for="hrmStaffPhone">Số điện thoại</label><input type="text" id="hrmStaffPhone" placeholder="0912345678" /></div>
+            <div class="form-group-login"><label for="hrmStaffStatus">Trạng thái *</label>
+              <select id="hrmStaffStatus" required>
+                <option value="Đang làm việc">Đang làm việc</option>
+                <option value="Nghỉ phép">Nghỉ phép</option>
+                <option value="Đã nghỉ việc">Đã nghỉ việc</option>
+              </select>
+            </div>
+          </div>
+          <button type="submit" class="btn-submit-login" style="width: 100%;">LƯU THÔNG TIN NHÂN SỰ</button>
+        </form>
+      </div>
+    </div>
+
+    <!-- HRM Project Modal -->
+    <div class="modal-overlay" id="hrmProjectModal" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.5); z-index: 1000; justify-content: center; align-items: center; padding: 2rem; backdrop-filter: blur(4px);">
+      <div class="login-card" style="max-width: 550px; padding: 2.5rem; width: 100%; border-radius: var(--border-radius-lg); box-shadow: var(--shadow-lg);">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+          <h3 id="hrmProjectModalTitle" style="font-family: var(--font-serif); font-size: 1.3rem; font-weight: 500; color: var(--text-main);">+ THÊM DỰ ÁN MỚI</h3>
+          <button type="button" id="btnCloseHrmProjectModal" style="font-size: 1.5rem; color: var(--text-muted); cursor: pointer;">&times;</button>
+        </div>
+        <form id="hrmProjectForm" class="hrm-modal-form">
+          <input type="hidden" id="hrmProjectEditId" />
+          <div class="form-group-login"><label for="hrmProjectName">Tên dự án *</label><input type="text" id="hrmProjectName" placeholder="Chiến dịch tuyển sinh mùa Thu 2026" required /></div>
+          <div class="form-group-login"><label for="hrmProjectDesc">Mô tả dự án</label><textarea id="hrmProjectDesc" placeholder="Mô tả ngắn gọn mục tiêu và phạm vi dự án..."></textarea></div>
+          <div class="hrm-form-row">
+            <div class="form-group-login"><label for="hrmProjectStatus">Trạng thái *</label>
+              <select id="hrmProjectStatus" required>
+                <option value="Lập kế hoạch">Lập kế hoạch</option>
+                <option value="Đang thực hiện">Đang thực hiện</option>
+                <option value="Đánh giá">Đánh giá</option>
+                <option value="Hoàn thành">Hoàn thành</option>
+              </select>
+            </div>
+            <div class="form-group-login"><label for="hrmProjectProgress">Tiến độ (%) *</label><input type="number" id="hrmProjectProgress" placeholder="0" required min="0" max="100" value="0" /></div>
+          </div>
+          <div class="hrm-form-row">
+            <div class="form-group-login"><label for="hrmProjectLeader">Người phụ trách *</label><input type="text" id="hrmProjectLeader" placeholder="Họ tên leader" required /></div>
+            <div class="form-group-login"><label for="hrmProjectTasks">Số nhiệm vụ con</label><input type="number" id="hrmProjectTasks" placeholder="0" min="0" value="0" /></div>
+          </div>
+          <button type="submit" class="btn-submit-login" style="width: 100%;">LƯU DỰ ÁN</button>
+        </form>
       </div>
     </div>
 

@@ -2273,4 +2273,671 @@ body.dark-theme-crm .student-header-navbar {
   font-weight: 600;
   color: var(--text-main);
   margin-bottom: 0.5rem;
+}
+
+/* ==========================================
+   HRM MODULE STYLES
+   ========================================== */
+
+/* HRM Sub-tabs Navigation */
+.hrm-subtabs {
+  display: flex;
+  gap: 0;
+  background: var(--bg-card);
+  border-bottom: 1px solid var(--border);
+  padding: 0 2rem;
+  flex-shrink: 0;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+
+.hrm-subtabs::-webkit-scrollbar {
+  display: none;
+}
+
+.hrm-subtab {
+  padding: 1rem 1.5rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  border: none;
+  background: none;
+  cursor: pointer;
+  transition: var(--transition-fast);
+  white-space: nowrap;
+  position: relative;
+  letter-spacing: 0.3px;
+}
+
+.hrm-subtab::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 0;
+  height: 3px;
+  background: var(--accent);
+  border-radius: 3px 3px 0 0;
+  transition: width 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.hrm-subtab:hover {
+  color: var(--text-main);
+  background: var(--accent-light);
+}
+
+.hrm-subtab.active {
+  color: var(--accent);
+}
+
+.hrm-subtab.active::after {
+  width: 70%;
+}
+
+/* HRM Tab Content Area */
+.hrm-tab-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 2rem;
+  animation: hrmFadeIn 0.35s ease;
+}
+
+@keyframes hrmFadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* HRM Section Headers */
+.hrm-section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.hrm-section-title {
+  font-family: var(--font-serif);
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: var(--text-main);
+  letter-spacing: 0.5px;
+}
+
+/* HRM KPI Summary Cards */
+.hrm-kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1.25rem;
+  margin-bottom: 2rem;
+}
+
+.hrm-kpi-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--border-radius-lg);
+  padding: 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  transition: var(--transition-fast);
+  box-shadow: var(--shadow-sm);
+  position: relative;
+  overflow: hidden;
+}
+
+.hrm-kpi-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 4px;
+  height: 100%;
+  border-radius: 4px 0 0 4px;
+}
+
+.hrm-kpi-card.kpi-tuyendung::before { background: #3FA2F6; }
+.hrm-kpi-card.kpi-daotao::before { background: #10B981; }
+.hrm-kpi-card.kpi-hanhchinh::before { background: #F59E0B; }
+.hrm-kpi-card.kpi-visa::before { background: #8B5CF6; }
+
+.hrm-kpi-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+  border-color: var(--accent);
+}
+
+.hrm-kpi-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: var(--border-radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.hrm-kpi-icon svg {
+  width: 24px;
+  height: 24px;
+  fill: currentColor;
+}
+
+.hrm-kpi-card.kpi-tuyendung .hrm-kpi-icon { background: rgba(63,162,246,0.12); color: #3FA2F6; }
+.hrm-kpi-card.kpi-daotao .hrm-kpi-icon { background: rgba(16,185,129,0.12); color: #10B981; }
+.hrm-kpi-card.kpi-hanhchinh .hrm-kpi-icon { background: rgba(245,158,11,0.12); color: #F59E0B; }
+.hrm-kpi-card.kpi-visa .hrm-kpi-icon { background: rgba(139,92,246,0.12); color: #8B5CF6; }
+
+.hrm-kpi-info {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.hrm-kpi-label {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  margin-bottom: 0.2rem;
+}
+
+.hrm-kpi-value {
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: var(--text-main);
+  line-height: 1.2;
+}
+
+.hrm-kpi-sub {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  margin-top: 0.15rem;
+}
+
+.hrm-kpi-progress {
+  height: 5px;
+  background: var(--bg-primary);
+  border-radius: 3px;
+  overflow: hidden;
+  margin-top: 0.5rem;
+}
+
+.hrm-kpi-progress-fill {
+  height: 100%;
+  border-radius: 3px;
+  transition: width 1s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* HRM Staff Table */
+.hrm-staff-container {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--border-radius-lg);
+  padding: 1.5rem;
+  box-shadow: var(--shadow-sm);
+  margin-bottom: 2rem;
+}
+
+.hrm-filter-bar {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+  flex-wrap: wrap;
+}
+
+.hrm-filter-bar input,
+.hrm-filter-bar select {
+  padding: 0.6rem 1rem;
+  border-radius: var(--border-radius-md);
+  border: 1px solid var(--border);
+  background: var(--bg-primary);
+  color: var(--text-main);
+  font-family: inherit;
+  font-size: 0.85rem;
+  outline: none;
+  transition: var(--transition-fast);
+  height: 40px;
+}
+
+.hrm-filter-bar input { flex: 1; min-width: 200px; }
+.hrm-filter-bar select { min-width: 160px; }
+
+.hrm-filter-bar input:focus,
+.hrm-filter-bar select:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(63, 162, 246, 0.1);
+}
+
+/* HRM Table shared styles */
+.hrm-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.hrm-table thead tr {
+  border-bottom: 2px solid var(--border);
+}
+
+.hrm-table th {
+  padding: 0.75rem 0.6rem;
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-align: left;
+}
+
+.hrm-table td {
+  padding: 0.85rem 0.6rem;
+  font-size: 0.85rem;
+  color: var(--text-main);
+  border-bottom: 1px solid var(--border-light);
+  vertical-align: middle;
+}
+
+.hrm-table tbody tr {
+  transition: var(--transition-fast);
+}
+
+.hrm-table tbody tr:hover {
+  background: var(--accent-light);
+}
+
+.hrm-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+/* Staff row avatar */
+.hrm-staff-info {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.hrm-staff-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.8rem;
+  color: #fff;
+  flex-shrink: 0;
+}
+
+.hrm-staff-name {
+  font-weight: 600;
+  color: var(--text-main);
+  font-size: 0.88rem;
+}
+
+.hrm-staff-email {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+/* HRM Badges */
+.hrm-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.2rem 0.65rem;
+  border-radius: 20px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+  white-space: nowrap;
+}
+
+.hrm-badge-active { background: rgba(16,185,129,0.12); color: #10B981; }
+.hrm-badge-inactive { background: rgba(239,68,68,0.1); color: #EF4444; }
+.hrm-badge-onleave { background: rgba(245,158,11,0.12); color: #F59E0B; }
+.hrm-badge-planning { background: rgba(139,92,246,0.12); color: #8B5CF6; }
+.hrm-badge-inprogress { background: rgba(63,162,246,0.12); color: #3FA2F6; }
+.hrm-badge-review { background: rgba(245,158,11,0.12); color: #F59E0B; }
+.hrm-badge-completed { background: rgba(16,185,129,0.12); color: #10B981; }
+.hrm-badge-pending { background: rgba(245,158,11,0.12); color: #F59E0B; }
+.hrm-badge-approved { background: rgba(16,185,129,0.12); color: #10B981; }
+.hrm-badge-rejected { background: rgba(239,68,68,0.1); color: #EF4444; }
+
+/* Action buttons in tables */
+.hrm-action-btn {
+  border: none;
+  background: none;
+  cursor: pointer;
+  padding: 6px;
+  border-radius: 50%;
+  color: var(--text-muted);
+  transition: var(--transition-fast);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.hrm-action-btn svg {
+  width: 16px;
+  height: 16px;
+  fill: currentColor;
+}
+
+.hrm-action-btn:hover { background: var(--accent-light); color: var(--accent); }
+.hrm-action-btn.danger:hover { background: rgba(239,68,68,0.08); color: #EF4444; }
+.hrm-action-btn.success:hover { background: rgba(16,185,129,0.1); color: #10B981; }
+
+/* ========== HRM Projects ========== */
+.hrm-projects-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+  gap: 1.25rem;
+}
+
+.hrm-project-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--border-radius-lg);
+  padding: 1.5rem;
+  box-shadow: var(--shadow-sm);
+  transition: var(--transition-fast);
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  animation: hrmFadeIn 0.35s ease;
+}
+
+.hrm-project-card:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-md);
+  border-color: var(--accent);
+}
+
+.hrm-project-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 0.75rem;
+}
+
+.hrm-project-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text-main);
+  line-height: 1.4;
+}
+
+.hrm-project-desc {
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  line-height: 1.5;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.hrm-project-progress {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.hrm-project-progress-header {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+
+.hrm-project-progress-label { color: var(--text-muted); }
+.hrm-project-progress-value { color: var(--accent); }
+
+.hrm-project-progress-bar {
+  height: 6px;
+  background: var(--bg-primary);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.hrm-project-progress-fill {
+  height: 100%;
+  border-radius: 3px;
+  background: linear-gradient(90deg, var(--accent), #38BDF8);
+  transition: width 1s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.hrm-project-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--border-light);
+}
+
+.hrm-project-meta-item {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+.hrm-project-meta-item svg {
+  width: 14px;
+  height: 14px;
+  fill: currentColor;
+  opacity: 0.7;
+}
+
+.hrm-project-leader-avatar {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  font-size: 0.6rem;
+  font-weight: 700;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ========== HRM Payments ========== */
+.hrm-payments-layout {
+  display: grid;
+  grid-template-columns: 1fr 1.6fr;
+  gap: 2rem;
+  align-items: start;
+}
+
+.hrm-payment-form-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--border-radius-lg);
+  padding: 1.5rem;
+  box-shadow: var(--shadow-sm);
+}
+
+.hrm-payment-form-card h3 {
+  font-family: var(--font-serif);
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: var(--text-main);
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 0.75rem;
+  margin-bottom: 1.25rem;
+  letter-spacing: 0.5px;
+}
+
+.hrm-payment-history-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--border-radius-lg);
+  padding: 1.5rem;
+  box-shadow: var(--shadow-sm);
+}
+
+.hrm-payment-history-card h3 {
+  font-family: var(--font-serif);
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: var(--text-main);
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 0.75rem;
+  margin-bottom: 1.25rem;
+  letter-spacing: 0.5px;
+}
+
+.hrm-payment-amount {
+  font-weight: 700;
+  color: var(--text-main);
+  font-size: 0.9rem;
+}
+
+/* HRM Empty State */
+.hrm-empty-state {
+  text-align: center;
+  padding: 3rem 2rem;
+  color: var(--text-muted);
+}
+
+.hrm-empty-state svg {
+  width: 48px;
+  height: 48px;
+  fill: var(--text-muted);
+  opacity: 0.3;
+  margin-bottom: 1rem;
+}
+
+.hrm-empty-state h4 {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-main);
+  margin-bottom: 0.3rem;
+}
+
+.hrm-empty-state p {
+  font-size: 0.85rem;
+}
+
+/* ========== HRM Modal Styles ========== */
+.hrm-modal-form .form-group-login {
+  margin-bottom: 1rem;
+}
+
+.hrm-modal-form input,
+.hrm-modal-form select,
+.hrm-modal-form textarea {
+  padding: 0.7rem 1rem;
+  border-radius: var(--border-radius-md);
+  border: 1px solid var(--border);
+  background: var(--bg-primary);
+  color: var(--text-main);
+  font-family: inherit;
+  font-size: inherit;
+  width: 100%;
+  outline: none;
+  transition: var(--transition-fast);
+}
+
+.hrm-modal-form input:focus,
+.hrm-modal-form select:focus,
+.hrm-modal-form textarea:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(63, 162, 246, 0.1);
+}
+
+.hrm-modal-form textarea {
+  resize: vertical;
+  min-height: 70px;
+}
+
+.hrm-modal-form select {
+  height: 42px;
+  cursor: pointer;
+}
+
+.hrm-form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+/* ========== HRM Mobile Responsive ========== */
+@media (max-width: 768px) {
+  .hrm-tab-content {
+    padding: 1.25rem;
+  }
+
+  .hrm-subtabs {
+    padding: 0 1rem;
+  }
+
+  .hrm-subtab {
+    padding: 0.85rem 1rem;
+    font-size: 0.8rem;
+  }
+
+  .hrm-kpi-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 0.75rem;
+  }
+
+  .hrm-kpi-card {
+    padding: 1rem;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+
+  .hrm-kpi-value {
+    font-size: 1.3rem;
+  }
+
+  .hrm-staff-container {
+    padding: 1rem;
+    overflow-x: auto;
+  }
+
+  .hrm-filter-bar {
+    flex-direction: column;
+  }
+
+  .hrm-filter-bar input,
+  .hrm-filter-bar select {
+    min-width: unset;
+    width: 100%;
+  }
+
+  .hrm-projects-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .hrm-payments-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .hrm-form-row {
+    grid-template-columns: 1fr;
+  }
+
+  .hrm-section-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+
+@media (max-width: 480px) {
+  .hrm-kpi-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .hrm-tab-content {
+    padding: 1rem;
+  }
 }

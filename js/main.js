@@ -960,15 +960,29 @@ document.addEventListener('DOMContentLoaded', () => {
     if (miniBlogsName) miniBlogsName.textContent = user.name;
     if (miniBlogsRole) miniBlogsRole.textContent = displayRole;
 
+    // Mini HRM header
+    syncAvatarElement('miniHrmAvatar');
+    const miniHrmName = document.getElementById('miniHrmName');
+    const miniHrmRole = document.getElementById('miniHrmRole');
+    if (miniHrmName) miniHrmName.textContent = user.name;
+    if (miniHrmRole) miniHrmRole.textContent = displayRole;
+
     // Role-based Access Controls (Admin Only "Tạo tài khoản NV" & "Tạo tài khoản HV")
     const menuItemCreateUsers = document.getElementById('menuItemCreateUsers');
     const menuItemCreateStudentUsers = document.getElementById('menuItemCreateStudentUsers');
+    const menuItemHRM = document.getElementById('menuItemHRM');
     if (user.role === 'admin') {
       if (menuItemCreateUsers) menuItemCreateUsers.style.display = 'flex';
       if (menuItemCreateStudentUsers) menuItemCreateStudentUsers.style.display = 'flex';
+      if (menuItemHRM) menuItemHRM.style.display = 'flex';
+    } else if (user.role === 'student') {
+      if (menuItemCreateUsers) menuItemCreateUsers.style.display = 'none';
+      if (menuItemCreateStudentUsers) menuItemCreateStudentUsers.style.display = 'none';
+      if (menuItemHRM) menuItemHRM.style.display = 'none';
     } else {
       if (menuItemCreateUsers) menuItemCreateUsers.style.display = 'none';
       if (menuItemCreateStudentUsers) menuItemCreateStudentUsers.style.display = 'none';
+      if (menuItemHRM) menuItemHRM.style.display = 'flex';
     }
   };
 
@@ -1112,6 +1126,8 @@ document.addEventListener('DOMContentLoaded', () => {
       applyStudentFiltersAndRender();
     } else if (targetViewId === 'blogs-dashboard') {
       renderAdminBlogsList();
+    } else if (targetViewId === 'hrm-dashboard') {
+      initHrmModule();
     }
   };
 
@@ -5128,5 +5144,479 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   };
   checkPortalSession();
+
+  /* ==========================================================================
+     HRM MODULE - COMPLETE LOGIC (STAFF, PROJECTS, PAYMENTS)
+     ========================================================================== */
+
+  let hrmInitialized = false;
+
+  const initHrmModule = async () => {
+    if (!hrmInitialized) {
+      hrmInitialized = true;
+      setupHrmSubtabs();
+      setupHrmModals();
+      setupHrmForms();
+      await bootstrapHrmMockData();
+    }
+    renderHrmKpi();
+    renderHrmStaffList();
+  };
+
+  // ---- HRM Sub-tabs ----
+  const setupHrmSubtabs = () => {
+    document.querySelectorAll('.hrm-subtab').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.hrm-subtab').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        const target = btn.getAttribute('data-tab');
+        document.querySelectorAll('.hrm-tab-content').forEach(tc => tc.style.display = 'none');
+        const el = document.getElementById(target);
+        if (el) el.style.display = 'block';
+        if (target === 'hrm-staff-tab') { renderHrmKpi(); renderHrmStaffList(); }
+        else if (target === 'hrm-projects-tab') { renderHrmProjects(); }
+        else if (target === 'hrm-payments-tab') { renderHrmPayments(); }
+      });
+    });
+  };
+
+  // ---- HRM Modals ----
+  const setupHrmModals = () => {
+    const staffModal = document.getElementById('hrmStaffModal');
+    const projectModal = document.getElementById('hrmProjectModal');
+    document.getElementById('btnOpenHrmStaffModal')?.addEventListener('click', () => {
+      document.getElementById('hrmStaffEditId').value = '';
+      document.getElementById('hrmStaffForm').reset();
+      document.getElementById('hrmStaffModalTitle').textContent = '+ THÊM NHÂN SỰ MỚI';
+      if (staffModal) staffModal.style.display = 'flex';
+    });
+    document.getElementById('btnCloseHrmStaffModal')?.addEventListener('click', () => {
+      if (staffModal) staffModal.style.display = 'none';
+    });
+    staffModal?.addEventListener('click', (e) => { if (e.target === staffModal) staffModal.style.display = 'none'; });
+
+    document.getElementById('btnOpenHrmProjectModal')?.addEventListener('click', () => {
+      document.getElementById('hrmProjectEditId').value = '';
+      document.getElementById('hrmProjectForm').reset();
+      document.getElementById('hrmProjectModalTitle').textContent = '+ THÊM DỰ ÁN MỚI';
+      if (projectModal) projectModal.style.display = 'flex';
+    });
+    document.getElementById('btnCloseHrmProjectModal')?.addEventListener('click', () => {
+      if (projectModal) projectModal.style.display = 'none';
+    });
+    projectModal?.addEventListener('click', (e) => { if (e.target === projectModal) projectModal.style.display = 'none'; });
+  };
+
+  // ---- HRM Filter listeners ----
+  const setupHrmForms = () => {
+    document.getElementById('hrmStaffSearch')?.addEventListener('input', () => renderHrmStaffList());
+    document.getElementById('hrmStaffDeptFilter')?.addEventListener('change', () => renderHrmStaffList());
+
+    // Staff form
+    document.getElementById('hrmStaffForm')?.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const editId = document.getElementById('hrmStaffEditId').value;
+      const data = {
+        name: document.getElementById('hrmStaffName').value.trim(),
+        email: document.getElementById('hrmStaffEmail').value.trim(),
+        department: document.getElementById('hrmStaffDept').value,
+        position: document.getElementById('hrmStaffPosition').value.trim(),
+        phone: document.getElementById('hrmStaffPhone').value.trim(),
+        status: document.getElementById('hrmStaffStatus').value,
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+      };
+      try {
+        if (editId) {
+          await db.collection('hrm_staff').doc(editId).update(data);
+          showToast('Đã cập nhật thông tin nhân sự!', 'success');
+        } else {
+          data.createdAt = firebase.firestore.FieldValue.serverTimestamp();
+          data.joinDate = new Date().toISOString().split('T')[0];
+          await db.collection('hrm_staff').add(data);
+          showToast('Đã thêm nhân sự mới thành công!', 'success');
+        }
+        document.getElementById('hrmStaffModal').style.display = 'none';
+        renderHrmStaffList();
+        renderHrmKpi();
+      } catch (err) {
+        console.error('HRM staff save error:', err);
+        showToast('Lỗi khi lưu nhân sự: ' + err.message, 'error');
+      }
+    });
+
+    // Project form
+    document.getElementById('hrmProjectForm')?.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const editId = document.getElementById('hrmProjectEditId').value;
+      const data = {
+        name: document.getElementById('hrmProjectName').value.trim(),
+        description: document.getElementById('hrmProjectDesc').value.trim(),
+        status: document.getElementById('hrmProjectStatus').value,
+        progress: parseInt(document.getElementById('hrmProjectProgress').value) || 0,
+        leader: document.getElementById('hrmProjectLeader').value.trim(),
+        tasksCount: parseInt(document.getElementById('hrmProjectTasks').value) || 0,
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+      };
+      try {
+        if (editId) {
+          await db.collection('hrm_projects').doc(editId).update(data);
+          showToast('Đã cập nhật dự án!', 'success');
+        } else {
+          data.createdAt = firebase.firestore.FieldValue.serverTimestamp();
+          await db.collection('hrm_projects').add(data);
+          showToast('Đã thêm dự án mới thành công!', 'success');
+        }
+        document.getElementById('hrmProjectModal').style.display = 'none';
+        renderHrmProjects();
+      } catch (err) {
+        console.error('HRM project save error:', err);
+        showToast('Lỗi khi lưu dự án: ' + err.message, 'error');
+      }
+    });
+
+    // Payment form
+    document.getElementById('hrmPaymentForm')?.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const data = {
+        purpose: document.getElementById('hrmPayPurpose').value.trim(),
+        category: document.getElementById('hrmPayCategory').value,
+        amount: parseInt(document.getElementById('hrmPayAmount').value) || 0,
+        department: document.getElementById('hrmPayDept').value,
+        notes: document.getElementById('hrmPayNotes').value.trim(),
+        requester: currentUser ? currentUser.name : 'Unknown',
+        requesterEmail: currentUser ? currentUser.email : '',
+        status: 'Chờ duyệt',
+        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+      };
+      try {
+        await db.collection('hrm_payments').add(data);
+        showToast('Đã gửi đề xuất thanh toán thành công!', 'success');
+        document.getElementById('hrmPaymentForm').reset();
+        renderHrmPayments();
+      } catch (err) {
+        console.error('HRM payment save error:', err);
+        showToast('Lỗi khi gửi đề xuất: ' + err.message, 'error');
+      }
+    });
+  };
+
+  // ---- Bootstrap Mock Data ----
+  const bootstrapHrmMockData = async () => {
+    try {
+      const staffSnap = await db.collection('hrm_staff').limit(1).get();
+      if (!staffSnap.empty) return;
+
+      const mockStaff = [
+        { name: 'Nguyễn Minh Đăng', email: 'dang.nm@aladdin.vn', department: 'Ban Giám đốc', position: 'Giám đốc điều hành', phone: '0901234567', status: 'Đang làm việc', joinDate: '2024-01-15' },
+        { name: 'Trần Thị Hương', email: 'huong.tt@aladdin.vn', department: 'Tuyển dụng', position: 'Trưởng phòng', phone: '0912345678', status: 'Đang làm việc', joinDate: '2024-03-01' },
+        { name: 'Lê Văn Quốc', email: 'quoc.lv@aladdin.vn', department: 'Đào tạo', position: 'Trưởng phòng', phone: '0923456789', status: 'Đang làm việc', joinDate: '2024-02-10' },
+        { name: 'Phạm Đức Hoàng', email: 'hoang.pd@aladdin.vn', department: 'Hành chính', position: 'Nhân viên', phone: '0934567890', status: 'Đang làm việc', joinDate: '2024-06-20' },
+        { name: 'Nguyễn Thảo Na', email: 'na.nt@aladdin.vn', department: 'Tư vấn Visa', position: 'Trưởng nhóm', phone: '0945678901', status: 'Đang làm việc', joinDate: '2024-04-05' },
+        { name: 'Võ Hoàng Anh', email: 'anh.vh@aladdin.vn', department: 'Tuyển dụng', position: 'Nhân viên', phone: '0956789012', status: 'Đang làm việc', joinDate: '2025-01-10' },
+        { name: 'Đặng Thị Mai', email: 'mai.dt@aladdin.vn', department: 'Đào tạo', position: 'Giảng viên', phone: '0967890123', status: 'Nghỉ phép', joinDate: '2024-09-15' },
+        { name: 'Bùi Thanh Tùng', email: 'tung.bt@aladdin.vn', department: 'Tư vấn Visa', position: 'Nhân viên', phone: '0978901234', status: 'Đang làm việc', joinDate: '2025-03-20' },
+        { name: 'Hoàng Thị Linh', email: 'linh.ht@aladdin.vn', department: 'Hành chính', position: 'Kế toán', phone: '0989012345', status: 'Đang làm việc', joinDate: '2024-07-01' },
+        { name: 'Trịnh Văn Khoa', email: 'khoa.tv@aladdin.vn', department: 'Tuyển dụng', position: 'Nhân viên', phone: '0990123456', status: 'Đã nghỉ việc', joinDate: '2024-05-12' }
+      ];
+      const batch1 = db.batch();
+      mockStaff.forEach(s => {
+        s.createdAt = firebase.firestore.FieldValue.serverTimestamp();
+        s.updatedAt = firebase.firestore.FieldValue.serverTimestamp();
+        batch1.set(db.collection('hrm_staff').doc(), s);
+      });
+      await batch1.commit();
+
+      const mockProjects = [
+        { name: 'Chiến dịch tuyển sinh mùa Thu 2026', description: 'Triển khai chiến dịch marketing và tư vấn tuyển sinh cho kỳ nhập học tháng 10/2026 tại Nhật Bản.', status: 'Đang thực hiện', progress: 65, leader: 'Trần Thị Hương', tasksCount: 12 },
+        { name: 'Nâng cấp giáo trình JLPT N3', description: 'Biên soạn và cập nhật bộ giáo trình luyện thi JLPT N3 phiên bản 2026 với bài tập thực tế.', status: 'Đánh giá', progress: 85, leader: 'Lê Văn Quốc', tasksCount: 8 },
+        { name: 'Hệ thống CRM nội bộ v2.0', description: 'Phát triển phiên bản 2.0 của hệ thống CRM nội bộ tích hợp module HRM và quản lý tài chính.', status: 'Đang thực hiện', progress: 40, leader: 'Nguyễn Minh Đăng', tasksCount: 20 },
+        { name: 'Đào tạo kỹ năng phỏng vấn Visa', description: 'Chương trình đào tạo chuyên sâu kỹ năng phỏng vấn Visa cho học viên chuẩn bị xuất cảnh.', status: 'Lập kế hoạch', progress: 15, leader: 'Nguyễn Thảo Na', tasksCount: 6 },
+        { name: 'Sự kiện Open Day Q3/2026', description: 'Tổ chức ngày hội tư vấn du học miễn phí cho phụ huynh và học viên tại TP.HCM.', status: 'Hoàn thành', progress: 100, leader: 'Võ Hoàng Anh', tasksCount: 15 }
+      ];
+      const batch2 = db.batch();
+      mockProjects.forEach(p => {
+        p.createdAt = firebase.firestore.FieldValue.serverTimestamp();
+        p.updatedAt = firebase.firestore.FieldValue.serverTimestamp();
+        batch2.set(db.collection('hrm_projects').doc(), p);
+      });
+      await batch2.commit();
+
+      const mockPayments = [
+        { purpose: 'Chi phí in ấn brochure tuyển sinh', category: 'Marketing', amount: 5500000, department: 'Tuyển dụng', requester: 'Trần Thị Hương', requesterEmail: 'huong.tt@aladdin.vn', status: 'Đã duyệt', notes: 'In 2000 bộ brochure cho sự kiện Open Day' },
+        { purpose: 'Mua sách giáo trình tiếng Nhật', category: 'Đào tạo', amount: 12000000, department: 'Đào tạo', requester: 'Lê Văn Quốc', requesterEmail: 'quoc.lv@aladdin.vn', status: 'Chờ duyệt', notes: 'Nhập 50 bộ Minna no Nihongo + Genki' },
+        { purpose: 'Thuê địa điểm tổ chức sự kiện', category: 'Vận hành', amount: 25000000, department: 'Hành chính', requester: 'Phạm Đức Hoàng', requesterEmail: 'hoang.pd@aladdin.vn', status: 'Từ chối', notes: 'Thuê hội trường 300 chỗ cho Open Day Q3' },
+        { purpose: 'Lương thưởng tháng 05/2026', category: 'Nhân sự', amount: 85000000, department: 'Ban Giám đốc', requester: 'Nguyễn Minh Đăng', requesterEmail: 'dang.nm@aladdin.vn', status: 'Đã duyệt', notes: '' },
+        { purpose: 'Mua thiết bị trình chiếu phòng đào tạo', category: 'Thiết bị', amount: 18500000, department: 'Đào tạo', requester: 'Lê Văn Quốc', requesterEmail: 'quoc.lv@aladdin.vn', status: 'Chờ duyệt', notes: 'Máy chiếu Epson EB-FH52 + Màn chiếu 120 inch' }
+      ];
+      const batch3 = db.batch();
+      mockPayments.forEach(p => {
+        p.createdAt = firebase.firestore.FieldValue.serverTimestamp();
+        batch3.set(db.collection('hrm_payments').doc(), p);
+      });
+      await batch3.commit();
+      console.log('HRM mock data bootstrapped successfully.');
+    } catch (err) {
+      console.error('HRM mock data bootstrap error:', err);
+    }
+  };
+
+  // ---- Render KPI ----
+  const renderHrmKpi = async () => {
+    const grid = document.getElementById('hrmKpiGrid');
+    if (!grid) return;
+    try {
+      const snap = await db.collection('hrm_staff').get();
+      const allStaff = [];
+      snap.forEach(doc => allStaff.push(doc.data()));
+      const active = allStaff.filter(s => s.status === 'Đang làm việc');
+
+      const depts = [
+        { key: 'Tuyển dụng', cls: 'kpi-tuyendung', icon: '<svg viewBox="0 0 24 24"><path d="M15,14C12.33,14 7,15.33 7,18V20H23V18C23,15.33 17.67,14 15,14M6,8.17V5H4V8.17C2.78,8.58 2,9.7 2,11C2,12.3 2.78,13.42 4,13.83V17H6V13.83C7.22,13.42 8,12.3 8,11C8,9.7 7.22,8.58 6,8.17M15,12A4,4 0 0,0 19,8A4,4 0 0,0 15,4A4,4 0 0,0 11,8A4,4 0 0,0 15,12Z"/></svg>' },
+        { key: 'Đào tạo', cls: 'kpi-daotao', icon: '<svg viewBox="0 0 24 24"><path d="M12,3L1,9L12,15L21,10.09V17H23V9M5,13.18V17.18L12,21L19,17.18V13.18L12,17L5,13.18Z"/></svg>' },
+        { key: 'Hành chính', cls: 'kpi-hanhchinh', icon: '<svg viewBox="0 0 24 24"><path d="M19,3H5C3.89,3 3,3.89 3,5V19A2,2 0 0,0 5,21H19A2,2 0 0,0 21,19V5C21,3.89 20.1,3 19,3M19,19H5V5H19V19M17,12H7V10H17V12M17,16H7V14H17V16M14,8H7V6H14V8Z"/></svg>' },
+        { key: 'Tư vấn Visa', cls: 'kpi-visa', icon: '<svg viewBox="0 0 24 24"><path d="M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M12,20C7.59,20 4,16.41 4,12C4,7.59 7.59,4 12,4C16.41,4 20,7.59 20,12C20,16.41 16.41,20 12,20M12.5,7H11V13L16.75,16.5L17.5,15.25L12.5,12.25V7Z"/></svg>' }
+      ];
+
+      grid.innerHTML = depts.map(dept => {
+        const total = allStaff.filter(s => s.department === dept.key).length;
+        const activeCount = active.filter(s => s.department === dept.key).length;
+        const pct = total > 0 ? Math.round((activeCount / total) * 100) : 0;
+        const colors = { 'kpi-tuyendung': '#3FA2F6', 'kpi-daotao': '#10B981', 'kpi-hanhchinh': '#F59E0B', 'kpi-visa': '#8B5CF6' };
+        return `
+          <div class="hrm-kpi-card ${dept.cls}">
+            <div class="hrm-kpi-icon">${dept.icon}</div>
+            <div class="hrm-kpi-info">
+              <span class="hrm-kpi-label">${dept.key}</span>
+              <span class="hrm-kpi-value">${activeCount}<span style="font-size:0.9rem; font-weight:500; color:var(--text-muted)">/${total}</span></span>
+              <span class="hrm-kpi-sub">nhân sự đang hoạt động</span>
+              <div class="hrm-kpi-progress"><div class="hrm-kpi-progress-fill" style="width:${pct}%; background:${colors[dept.cls]}"></div></div>
+            </div>
+          </div>`;
+      }).join('');
+    } catch (err) {
+      console.error('HRM KPI render error:', err);
+    }
+  };
+
+  // ---- Render Staff ----
+  const renderHrmStaffList = async () => {
+    const tbody = document.getElementById('hrmStaffTableBody');
+    if (!tbody) return;
+    tbody.innerHTML = '';
+    try {
+      const snap = await db.collection('hrm_staff').orderBy('createdAt', 'desc').get();
+      let staffList = [];
+      snap.forEach(doc => { const d = doc.data(); d.id = doc.id; staffList.push(d); });
+
+      const query = (document.getElementById('hrmStaffSearch')?.value || '').trim().toLowerCase();
+      const deptFilter = document.getElementById('hrmStaffDeptFilter')?.value || 'All';
+
+      staffList = staffList.filter(s => {
+        const matchQuery = !query || s.name.toLowerCase().includes(query) || (s.email && s.email.toLowerCase().includes(query)) || (s.position && s.position.toLowerCase().includes(query));
+        const matchDept = deptFilter === 'All' || s.department === deptFilter;
+        return matchQuery && matchDept;
+      });
+
+      if (staffList.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:2rem;color:var(--text-muted);font-size:0.85rem;">Không tìm thấy nhân sự phù hợp.</td></tr>';
+        return;
+      }
+
+      staffList.forEach(s => {
+        const initials = s.name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+        const bg = getAvatarBgColor(s.name);
+        let badgeCls = 'hrm-badge-active';
+        if (s.status === 'Nghỉ phép') badgeCls = 'hrm-badge-onleave';
+        else if (s.status === 'Đã nghỉ việc') badgeCls = 'hrm-badge-inactive';
+
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td><div class="hrm-staff-info"><div class="hrm-staff-avatar" style="background:${bg}">${initials}</div><div><div class="hrm-staff-name">${s.name}</div><div class="hrm-staff-email">${s.email || ''}</div></div></div></td>
+          <td>${s.department || ''}</td>
+          <td>${s.position || ''}</td>
+          <td>${s.joinDate || 'N/A'}</td>
+          <td><span class="hrm-badge ${badgeCls}">${s.status}</span></td>
+          <td style="text-align:center">
+            <button class="hrm-action-btn btn-edit-hrm-staff" data-id="${s.id}" title="Sửa"><svg viewBox="0 0 24 24"><path d="M20.71,7.04C21.1,6.65 21.1,6 20.71,5.63L18.37,3.29C18,2.9 17.35,2.9 16.96,3.29L15.12,5.12L18.87,8.87M3,17.25V21H6.75L17.81,9.93L14.06,6.18L3,17.25Z"/></svg></button>
+            <button class="hrm-action-btn danger btn-del-hrm-staff" data-id="${s.id}" data-name="${s.name}" title="Xóa"><svg viewBox="0 0 24 24"><path d="M19,4H15.5L14.5,3H9.5L8.5,4H5V6H19M6,19A2,2 0 0,0 8,21H16A2,2 0 0,0 18,19V7H6V19Z"/></svg></button>
+          </td>`;
+
+        tr.querySelector('.btn-edit-hrm-staff')?.addEventListener('click', () => editHrmStaff(s));
+        tr.querySelector('.btn-del-hrm-staff')?.addEventListener('click', () => deleteHrmStaff(s.id, s.name));
+        tbody.appendChild(tr);
+      });
+    } catch (err) {
+      console.error('HRM staff list error:', err);
+    }
+  };
+
+  const editHrmStaff = (s) => {
+    document.getElementById('hrmStaffEditId').value = s.id;
+    document.getElementById('hrmStaffName').value = s.name;
+    document.getElementById('hrmStaffEmail').value = s.email || '';
+    document.getElementById('hrmStaffDept').value = s.department;
+    document.getElementById('hrmStaffPosition').value = s.position || '';
+    document.getElementById('hrmStaffPhone').value = s.phone || '';
+    document.getElementById('hrmStaffStatus').value = s.status;
+    document.getElementById('hrmStaffModalTitle').textContent = '✏️ SỬA THÔNG TIN NHÂN SỰ';
+    document.getElementById('hrmStaffModal').style.display = 'flex';
+  };
+
+  const deleteHrmStaff = async (id, name) => {
+    if (!confirm(`Xác nhận xóa nhân sự "${name}" khỏi hệ thống?`)) return;
+    try {
+      await db.collection('hrm_staff').doc(id).delete();
+      showToast(`Đã xóa nhân sự ${name}!`, 'warning');
+      renderHrmStaffList();
+      renderHrmKpi();
+    } catch (err) {
+      showToast('Lỗi khi xóa nhân sự!', 'error');
+    }
+  };
+
+  // ---- Render Projects ----
+  const renderHrmProjects = async () => {
+    const grid = document.getElementById('hrmProjectsGrid');
+    if (!grid) return;
+    grid.innerHTML = '';
+    try {
+      const snap = await db.collection('hrm_projects').orderBy('createdAt', 'desc').get();
+      if (snap.empty) {
+        grid.innerHTML = '<div class="hrm-empty-state"><svg viewBox="0 0 24 24"><path d="M19,3H5C3.89,3 3,3.89 3,5V19A2,2 0 0,0 5,21H19A2,2 0 0,0 21,19V5C21,3.89 20.1,3 19,3M19,19H5V5H19V19M17,12H7V10H17V12M17,16H7V14H17V16M14,8H7V6H14V8Z"/></svg><h4>Chưa có dự án nào</h4><p>Hãy tạo dự án mới để bắt đầu quản lý.</p></div>';
+        return;
+      }
+      snap.forEach(doc => {
+        const p = doc.data();
+        p.id = doc.id;
+        let badgeCls = 'hrm-badge-planning';
+        if (p.status === 'Đang thực hiện') badgeCls = 'hrm-badge-inprogress';
+        else if (p.status === 'Đánh giá') badgeCls = 'hrm-badge-review';
+        else if (p.status === 'Hoàn thành') badgeCls = 'hrm-badge-completed';
+
+        const initials = p.leader ? p.leader.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase() : '??';
+        const bg = getAvatarBgColor(p.leader || 'default');
+
+        const card = document.createElement('div');
+        card.className = 'hrm-project-card';
+        card.innerHTML = `
+          <div class="hrm-project-header">
+            <div class="hrm-project-title">${p.name}</div>
+            <span class="hrm-badge ${badgeCls}">${p.status}</span>
+          </div>
+          <div class="hrm-project-desc">${p.description || 'Không có mô tả'}</div>
+          <div class="hrm-project-progress">
+            <div class="hrm-project-progress-header">
+              <span class="hrm-project-progress-label">Tiến độ</span>
+              <span class="hrm-project-progress-value">${p.progress || 0}%</span>
+            </div>
+            <div class="hrm-project-progress-bar"><div class="hrm-project-progress-fill" style="width:${p.progress || 0}%"></div></div>
+          </div>
+          <div class="hrm-project-meta">
+            <div class="hrm-project-meta-item">
+              <div class="hrm-project-leader-avatar" style="background:${bg}">${initials}</div>
+              <span>${p.leader || 'Chưa phân công'}</span>
+            </div>
+            <div class="hrm-project-meta-item">
+              <svg viewBox="0 0 24 24"><path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20M9,13V18H7V13H9M15,15V18H13V15H15M11,11V18H13V11H11Z"/></svg>
+              <span>${p.tasksCount || 0} nhiệm vụ</span>
+            </div>
+            <div style="display:flex;gap:2px">
+              <button class="hrm-action-btn btn-edit-hrm-proj" title="Sửa"><svg viewBox="0 0 24 24"><path d="M20.71,7.04C21.1,6.65 21.1,6 20.71,5.63L18.37,3.29C18,2.9 17.35,2.9 16.96,3.29L15.12,5.12L18.87,8.87M3,17.25V21H6.75L17.81,9.93L14.06,6.18L3,17.25Z"/></svg></button>
+              <button class="hrm-action-btn danger btn-del-hrm-proj" title="Xóa"><svg viewBox="0 0 24 24"><path d="M19,4H15.5L14.5,3H9.5L8.5,4H5V6H19M6,19A2,2 0 0,0 8,21H16A2,2 0 0,0 18,19V7H6V19Z"/></svg></button>
+            </div>
+          </div>`;
+
+        card.querySelector('.btn-edit-hrm-proj')?.addEventListener('click', () => {
+          document.getElementById('hrmProjectEditId').value = p.id;
+          document.getElementById('hrmProjectName').value = p.name;
+          document.getElementById('hrmProjectDesc').value = p.description || '';
+          document.getElementById('hrmProjectStatus').value = p.status;
+          document.getElementById('hrmProjectProgress').value = p.progress || 0;
+          document.getElementById('hrmProjectLeader').value = p.leader || '';
+          document.getElementById('hrmProjectTasks').value = p.tasksCount || 0;
+          document.getElementById('hrmProjectModalTitle').textContent = '✏️ SỬA DỰ ÁN';
+          document.getElementById('hrmProjectModal').style.display = 'flex';
+        });
+        card.querySelector('.btn-del-hrm-proj')?.addEventListener('click', async () => {
+          if (!confirm(`Xác nhận xóa dự án "${p.name}"?`)) return;
+          try {
+            await db.collection('hrm_projects').doc(p.id).delete();
+            showToast(`Đã xóa dự án ${p.name}!`, 'warning');
+            renderHrmProjects();
+          } catch (err) { showToast('Lỗi khi xóa dự án!', 'error'); }
+        });
+        grid.appendChild(card);
+      });
+    } catch (err) {
+      console.error('HRM projects render error:', err);
+    }
+  };
+
+  // ---- Render Payments ----
+  const formatVND = (num) => {
+    return new Intl.NumberFormat('vi-VN').format(num) + ' ₫';
+  };
+
+  const renderHrmPayments = async () => {
+    const tbody = document.getElementById('hrmPaymentsTableBody');
+    if (!tbody) return;
+    tbody.innerHTML = '';
+    try {
+      const snap = await db.collection('hrm_payments').orderBy('createdAt', 'desc').get();
+      if (snap.empty) {
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:2rem;color:var(--text-muted);font-size:0.85rem;">Chưa có đề xuất thanh toán nào.</td></tr>';
+        return;
+      }
+      const isAdmin = currentUser && currentUser.role === 'admin';
+      snap.forEach(doc => {
+        const p = doc.data();
+        p.id = doc.id;
+        let badgeCls = 'hrm-badge-pending';
+        if (p.status === 'Đã duyệt') badgeCls = 'hrm-badge-approved';
+        else if (p.status === 'Từ chối') badgeCls = 'hrm-badge-rejected';
+
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td><strong>${p.requester || 'N/A'}</strong><br><span style="font-size:0.72rem;color:var(--text-muted)">${p.department || ''}</span></td>
+          <td>${p.purpose || ''}</td>
+          <td><span style="font-size:0.78rem;">${p.category || ''}</span></td>
+          <td><span class="hrm-payment-amount">${formatVND(p.amount || 0)}</span></td>
+          <td><span class="hrm-badge ${badgeCls}">${p.status}</span></td>
+          <td style="text-align:center">
+            ${isAdmin && p.status === 'Chờ duyệt' ? `
+              <button class="hrm-action-btn success btn-approve-pay" title="Duyệt"><svg viewBox="0 0 24 24"><path d="M21,7L9,19L3.5,13.5L4.91,12.09L9,16.17L19.59,5.59L21,7Z"/></svg></button>
+              <button class="hrm-action-btn danger btn-reject-pay" title="Từ chối"><svg viewBox="0 0 24 24"><path d="M19,6.41L17.59,5L12,10.59L6.41,5L5,6.41L10.59,12L5,17.59L6.41,19L12,13.41L17.59,19L19,17.59L13.41,12L19,6.41Z"/></svg></button>
+            ` : ''}
+            <button class="hrm-action-btn danger btn-del-pay" title="Xóa"><svg viewBox="0 0 24 24"><path d="M19,4H15.5L14.5,3H9.5L8.5,4H5V6H19M6,19A2,2 0 0,0 8,21H16A2,2 0 0,0 18,19V7H6V19Z"/></svg></button>
+          </td>`;
+
+        tr.querySelector('.btn-approve-pay')?.addEventListener('click', async () => {
+          try {
+            await db.collection('hrm_payments').doc(p.id).update({ status: 'Đã duyệt' });
+            showToast('Đã duyệt đề xuất thanh toán!', 'success');
+            renderHrmPayments();
+          } catch (err) { showToast('Lỗi khi duyệt!', 'error'); }
+        });
+        tr.querySelector('.btn-reject-pay')?.addEventListener('click', async () => {
+          try {
+            await db.collection('hrm_payments').doc(p.id).update({ status: 'Từ chối' });
+            showToast('Đã từ chối đề xuất thanh toán.', 'warning');
+            renderHrmPayments();
+          } catch (err) { showToast('Lỗi khi từ chối!', 'error'); }
+        });
+        tr.querySelector('.btn-del-pay')?.addEventListener('click', async () => {
+          if (!confirm(`Xóa đề xuất thanh toán "${p.purpose}"?`)) return;
+          try {
+            await db.collection('hrm_payments').doc(p.id).delete();
+            showToast('Đã xóa đề xuất!', 'warning');
+            renderHrmPayments();
+          } catch (err) { showToast('Lỗi khi xóa!', 'error'); }
+        });
+        tbody.appendChild(tr);
+      });
+    } catch (err) {
+      console.error('HRM payments render error:', err);
+    }
+  };
 
 });
