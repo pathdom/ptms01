@@ -2620,6 +2620,208 @@
                 </div>
               </div>
             </div>
+
+            <!-- ===== EMPLOYEE PROFILE VIEW ===== -->
+            <div id="hrmProfileView" class="hrm-profile-view" style="display: none">
+
+              <!-- Profile Top Navigation Bar -->
+              <div class="hrm-profile-topbar">
+                <button class="hrm-back-btn" id="btnBackToHrmList">
+                  <svg viewBox="0 0 24 24"><path d="M20,11V13H8L13.5,18.5L12.08,19.92L4.16,12L12.08,4.08L13.5,5.5L8,11H20Z"/></svg>
+                  Quay lại
+                </button>
+                <div class="hrm-profile-nav-tabs">
+                  <button class="hrm-ptab active" data-ptab="ptab-general">Thông tin chung</button>
+                  <button class="hrm-ptab" data-ptab="ptab-resume">Sơ yếu lý lịch</button>
+                  <button class="hrm-ptab" data-ptab="ptab-contract">Công việc &amp; Hợp đồng</button>
+                  <button class="hrm-ptab" data-ptab="ptab-salary">Lương &amp; Phúc lợi</button>
+                  <button class="hrm-ptab" data-ptab="ptab-leave">Thông tin phép</button>
+                  <button class="hrm-ptab" data-ptab="ptab-compensatory">Thông tin nghỉ bù</button>
+                </div>
+                <div class="hrm-profile-header-actions">
+                  <button class="hrm-btn-icon-action" id="btnUpdateProfileEdit">
+                    <svg viewBox="0 0 24 24"><path d="M20.71,7.04C21.1,6.65 21.1,6 20.71,5.63L18.37,3.29C18,2.9 17.35,2.9 16.96,3.29L15.12,5.12L18.87,8.87M3,17.25V21H6.75L17.81,9.93L14.06,6.18L3,17.25Z"/></svg>
+                    Cập nhật
+                  </button>
+                </div>
+              </div>
+
+              <!-- Tab: Thông tin chung -->
+              <div id="ptab-general" class="hrm-ptab-panel active">
+                <div class="hrm-profile-grid">
+
+                  <!-- Left: Basic Info Card -->
+                  <div class="hrm-profile-info-card">
+                    <div class="profile-avatar-section">
+                      <div class="profile-avatar-lg" id="profileAvatarLg">NV</div>
+                      <div class="profile-name-block">
+                        <h2 id="profileFullName">--</h2>
+                        <span class="profile-emp-code" id="profileEmpCode">Mã --</span>
+                        <div class="profile-positions" id="profilePositions">--</div>
+                        <span class="profile-status-badge active-badge" id="profileStatusBadge">Đang làm việc</span>
+                      </div>
+                    </div>
+                    <div class="profile-info-rows">
+                      <div class="profile-info-row">
+                        <span class="info-label">Tên tài khoản</span>
+                        <span class="info-val" id="profileUsername">--</span>
+                      </div>
+                      <div class="profile-info-row">
+                        <span class="info-label">Ngày nhận việc</span>
+                        <span class="info-val" id="profileJoinDate">--</span>
+                      </div>
+                      <div class="profile-info-row">
+                        <span class="info-label">Email</span>
+                        <a class="info-val link" id="profileEmail" href="#">--</a>
+                      </div>
+                      <div class="profile-info-row">
+                        <span class="info-label">Ngày sinh</span>
+                        <span class="info-val" id="profileBirthday">--</span>
+                      </div>
+                      <div class="profile-info-row">
+                        <span class="info-label">Điện thoại</span>
+                        <a class="info-val link" id="profilePhone" href="#">--</a>
+                      </div>
+                      <div class="profile-info-row">
+                        <span class="info-label">Nguyên quán</span>
+                        <span class="info-val" id="profileHometown">--</span>
+                      </div>
+                      <div class="profile-info-row">
+                        <span class="info-label">Giới tính</span>
+                        <span class="info-val" id="profileGender">--</span>
+                      </div>
+                      <div class="profile-info-row">
+                        <span class="info-label">Hôn nhân</span>
+                        <span class="info-val" id="profileMarital">--</span>
+                      </div>
+                      <div class="profile-info-row">
+                        <span class="info-label">Học vấn</span>
+                        <span class="info-val" id="profileEducation">--</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Middle Column -->
+                  <div class="hrm-profile-mid-col">
+                    <!-- Debt Card -->
+                    <div class="hrm-metric-card">
+                      <div class="metric-card-header"><h4>Công nợ</h4></div>
+                      <div class="debt-total-row">
+                        <div class="debt-icon">₫</div>
+                        <span class="debt-label">Tổng công nợ</span>
+                        <span class="debt-amount" id="profileTotalDebt">0 đ</span>
+                      </div>
+                      <div class="debt-breakdown">
+                        <div class="debt-row">
+                          <span class="debt-type">
+                            <span class="debt-type-icon" style="background: #FEF3C7; color: #D97706;">
+                              <svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><path d="M19,3H5C3.9,3 3,3.9 3,5V19C3,20.1 3.9,21 5,21H19C20.1,21 21,20.1 21,19V5C21,3.9 20.1,3 19,3M19,19H5V5H19V19M11,17H13V11H11V17M11,9H13V7H11V9Z"/></svg>
+                            </span>
+                            Công ty nợ
+                          </span>
+                          <span class="debt-val" id="profileCompanyDebt">0 đ</span>
+                        </div>
+                        <div class="debt-row">
+                          <span class="debt-type">
+                            <span class="debt-type-icon" style="background: #E0F2FE; color: #0369A1;">
+                              <svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><path d="M12,4A4,4 0 0,1 16,8A4,4 0 0,1 12,12A4,4 0 0,1 8,8A4,4 0 0,1 12,4M12,14C16.42,14 20,15.79 20,18V20H4V18C4,15.79 7.58,14 12,14Z"/></svg>
+                            </span>
+                            Bạn nợ
+                          </span>
+                          <span class="debt-val" id="profilePersonalDebt">0 đ</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- Skills Radar Card -->
+                    <div class="hrm-metric-card">
+                      <div class="metric-card-header"><h4>Kỹ năng làm việc</h4></div>
+                      <div class="radar-chart-wrapper">
+                        <canvas id="skillsRadarChart" width="260" height="230"></canvas>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Right Column -->
+                  <div class="hrm-profile-right-col">
+                    <!-- Work Efficiency Donut Card -->
+                    <div class="hrm-metric-card">
+                      <div class="metric-card-header"><h4>Hiệu quả công việc</h4></div>
+                      <div class="donut-chart-wrapper">
+                        <canvas id="workEfficiencyChart" width="180" height="180"></canvas>
+                      </div>
+                      <div class="efficiency-legend">
+                        <div class="legend-item"><span class="legend-dot" style="background:#4CAF50"></span>Hoàn thành trước hạn<strong id="legEarly">40%</strong></div>
+                        <div class="legend-item"><span class="legend-dot" style="background:#3FA2F6"></span>Hoàn thành đúng hạn<strong id="legOnTime">10%</strong></div>
+                        <div class="legend-item"><span class="legend-dot" style="background:#FFC107"></span>Hoàn thành quá hạn<strong id="legLate">20%</strong></div>
+                        <div class="legend-item"><span class="legend-dot" style="background:#F44336"></span>Chưa hoàn thành<strong id="legPending">30%</strong></div>
+                      </div>
+                    </div>
+
+                    <!-- Income Card -->
+                    <div class="hrm-metric-card">
+                      <div class="metric-card-header"><h4>Thu nhập</h4></div>
+                      <div class="income-display">
+                        <span class="income-label">
+                          <span class="income-icon">
+                            <svg viewBox="0 0 24 24"><path d="M11.5,2C6.81,2 3,5.81 3,10.5C3,14.63 5.75,18.1 9.5,19.22V20H8V22H16V20H14.5V19.22C18.25,18.1 21,14.63 21,10.5C21,5.81 17.19,2 12.5,2H11.5M11.5,4H12.5C16.09,4 19,6.91 19,10.5C19,14.09 16.09,17 12.5,17H11.5C7.91,17 5,14.09 5,10.5C5,6.91 7.91,4 11.5,4M12,6V7.19C11,7.37 10,8.12 10,9.25C10,10.5 11,11.12 12.25,11.5C13.5,11.87 13.75,12.25 13.75,12.75C13.75,13.37 13.12,13.75 12.25,13.75C11.37,13.75 10.87,13.37 10.75,12.75H9.25C9.37,13.87 10.19,14.75 11.25,15V16H12.75V15C13.87,14.75 14.75,13.87 14.75,12.75C14.75,11.5 13.75,10.87 12.5,10.5C11.25,10.12 11,9.75 11,9.25C11,8.75 11.5,8.25 12.25,8.25C12.87,8.25 13.37,8.62 13.5,9.25H15C14.87,8.12 14.06,7.31 13,7.06V6H12Z"/></svg>
+                          </span>
+                          Tổng thu nhập
+                        </span>
+                        <span class="income-amount" id="profileIncome">-- đ</span>
+                      </div>
+                    </div>
+                  </div>
+
+                </div>
+              </div>
+
+              <!-- Tab: Sơ yếu lý lịch -->
+              <div id="ptab-resume" class="hrm-ptab-panel">
+                <div class="hrm-tab-placeholder">
+                  <svg viewBox="0 0 24 24"><path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z"/></svg>
+                  <h3>Sơ yếu lý lịch</h3>
+                  <p>Chức năng đang được phát triển</p>
+                </div>
+              </div>
+
+              <!-- Tab: Công việc & Hợp đồng -->
+              <div id="ptab-contract" class="hrm-ptab-panel">
+                <div class="hrm-tab-placeholder">
+                  <svg viewBox="0 0 24 24"><path d="M19,3H5C3.89,3 3,3.89 3,5V19A2,2 0 0,0 5,21H19A2,2 0 0,0 21,19V5C21,3.89 20.1,3 19,3M19,19H5V5H19V19M17,12H7V10H17V12M17,16H7V14H17V16M14,8H7V6H14V8Z"/></svg>
+                  <h3>Công việc &amp; Hợp đồng</h3>
+                  <p>Chức năng đang được phát triển</p>
+                </div>
+              </div>
+
+              <!-- Tab: Lương & Phúc lợi -->
+              <div id="ptab-salary" class="hrm-ptab-panel">
+                <div class="hrm-tab-placeholder">
+                  <svg viewBox="0 0 24 24"><path d="M11.5,2C6.81,2 3,5.81 3,10.5C3,14.63 5.75,18.1 9.5,19.22V20H8V22H16V20H14.5V19.22C18.25,18.1 21,14.63 21,10.5C21,5.81 17.19,2 12.5,2H11.5M11.5,4H12.5C16.09,4 19,6.91 19,10.5C19,14.09 16.09,17 12.5,17H11.5C7.91,17 5,14.09 5,10.5C5,6.91 7.91,4 11.5,4M12,6V7.19C11,7.37 10,8.12 10,9.25C10,10.5 11,11.12 12.25,11.5C13.5,11.87 13.75,12.25 13.75,12.75C13.75,13.37 13.12,13.75 12.25,13.75C11.37,13.75 10.87,13.37 10.75,12.75H9.25C9.37,13.87 10.19,14.75 11.25,15V16H12.75V15C13.87,14.75 14.75,13.87 14.75,12.75C14.75,11.5 13.75,10.87 12.5,10.5C11.25,10.12 11,9.75 11,9.25C11,8.75 11.5,8.25 12.25,8.25C12.87,8.25 13.37,8.62 13.5,9.25H15C14.87,8.12 14.06,7.31 13,7.06V6H12Z"/></svg>
+                  <h3>Lương &amp; Phúc lợi</h3>
+                  <p>Chức năng đang được phát triển</p>
+                </div>
+              </div>
+
+              <!-- Tab: Thông tin phép -->
+              <div id="ptab-leave" class="hrm-ptab-panel">
+                <div class="hrm-tab-placeholder">
+                  <svg viewBox="0 0 24 24"><path d="M19,4H18V2H16V4H8V2H6V4H5C3.89,4 3,4.9 3,6V20A2,2 0 0,0 5,22H19A2,2 0 0,0 21,20V6A2,2 0 0,0 19,4M19,20H5V10H19V20M19,8H5V6H19V8Z"/></svg>
+                  <h3>Thông tin phép</h3>
+                  <p>Chức năng đang được phát triển</p>
+                </div>
+              </div>
+
+              <!-- Tab: Thông tin nghỉ bù -->
+              <div id="ptab-compensatory" class="hrm-ptab-panel">
+                <div class="hrm-tab-placeholder">
+                  <svg viewBox="0 0 24 24"><path d="M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M16.2,16.2L11,13V7H12.5V12.2L17,14.9L16.2,16.2Z"/></svg>
+                  <h3>Thông tin nghỉ bù</h3>
+                  <p>Chức năng đang được phát triển</p>
+                </div>
+              </div>
+
+            </div>
           </div>
         </div>
       </div>
@@ -6377,12 +6579,12 @@
 
     <!-- HRM Staff Modal -->
     <div class="modal-overlay" id="hrmStaffModal" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.5); z-index: 1000; justify-content: center; align-items: center; padding: 2rem; backdrop-filter: blur(4px);">
-      <div class="login-card" style="max-width: 550px; padding: 2.5rem; width: 100%; border-radius: var(--border-radius-lg); box-shadow: var(--shadow-lg);">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+      <div class="login-card" style="max-width: 580px; padding: 2.5rem; width: 100%; border-radius: var(--border-radius-lg); box-shadow: var(--shadow-lg); display: flex; flex-direction: column; max-height: 92vh;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-shrink: 0;">
           <h3 id="hrmStaffModalTitle" style="font-family: var(--font-serif); font-size: 1.3rem; font-weight: 500; color: var(--text-main);">+ THÊM NHÂN SỰ MỚI</h3>
           <button type="button" id="btnCloseHrmStaffModal" style="font-size: 1.5rem; color: var(--text-muted); cursor: pointer;">&times;</button>
         </div>
-        <form id="hrmStaffForm" class="hrm-modal-form">
+        <form id="hrmStaffForm" class="hrm-modal-form" style="overflow-y: auto; flex: 1; padding-right: 4px;">
           <input type="hidden" id="hrmStaffEditId" />
           <div class="hrm-form-row">
             <div class="form-group-login"><label for="hrmStaffName">Họ và tên *</label><input type="text" id="hrmStaffName" placeholder="Nguyễn Văn A" required /></div>
@@ -6410,7 +6612,37 @@
               </select>
             </div>
           </div>
-          <button type="submit" class="btn-submit-login" style="width: 100%;">LƯU THÔNG TIN NHÂN SỰ</button>
+          <div class="hrm-form-row">
+            <div class="form-group-login"><label for="hrmStaffCode">Mã nhân viên</label><input type="text" id="hrmStaffCode" placeholder="VD: 0267/HN.0267" /></div>
+            <div class="form-group-login"><label for="hrmStaffUsername">Tên tài khoản</label><input type="text" id="hrmStaffUsername" placeholder="VD: nguyenvana" /></div>
+          </div>
+          <div class="hrm-form-row">
+            <div class="form-group-login"><label for="hrmStaffBirthday">Ngày sinh</label><input type="date" id="hrmStaffBirthday" /></div>
+            <div class="form-group-login"><label for="hrmStaffGender">Giới tính</label>
+              <select id="hrmStaffGender">
+                <option value="">-- Chọn --</option>
+                <option value="Nam">Nam</option>
+                <option value="Nữ">Nữ</option>
+                <option value="Khác">Khác</option>
+              </select>
+            </div>
+          </div>
+          <div class="hrm-form-row">
+            <div class="form-group-login"><label for="hrmStaffHometown">Nguyên quán</label><input type="text" id="hrmStaffHometown" placeholder="VD: P. Minh Khai, TP. Hà Nội" /></div>
+            <div class="form-group-login"><label for="hrmStaffMarital">Hôn nhân</label>
+              <select id="hrmStaffMarital">
+                <option value="">-- Chọn --</option>
+                <option value="Độc thân">Độc thân</option>
+                <option value="Đã kết hôn">Đã kết hôn</option>
+                <option value="Đã ly hôn">Đã ly hôn</option>
+              </select>
+            </div>
+          </div>
+          <div class="hrm-form-row">
+            <div class="form-group-login"><label for="hrmStaffEducation">Học vấn</label><input type="text" id="hrmStaffEducation" placeholder="VD: Cử nhân ĐH Kinh tế quốc dân" /></div>
+            <div class="form-group-login"><label for="hrmStaffSalary">Lương cơ bản (VNĐ)</label><input type="number" id="hrmStaffSalary" placeholder="0" min="0" /></div>
+          </div>
+          <button type="submit" class="btn-submit-login" style="width: 100%; margin-top: 0.5rem; flex-shrink: 0;">LƯU THÔNG TIN NHÂN SỰ</button>
         </form>
       </div>
     </div>

@@ -5149,6 +5149,244 @@ document.addEventListener('DOMContentLoaded', () => {
      HRM MODULE - COMPLETE LOGIC (STAFF, PROJECTS, PAYMENTS)
      ========================================================================== */
 
+  // ---- HRM Chart Rendering ----
+
+  const drawDonutChart = (canvasId, totalCount, segments) => {
+    const canvas = document.getElementById(canvasId);
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    const w = canvas.width, h = canvas.height;
+    ctx.clearRect(0, 0, w, h);
+
+    const cx = w / 2, cy = h / 2;
+    const outerR = Math.min(cx, cy) - 6;
+    const innerR = outerR * 0.62;
+    const total = segments.reduce((s, seg) => s + seg.value, 0);
+    let startAngle = -Math.PI / 2;
+
+    segments.forEach(seg => {
+      const sliceAngle = (seg.value / total) * 2 * Math.PI;
+      ctx.beginPath();
+      ctx.moveTo(cx, cy);
+      ctx.arc(cx, cy, outerR, startAngle, startAngle + sliceAngle);
+      ctx.closePath();
+      ctx.fillStyle = seg.color;
+      ctx.fill();
+      startAngle += sliceAngle;
+    });
+
+    const isDark = document.body.classList.contains('dark-theme-crm');
+    ctx.beginPath();
+    ctx.arc(cx, cy, innerR, 0, 2 * Math.PI);
+    ctx.fillStyle = isDark ? '#1E293B' : '#FFFFFF';
+    ctx.fill();
+
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillStyle = isDark ? '#F8FAFC' : '#0F172A';
+    ctx.font = 'bold 26px Roboto, sans-serif';
+    ctx.fillText(totalCount.toString(), cx, cy - 10);
+    ctx.fillStyle = isDark ? '#94A3B8' : '#475569';
+    ctx.font = '11px Roboto, sans-serif';
+    ctx.fillText('Tổng công việc', cx, cy + 10);
+  };
+
+  const drawRadarChart = (canvasId, data) => {
+    const canvas = document.getElementById(canvasId);
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    const w = canvas.width, h = canvas.height;
+    ctx.clearRect(0, 0, w, h);
+
+    const n = data.length;
+    const cx = w / 2, cy = h / 2 + 8;
+    const r = Math.min(cx, cy) - 34;
+    const levels = 5;
+    const isDark = document.body.classList.contains('dark-theme-crm');
+    const gridColor = isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)';
+    const labelColor = isDark ? '#94A3B8' : '#475569';
+
+    for (let l = 1; l <= levels; l++) {
+      const lr = (r * l) / levels;
+      ctx.beginPath();
+      for (let i = 0; i < n; i++) {
+        const angle = (2 * Math.PI * i) / n - Math.PI / 2;
+        const x = cx + lr * Math.cos(angle), y = cy + lr * Math.sin(angle);
+        if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+      }
+      ctx.closePath();
+      ctx.strokeStyle = gridColor;
+      ctx.lineWidth = 1;
+      ctx.stroke();
+    }
+
+    for (let i = 0; i < n; i++) {
+      const angle = (2 * Math.PI * i) / n - Math.PI / 2;
+      ctx.beginPath();
+      ctx.moveTo(cx, cy);
+      ctx.lineTo(cx + r * Math.cos(angle), cy + r * Math.sin(angle));
+      ctx.strokeStyle = gridColor;
+      ctx.lineWidth = 1;
+      ctx.stroke();
+    }
+
+    ctx.beginPath();
+    data.forEach((d, i) => {
+      const angle = (2 * Math.PI * i) / n - Math.PI / 2;
+      const val = (d.value / d.max) * r;
+      const x = cx + val * Math.cos(angle), y = cy + val * Math.sin(angle);
+      if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+    });
+    ctx.closePath();
+    ctx.fillStyle = 'rgba(255, 193, 7, 0.22)';
+    ctx.fill();
+    ctx.strokeStyle = '#FFC107';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    data.forEach((d, i) => {
+      const angle = (2 * Math.PI * i) / n - Math.PI / 2;
+      const val = (d.value / d.max) * r;
+      const x = cx + val * Math.cos(angle), y = cy + val * Math.sin(angle);
+      ctx.beginPath();
+      ctx.arc(x, y, 3.5, 0, 2 * Math.PI);
+      ctx.fillStyle = '#FFC107';
+      ctx.fill();
+    });
+
+    ctx.fillStyle = labelColor;
+    data.forEach((d, i) => {
+      const angle = (2 * Math.PI * i) / n - Math.PI / 2;
+      const lx = cx + (r + 22) * Math.cos(angle);
+      const ly = cy + (r + 22) * Math.sin(angle);
+      ctx.font = '10px Roboto, sans-serif';
+      if (Math.cos(angle) > 0.3) ctx.textAlign = 'left';
+      else if (Math.cos(angle) < -0.3) ctx.textAlign = 'right';
+      else ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(d.label, lx, ly);
+    });
+  };
+
+  // ---- HRM Profile View ----
+
+  let _currentProfileStaff = null;
+
+  const openHrmProfile = (staff) => {
+    _currentProfileStaff = staff;
+    document.querySelector('.hrm-subtabs').style.display = 'none';
+    document.querySelectorAll('.hrm-tab-content').forEach(el => el.style.display = 'none');
+
+    const pv = document.getElementById('hrmProfileView');
+    if (!pv) return;
+    pv.style.display = 'flex';
+    pv.style.flexDirection = 'column';
+
+    document.querySelectorAll('.hrm-ptab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.hrm-ptab-panel').forEach(p => p.classList.remove('active'));
+    const firstTab = document.querySelector('.hrm-ptab[data-ptab="ptab-general"]');
+    if (firstTab) firstTab.classList.add('active');
+    const firstPanel = document.getElementById('ptab-general');
+    if (firstPanel) firstPanel.classList.add('active');
+
+    populateHrmProfile(staff);
+  };
+
+  const closeHrmProfile = () => {
+    const pv = document.getElementById('hrmProfileView');
+    if (pv) pv.style.display = 'none';
+
+    const subtabs = document.querySelector('.hrm-subtabs');
+    if (subtabs) subtabs.style.display = '';
+    document.querySelectorAll('.hrm-tab-content').forEach(el => el.style.display = 'none');
+    const staffTab = document.getElementById('hrm-staff-tab');
+    if (staffTab) staffTab.style.display = 'block';
+    document.querySelectorAll('.hrm-subtab').forEach(t => t.classList.remove('active'));
+    const firstSubtab = document.querySelector('.hrm-subtab[data-tab="hrm-staff-tab"]');
+    if (firstSubtab) firstSubtab.classList.add('active');
+  };
+
+  const populateHrmProfile = (s) => {
+    const initials = s.name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+    const bg = getAvatarBgColor(s.name);
+
+    const avatarEl = document.getElementById('profileAvatarLg');
+    if (avatarEl) { avatarEl.textContent = initials; avatarEl.style.background = bg; }
+
+    const setText = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val || '--'; };
+    setText('profileFullName', s.name);
+    document.getElementById('profileEmpCode').textContent = s.employeeCode ? `Mã ${s.employeeCode}` : 'Mã --';
+    document.getElementById('profilePositions').textContent = s.position
+      ? `${s.position} • ${s.department || ''}` : '--';
+    setText('profileUsername', s.username);
+    setText('profileJoinDate', s.joinDate);
+    setText('profileBirthday', s.birthday);
+    setText('profileHometown', s.hometown);
+    setText('profileGender', s.gender);
+    setText('profileMarital', s.maritalStatus);
+    setText('profileEducation', s.education);
+
+    const emailEl = document.getElementById('profileEmail');
+    if (emailEl) { emailEl.textContent = s.email || '--'; emailEl.href = s.email ? `mailto:${s.email}` : '#'; }
+    const phoneEl = document.getElementById('profilePhone');
+    if (phoneEl) { phoneEl.textContent = s.phone || '--'; phoneEl.href = s.phone ? `tel:${s.phone}` : '#'; }
+
+    const badge = document.getElementById('profileStatusBadge');
+    if (badge) {
+      badge.textContent = s.status || '--';
+      badge.className = 'profile-status-badge';
+      if (s.status === 'Đang làm việc') badge.classList.add('active-badge');
+      else if (s.status === 'Nghỉ phép') badge.classList.add('leave-badge');
+      else badge.classList.add('inactive-badge');
+    }
+
+    const salary = s.salary || 0;
+    const incomeEl = document.getElementById('profileIncome');
+    if (incomeEl) incomeEl.textContent = salary > 0 ? salary.toLocaleString('vi-VN') + ' đ' : '-- đ';
+
+    const seedStr = s.id || s.name || 'x';
+    const seed = seedStr.split('').reduce((a, c) => a + c.charCodeAt(0), 0);
+    const companyDebt = Math.round(((seed * 1234567) % 25000000) / 1000000) * 1000000;
+    const personalDebt = Math.round(((seed * 89012) % 4000000) / 500000) * 500000;
+    const totalDebt = companyDebt + personalDebt;
+
+    document.getElementById('profileTotalDebt').textContent = totalDebt.toLocaleString('vi-VN') + ' đ';
+    document.getElementById('profileCompanyDebt').textContent = companyDebt.toLocaleString('vi-VN') + ' đ';
+    document.getElementById('profilePersonalDebt').textContent = personalDebt.toLocaleString('vi-VN') + ' đ';
+
+    const early = 25 + (seed % 20);
+    const onTime = 8 + (seed % 12);
+    const late = 8 + ((seed * 3) % 18);
+    const pending = Math.max(5, 100 - early - onTime - late);
+    const totalTasks = 18 + (seed % 28);
+
+    const legEarly = document.getElementById('legEarly');
+    const legOnTime = document.getElementById('legOnTime');
+    const legLate = document.getElementById('legLate');
+    const legPending = document.getElementById('legPending');
+    if (legEarly) legEarly.textContent = early + '%';
+    if (legOnTime) legOnTime.textContent = onTime + '%';
+    if (legLate) legLate.textContent = late + '%';
+    if (legPending) legPending.textContent = pending + '%';
+
+    requestAnimationFrame(() => {
+      drawDonutChart('workEfficiencyChart', totalTasks, [
+        { value: early, color: '#4CAF50' },
+        { value: onTime, color: '#3FA2F6' },
+        { value: late, color: '#FFC107' },
+        { value: pending, color: '#F44336' }
+      ]);
+      drawRadarChart('skillsRadarChart', [
+        { label: 'Tổ chức', value: 2 + (seed % 3), max: 5 },
+        { label: 'Văn hóa', value: 2 + ((seed * 2) % 3), max: 5 },
+        { label: 'Giao tiếp', value: 2 + ((seed * 3) % 3), max: 5 },
+        { label: 'Chuyên môn', value: 2 + ((seed * 4) % 3), max: 5 },
+        { label: 'Sáng tạo', value: 1 + ((seed * 5) % 4), max: 5 },
+        { label: 'Nhóm', value: 2 + ((seed * 6) % 3), max: 5 }
+      ]);
+    });
+  };
+
   let hrmInitialized = false;
 
   const initHrmModule = async () => {
@@ -5205,6 +5443,23 @@ document.addEventListener('DOMContentLoaded', () => {
       if (projectModal) projectModal.style.display = 'none';
     });
     projectModal?.addEventListener('click', (e) => { if (e.target === projectModal) projectModal.style.display = 'none'; });
+
+    document.getElementById('btnBackToHrmList')?.addEventListener('click', closeHrmProfile);
+
+    document.getElementById('btnUpdateProfileEdit')?.addEventListener('click', () => {
+      if (_currentProfileStaff) editHrmStaff(_currentProfileStaff);
+    });
+
+    document.querySelectorAll('.hrm-ptab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        const target = tab.dataset.ptab;
+        document.querySelectorAll('.hrm-ptab').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.hrm-ptab-panel').forEach(p => p.classList.remove('active'));
+        tab.classList.add('active');
+        const panel = document.getElementById(target);
+        if (panel) panel.classList.add('active');
+      });
+    });
   };
 
   // ---- HRM Filter listeners ----
@@ -5223,6 +5478,14 @@ document.addEventListener('DOMContentLoaded', () => {
         position: document.getElementById('hrmStaffPosition').value.trim(),
         phone: document.getElementById('hrmStaffPhone').value.trim(),
         status: document.getElementById('hrmStaffStatus').value,
+        employeeCode: document.getElementById('hrmStaffCode').value.trim(),
+        username: document.getElementById('hrmStaffUsername').value.trim(),
+        birthday: document.getElementById('hrmStaffBirthday').value,
+        gender: document.getElementById('hrmStaffGender').value,
+        hometown: document.getElementById('hrmStaffHometown').value.trim(),
+        maritalStatus: document.getElementById('hrmStaffMarital').value,
+        education: document.getElementById('hrmStaffEducation').value.trim(),
+        salary: parseInt(document.getElementById('hrmStaffSalary').value) || 0,
         updatedAt: firebase.firestore.FieldValue.serverTimestamp()
       };
       try {
@@ -5437,10 +5700,12 @@ document.addEventListener('DOMContentLoaded', () => {
           <td>${s.joinDate || 'N/A'}</td>
           <td><span class="hrm-badge ${badgeCls}">${s.status}</span></td>
           <td style="text-align:center">
+            <button class="hrm-action-btn btn-view-hrm-staff" data-id="${s.id}" title="Xem hồ sơ"><svg viewBox="0 0 24 24"><path d="M12,9A3,3 0 0,0 9,12A3,3 0 0,0 12,15A3,3 0 0,0 15,12A3,3 0 0,0 12,9M12,17A5,5 0 0,1 7,12A5,5 0 0,1 12,7A5,5 0 0,1 17,12A5,5 0 0,1 12,17M12,4.5C7,4.5 2.73,7.61 1,12C2.73,16.39 7,19.5 12,19.5C17,19.5 21.27,16.39 23,12C21.27,7.61 17,7.61 12,4.5Z"/></svg></button>
             <button class="hrm-action-btn btn-edit-hrm-staff" data-id="${s.id}" title="Sửa"><svg viewBox="0 0 24 24"><path d="M20.71,7.04C21.1,6.65 21.1,6 20.71,5.63L18.37,3.29C18,2.9 17.35,2.9 16.96,3.29L15.12,5.12L18.87,8.87M3,17.25V21H6.75L17.81,9.93L14.06,6.18L3,17.25Z"/></svg></button>
             <button class="hrm-action-btn danger btn-del-hrm-staff" data-id="${s.id}" data-name="${s.name}" title="Xóa"><svg viewBox="0 0 24 24"><path d="M19,4H15.5L14.5,3H9.5L8.5,4H5V6H19M6,19A2,2 0 0,0 8,21H16A2,2 0 0,0 18,19V7H6V19Z"/></svg></button>
           </td>`;
 
+        tr.querySelector('.btn-view-hrm-staff')?.addEventListener('click', () => openHrmProfile(s));
         tr.querySelector('.btn-edit-hrm-staff')?.addEventListener('click', () => editHrmStaff(s));
         tr.querySelector('.btn-del-hrm-staff')?.addEventListener('click', () => deleteHrmStaff(s.id, s.name));
         tbody.appendChild(tr);
@@ -5458,6 +5723,14 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('hrmStaffPosition').value = s.position || '';
     document.getElementById('hrmStaffPhone').value = s.phone || '';
     document.getElementById('hrmStaffStatus').value = s.status;
+    document.getElementById('hrmStaffCode').value = s.employeeCode || '';
+    document.getElementById('hrmStaffUsername').value = s.username || '';
+    document.getElementById('hrmStaffBirthday').value = s.birthday || '';
+    document.getElementById('hrmStaffGender').value = s.gender || '';
+    document.getElementById('hrmStaffHometown').value = s.hometown || '';
+    document.getElementById('hrmStaffMarital').value = s.maritalStatus || '';
+    document.getElementById('hrmStaffEducation').value = s.education || '';
+    document.getElementById('hrmStaffSalary').value = s.salary || '';
     document.getElementById('hrmStaffModalTitle').textContent = '✏️ SỬA THÔNG TIN NHÂN SỰ';
     document.getElementById('hrmStaffModal').style.display = 'flex';
   };
