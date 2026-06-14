@@ -6705,11 +6705,18 @@ document.addEventListener('DOMContentLoaded', () => {
       // Bubble content
       let bubbleContent = '';
       if (msg.recalled) {
-        bubbleContent = `<div class="ioc-msg-bubble recalled">Tin nhắn đã được thu hồi</div>`;
+        bubbleContent = `<div class="ioc-msg-bubble recalled"><svg viewBox="0 0 24 24" style="width:13px;height:13px;fill:currentColor;margin-right:4px;vertical-align:middle"><path d="M12,2A10,10 0 0,1 22,12A10,10 0 0,1 12,22A10,10 0 0,1 2,12A10,10 0 0,1 12,2M12,4A8,8 0 0,0 4,12A8,8 0 0,0 12,20A8,8 0 0,0 20,12A8,8 0 0,0 12,4M11,9H13V13H11V9M11,15H13V17H11V15Z"/></svg>Tin nhắn đã được thu hồi</div>`;
       } else {
-        const editedBadge = msg.edited ? `<span class="ioc-msg-edited">(đã sửa)</span>` : '';
-        const pinnedBadge = msg.pinned ? `<span class="ioc-msg-pinned-badge">📌</span>` : '';
-        bubbleContent = `<div class="ioc-msg-bubble" data-msgid="${msg.id}">${quoteHtml}${esc(msg.content)}${editedBadge}${pinnedBadge}</div>`;
+        const editedBadge = msg.edited ? `<span class="ioc-msg-edited">đã sửa</span>` : '';
+        const pinnedBadge = msg.pinned ? `<span class="ioc-msg-pinned-badge">📌 Đã ghim</span>` : '';
+        let mediaHtml = '';
+        if (msg.imageUrl) {
+          mediaHtml = `<div class="ioc-msg-img-wrap"><img src="${msg.imageUrl}" class="ioc-msg-img" alt="ảnh" loading="lazy" /></div>`;
+        } else if (msg.fileName) {
+          mediaHtml = `<div class="ioc-msg-file-pill"><svg viewBox="0 0 24 24"><path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z"/></svg>${esc(msg.fileName)}</div>`;
+        }
+        const textPart = msg.content ? `<span class="ioc-msg-text">${esc(msg.content)}</span>` : '';
+        bubbleContent = `<div class="ioc-msg-bubble" data-msgid="${msg.id}">${quoteHtml}${mediaHtml}${textPart}${editedBadge}${pinnedBadge}</div>`;
       }
 
       // Hover action bar
@@ -6884,7 +6891,45 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   };
 
+  // ── Pending file attachment state ──
+  let _iocPendingFile = null; // { dataUrl, fileName, isImage }
+
+  const iocShowFilePreview = (file) => {
+    const strip = document.getElementById('iocFilePreviewStrip');
+    const inner = document.getElementById('iocFilePreviewInner');
+    if (!strip || !inner) return;
+    const isImage = file.type.startsWith('image/');
+    if (isImage) {
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        _iocPendingFile = { dataUrl: ev.target.result, fileName: file.name, isImage: true };
+        inner.innerHTML = `<img src="${ev.target.result}" class="ioc-file-preview-img" alt="${esc(file.name)}" /><span class="ioc-file-preview-name">${esc(file.name)}</span>`;
+        strip.style.display = 'flex';
+      };
+      reader.readAsDataURL(file);
+    } else {
+      _iocPendingFile = { dataUrl: null, fileName: file.name, isImage: false };
+      inner.innerHTML = `<div class="ioc-file-preview-pill"><svg viewBox="0 0 24 24"><path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z"/></svg><span>${esc(file.name)}</span></div>`;
+      strip.style.display = 'flex';
+    }
+  };
+
+  const iocClearFilePreview = () => {
+    _iocPendingFile = null;
+    const strip = document.getElementById('iocFilePreviewStrip');
+    const inner = document.getElementById('iocFilePreviewInner');
+    if (strip) strip.style.display = 'none';
+    if (inner) inner.innerHTML = '';
+  };
+
   // ── Firestore actions ──
+  const iocDelete = async (msgId) => {
+    if (!msgId) return;
+    if (!confirm('Xóa tin nhắn này vĩnh viễn?')) return;
+    try { await db.collection('messages').doc(msgId).delete(); }
+    catch(e) { showToast('Lỗi xóa tin nhắn!', 'error'); }
+  };
+
   const iocRecall = async (msgId) => {
     if (!msgId) return;
     try { await db.collection('messages').doc(msgId).update({ recalled: true, content: '' }); }
@@ -6925,12 +6970,12 @@ document.addEventListener('DOMContentLoaded', () => {
   // ── Send ──
   const sendCrmChatMessage = async () => {
     const input = document.getElementById('crmChatInput');
-    if (!input) return;
+    if (!input || !currentUser) return;
     const content = input.value.trim();
-    if (!content || !currentUser) return;
+    if (!content && !_iocPendingFile) return;
     input.value = '';
-    const payload = {
-      content,
+
+    const base = {
       senderName:  currentUser.name,
       senderEmail: currentUser.email,
       senderRole:  currentUser.role === 'admin' ? 'quản trị viên' : 'nhân viên',
@@ -6940,8 +6985,20 @@ document.addEventListener('DOMContentLoaded', () => {
       edited:      false,
       pinned:      false,
     };
-    if (_iocReplyTo) { payload.replyTo = { ..._iocReplyTo }; iocCancelReply(); }
-    try { await db.collection('messages').add(payload); }
+    if (_iocReplyTo) { base.replyTo = { ..._iocReplyTo }; iocCancelReply(); }
+
+    // If there's a pending file, send it first
+    if (_iocPendingFile) {
+      const filePayload = { ...base, content: content || '' };
+      if (_iocPendingFile.isImage) filePayload.imageUrl = _iocPendingFile.dataUrl;
+      else filePayload.fileName = _iocPendingFile.fileName;
+      iocClearFilePreview();
+      try { await db.collection('messages').add(filePayload); }
+      catch(e) { showToast('Lỗi gửi file!', 'error'); }
+      return;
+    }
+
+    try { await db.collection('messages').add({ ...base, content }); }
     catch(e) { console.error('CRM chat send error:', e); showToast('Lỗi gửi tin nhắn!', 'error'); }
   };
 
@@ -6991,7 +7048,30 @@ document.addEventListener('DOMContentLoaded', () => {
         if (act === 'edit')    iocOpenEdit(msgId);
         if (act === 'forward') showToast('Tính năng chuyển tiếp sắp ra mắt!', 'info');
         if (act === 'relate')  showToast('Tính năng đang phát triển!', 'info');
+        if (act === 'delete')  iocDelete(msgId);
       });
+    });
+
+    // File attachment
+    const fileInput = document.getElementById('iocFileInput');
+    document.getElementById('btnIocAttach')?.addEventListener('click', () => fileInput?.click());
+    fileInput?.addEventListener('change', () => {
+      const file = fileInput.files[0];
+      if (!file) return;
+      if (file.size > 2 * 1024 * 1024) { showToast('File quá lớn (tối đa 2MB)', 'error'); fileInput.value = ''; return; }
+      iocShowFilePreview(file);
+      fileInput.value = '';
+    });
+    document.getElementById('btnClearFilePreview')?.addEventListener('click', iocClearFilePreview);
+
+    // Add people → open find friends modal
+    document.getElementById('btnIocAddPeople')?.addEventListener('click', () => {
+      const modal = document.getElementById('findFriendsModal');
+      if (!modal) return;
+      modal.style.display = 'flex';
+      const inp = document.getElementById('friendSearchInput');
+      if (inp) { inp.value = ''; inp.focus(); }
+      renderFriendsSearchResults('');
     });
 
     // Dismiss context menu & emoji on outside click

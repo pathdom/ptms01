@@ -4250,6 +4250,7 @@ body.dark-theme-crm {
 }
 
 .ioc-sidebar-title { font-size: 0.95rem; font-weight: 700; color: var(--text-main); }
+.ioc-sidebar-head-acts { display: flex; align-items: center; gap: 0.15rem; }
 
 .ioc-icon-btn {
   width: 32px;
@@ -4515,46 +4516,139 @@ body.dark-theme-crm {
 
 /* Bubble */
 .ioc-msg-bubble {
-  padding: 0.5rem 0.9rem;
-  border-radius: 16px;
-  font-size: 0.83rem;
-  line-height: 1.55;
+  padding: 0.55rem 1rem;
+  border-radius: 18px;
+  font-size: 0.85rem;
+  line-height: 1.6;
   word-break: break-word;
   position: relative;
+  max-width: 100%;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.07);
 }
 .ioc-msg-row:not(.self) .ioc-msg-bubble {
-  background: var(--bg-card);
+  background: #fff;
   color: var(--text-main);
   border: 1px solid var(--border);
-  border-bottom-left-radius: 4px;
+  border-bottom-left-radius: 5px;
 }
 .ioc-msg-row.self .ioc-msg-bubble {
   background: var(--crm-blue);
   color: #fff;
-  border-bottom-right-radius: 4px;
+  border-bottom-right-radius: 5px;
 }
 .ioc-msg-bubble.recalled {
   background: none !important;
   border: 1px dashed var(--border) !important;
   color: var(--text-muted) !important;
   font-style: italic;
-  padding: 0.4rem 0.8rem;
+  font-size: 0.8rem;
+  padding: 0.4rem 0.85rem;
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  box-shadow: none;
 }
+.ioc-msg-text { display: block; }
+
+/* Images and files in messages */
+.ioc-msg-img-wrap { margin-bottom: 0.3rem; }
+.ioc-msg-img {
+  max-width: 220px;
+  max-height: 200px;
+  border-radius: 10px;
+  display: block;
+  cursor: zoom-in;
+  transition: transform 0.2s;
+}
+.ioc-msg-img:hover { transform: scale(1.02); }
+.ioc-msg-file-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  background: rgba(0,0,0,0.07);
+  border-radius: 8px;
+  padding: 0.35rem 0.7rem;
+  font-size: 0.78rem;
+  font-weight: 500;
+  margin-bottom: 0.15rem;
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.ioc-msg-file-pill svg { width: 14px; height: 14px; flex-shrink: 0; fill: currentColor; }
+.ioc-msg-row.self .ioc-msg-file-pill { background: rgba(255,255,255,0.18); }
 
 /* Edited label */
-.ioc-msg-edited { font-size: 0.65rem; opacity: 0.65; margin-left: 0.3rem; }
+.ioc-msg-edited {
+  font-size: 0.63rem;
+  opacity: 0.6;
+  margin-left: 0.35rem;
+  font-style: italic;
+}
 
 /* Pin indicator */
 .ioc-msg-pinned-badge {
-  font-size: 0.65rem;
-  background: rgba(255,215,0,0.2);
-  color: #B45309;
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  font-size: 0.63rem;
+  background: rgba(255,193,7,0.15);
+  color: #92651a;
   border-radius: 4px;
-  padding: 1px 5px;
-  margin-left: 0.3rem;
+  padding: 1px 6px;
+  margin-left: 0.4rem;
   font-weight: 600;
 }
-.ioc-msg-row.self .ioc-msg-pinned-badge { background: rgba(255,255,255,0.2); color: rgba(255,255,255,0.85); }
+.ioc-msg-row.self .ioc-msg-pinned-badge { background: rgba(255,255,255,0.22); color: rgba(255,255,255,0.9); }
+
+/* File preview strip (above input bar) */
+.ioc-file-preview-strip {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  background: var(--bg-card);
+  border-top: 1px solid var(--border);
+  animation: hrmFadeIn 0.15s ease;
+}
+.ioc-file-preview-inner {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex: 1;
+  overflow: hidden;
+}
+.ioc-file-preview-img {
+  width: 48px;
+  height: 48px;
+  object-fit: cover;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  flex-shrink: 0;
+}
+.ioc-file-preview-name {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.ioc-file-preview-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 0.35rem 0.7rem;
+  font-size: 0.78rem;
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.ioc-file-preview-pill svg { width: 14px; height: 14px; fill: var(--text-muted); flex-shrink: 0; }
 
 .ioc-msg-meta { display: flex; align-items: center; gap: 0.15rem; padding: 0 0.3rem; }
 .ioc-msg-time { font-size: 0.67rem; color: var(--text-muted); }
