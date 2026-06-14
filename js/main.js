@@ -6480,6 +6480,14 @@ document.addEventListener('DOMContentLoaded', () => {
     _crmStaffProfileStaff = s;
     const overlay = document.getElementById('crmStaffProfileView');
     if (!overlay) return;
+
+    // Ensure overlay lives inside portal-main-workspace so position:absolute
+    // covers only the main area and leaves the sidebar visible
+    const workspace = document.querySelector('.portal-main-workspace');
+    if (workspace && overlay.parentElement !== workspace) {
+      workspace.appendChild(overlay);
+    }
+
     document.querySelectorAll('.crmsp-tab').forEach(t => t.classList.remove('active'));
     document.querySelectorAll('.crmsp-panel').forEach(p => p.classList.remove('active'));
     const firstTab = document.querySelector('.crmsp-tab[data-ctab="cptab-general"]');

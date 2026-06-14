@@ -4118,11 +4118,11 @@ body.dark-theme-crm {
 .crm-row-action-btn.edit:hover   { background: #F0FDF4; color: #16A34A; }
 .crm-row-action-btn.delete:hover { background: #FEF2F2; color: #DC2626; }
 
-/* CRM Staff Full-Page Profile Overlay */
+/* CRM Staff Full-Page Profile Overlay — sits inside .portal-main-workspace (position:relative) */
 .crm-staff-profile-overlay {
-  position: fixed;
+  position: absolute;
   inset: 0;
-  z-index: 999;
+  z-index: 100;
   background: var(--bg-primary);
   display: flex;
   flex-direction: column;
