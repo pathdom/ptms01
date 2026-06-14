@@ -7168,10 +7168,8 @@ document.addEventListener('DOMContentLoaded', () => {
   const iocRenderMessages = (msgs, searchTerm = '') => {
     const container = document.getElementById('crmChatMessages');
     if (!container) return;
-    const prevCount = _iocMsgs.length;
     _iocMsgs = msgs;
-    // Only update sidebar when message count changes (not on every optimistic re-render)
-    if (msgs.length !== prevCount) iocRenderConvList();
+    iocRenderConvList();
     iocUpdatePinnedCount();
 
     if (!msgs.length) {
@@ -7225,14 +7223,11 @@ document.addEventListener('DOMContentLoaded', () => {
         } else if (msg.fileName) {
           mediaHtml = `<div class="ioc-msg-file-pill"><svg viewBox="0 0 24 24"><path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z"/></svg>${esc(msg.fileName)}</div>`;
         }
-        const textPart    = msg.content ? `<span class="ioc-msg-text">${esc(msg.content)}</span>` : '';
-        const optClass    = msg.id.startsWith('__opt_') ? ' sending' : '';
-        bubbleContent = `<div class="ioc-msg-bubble${optClass}" data-msgid="${msg.id}">${quoteHtml}${mediaHtml}${textPart}${editedBadge}${pinnedBadge}</div>`;
+        const textPart = msg.content ? `<span class="ioc-msg-text">${esc(msg.content)}</span>` : '';
+        bubbleContent = `<div class="ioc-msg-bubble" data-msgid="${msg.id}">${quoteHtml}${mediaHtml}${textPart}${editedBadge}${pinnedBadge}</div>`;
       }
 
-      // Hover action bar (skip for optimistic messages still being written)
-      const isOptimistic = msg.id.startsWith('__opt_');
-      const actionBar = (msg.recalled || isOptimistic) ? '' : `
+      const actionBar = msg.recalled ? '' : `
         <div class="ioc-msg-actions">
           <button class="ioc-msg-action-btn" data-msgid="${msg.id}" data-act="reply" title="Trả lời">
             <svg viewBox="0 0 24 24"><path d="M10,9V5L3,12L10,19V14.9C15,14.9 18.5,16.5 21,20C20,15 17,10 10,9Z"/></svg>
@@ -7271,7 +7266,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Right-click on bubble
     container.querySelectorAll('.ioc-msg-bubble[data-msgid]').forEach(bubble => {
-      if (bubble.dataset.msgid.startsWith('__opt_')) return; // skip optimistic
       bubble.addEventListener('contextmenu', (e) => {
         e.preventDefault();
         const row = bubble.closest('.ioc-msg-row');
@@ -7508,22 +7502,50 @@ document.addEventListener('DOMContentLoaded', () => {
     } catch(e) { showToast('Lỗi chỉnh sửa tin nhắn!', 'error'); }
   };
 
+  // ── Optimistic: directly append a row so it appears before Firestore confirms ──
+  const iocAppendOptimistic = (tempId, payload) => {
+    const container = document.getElementById('crmChatMessages');
+    if (!container) return;
+    // Remove empty-state placeholder if present
+    container.querySelector('.crm-chat-loading')?.remove();
+
+    const ts      = payload.createdAt?.toDate ? payload.createdAt.toDate() : new Date();
+    const timeStr = ts.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
+
+    let inner = '';
+    if (payload.replyTo) {
+      inner += `<div class="ioc-msg-quote"><span class="ioc-msg-quote-sender">${esc(payload.replyTo.senderName)}</span>${esc(payload.replyTo.content)}</div>`;
+    }
+    if (payload.imageUrl) {
+      inner += `<div class="ioc-msg-img-wrap"><img src="${payload.imageUrl}" class="ioc-msg-img" alt="ảnh" /></div>`;
+    } else if (payload.fileName) {
+      inner += `<div class="ioc-msg-file-pill"><svg viewBox="0 0 24 24"><path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z"/></svg>${esc(payload.fileName)}</div>`;
+    }
+    if (payload.content) inner += `<span class="ioc-msg-text">${esc(payload.content)}</span>`;
+
+    const row = document.createElement('div');
+    row.className = 'ioc-msg-row self';
+    row.dataset.optId = tempId;
+    row.innerHTML = `<div class="ioc-msg-body"><div class="ioc-msg-bubble sending">${inner}</div><div class="ioc-msg-meta"><span class="ioc-msg-time">${timeStr}</span></div></div>`;
+    container.appendChild(row);
+    container.scrollTop = container.scrollHeight;
+  };
+
   // ── Send ──
-  const sendCrmChatMessage = async () => {
+  const sendCrmChatMessage = () => {
     const input = document.getElementById('crmChatInput');
     if (!input || !currentUser) return;
     const content = input.value.trim();
     if (!content && !_iocPendingFile) return;
     input.value = '';
 
-    const now = firebase.firestore.Timestamp.now();
     const payload = {
       content:     content || '',
       senderName:  currentUser.name,
       senderEmail: currentUser.email,
       senderRole:  currentUser.role === 'admin' ? 'quản trị viên' : 'nhân viên',
       threadId:    _iocActiveThread.id,
-      createdAt:   now,
+      createdAt:   firebase.firestore.Timestamp.now(),
       recalled:    false,
       edited:      false,
       pinned:      false,
@@ -7535,18 +7557,15 @@ document.addEventListener('DOMContentLoaded', () => {
       iocClearFilePreview();
     }
 
-    // Optimistic render: show immediately, snapshot will replace with real doc
-    const tempId = '__opt_' + now.toMillis();
-    _iocMsgs = [..._iocMsgs, { id: tempId, ...payload }];
-    iocRenderMessages(_iocMsgs, '');
+    // Append to DOM instantly — no async, no waiting
+    const tempId = '__opt_' + Date.now();
+    iocAppendOptimistic(tempId, payload);
 
-    try {
-      await db.collection('messages').add(payload);
-    } catch(e) {
-      _iocMsgs = _iocMsgs.filter(m => m.id !== tempId);
-      iocRenderMessages(_iocMsgs, '');
+    // Write to Firestore in background
+    db.collection('messages').add(payload).catch(() => {
+      document.querySelector(`[data-opt-id="${tempId}"]`)?.remove();
       showToast('Lỗi gửi tin nhắn!', 'error');
-    }
+    });
   };
 
   // ── Setup / teardown ──
@@ -7560,14 +7579,13 @@ document.addEventListener('DOMContentLoaded', () => {
       .where('threadId', '==', _iocActiveThread.id)
       .orderBy('createdAt', 'asc')
       .limitToLast(100)
-      .onSnapshot({ includeMetadataChanges: false }, snap => {
-        const serverMsgs = [];
-        snap.forEach(doc => serverMsgs.push({ id: doc.id, ...doc.data() }));
-        // Keep any optimistic messages whose content is not yet confirmed by server
-        const optimistic = _iocMsgs.filter(m => m.id.startsWith('__opt_') &&
-          !serverMsgs.some(s => s.senderEmail === m.senderEmail && s.createdAt?.toMillis?.() === m.createdAt?.toMillis?.()));
+      .onSnapshot(snap => {
+        const msgs = [];
+        snap.forEach(doc => msgs.push({ id: doc.id, ...doc.data() }));
+        // Remove any optimistic DOM rows before full re-render
+        document.querySelectorAll('[data-opt-id]').forEach(el => el.remove());
         const searchTerm = document.getElementById('iocMsgSearchInput')?.value || '';
-        iocRenderMessages([...serverMsgs, ...optimistic], searchTerm);
+        iocRenderMessages(msgs, searchTerm);
       }, err => console.error('CRM chat error:', err));
   };
 
