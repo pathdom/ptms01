@@ -6445,129 +6445,466 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   };
 
-  // ── CRM Chat ───────────────────────────────────────────────────────────────
+  // ══════════════════════════════════════════════════════════════════════════
+  // 1OFFICE-STYLE INTERNAL CHAT
+  // ══════════════════════════════════════════════════════════════════════════
   let crmChatSubscription = null;
+  let _iocMsgs = [];          // live message cache
+  let _iocReplyTo = null;     // { id, senderName, content }
+  let _iocEditingId = null;   // message id being edited
+  let _iocCtxMsgId = null;    // message id for context menu
 
-  const avatarColor = (str) => {
-    const COLORS = ['#2563EB','#7C3AED','#DB2777','#D97706','#059669','#0891B2','#DC2626','#7E22CE'];
+  const iocAvatarColor = (str) => {
+    const C = ['#2563EB','#7C3AED','#DB2777','#D97706','#059669','#0891B2','#DC2626','#7E22CE'];
     let h = 0;
-    for (let i = 0; i < str.length; i++) h = str.charCodeAt(i) + ((h << 5) - h);
-    return COLORS[Math.abs(h) % COLORS.length];
+    for (let i = 0; i < (str || '').length; i++) h = (str.charCodeAt(i) + ((h << 5) - h)) | 0;
+    return C[Math.abs(h) % C.length];
   };
 
-  const renderCrmChatMembers = () => {
-    const list = document.getElementById('crmChatContactList');
-    const counter = document.getElementById('crmMemberCount');
-    const avatarGroup = document.getElementById('crmChatAvatarGroup');
-    if (!list) return;
+  const iocIsMine = (msg) => {
+    const me = currentUser;
+    if (!me) return false;
+    return (msg.senderEmail && me.email && msg.senderEmail.toLowerCase() === me.email.toLowerCase()) ||
+           (msg.senderName  && me.name  && msg.senderName.toLowerCase()  === me.name.toLowerCase());
+  };
 
-    const members = allUsersList.length ? allUsersList : (currentUser ? [currentUser] : []);
-    if (counter) counter.textContent = `${members.length} người`;
+  const esc = (s) => (s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 
-    list.innerHTML = members.map(u => {
-      const initials = (u.name || 'U').split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
-      const color = avatarColor(u.name || 'U');
-      const role = u.role === 'admin' ? 'Quản trị viên' : 'Nhân viên';
-      return `<div class="crm-contact-item">
-        <div class="crm-contact-avatar" style="background:${color}">
-          ${initials}
-          <span class="crm-contact-online-dot"></span>
-        </div>
-        <div class="crm-contact-info">
-          <div class="crm-contact-name">${u.name || 'Người dùng'}</div>
-          <div class="crm-contact-role">${role}</div>
+  // ── Render conversation list ──
+  const iocRenderConvList = () => {
+    const favEl  = document.getElementById('iocConvList');
+    const recEl  = document.getElementById('iocRecentList');
+    if (!favEl || !recEl) return;
+
+    const lastMsg  = _iocMsgs.length ? _iocMsgs[_iocMsgs.length - 1] : null;
+    const preview  = lastMsg ? esc(lastMsg.recalled ? 'Tin nhắn đã được thu hồi' : lastMsg.content || '') : 'Chưa có tin nhắn';
+    const timeStr  = lastMsg?.createdAt?.toDate ? lastMsg.createdAt.toDate().toLocaleTimeString('vi-VN',{hour:'2-digit',minute:'2-digit'}) : '';
+    const members  = allUsersList.length ? allUsersList : (currentUser ? [currentUser] : []);
+
+    // Favourite: the group
+    favEl.innerHTML = `<div class="ioc-conv-item active">
+      <div class="ioc-conv-av" style="background:#2563EB">N<span class="ioc-online"></span></div>
+      <div class="ioc-conv-body">
+        <div class="ioc-conv-name">Nhóm Nội bộ Aladdin</div>
+        <div class="ioc-conv-preview">${preview}</div>
+      </div>
+      <div class="ioc-conv-meta"><span class="ioc-conv-time">${timeStr}</span></div>
+    </div>`;
+
+    // Recent: individual members
+    recEl.innerHTML = members.slice(0, 8).map(u => {
+      const ini   = (u.name || 'U').split(' ').map(w => w[0]).join('').slice(0,2).toUpperCase();
+      const color = iocAvatarColor(u.name || 'U');
+      const role  = u.role === 'admin' ? 'Quản trị viên' : 'Nhân viên';
+      return `<div class="ioc-conv-item">
+        <div class="ioc-conv-av" style="background:${color}">${ini}<span class="ioc-online"></span></div>
+        <div class="ioc-conv-body">
+          <div class="ioc-conv-name">${esc(u.name || 'Người dùng')}</div>
+          <div class="ioc-conv-preview">${role}</div>
         </div>
       </div>`;
     }).join('');
 
-    if (avatarGroup) {
-      avatarGroup.innerHTML = members.slice(0, 4).map(u => {
-        const initials = (u.name || 'U').split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
-        const color = avatarColor(u.name || 'U');
-        return `<div class="crm-mini-av" style="background:${color}">${initials}</div>`;
-      }).join('');
-    }
+    // Header sub-title
+    const sub = document.getElementById('iocActiveThreadSub');
+    if (sub) sub.textContent = `${members.length} người tham dự`;
+
+    // Member count badge
+    const badge = document.getElementById('crmMemberCount');
+    if (badge) badge.textContent = members.length;
   };
 
-  const renderCrmChatMessages = (msgs) => {
+  // ── Render messages ──
+  const iocRenderMessages = (msgs, searchTerm = '') => {
     const container = document.getElementById('crmChatMessages');
     if (!container) return;
+    _iocMsgs = msgs;
+    iocRenderConvList();
+    iocUpdatePinnedCount();
+
     if (!msgs.length) {
-      container.innerHTML = '<div class="crm-chat-loading">Chưa có tin nhắn nào. Hãy bắt đầu cuộc trò chuyện!</div>';
+      container.innerHTML = '<div class="crm-chat-loading">Chưa có tin nhắn. Hãy bắt đầu cuộc trò chuyện!</div>';
       return;
     }
 
-    const myName = currentUser?.name || '';
+    const myName  = currentUser?.name  || '';
     const myEmail = currentUser?.email || '';
-    let lastDate = '';
-    const fragments = [];
+    let lastDate  = '';
+    let lastSender = '';
+    const parts   = [];
 
-    msgs.forEach(msg => {
-      const ts = msg.createdAt?.toDate ? msg.createdAt.toDate() : new Date();
-      const dateStr = ts.toLocaleDateString('vi-VN', { weekday: 'long', day: '2-digit', month: '2-digit', year: 'numeric' });
+    msgs.forEach((msg, idx) => {
+      if (searchTerm && !(msg.content || '').toLowerCase().includes(searchTerm.toLowerCase())) return;
+
+      const ts      = msg.createdAt?.toDate ? msg.createdAt.toDate() : new Date();
+      const dateStr = ts.toLocaleDateString('vi-VN', { weekday:'long', day:'2-digit', month:'2-digit', year:'numeric' });
       if (dateStr !== lastDate) {
-        fragments.push(`<div class="crm-date-divider"><span>${dateStr}</span></div>`);
+        parts.push(`<div class="ioc-date-divider"><span>${dateStr}</span></div>`);
         lastDate = dateStr;
+        lastSender = '';
       }
 
-      const isMine = (msg.senderEmail && myEmail && msg.senderEmail.toLowerCase() === myEmail.toLowerCase()) ||
-                     (msg.senderName && myName && msg.senderName.toLowerCase() === myName.toLowerCase());
-      const senderLabel = msg.senderName || msg.sender || 'Người dùng';
-      const initials = senderLabel.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
-      const color = avatarColor(senderLabel);
-      const timeStr = ts.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
+      const mine      = iocIsMine(msg);
+      const sender    = msg.senderName || 'Người dùng';
+      const initials  = sender.split(' ').map(w => w[0]).join('').slice(0,2).toUpperCase();
+      const color     = iocAvatarColor(sender);
+      const timeStr   = ts.toLocaleTimeString('vi-VN', { hour:'2-digit', minute:'2-digit' });
+      const condensed = sender === lastSender;
+      lastSender = sender;
 
-      fragments.push(`<div class="crm-msg-row ${isMine ? 'self' : ''}">
-        <div class="crm-msg-av" style="background:${color}">${initials}</div>
-        <div class="crm-msg-content">
-          <span class="crm-msg-sender">${senderLabel}</span>
-          <div class="crm-msg-bubble">${(msg.content || '').replace(/</g, '&lt;')}</div>
-          <span class="crm-msg-time">${timeStr}</span>
+      // Reply quote
+      let quoteHtml = '';
+      if (msg.replyTo) {
+        quoteHtml = `<div class="ioc-msg-quote">
+          <span class="ioc-msg-quote-sender">${esc(msg.replyTo.senderName)}</span>
+          ${esc(msg.replyTo.content)}
+        </div>`;
+      }
+
+      // Bubble content
+      let bubbleContent = '';
+      if (msg.recalled) {
+        bubbleContent = `<div class="ioc-msg-bubble recalled">Tin nhắn đã được thu hồi</div>`;
+      } else {
+        const editedBadge = msg.edited ? `<span class="ioc-msg-edited">(đã sửa)</span>` : '';
+        const pinnedBadge = msg.pinned ? `<span class="ioc-msg-pinned-badge">📌</span>` : '';
+        bubbleContent = `<div class="ioc-msg-bubble" data-msgid="${msg.id}">${quoteHtml}${esc(msg.content)}${editedBadge}${pinnedBadge}</div>`;
+      }
+
+      // Hover action bar
+      const actionBar = msg.recalled ? '' : `
+        <div class="ioc-msg-actions">
+          <button class="ioc-msg-action-btn" data-msgid="${msg.id}" data-act="reply" title="Trả lời">
+            <svg viewBox="0 0 24 24"><path d="M10,9V5L3,12L10,19V14.9C15,14.9 18.5,16.5 21,20C20,15 17,10 10,9Z"/></svg>
+          </button>
+          <button class="ioc-msg-action-btn" data-msgid="${msg.id}" data-act="more" title="Thêm">
+            <svg viewBox="0 0 24 24"><path d="M12,16A2,2 0 0,1 14,18A2,2 0 0,1 12,20A2,2 0 0,1 10,18A2,2 0 0,1 12,16M12,10A2,2 0 0,1 14,12A2,2 0 0,1 12,14A2,2 0 0,1 10,12A2,2 0 0,1 12,10M12,4A2,2 0 0,1 14,6A2,2 0 0,1 12,8A2,2 0 0,1 10,6A2,2 0 0,1 12,4Z"/></svg>
+          </button>
+        </div>`;
+
+      parts.push(`<div class="ioc-msg-row${mine?' self':''}${condensed?' condensed':''}" data-msgid="${msg.id}" data-mine="${mine}">
+        ${mine ? actionBar : ''}
+        <div class="ioc-msg-av" style="background:${color}">${initials}</div>
+        <div class="ioc-msg-body">
+          ${condensed ? '' : `<div class="ioc-msg-name">${esc(sender)}</div>`}
+          ${bubbleContent}
+          <div class="ioc-msg-meta"><span class="ioc-msg-time">${timeStr}</span></div>
         </div>
+        ${!mine ? actionBar : ''}
       </div>`);
     });
 
-    container.innerHTML = fragments.join('');
-    container.scrollTop = container.scrollHeight;
+    const wasAtBottom = container.scrollHeight - container.scrollTop - container.clientHeight < 80;
+    container.innerHTML = parts.join('') || '<div class="crm-chat-loading">Không tìm thấy tin nhắn.</div>';
+
+    // Bind action buttons
+    container.querySelectorAll('.ioc-msg-action-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const row   = btn.closest('.ioc-msg-row');
+        const msgId = btn.dataset.msgid;
+        const act   = btn.dataset.act;
+        if (act === 'reply') { iocSetReply(msgId); return; }
+        if (act === 'more')  { iocShowCtxMenu(e, msgId, row.dataset.mine === 'true'); }
+      });
+    });
+
+    // Right-click on bubble
+    container.querySelectorAll('.ioc-msg-bubble[data-msgid]').forEach(bubble => {
+      bubble.addEventListener('contextmenu', (e) => {
+        e.preventDefault();
+        const row = bubble.closest('.ioc-msg-row');
+        iocShowCtxMenu(e, bubble.dataset.msgid, row.dataset.mine === 'true');
+      });
+    });
+
+    if (wasAtBottom) container.scrollTop = container.scrollHeight;
   };
 
-  const setupCrmChat = () => {
-    if (crmChatSubscription) return;
-    renderCrmChatMembers();
-    crmChatSubscription = db.collection('messages')
-      .where('threadId', '==', 'group-global')
-      .orderBy('createdAt', 'asc')
-      .limitToLast(80)
-      .onSnapshot(snap => {
-        const msgs = [];
-        snap.forEach(doc => { msgs.push({ id: doc.id, ...doc.data() }); });
-        renderCrmChatMessages(msgs);
-      }, err => console.error('CRM chat error:', err));
+  // ── Context menu ──
+  const iocShowCtxMenu = (e, msgId, isMine) => {
+    e.preventDefault();
+    _iocCtxMsgId = msgId;
+    const menu = document.getElementById('iocCtxMenu');
+    if (!menu) return;
+    menu.querySelectorAll('.ioc-ctx-mine-only').forEach(el => { el.style.display = isMine ? 'flex' : 'none'; });
+    const vw = window.innerWidth, vh = window.innerHeight;
+    let x = e.clientX, y = e.clientY;
+    menu.style.display = 'block';
+    const mw = menu.offsetWidth, mh = menu.offsetHeight;
+    if (x + mw > vw) x = vw - mw - 8;
+    if (y + mh > vh) y = vh - mh - 8;
+    menu.style.left = x + 'px';
+    menu.style.top  = y + 'px';
   };
 
-  const teardownCrmChat = () => {
-    if (crmChatSubscription) { crmChatSubscription(); crmChatSubscription = null; }
+  const iocHideCtxMenu = () => {
+    const menu = document.getElementById('iocCtxMenu');
+    if (menu) menu.style.display = 'none';
+    _iocCtxMsgId = null;
   };
 
+  // ── Reply ──
+  const iocSetReply = (msgId) => {
+    const msg = _iocMsgs.find(m => m.id === msgId);
+    if (!msg) return;
+    _iocReplyTo = { id: msgId, senderName: msg.senderName || 'Người dùng', content: msg.content || '' };
+    const strip = document.getElementById('iocReplyStrip');
+    if (strip) strip.style.display = 'flex';
+    document.getElementById('iocReplySender').textContent = _iocReplyTo.senderName;
+    document.getElementById('iocReplyText').textContent   = _iocReplyTo.content;
+    document.getElementById('crmChatInput')?.focus();
+  };
+
+  const iocCancelReply = () => {
+    _iocReplyTo = null;
+    const strip = document.getElementById('iocReplyStrip');
+    if (strip) strip.style.display = 'none';
+  };
+
+  // ── Pinned ──
+  const iocUpdatePinnedCount = () => {
+    const count = _iocMsgs.filter(m => m.pinned && !m.recalled).length;
+    const el = document.getElementById('iocPinnedCount');
+    if (el) el.textContent = count;
+  };
+
+  const iocRenderPinnedPanel = () => {
+    const list = document.getElementById('iocPinnedMsgList');
+    if (!list) return;
+    const pinned = _iocMsgs.filter(m => m.pinned && !m.recalled);
+    list.innerHTML = pinned.length ? pinned.map(m => {
+      const ts = m.createdAt?.toDate ? m.createdAt.toDate().toLocaleTimeString('vi-VN',{hour:'2-digit',minute:'2-digit'}) : '';
+      return `<div class="ioc-pinned-item">
+        <div class="ioc-pinned-item-sender">${esc(m.senderName || '')} · ${ts}</div>
+        <div class="ioc-pinned-item-text">${esc(m.content || '')}</div>
+      </div>`;
+    }).join('') : '<div style="padding:1rem;color:var(--text-muted);font-size:0.82rem;text-align:center">Chưa có tin nhắn được ghim</div>';
+  };
+
+  // ── Members panel ──
+  const iocRenderMembers = () => {
+    const list = document.getElementById('iocMembersList');
+    const cnt  = document.getElementById('iocMemberListCount');
+    if (!list) return;
+    const members = allUsersList.length ? allUsersList : (currentUser ? [currentUser] : []);
+    if (cnt) cnt.textContent = members.length;
+    list.innerHTML = members.map(u => {
+      const ini   = (u.name || 'U').split(' ').map(w => w[0]).join('').slice(0,2).toUpperCase();
+      const color = iocAvatarColor(u.name || 'U');
+      const role  = u.role === 'admin' ? 'Quản trị viên' : 'Nhân viên';
+      return `<div class="ioc-member-item">
+        <div class="ioc-member-av" style="background:${color}">${ini}<span class="ioc-member-online"></span></div>
+        <div>
+          <div class="ioc-member-name">${esc(u.name || 'Người dùng')}</div>
+          <div class="ioc-member-role">${role}</div>
+        </div>
+      </div>`;
+    }).join('');
+  };
+
+  // ── Info panel navigation ──
+  const iocShowInfoMain   = () => { document.getElementById('iocInfoMain').style.display=''; document.getElementById('iocMembersPanel').style.display='none'; document.getElementById('iocPinnedPanel').style.display='none'; };
+  const iocShowMembers    = () => { iocRenderMembers(); document.getElementById('iocInfoMain').style.display='none'; document.getElementById('iocMembersPanel').style.display=''; document.getElementById('iocPinnedPanel').style.display='none'; };
+  const iocShowPinned     = () => { iocRenderPinnedPanel(); document.getElementById('iocInfoMain').style.display='none'; document.getElementById('iocPinnedPanel').style.display=''; document.getElementById('iocMembersPanel').style.display='none'; };
+
+  // ── Emoji picker ──
+  const EMOJIS = ['😀','😂','😍','🥰','😎','🤩','👍','👏','🎉','❤️','🔥','✅','💯','🚀','⭐','😅','🤔','😊','🙌','💪','📌','📎','📝','🎯','💡','✨','🏆','🎊','😭','😤','🤝','💬','📊','🗒️','📅','⏰','🌟','💼','📋','🎁','🛠️','🔍','📈','📉','💰','🌏','🏠','🌺','🦋','🐉'];
+
+  const iocSetupEmojiPicker = () => {
+    const picker = document.getElementById('iocEmojiPicker');
+    if (!picker || picker.childElementCount) return;
+    picker.innerHTML = EMOJIS.map(e =>
+      `<button class="ioc-emoji-btn" data-e="${e}">${e}</button>`
+    ).join('');
+    picker.querySelectorAll('.ioc-emoji-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const input = document.getElementById('crmChatInput');
+        if (input) { input.value += btn.dataset.e; input.focus(); }
+        picker.style.display = 'none';
+      });
+    });
+  };
+
+  const iocToggleEmoji = (e) => {
+    e.stopPropagation();
+    const picker = document.getElementById('iocEmojiPicker');
+    if (!picker) return;
+    iocSetupEmojiPicker();
+    const btn = document.getElementById('btnIocEmoji');
+    if (picker.style.display === 'none' || !picker.style.display) {
+      const rect = btn.getBoundingClientRect();
+      picker.style.left  = (rect.left - 280 + rect.width) + 'px';
+      picker.style.bottom = (window.innerHeight - rect.top + 8) + 'px';
+      picker.style.top   = 'auto';
+      picker.style.display = 'grid';
+    } else {
+      picker.style.display = 'none';
+    }
+  };
+
+  // ── Firestore actions ──
+  const iocRecall = async (msgId) => {
+    if (!msgId) return;
+    try { await db.collection('messages').doc(msgId).update({ recalled: true, content: '' }); }
+    catch(e) { showToast('Lỗi thu hồi tin nhắn!', 'error'); }
+  };
+
+  const iocPin = async (msgId) => {
+    const msg = _iocMsgs.find(m => m.id === msgId);
+    if (!msg) return;
+    try { await db.collection('messages').doc(msgId).update({ pinned: !msg.pinned }); }
+    catch(e) { showToast('Lỗi ghim tin nhắn!', 'error'); }
+  };
+
+  const iocOpenEdit = (msgId) => {
+    const msg = _iocMsgs.find(m => m.id === msgId);
+    if (!msg || msg.recalled) return;
+    _iocEditingId = msgId;
+    const overlay = document.getElementById('iocEditOverlay');
+    const ta      = document.getElementById('iocEditInput');
+    if (!overlay || !ta) return;
+    ta.value = msg.content || '';
+    overlay.style.display = 'flex';
+    ta.focus();
+  };
+
+  const iocConfirmEdit = async () => {
+    if (!_iocEditingId) return;
+    const ta = document.getElementById('iocEditInput');
+    const newContent = ta?.value.trim();
+    if (!newContent) return;
+    try {
+      await db.collection('messages').doc(_iocEditingId).update({ content: newContent, edited: true });
+      document.getElementById('iocEditOverlay').style.display = 'none';
+      _iocEditingId = null;
+    } catch(e) { showToast('Lỗi chỉnh sửa tin nhắn!', 'error'); }
+  };
+
+  // ── Send ──
   const sendCrmChatMessage = async () => {
     const input = document.getElementById('crmChatInput');
     if (!input) return;
     const content = input.value.trim();
     if (!content || !currentUser) return;
     input.value = '';
-    try {
-      await db.collection('messages').add({
-        content,
-        senderName: currentUser.name,
-        senderEmail: currentUser.email,
-        senderRole: currentUser.role === 'admin' ? 'quản trị viên' : 'nhân viên',
-        threadId: 'group-global',
-        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    const payload = {
+      content,
+      senderName:  currentUser.name,
+      senderEmail: currentUser.email,
+      senderRole:  currentUser.role === 'admin' ? 'quản trị viên' : 'nhân viên',
+      threadId:    'group-global',
+      createdAt:   firebase.firestore.FieldValue.serverTimestamp(),
+      recalled:    false,
+      edited:      false,
+      pinned:      false,
+    };
+    if (_iocReplyTo) { payload.replyTo = { ..._iocReplyTo }; iocCancelReply(); }
+    try { await db.collection('messages').add(payload); }
+    catch(e) { console.error('CRM chat send error:', e); showToast('Lỗi gửi tin nhắn!', 'error'); }
+  };
+
+  // ── Setup / teardown ──
+  const setupCrmChat = () => {
+    if (crmChatSubscription) { iocRenderConvList(); return; }
+    iocRenderConvList();
+    crmChatSubscription = db.collection('messages')
+      .where('threadId', '==', 'group-global')
+      .orderBy('createdAt', 'asc')
+      .limitToLast(100)
+      .onSnapshot(snap => {
+        const msgs = [];
+        snap.forEach(doc => msgs.push({ id: doc.id, ...doc.data() }));
+        const searchTerm = document.getElementById('iocMsgSearchInput')?.value || '';
+        iocRenderMessages(msgs, searchTerm);
+      }, err => console.error('CRM chat error:', err));
+  };
+
+  const teardownCrmChat = () => {
+    if (crmChatSubscription) { crmChatSubscription(); crmChatSubscription = null; }
+    iocHideCtxMenu();
+    const picker = document.getElementById('iocEmojiPicker');
+    if (picker) picker.style.display = 'none';
+  };
+
+  // ── Wire IOC events (called once inside initCrmModule) ──
+  const iocBindEvents = () => {
+    // Send
+    document.getElementById('btnSendCrmChat')?.addEventListener('click', sendCrmChatMessage);
+    document.getElementById('crmChatInput')?.addEventListener('keydown', e => {
+      if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendCrmChatMessage(); }
+    });
+
+    // Reply cancel
+    document.getElementById('btnCancelIocReply')?.addEventListener('click', iocCancelReply);
+
+    // Context menu actions
+    document.getElementById('iocCtxMenu')?.querySelectorAll('.ioc-ctx-item').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const act   = btn.dataset.action;
+        const msgId = _iocCtxMsgId;
+        iocHideCtxMenu();
+        if (act === 'reply')   iocSetReply(msgId);
+        if (act === 'recall')  iocRecall(msgId);
+        if (act === 'pin')     iocPin(msgId);
+        if (act === 'edit')    iocOpenEdit(msgId);
+        if (act === 'forward') showToast('Tính năng chuyển tiếp sắp ra mắt!', 'info');
+        if (act === 'relate')  showToast('Tính năng đang phát triển!', 'info');
       });
-    } catch (e) {
-      console.error('CRM chat send error:', e);
-      showToast('Lỗi gửi tin nhắn!', 'error');
-    }
+    });
+
+    // Dismiss context menu & emoji on outside click
+    document.addEventListener('click', (e) => {
+      if (!e.target.closest('#iocCtxMenu'))    iocHideCtxMenu();
+      if (!e.target.closest('#iocEmojiPicker') && !e.target.closest('#btnIocEmoji')) {
+        const p = document.getElementById('iocEmojiPicker');
+        if (p) p.style.display = 'none';
+      }
+    }, true);
+
+    // In-chat search
+    document.getElementById('btnIocSearchMsg')?.addEventListener('click', () => {
+      const bar = document.getElementById('iocMsgSearchBar');
+      if (!bar) return;
+      const show = bar.style.display === 'none' || !bar.style.display;
+      bar.style.display = show ? 'flex' : 'none';
+      if (show) document.getElementById('iocMsgSearchInput')?.focus();
+    });
+    document.getElementById('btnCloseIocSearch')?.addEventListener('click', () => {
+      const bar = document.getElementById('iocMsgSearchBar');
+      if (bar) bar.style.display = 'none';
+      const inp = document.getElementById('iocMsgSearchInput');
+      if (inp) inp.value = '';
+      iocRenderMessages(_iocMsgs, '');
+    });
+    document.getElementById('iocMsgSearchInput')?.addEventListener('input', (e) => {
+      iocRenderMessages(_iocMsgs, e.target.value);
+    });
+
+    // Info panel toggle
+    document.getElementById('btnToggleIocInfo')?.addEventListener('click', () => {
+      document.getElementById('iocInfoPanel')?.classList.toggle('hidden');
+    });
+
+    // Info sub-panels
+    document.getElementById('btnIocShowMembers')?.addEventListener('click', iocShowMembers);
+    document.getElementById('btnIocBackFromMembers')?.addEventListener('click', iocShowInfoMain);
+    document.getElementById('btnIocShowPinned')?.addEventListener('click', iocShowPinned);
+    document.getElementById('btnIocBackFromPinned')?.addEventListener('click', iocShowInfoMain);
+
+    // Edit overlay
+    document.getElementById('btnConfirmIocEdit')?.addEventListener('click', iocConfirmEdit);
+    document.getElementById('btnCancelIocEdit')?.addEventListener('click', () => {
+      document.getElementById('iocEditOverlay').style.display = 'none';
+      _iocEditingId = null;
+    });
+    document.getElementById('iocEditInput')?.addEventListener('keydown', e => {
+      if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) iocConfirmEdit();
+      if (e.key === 'Escape') { document.getElementById('iocEditOverlay').style.display = 'none'; _iocEditingId = null; }
+    });
+
+    // Emoji
+    document.getElementById('btnIocEmoji')?.addEventListener('click', iocToggleEmoji);
   };
 
   // ── init ───────────────────────────────────────────────────────────────────
@@ -6643,10 +6980,7 @@ document.addEventListener('DOMContentLoaded', () => {
       document.getElementById('crmStaffDeptFilter')?.addEventListener('change', () => renderCrmStaff(true));
       document.getElementById('crmStaffStatusFilter')?.addEventListener('change', () => renderCrmStaff(true));
 
-      document.getElementById('btnSendCrmChat')?.addEventListener('click', sendCrmChatMessage);
-      document.getElementById('crmChatInput')?.addEventListener('keydown', e => {
-        if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendCrmChatMessage(); }
-      });
+      iocBindEvents();
 
       if (currentUser) {
         const av = document.getElementById('miniCrmAvatar');

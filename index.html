@@ -3134,39 +3134,219 @@
 
             <!-- ===== TAB 4: INTERNAL CHAT ===== -->
             <div id="crm-chat-tab" class="crm-tab-content crm-chat-tab-content" style="display: none">
-              <div class="crm-chat-layout">
+              <div class="ioc-layout">
 
-                <!-- Left: Contact List -->
-                <div class="crm-chat-sidebar">
-                  <div class="crm-chat-sidebar-header">
-                    <h4>Thành viên nhóm</h4>
-                    <span class="crm-card-subtitle" id="crmMemberCount">0 người</span>
+                <!-- COL 1: Conversation list -->
+                <aside class="ioc-sidebar">
+                  <div class="ioc-sidebar-head">
+                    <span class="ioc-sidebar-title">Chat nội bộ</span>
+                    <button class="ioc-icon-btn" title="Cuộc trò chuyện mới">
+                      <svg viewBox="0 0 24 24"><path d="M20,2H4A2,2 0 0,0 2,4V22L6,18H20A2,2 0 0,0 22,16V4C22,2.89 21.1,2 20,2M6,9H18V11H6M14,14H6V12H14M18,8H6V6H18V8Z"/></svg>
+                    </button>
                   </div>
-                  <div class="crm-chat-contact-list" id="crmChatContactList">
-                    <!-- Populated via JS -->
+                  <div class="ioc-sidebar-search">
+                    <svg viewBox="0 0 24 24"><path d="M9.5,3A6.5,6.5 0 0,1 16,9.5C16,11.11 15.41,12.59 14.44,13.73L14.71,14H15.5L20.5,19L19,20.5L14,15.5V14.71L13.73,14.44C12.59,15.41 11.11,16 9.5,16A6.5,6.5 0 0,1 3,9.5A6.5,6.5 0 0,1 9.5,3M9.5,5C7,5 5,7 5,9.5C5,12 7,14 9.5,14C12,14 14,12 14,9.5C14,7 12,5 9.5,5Z"/></svg>
+                    <input type="text" id="crmChatSearch" placeholder="Tìm kiếm mọi người" />
                   </div>
-                </div>
+                  <div class="ioc-thread-label">Yêu thích</div>
+                  <div id="iocConvList" class="ioc-conv-list"><!-- JS --></div>
+                  <div class="ioc-thread-label">Trò chuyện gần đây</div>
+                  <div id="iocRecentList" class="ioc-conv-list"><!-- JS --></div>
+                </aside>
 
-                <!-- Right: Message Window -->
-                <div class="crm-chat-window">
-                  <div class="crm-chat-window-header">
-                    <div class="crm-chat-avatar-group" id="crmChatAvatarGroup"></div>
-                    <div class="crm-chat-window-info">
-                      <span class="crm-chat-window-title">Nhóm Nội Bộ Aladdin</span>
-                      <span class="crm-chat-window-sub">Chat thời gian thực</span>
+                <!-- COL 2: Message window -->
+                <main class="ioc-main">
+                  <div class="ioc-main-header">
+                    <div class="ioc-main-info">
+                      <div class="ioc-main-av" id="iocActiveAv">N</div>
+                      <div>
+                        <div class="ioc-main-name" id="iocActiveThreadName">Nhóm Nội bộ Aladdin</div>
+                        <div class="ioc-main-sub" id="iocActiveThreadSub">Đang kết nối...</div>
+                      </div>
+                    </div>
+                    <div class="ioc-main-acts">
+                      <button class="ioc-icon-btn" id="btnIocSearchMsg" title="Tìm kiếm">
+                        <svg viewBox="0 0 24 24"><path d="M9.5,3A6.5,6.5 0 0,1 16,9.5C16,11.11 15.41,12.59 14.44,13.73L14.71,14H15.5L20.5,19L19,20.5L14,15.5V14.71L13.73,14.44C12.59,15.41 11.11,16 9.5,16A6.5,6.5 0 0,1 3,9.5A6.5,6.5 0 0,1 9.5,3M9.5,5C7,5 5,7 5,9.5C5,12 7,14 9.5,14C12,14 14,12 14,9.5C14,7 12,5 9.5,5Z"/></svg>
+                      </button>
+                      <button class="ioc-icon-btn" title="Thành viên">
+                        <svg viewBox="0 0 24 24"><path d="M16,13C15.71,13 15.38,13 15.03,13.05C16.19,13.89 17,15 17,16.5V19H23V16.5C23,14.17 18.33,13 16,13M8,13C5.67,13 1,14.17 1,16.5V19H15V16.5C15,14.17 10.33,13 8,13M8,11A3,3 0 0,0 11,8A3,3 0 0,0 8,5A3,3 0 0,0 5,8A3,3 0 0,0 8,11M16,11A3,3 0 0,0 19,8A3,3 0 0,0 16,5A3,3 0 0,0 13,8A3,3 0 0,0 16,11Z"/></svg>
+                      </button>
+                      <button class="ioc-icon-btn" id="btnToggleIocInfo" title="Thông tin nhóm">
+                        <svg viewBox="0 0 24 24"><path d="M13,9H11V7H13M13,17H11V11H13M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2Z"/></svg>
+                      </button>
                     </div>
                   </div>
-                  <div class="crm-chat-messages" id="crmChatMessages">
+
+                  <!-- In-chat search bar -->
+                  <div class="ioc-msg-search-bar" id="iocMsgSearchBar" style="display:none">
+                    <svg viewBox="0 0 24 24"><path d="M9.5,3A6.5,6.5 0 0,1 16,9.5C16,11.11 15.41,12.59 14.44,13.73L14.71,14H15.5L20.5,19L19,20.5L14,15.5V14.71L13.73,14.44C12.59,15.41 11.11,16 9.5,16A6.5,6.5 0 0,1 3,9.5A6.5,6.5 0 0,1 9.5,3M9.5,5C7,5 5,7 5,9.5C5,12 7,14 9.5,14C12,14 14,12 14,9.5C14,7 12,5 9.5,5Z"/></svg>
+                    <input type="text" id="iocMsgSearchInput" placeholder="Tìm trong cuộc trò chuyện..." />
+                    <button class="ioc-icon-btn" id="btnCloseIocSearch">
+                      <svg viewBox="0 0 24 24"><path d="M19,6.41L17.59,5L12,10.59L6.41,5L5,6.41L10.59,12L5,17.59L6.41,19L12,13.41L17.59,19L19,17.59L13.41,12L19,6.41Z"/></svg>
+                    </button>
+                  </div>
+
+                  <!-- Reply preview strip -->
+                  <div class="ioc-reply-strip" id="iocReplyStrip" style="display:none">
+                    <div class="ioc-reply-bar"></div>
+                    <div class="ioc-reply-content">
+                      <span class="ioc-reply-sender" id="iocReplySender"></span>
+                      <span class="ioc-reply-text" id="iocReplyText"></span>
+                    </div>
+                    <button class="ioc-icon-btn" id="btnCancelIocReply">
+                      <svg viewBox="0 0 24 24"><path d="M19,6.41L17.59,5L12,10.59L6.41,5L5,6.41L10.59,12L5,17.59L6.41,19L12,13.41L17.59,19L19,17.59L13.41,12L19,6.41Z"/></svg>
+                    </button>
+                  </div>
+
+                  <!-- Messages -->
+                  <div class="ioc-messages" id="crmChatMessages">
                     <div class="crm-chat-loading">Đang tải tin nhắn...</div>
                   </div>
-                  <div class="crm-chat-input-bar">
-                    <input type="text" id="crmChatInput" placeholder="Nhập tin nhắn nội bộ..." />
-                    <button id="btnSendCrmChat" class="crm-send-btn" title="Gửi">
+
+                  <!-- Input -->
+                  <div class="ioc-input-bar">
+                    <button class="ioc-tool-btn" title="Đính kèm file">
+                      <svg viewBox="0 0 24 24"><path d="M16.5,6V17.5A4,4 0 0,1 12.5,21.5A4,4 0 0,1 8.5,17.5V5A2.5,2.5 0 0,1 11,2.5A2.5,2.5 0 0,1 13.5,5V15.5A1,1 0 0,1 12.5,16.5A1,1 0 0,1 11.5,15.5V6H10V15.5A2.5,2.5 0 0,0 12.5,18A2.5,2.5 0 0,0 15,15.5V5A4,4 0 0,0 11,1A4,4 0 0,0 7,5V17.5A5.5,5.5 0 0,0 12.5,23A5.5,5.5 0 0,0 18,17.5V6H16.5Z"/></svg>
+                    </button>
+                    <button class="ioc-tool-btn" id="btnIocEmoji" title="Biểu cảm">
+                      <svg viewBox="0 0 24 24"><path d="M12,17.5C14.33,17.5 16.3,16.04 17.11,14H6.89C7.69,16.04 9.67,17.5 12,17.5M8.5,11A1.5,1.5 0 0,0 10,9.5A1.5,1.5 0 0,0 8.5,8A1.5,1.5 0 0,0 7,9.5A1.5,1.5 0 0,0 8.5,11M15.5,11A1.5,1.5 0 0,0 17,9.5A1.5,1.5 0 0,0 15.5,8A1.5,1.5 0 0,0 14,9.5A1.5,1.5 0 0,0 15.5,11M12,20A8,8 0 0,1 4,12A8,8 0 0,1 12,4A8,8 0 0,1 20,12A8,8 0 0,1 12,20M12,2C6.47,2 2,6.5 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2Z"/></svg>
+                    </button>
+                    <input type="text" id="crmChatInput" placeholder="Viết tin nhắn..." />
+                    <button id="btnSendCrmChat" class="ioc-send-btn" title="Gửi">
                       <svg viewBox="0 0 24 24"><path d="M2,21L23,12L2,3V10L17,12L2,14V21Z"/></svg>
                     </button>
                   </div>
-                </div>
+                </main>
 
+                <!-- COL 3: Info panel -->
+                <aside class="ioc-info-panel" id="iocInfoPanel">
+                  <div class="ioc-info-group-hd">
+                    <div class="ioc-info-group-av">N</div>
+                    <div class="ioc-info-group-name">
+                      Nhóm Nội bộ Aladdin
+                      <button class="ioc-info-edit-btn" title="Đổi tên">
+                        <svg viewBox="0 0 24 24"><path d="M20.71,7.04C21.1,6.65 21.1,6 20.71,5.63L18.37,3.29C18,2.9 17.35,2.9 16.96,3.29L15.12,5.12L18.87,8.87M3,17.25V21H6.75L17.81,9.93L14.06,6.18L3,17.25Z"/></svg>
+                      </button>
+                    </div>
+                    <p class="ioc-info-group-desc">Kênh trao đổi nội bộ toàn công ty</p>
+                  </div>
+
+                  <div class="ioc-info-quick-acts">
+                    <button class="ioc-info-quick-btn">
+                      <span class="ioc-info-quick-icon">★</span>
+                      <span>Yêu thích</span>
+                    </button>
+                    <button class="ioc-info-quick-btn">
+                      <span class="ioc-info-quick-icon">🔔</span>
+                      <span>Thông báo</span>
+                    </button>
+                    <button class="ioc-info-quick-btn" id="btnIocShowMembers">
+                      <span class="ioc-info-quick-icon">
+                        <svg viewBox="0 0 24 24"><path d="M16,13C15.71,13 15.38,13 15.03,13.05C16.19,13.89 17,15 17,16.5V19H23V16.5C23,14.17 18.33,13 16,13M8,13C5.67,13 1,14.17 1,16.5V19H15V16.5C15,14.17 10.33,13 8,13M8,11A3,3 0 0,0 11,8A3,3 0 0,0 8,5A3,3 0 0,0 5,8A3,3 0 0,0 8,11M16,11A3,3 0 0,0 19,8A3,3 0 0,0 16,5A3,3 0 0,0 13,8A3,3 0 0,0 16,11Z"/></svg>
+                      </span>
+                      <span>Thành viên</span>
+                      <span class="ioc-badge" id="crmMemberCount">0</span>
+                    </button>
+                  </div>
+
+                  <!-- Main info content -->
+                  <div id="iocInfoMain">
+                    <div class="ioc-info-section">
+                      <div class="ioc-info-section-title">Thông tin nổi bật</div>
+                      <button class="ioc-info-item" id="btnIocShowPinned">
+                        <span class="ioc-info-item-icon">
+                          <svg viewBox="0 0 24 24"><path d="M16,12V4H17V2H7V4H8V12L6,14V16H11.2V22H12.8V16H18V14L16,12Z"/></svg>
+                        </span>
+                        <span>Tin nhắn đã ghim</span>
+                        <span class="ioc-badge" id="iocPinnedCount">0</span>
+                        <svg class="ioc-info-arrow" viewBox="0 0 24 24"><path d="M8.59,16.58L13.17,12L8.59,7.41L10,6L16,12L10,18L8.59,16.58Z"/></svg>
+                      </button>
+                    </div>
+                    <div class="ioc-info-section">
+                      <div class="ioc-info-section-title">Thư viện</div>
+                      <button class="ioc-info-item">
+                        <span class="ioc-info-item-icon">
+                          <svg viewBox="0 0 24 24"><path d="M8.5,13.5L11,16.5L14.5,12L19,18H5M21,19V5C21,3.89 20.1,3 19,3H5A2,2 0 0,0 3,5V19A2,2 0 0,0 5,21H19A2,2 0 0,0 21,19Z"/></svg>
+                        </span>
+                        <span>Ảnh, video</span>
+                        <svg class="ioc-info-arrow" viewBox="0 0 24 24"><path d="M8.59,16.58L13.17,12L8.59,7.41L10,6L16,12L10,18L8.59,16.58Z"/></svg>
+                      </button>
+                      <button class="ioc-info-item">
+                        <span class="ioc-info-item-icon">
+                          <svg viewBox="0 0 24 24"><path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z"/></svg>
+                        </span>
+                        <span>Files</span>
+                        <svg class="ioc-info-arrow" viewBox="0 0 24 24"><path d="M8.59,16.58L13.17,12L8.59,7.41L10,6L16,12L10,18L8.59,16.58Z"/></svg>
+                      </button>
+                    </div>
+                  </div>
+
+                  <!-- Members sub-panel -->
+                  <div id="iocMembersPanel" style="display:none">
+                    <div class="ioc-info-sub-head">
+                      <button class="ioc-icon-btn" id="btnIocBackFromMembers">
+                        <svg viewBox="0 0 24 24"><path d="M20,11V13H8L13.5,18.5L12.08,19.92L4.16,12L12.08,4.08L13.5,5.5L8,11H20Z"/></svg>
+                      </button>
+                      <span>Thành viên (<span id="iocMemberListCount">0</span>)</span>
+                    </div>
+                    <div id="iocMembersList" class="ioc-members-list"></div>
+                  </div>
+
+                  <!-- Pinned messages sub-panel -->
+                  <div id="iocPinnedPanel" style="display:none">
+                    <div class="ioc-info-sub-head">
+                      <button class="ioc-icon-btn" id="btnIocBackFromPinned">
+                        <svg viewBox="0 0 24 24"><path d="M20,11V13H8L13.5,18.5L12.08,19.92L4.16,12L12.08,4.08L13.5,5.5L8,11H20Z"/></svg>
+                      </button>
+                      <span>Tin nhắn đã ghim</span>
+                    </div>
+                    <div id="iocPinnedMsgList" class="ioc-pinned-list"></div>
+                  </div>
+                </aside>
+              </div>
+
+              <!-- Context Menu (portal) -->
+              <div class="ioc-ctx-menu" id="iocCtxMenu" style="display:none">
+                <button class="ioc-ctx-item" data-action="reply">
+                  <svg viewBox="0 0 24 24"><path d="M10,9V5L3,12L10,19V14.9C15,14.9 18.5,16.5 21,20C20,15 17,10 10,9Z"/></svg>
+                  Trả lời
+                </button>
+                <button class="ioc-ctx-item" data-action="forward">
+                  <svg viewBox="0 0 24 24"><path d="M14,9V5L21,12L14,19V14.9C9,14.9 5.5,16.5 3,20C4,15 7,10 14,9Z"/></svg>
+                  Chuyển tiếp
+                </button>
+                <button class="ioc-ctx-item ioc-ctx-mine-only" data-action="edit">
+                  <svg viewBox="0 0 24 24"><path d="M20.71,7.04C21.1,6.65 21.1,6 20.71,5.63L18.37,3.29C18,2.9 17.35,2.9 16.96,3.29L15.12,5.12L18.87,8.87M3,17.25V21H6.75L17.81,9.93L14.06,6.18L3,17.25Z"/></svg>
+                  Chỉnh sửa
+                </button>
+                <button class="ioc-ctx-item" data-action="pin">
+                  <svg viewBox="0 0 24 24"><path d="M16,12V4H17V2H7V4H8V12L6,14V16H11.2V22H12.8V16H18V14L16,12Z"/></svg>
+                  Ghim tin nhắn
+                </button>
+                <button class="ioc-ctx-item" data-action="relate">
+                  <svg viewBox="0 0 24 24"><path d="M10.59,13.41C11,13.8 11,14.44 10.59,14.83C10.2,15.22 9.56,15.22 9.17,14.83C7.22,12.88 7.22,9.71 9.17,7.76L12.76,4.17C14.71,2.22 17.88,2.22 19.83,4.17C21.78,6.12 21.78,9.29 19.83,11.24L18.07,13C18.07,12.34 17.96,11.68 17.75,11.04L18.71,10.07C19.9,8.88 19.9,6.93 18.71,5.74C17.52,4.55 15.57,4.55 14.38,5.74L10.79,9.33C9.6,10.52 9.6,12.47 10.79,13.66L10.59,13.41M13.41,10.59C13.8,10.2 14.44,10.2 14.83,10.59C16.78,12.54 16.78,15.71 14.83,17.66L11.24,21.25C9.29,23.2 6.12,23.2 4.17,21.25C2.22,19.3 2.22,16.13 4.17,14.18L5.93,12.42C5.93,13.08 6.04,13.74 6.25,14.38L5.29,15.35C4.1,16.54 4.1,18.49 5.29,19.68C6.48,20.87 8.43,20.87 9.62,19.68L13.21,16.09C14.4,14.9 14.4,12.95 13.21,11.76L13.41,10.59Z"/></svg>
+                  Tạo đối tượng liên quan
+                </button>
+                <div class="ioc-ctx-divider"></div>
+                <button class="ioc-ctx-item ioc-ctx-danger ioc-ctx-mine-only" data-action="recall">
+                  <svg viewBox="0 0 24 24"><path d="M19,4H15.5L14.5,3H9.5L8.5,4H5V6H19M6,19A2,2 0 0,0 8,21H16A2,2 0 0,0 18,19V7H6V19Z"/></svg>
+                  Thu hồi tin nhắn
+                </button>
+              </div>
+
+              <!-- Emoji Picker -->
+              <div class="ioc-emoji-picker" id="iocEmojiPicker" style="display:none"></div>
+
+              <!-- Edit overlay -->
+              <div class="ioc-edit-overlay" id="iocEditOverlay" style="display:none">
+                <div class="ioc-edit-box">
+                  <div class="ioc-edit-label">Chỉnh sửa tin nhắn</div>
+                  <textarea id="iocEditInput" rows="3"></textarea>
+                  <div class="ioc-edit-actions">
+                    <button class="crm-btn-secondary" id="btnCancelIocEdit">Hủy</button>
+                    <button class="crm-btn-primary" id="btnConfirmIocEdit">Lưu</button>
+                  </div>
+                </div>
               </div>
             </div>
 
