@@ -2107,20 +2107,15 @@ document.addEventListener('DOMContentLoaded', () => {
   // ==========================================
 
   const subscribeToUsersCache = () => {
-    if (usersSubscription) usersSubscription();
-    usersSubscription = db.collection("users")
-      .onSnapshot((snapshot) => {
-        allUsersList = [];
-        snapshot.forEach((doc) => {
-          const u = doc.data();
-          u.uid = doc.id;
-          usersCache[u.uid] = u;
-          allUsersList.push(u);
-        });
-        rebuildChatThreads();
-      }, (error) => {
-        console.error("Users cache observer failure:", error);
+    db.collection("users").get().then(snapshot => {
+      allUsersList = [];
+      snapshot.forEach(doc => {
+        const u = doc.data();
+        u.uid = doc.id;
+        usersCache[u.uid] = u;
+        allUsersList.push(u);
       });
+    }).catch(err => console.error("Users cache load error:", err));
   };
 
   const subscribeToContacts = () => {
@@ -2130,21 +2125,13 @@ document.addEventListener('DOMContentLoaded', () => {
       .where("userUid", "==", auth.currentUser.uid)
       .onSnapshot((snapshot) => {
         myContacts = [];
-        snapshot.forEach((doc) => {
-          const data = doc.data();
-          myContacts.push(data.contactUid);
-        });
-        rebuildChatThreads();
-        
-        // Re-render search results inside modal if it's currently open
+        snapshot.forEach((doc) => myContacts.push(doc.data().contactUid));
         const modal = document.getElementById('findFriendsModal');
         if (modal && modal.style.display === 'flex') {
           const searchInput = document.getElementById('friendSearchInput');
           renderFriendsSearchResults(searchInput ? searchInput.value : "");
         }
-      }, (error) => {
-        console.error("Contacts observer failure:", error);
-      });
+      }, err => console.error("Contacts observer failure:", err));
   };
 
   const updateFriendBadge = () => {
@@ -2992,97 +2979,18 @@ document.addEventListener('DOMContentLoaded', () => {
   let currentPage = 1;
   const itemsPerPage = 8;
 
-  const subscribeToStudents = async () => {
+  const subscribeToStudents = () => {
     if (studentsSubscription) studentsSubscription();
 
-    // 1. One-time check and pre-populate missing default students to avoid onSnapshot race conditions
-    try {
-      const snapshot = await db.collection("students").get();
-      
-      // Perform migration to update all existing student emails in Firestore to end in @ptms.hv
-      for (const doc of snapshot.docs) {
-        const studentData = doc.data();
-        if (studentData.email && !studentData.email.toLowerCase().endsWith("@ptms.hv")) {
-          const parts = studentData.email.split('@');
-          const newEmail = parts[0].toLowerCase().trim() + "@ptms.hv";
-          console.log(`Migrating student email from ${studentData.email} to ${newEmail}`);
-          
-          // Update in students collection
-          await db.collection("students").doc(doc.id).update({
-            email: newEmail
-          });
-
-          // Also check and update the corresponding user account in users collection if it exists
-          const userQuery = await db.collection("users").where("email", "==", studentData.email).get();
-          for (const userDoc of userQuery.docs) {
-            await db.collection("users").doc(userDoc.id).update({
-              email: newEmail
-            });
-            console.log(`Migrating user account email from ${studentData.email} to ${newEmail}`);
-          }
-        }
-      }
-
-      // Also migrate existing staff user emails in users collection to end in @ptms.hv
-      const staffQuery = await db.collection("users").where("role", "==", "staff").get();
-      for (const doc of staffQuery.docs) {
-        const userData = doc.data();
-        if (userData.email && !userData.email.toLowerCase().endsWith("@ptms.hv")) {
-          const parts = userData.email.split('@');
-          const newEmail = parts[0].toLowerCase().trim() + "@ptms.hv";
-          await db.collection("users").doc(doc.id).update({
-            email: newEmail
-          });
-          console.log(`Migrating staff email from ${userData.email} to ${newEmail}`);
-        }
-      }
-
-      // Re-fetch to ensure the existingEmails set is 100% accurate
-      const updatedSnapshot = await db.collection("students").get();
-      const existingEmails = new Set();
-      updatedSnapshot.forEach(doc => {
-        const data = doc.data();
-        if (data.email) {
-          existingEmails.add(data.email.toLowerCase().trim());
-        }
-      });
-
-      // Find missing default students
-      const missingStudents = defaultStudents.filter(s => s.email && !existingEmails.has(s.email.toLowerCase().trim()));
-
-      if (missingStudents.length > 0) {
-        console.log(`Pre-populating ${missingStudents.length} missing default students...`);
-        for (const s of missingStudents) {
-          const studentCopy = { ...s };
-          studentCopy.createdAt = firebase.firestore.FieldValue.serverTimestamp();
-          studentCopy.learningMonth = "Tháng 1";
-          await db.collection("students").add(studentCopy);
-        }
-      }
-    } catch (err) {
-      console.error("Error pre-populating missing default students & migration:", err);
-    }
-
-    // 2. Start the real-time observer
     studentsSubscription = db.collection("students")
       .orderBy("code", "asc")
       .onSnapshot((snapshot) => {
-        // Real-time migration: delete old mock students containing other countries
-        snapshot.forEach((doc) => {
-          const data = doc.data();
-          if (data.country && !["Nhật", "Đài", "Hàn"].includes(data.country)) {
-            db.collection("students").doc(doc.id).delete().catch(console.error);
-          }
-        });
-
         students = [];
         snapshot.forEach((doc) => {
           const data = doc.data();
           data.id = doc.id;
           students.push(data);
         });
-
-        // Trigger render
         applyStudentFiltersAndRender();
       }, (error) => {
         console.error("Firestore students observer failure:", error);
@@ -5079,10 +4987,8 @@ document.addEventListener('DOMContentLoaded', () => {
             if (loginContainer) loginContainer.style.display = 'none';
             if (appRoot) appRoot.style.display = 'flex';
 
-            // Subscribe to users and contacts cache updates
+            // Load users cache (one-time fetch)
             subscribeToUsersCache();
-            subscribeToContacts();
-            subscribeToFriendRequests();
 
             // Subscribe to real-time students updates
             subscribeToStudents();
@@ -7607,6 +7513,9 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('btnIocAddPeople')?.addEventListener('click', () => {
       const modal = document.getElementById('findFriendsModal');
       if (!modal) return;
+      // Lazy-subscribe contacts & friend requests only when modal is first opened
+      if (!contactsSubscription)      subscribeToContacts();
+      if (!sentRequestsSubscription)  subscribeToFriendRequests();
       modal.style.display = 'flex';
       const inp = document.getElementById('friendSearchInput');
       if (inp) { inp.value = ''; inp.focus(); }
