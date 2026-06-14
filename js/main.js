@@ -1130,6 +1130,8 @@ document.addEventListener('DOMContentLoaded', () => {
       initHrmModule();
     } else if (targetViewId === 'crm-dashboard') {
       initCrmModule();
+    } else {
+      if (typeof teardownCrmChat === 'function') teardownCrmChat();
     }
   };
 
@@ -4088,7 +4090,6 @@ document.addEventListener('DOMContentLoaded', () => {
   let selectedProfileAvatarBase64 = null;
 
   // Bind Open Profile Modal click
-  const btnOpenProfileModal = document.getElementById('btnOpenProfileModal');
   const profileModal = document.getElementById('profileModal');
   const btnCloseProfileModal = document.getElementById('btnCloseProfileModal');
   const profileForm = document.getElementById('profileForm');
@@ -4224,8 +4225,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // ==========================================
 
   // Helper to get fixed / hardcoded enrollment dates for test & scorecard calculations
-  const getFixedEnrollDate = (email, originalCreatedAt) => {
-    const today = new Date("2026-05-31T23:12:46+07:00");
+  const getFixedEnrollDate = (email) => {
     const emailLower = (email || "").toLowerCase();
     
     // Explicit override for our main test student Vũ Thùy Chi to keep it exactly 2 weeks (15/05/2026)
@@ -6250,7 +6250,38 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   };
 
-  const renderCrmCustomers = () => {
+  // ── Pagination helper ─────────────────────────────────────────────────────
+  const PAGE_SIZE = 10;
+
+  const renderPagination = (containerId, currentPage, total, onGo) => {
+    const el = document.getElementById(containerId);
+    if (!el) return;
+    const totalPages = Math.ceil(total / PAGE_SIZE);
+    if (totalPages <= 1) { el.innerHTML = ''; return; }
+    const from = (currentPage - 1) * PAGE_SIZE + 1;
+    const to   = Math.min(currentPage * PAGE_SIZE, total);
+    const pageBtn = (label, page, disabled = false, active = false) =>
+      `<button class="crm-page-btn${active ? ' active' : ''}" data-page="${page}" ${disabled ? 'disabled' : ''}>${label}</button>`;
+    let pages = '';
+    const delta = 2;
+    for (let p = 1; p <= totalPages; p++) {
+      if (p === 1 || p === totalPages || (p >= currentPage - delta && p <= currentPage + delta)) {
+        pages += pageBtn(p, p, false, p === currentPage);
+      } else if (p === currentPage - delta - 1 || p === currentPage + delta + 1) {
+        pages += `<span style="padding:0 4px;color:var(--text-muted);font-size:0.8rem">…</span>`;
+      }
+    }
+    el.innerHTML = `<span class="crm-page-info">${from}–${to} / ${total} mục</span>${pageBtn('‹', currentPage - 1, currentPage === 1)}${pages}${pageBtn('›', currentPage + 1, currentPage === totalPages)}`;
+    el.querySelectorAll('.crm-page-btn:not([disabled])').forEach(btn => {
+      btn.addEventListener('click', () => onGo(parseInt(btn.dataset.page)));
+    });
+  };
+
+  // ── Customer table ─────────────────────────────────────────────────────────
+  let crmCustomerPage = 1;
+
+  const renderCrmCustomers = (resetPage = false) => {
+    if (resetPage) crmCustomerPage = 1;
     const tbody = document.getElementById('crmCustomerTableBody');
     if (!tbody) return;
 
@@ -6267,14 +6298,21 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (filtered.length === 0) {
       tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:2.5rem;color:var(--text-muted);font-size:0.82rem">Không tìm thấy khách hàng phù hợp.</td></tr>`;
+      renderPagination('crmCustomerPagination', 1, 0, () => {});
       return;
     }
+
+    const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
+    crmCustomerPage = Math.min(crmCustomerPage, totalPages);
+    const pageData = filtered.slice((crmCustomerPage - 1) * PAGE_SIZE, crmCustomerPage * PAGE_SIZE);
+    const globalOffset = (crmCustomerPage - 1) * PAGE_SIZE;
 
     const badgeCls = { 'Đang học': 'crm-badge-active', 'Chờ phỏng vấn': 'crm-badge-waiting', 'Đang làm hồ sơ': 'crm-badge-processing', 'Đã trúng tuyển': 'crm-badge-selected' };
     const flags = { 'Nhật': '🇯🇵', 'Đài': '🇹🇼', 'Hàn': '🇰🇷' };
     const avColors = ['#2563EB', '#7C3AED', '#059669', '#D97706', '#DC2626', '#0891B2'];
 
-    tbody.innerHTML = filtered.map((c, i) => {
+    tbody.innerHTML = pageData.map((c, i) => {
+      const gi = globalOffset + i;
       const ini = (c.name || 'KH').split(' ').map(w => w[0]).filter(Boolean).slice(-2).join('').toUpperCase();
       const bc = badgeCls[c.status] || 'crm-badge-processing';
       const flag = flags[c.country] || '🌏';
@@ -6288,7 +6326,7 @@ document.addEventListener('DOMContentLoaded', () => {
           <td><span style="font-family:monospace;font-size:0.78rem;font-weight:600;color:var(--crm-blue)">${c.code || '--'}</span></td>
           <td>
             <div style="display:flex;align-items:center;gap:0.65rem">
-              <div style="width:32px;height:32px;border-radius:50%;background:${avColors[i % avColors.length]};color:#fff;display:flex;align-items:center;justify-content:center;font-size:0.7rem;font-weight:700;flex-shrink:0">${ini}</div>
+              <div style="width:32px;height:32px;border-radius:50%;background:${avColors[gi % avColors.length]};color:#fff;display:flex;align-items:center;justify-content:center;font-size:0.7rem;font-weight:700;flex-shrink:0">${ini}</div>
               <span style="font-weight:600;font-size:0.83rem">${c.name || '--'}</span>
             </div>
           </td>
@@ -6300,10 +6338,10 @@ document.addEventListener('DOMContentLoaded', () => {
           <td><span class="crm-pill ${bc}">${c.status || '--'}</span></td>
           <td style="font-size:0.79rem">${dateStr}</td>
           <td style="text-align:center">
-            <button class="crm-action-btn view btn-view-crm" data-crmidx="${i}" title="Xem hồ sơ">
+            <button class="crm-action-btn view btn-view-crm" data-fidx="${i}" title="Xem hồ sơ">
               <svg viewBox="0 0 24 24"><path d="M12,4.5C7,4.5 2.73,7.61 1,12C2.73,16.39 7,19.5 12,19.5C17,19.5 21.27,16.39 23,12C21.27,7.61 17,4.5 12,4.5M12,17A5,5 0 0,1 7,12A5,5 0 0,1 12,7A5,5 0 0,1 17,12A5,5 0 0,1 12,17M12,9A3,3 0 0,0 9,12A3,3 0 0,0 12,15A3,3 0 0,0 15,12A3,3 0 0,0 12,9Z"/></svg>
             </button>
-            <button class="crm-action-btn edit btn-edit-crm" data-crmidx="${i}" title="Chỉnh sửa">
+            <button class="crm-action-btn edit btn-edit-crm" data-fidx="${i}" title="Chỉnh sửa">
               <svg viewBox="0 0 24 24"><path d="M20.71,7.04C21.1,6.65 21.1,6 20.71,5.63L18.37,3.29C18,2.9 17.35,2.9 16.96,3.29L15.12,5.12L18.87,8.87M3,17.25V21H6.75L17.81,9.93L14.06,6.18L3,17.25Z"/></svg>
             </button>
           </td>
@@ -6311,12 +6349,12 @@ document.addEventListener('DOMContentLoaded', () => {
     }).join('');
 
     tbody.querySelectorAll('.btn-view-crm').forEach(btn => {
-      btn.addEventListener('click', () => openCrmProfile(filtered[parseInt(btn.dataset.crmidx)]));
+      btn.addEventListener('click', () => openCrmProfile(pageData[parseInt(btn.dataset.fidx)]));
     });
 
     tbody.querySelectorAll('.btn-edit-crm').forEach(btn => {
       btn.addEventListener('click', () => {
-        const c = filtered[parseInt(btn.dataset.crmidx)];
+        const c = pageData[parseInt(btn.dataset.fidx)];
         if (!c) return;
         const modal = document.getElementById('studentModal');
         if (!modal) return;
@@ -6333,8 +6371,206 @@ document.addEventListener('DOMContentLoaded', () => {
         modal.style.display = 'flex';
       });
     });
+
+    renderPagination('crmCustomerPagination', crmCustomerPage, filtered.length, (p) => {
+      crmCustomerPage = p;
+      renderCrmCustomers();
+    });
   };
 
+  // ── CRM Staff ──────────────────────────────────────────────────────────────
+  let _allCrmStaff = [];
+  let crmStaffPage = 1;
+
+  const renderCrmStaff = (resetPage = false) => {
+    if (resetPage) crmStaffPage = 1;
+    const tbody = document.getElementById('crmStaffTableBody');
+    if (!tbody) return;
+    const search = (document.getElementById('crmStaffSearch')?.value || '').toLowerCase();
+    const dept   = document.getElementById('crmStaffDeptFilter')?.value || 'All';
+    const status = document.getElementById('crmStaffStatusFilter')?.value || 'All';
+
+    const filtered = _allCrmStaff.filter(s => {
+      if (dept !== 'All' && s.department !== dept) return false;
+      if (status !== 'All' && s.status !== status) return false;
+      if (search) {
+        const hay = `${s.name} ${s.email} ${s.position}`.toLowerCase();
+        if (!hay.includes(search)) return false;
+      }
+      return true;
+    });
+
+    const counter = document.getElementById('crmStaffCount');
+    if (counter) counter.textContent = `${filtered.length} / ${_allCrmStaff.length} nhân viên`;
+
+    if (!filtered.length) {
+      tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--text-muted);padding:2rem">Không tìm thấy nhân viên nào</td></tr>';
+      renderPagination('crmStaffPagination', 1, 0, () => {});
+      return;
+    }
+
+    const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
+    crmStaffPage = Math.min(crmStaffPage, totalPages);
+    const pageData = filtered.slice((crmStaffPage - 1) * PAGE_SIZE, crmStaffPage * PAGE_SIZE);
+    const globalOffset = (crmStaffPage - 1) * PAGE_SIZE;
+
+    const COLORS = ['#2563EB','#7C3AED','#DB2777','#D97706','#059669','#0891B2'];
+    tbody.innerHTML = pageData.map((s, i) => {
+      const gi = globalOffset + i;
+      const initials = (s.name || 'N').split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
+      const color = COLORS[gi % COLORS.length];
+      const joinDate = s.joinDate ? new Date(s.joinDate).toLocaleDateString('vi-VN') : '--';
+      const st = s.status === 'Đang làm việc' ? 'active' : s.status === 'Nghỉ phép' ? 'leave' : 'left';
+      return `<tr>
+        <td>
+          <div style="display:flex;align-items:center;gap:0.65rem">
+            <div style="width:34px;height:34px;border-radius:50%;background:${color};display:flex;align-items:center;justify-content:center;font-size:0.7rem;font-weight:700;color:#fff;flex-shrink:0">${initials}</div>
+            <div>
+              <div style="font-weight:600;font-size:0.82rem">${s.name || '--'}</div>
+              <div style="font-size:0.71rem;color:var(--text-muted)">${s.email || ''}</div>
+            </div>
+          </div>
+        </td>
+        <td style="font-size:0.8rem">${s.department || '--'}</td>
+        <td style="font-size:0.8rem">${s.position || '--'}</td>
+        <td style="font-size:0.78rem;color:var(--text-muted)">${s.phone || '--'}</td>
+        <td style="font-size:0.78rem">${joinDate}</td>
+        <td><span class="crm-staff-badge ${st}">${s.status || '--'}</span></td>
+      </tr>`;
+    }).join('');
+
+    renderPagination('crmStaffPagination', crmStaffPage, filtered.length, (p) => {
+      crmStaffPage = p;
+      renderCrmStaff();
+    });
+  };
+
+  // ── CRM Chat ───────────────────────────────────────────────────────────────
+  let crmChatSubscription = null;
+
+  const avatarColor = (str) => {
+    const COLORS = ['#2563EB','#7C3AED','#DB2777','#D97706','#059669','#0891B2','#DC2626','#7E22CE'];
+    let h = 0;
+    for (let i = 0; i < str.length; i++) h = str.charCodeAt(i) + ((h << 5) - h);
+    return COLORS[Math.abs(h) % COLORS.length];
+  };
+
+  const renderCrmChatMembers = () => {
+    const list = document.getElementById('crmChatContactList');
+    const counter = document.getElementById('crmMemberCount');
+    const avatarGroup = document.getElementById('crmChatAvatarGroup');
+    if (!list) return;
+
+    const members = allUsersList.length ? allUsersList : (currentUser ? [currentUser] : []);
+    if (counter) counter.textContent = `${members.length} người`;
+
+    list.innerHTML = members.map(u => {
+      const initials = (u.name || 'U').split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
+      const color = avatarColor(u.name || 'U');
+      const role = u.role === 'admin' ? 'Quản trị viên' : 'Nhân viên';
+      return `<div class="crm-contact-item">
+        <div class="crm-contact-avatar" style="background:${color}">
+          ${initials}
+          <span class="crm-contact-online-dot"></span>
+        </div>
+        <div class="crm-contact-info">
+          <div class="crm-contact-name">${u.name || 'Người dùng'}</div>
+          <div class="crm-contact-role">${role}</div>
+        </div>
+      </div>`;
+    }).join('');
+
+    if (avatarGroup) {
+      avatarGroup.innerHTML = members.slice(0, 4).map(u => {
+        const initials = (u.name || 'U').split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
+        const color = avatarColor(u.name || 'U');
+        return `<div class="crm-mini-av" style="background:${color}">${initials}</div>`;
+      }).join('');
+    }
+  };
+
+  const renderCrmChatMessages = (msgs) => {
+    const container = document.getElementById('crmChatMessages');
+    if (!container) return;
+    if (!msgs.length) {
+      container.innerHTML = '<div class="crm-chat-loading">Chưa có tin nhắn nào. Hãy bắt đầu cuộc trò chuyện!</div>';
+      return;
+    }
+
+    const myName = currentUser?.name || '';
+    const myEmail = currentUser?.email || '';
+    let lastDate = '';
+    const fragments = [];
+
+    msgs.forEach(msg => {
+      const ts = msg.createdAt?.toDate ? msg.createdAt.toDate() : new Date();
+      const dateStr = ts.toLocaleDateString('vi-VN', { weekday: 'long', day: '2-digit', month: '2-digit', year: 'numeric' });
+      if (dateStr !== lastDate) {
+        fragments.push(`<div class="crm-date-divider"><span>${dateStr}</span></div>`);
+        lastDate = dateStr;
+      }
+
+      const isMine = (msg.senderEmail && myEmail && msg.senderEmail.toLowerCase() === myEmail.toLowerCase()) ||
+                     (msg.senderName && myName && msg.senderName.toLowerCase() === myName.toLowerCase());
+      const senderLabel = msg.senderName || msg.sender || 'Người dùng';
+      const initials = senderLabel.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
+      const color = avatarColor(senderLabel);
+      const timeStr = ts.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
+
+      fragments.push(`<div class="crm-msg-row ${isMine ? 'self' : ''}">
+        <div class="crm-msg-av" style="background:${color}">${initials}</div>
+        <div class="crm-msg-content">
+          <span class="crm-msg-sender">${senderLabel}</span>
+          <div class="crm-msg-bubble">${(msg.content || '').replace(/</g, '&lt;')}</div>
+          <span class="crm-msg-time">${timeStr}</span>
+        </div>
+      </div>`);
+    });
+
+    container.innerHTML = fragments.join('');
+    container.scrollTop = container.scrollHeight;
+  };
+
+  const setupCrmChat = () => {
+    if (crmChatSubscription) return;
+    renderCrmChatMembers();
+    crmChatSubscription = db.collection('messages')
+      .where('threadId', '==', 'group-global')
+      .orderBy('createdAt', 'asc')
+      .limitToLast(80)
+      .onSnapshot(snap => {
+        const msgs = [];
+        snap.forEach(doc => { msgs.push({ id: doc.id, ...doc.data() }); });
+        renderCrmChatMessages(msgs);
+      }, err => console.error('CRM chat error:', err));
+  };
+
+  const teardownCrmChat = () => {
+    if (crmChatSubscription) { crmChatSubscription(); crmChatSubscription = null; }
+  };
+
+  const sendCrmChatMessage = async () => {
+    const input = document.getElementById('crmChatInput');
+    if (!input) return;
+    const content = input.value.trim();
+    if (!content || !currentUser) return;
+    input.value = '';
+    try {
+      await db.collection('messages').add({
+        content,
+        senderName: currentUser.name,
+        senderEmail: currentUser.email,
+        senderRole: currentUser.role === 'admin' ? 'quản trị viên' : 'nhân viên',
+        threadId: 'group-global',
+        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+      });
+    } catch (e) {
+      console.error('CRM chat send error:', e);
+      showToast('Lỗi gửi tin nhắn!', 'error');
+    }
+  };
+
+  // ── init ───────────────────────────────────────────────────────────────────
   const initCrmModule = () => {
     if (!crmInitialized) {
       crmInitialized = true;
@@ -6347,6 +6583,9 @@ document.addEventListener('DOMContentLoaded', () => {
           document.querySelectorAll('.crm-tab-content').forEach(tc => tc.style.display = 'none');
           const el = document.getElementById(target);
           if (el) el.style.display = 'flex';
+          if (target === 'crm-staff-tab') renderCrmStaff();
+          if (target === 'crm-chat-tab') setupCrmChat();
+          else teardownCrmChat();
         });
       });
 
@@ -6396,9 +6635,18 @@ document.addEventListener('DOMContentLoaded', () => {
         showToast('Đã xuất Excel thành công!', 'success');
       });
 
-      document.getElementById('crmSearchInput')?.addEventListener('input', renderCrmCustomers);
-      document.getElementById('crmCountryFilter')?.addEventListener('change', renderCrmCustomers);
-      document.getElementById('crmStatusFilter')?.addEventListener('change', renderCrmCustomers);
+      document.getElementById('crmSearchInput')?.addEventListener('input', () => renderCrmCustomers(true));
+      document.getElementById('crmCountryFilter')?.addEventListener('change', () => renderCrmCustomers(true));
+      document.getElementById('crmStatusFilter')?.addEventListener('change', () => renderCrmCustomers(true));
+
+      document.getElementById('crmStaffSearch')?.addEventListener('input', () => renderCrmStaff(true));
+      document.getElementById('crmStaffDeptFilter')?.addEventListener('change', () => renderCrmStaff(true));
+      document.getElementById('crmStaffStatusFilter')?.addEventListener('change', () => renderCrmStaff(true));
+
+      document.getElementById('btnSendCrmChat')?.addEventListener('click', sendCrmChatMessage);
+      document.getElementById('crmChatInput')?.addEventListener('keydown', e => {
+        if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendCrmChatMessage(); }
+      });
 
       if (currentUser) {
         const av = document.getElementById('miniCrmAvatar');
@@ -6418,6 +6666,14 @@ document.addEventListener('DOMContentLoaded', () => {
         renderCrmCustomers();
       })
       .catch(err => console.error('CRM data load error:', err));
+
+    db.collection('hrm_staff').orderBy('name').get()
+      .then(snap => {
+        _allCrmStaff = [];
+        snap.forEach(doc => { const d = doc.data(); d.id = doc.id; _allCrmStaff.push(d); });
+        renderCrmStaff();
+      })
+      .catch(err => console.error('CRM staff load error:', err));
   };
 
 });

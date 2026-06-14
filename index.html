@@ -2873,11 +2873,13 @@
             <!-- CRM Sub-tabs -->
             <div class="crm-subtabs">
               <button class="crm-subtab active" data-tab="crm-overview-tab">📊 Tổng quan</button>
+              <button class="crm-subtab" data-tab="crm-staff-tab">👤 Quản lý Nhân viên</button>
               <button class="crm-subtab" data-tab="crm-customers-tab">👥 Quản lý Khách hàng</button>
+              <button class="crm-subtab" data-tab="crm-chat-tab">💬 Chat Nội bộ</button>
             </div>
 
             <!-- ===== TAB 1: OVERVIEW ===== -->
-            <div id="crm-overview-tab" class="crm-tab-content" style="display: block">
+            <div id="crm-overview-tab" class="crm-tab-content" style="display: flex">
 
               <!-- Stats Bar -->
               <div class="crm-stats-bar" id="crmStatsBar"></div>
@@ -2946,7 +2948,7 @@
                 </div>
 
                 <!-- Table -->
-                <div class="mini-table-container" style="max-height: 520px; overflow-y: auto">
+                <div class="mini-table-container">
                   <table class="crm-table">
                     <thead>
                       <tr>
@@ -2964,6 +2966,8 @@
                     </tbody>
                   </table>
                 </div>
+                <!-- Pagination -->
+                <div class="crm-pagination" id="crmCustomerPagination"></div>
               </div>
             </div>
 
@@ -3078,6 +3082,93 @@
 
             </div>
             <!-- end crmCustomerProfile -->
+
+            <!-- ===== TAB 2: STAFF ===== -->
+            <div id="crm-staff-tab" class="crm-tab-content" style="display: none">
+              <div class="crm-metric-card crm-customers-section">
+                <div class="crm-card-header">
+                  <h4>DANH SÁCH NHÂN VIÊN NỘI BỘ</h4>
+                  <span class="crm-card-subtitle" id="crmStaffCount">Đang tải...</span>
+                </div>
+                <div class="crm-filter-bar">
+                  <div class="crm-search-wrap">
+                    <svg viewBox="0 0 24 24"><path d="M9.5,3A6.5,6.5 0 0,1 16,9.5C16,11.11 15.41,12.59 14.44,13.73L14.71,14H15.5L20.5,19L19,20.5L14,15.5V14.71L13.73,14.44C12.59,15.41 11.11,16 9.5,16A6.5,6.5 0 0,1 3,9.5A6.5,6.5 0 0,1 9.5,3M9.5,5C7,5 5,7 5,9.5C5,12 7,14 9.5,14C12,14 14,12 14,9.5C14,7 12,5 9.5,5Z"/></svg>
+                    <input type="text" id="crmStaffSearch" placeholder="Tìm theo tên, email, chức vụ..." />
+                  </div>
+                  <select id="crmStaffDeptFilter">
+                    <option value="All">Tất cả phòng ban</option>
+                    <option value="Tuyển dụng">Tuyển dụng</option>
+                    <option value="Đào tạo">Đào tạo</option>
+                    <option value="Hành chính">Hành chính</option>
+                    <option value="Tư vấn Visa">Tư vấn Visa</option>
+                    <option value="Ban Giám đốc">Ban Giám đốc</option>
+                  </select>
+                  <select id="crmStaffStatusFilter">
+                    <option value="All">Tất cả trạng thái</option>
+                    <option value="Đang làm việc">Đang làm việc</option>
+                    <option value="Nghỉ phép">Nghỉ phép</option>
+                    <option value="Đã nghỉ việc">Đã nghỉ việc</option>
+                  </select>
+                </div>
+                <div class="mini-table-container">
+                  <table class="crm-table">
+                    <thead>
+                      <tr>
+                        <th>NHÂN VIÊN</th>
+                        <th>PHÒNG BAN</th>
+                        <th>CHỨC VỤ</th>
+                        <th>LIÊN HỆ</th>
+                        <th>NGÀY VÀO LÀM</th>
+                        <th>TRẠNG THÁI</th>
+                      </tr>
+                    </thead>
+                    <tbody id="crmStaffTableBody">
+                      <!-- Populated via JS -->
+                    </tbody>
+                  </table>
+                </div>
+                <!-- Pagination -->
+                <div class="crm-pagination" id="crmStaffPagination"></div>
+              </div>
+            </div>
+
+            <!-- ===== TAB 4: INTERNAL CHAT ===== -->
+            <div id="crm-chat-tab" class="crm-tab-content crm-chat-tab-content" style="display: none">
+              <div class="crm-chat-layout">
+
+                <!-- Left: Contact List -->
+                <div class="crm-chat-sidebar">
+                  <div class="crm-chat-sidebar-header">
+                    <h4>Thành viên nhóm</h4>
+                    <span class="crm-card-subtitle" id="crmMemberCount">0 người</span>
+                  </div>
+                  <div class="crm-chat-contact-list" id="crmChatContactList">
+                    <!-- Populated via JS -->
+                  </div>
+                </div>
+
+                <!-- Right: Message Window -->
+                <div class="crm-chat-window">
+                  <div class="crm-chat-window-header">
+                    <div class="crm-chat-avatar-group" id="crmChatAvatarGroup"></div>
+                    <div class="crm-chat-window-info">
+                      <span class="crm-chat-window-title">Nhóm Nội Bộ Aladdin</span>
+                      <span class="crm-chat-window-sub">Chat thời gian thực</span>
+                    </div>
+                  </div>
+                  <div class="crm-chat-messages" id="crmChatMessages">
+                    <div class="crm-chat-loading">Đang tải tin nhắn...</div>
+                  </div>
+                  <div class="crm-chat-input-bar">
+                    <input type="text" id="crmChatInput" placeholder="Nhập tin nhắn nội bộ..." />
+                    <button id="btnSendCrmChat" class="crm-send-btn" title="Gửi">
+                      <svg viewBox="0 0 24 24"><path d="M2,21L23,12L2,3V10L17,12L2,14V21Z"/></svg>
+                    </button>
+                  </div>
+                </div>
+
+              </div>
+            </div>
 
           </div>
         </div>
