@@ -2541,22 +2541,8 @@
                     <option value="Ban Giám đốc">Ban Giám đốc</option>
                   </select>
                 </div>
-                <div class="mini-table-container" style="max-height: 480px; overflow-y: auto">
-                  <table class="hrm-table">
-                    <thead>
-                      <tr>
-                        <th>NHÂN VIÊN</th>
-                        <th>PHÒNG BAN</th>
-                        <th>CHỨC VỤ</th>
-                        <th>NGÀY VÀO LÀM</th>
-                        <th>TRẠNG THÁI</th>
-                        <th style="text-align: center">HÀNH ĐỘNG</th>
-                      </tr>
-                    </thead>
-                    <tbody id="hrmStaffTableBody">
-                      <!-- Populated dynamically via JS -->
-                    </tbody>
-                  </table>
+                <div class="hrm-staff-grid" id="hrmStaffGrid">
+                  <!-- Populated dynamically via JS -->
                 </div>
               </div>
 
@@ -2792,28 +2778,84 @@
 
               <!-- Tab: Sơ yếu lý lịch -->
               <div id="ptab-resume" class="hrm-ptab-panel">
-                <div class="hrm-tab-placeholder">
-                  <svg viewBox="0 0 24 24"><path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z"/></svg>
-                  <h3>Sơ yếu lý lịch</h3>
-                  <p>Chức năng đang được phát triển</p>
+                <div class="hrm-profile-tab-grid">
+                  <!-- Card 1: Giấy tờ tùy thân -->
+                  <div class="hrm-metric-card" style="margin-bottom: 0;">
+                    <div class="metric-card-header"><h4>GIẤY TỜ TÙY THÂN</h4></div>
+                    <div class="profile-info-rows">
+                      <div class="profile-info-row"><span class="info-label">Số CCCD/Hộ chiếu</span><span class="info-val" id="profileIdNumber">--</span></div>
+                      <div class="profile-info-row"><span class="info-label">Ngày cấp</span><span class="info-val" id="profileIdDate">--</span></div>
+                      <div class="profile-info-row"><span class="info-label">Nơi cấp</span><span class="info-val" id="profileIdPlace">--</span></div>
+                    </div>
+                  </div>
+                  <!-- Card 2: Thông tin cư trú -->
+                  <div class="hrm-metric-card" style="margin-bottom: 0;">
+                    <div class="metric-card-header"><h4>ĐỊA CHỈ CƯ TRÚ</h4></div>
+                    <div class="profile-info-rows">
+                      <div class="profile-info-row"><span class="info-label">Địa chỉ thường trú</span><span class="info-val" id="profileAddressPermanent">--</span></div>
+                      <div class="profile-info-row"><span class="info-label">Chỗ ở hiện tại</span><span class="info-val" id="profileAddressCurrent">--</span></div>
+                    </div>
+                  </div>
+                  <!-- Card 3: Liên hệ khẩn cấp -->
+                  <div class="hrm-metric-card" style="margin-bottom: 0;">
+                    <div class="metric-card-header"><h4>LIÊN HỆ KHẨN CẤP</h4></div>
+                    <div class="profile-info-rows">
+                      <div class="profile-info-row"><span class="info-label">Họ tên người liên hệ</span><span class="info-val" id="profileEmergencyName">--</span></div>
+                      <div class="profile-info-row"><span class="info-label">Số điện thoại</span><span class="info-val" id="profileEmergencyPhone">--</span></div>
+                      <div class="profile-info-row"><span class="info-label">Mối quan hệ</span><span class="info-val" id="profileEmergencyRelation">--</span></div>
+                    </div>
+                  </div>
                 </div>
               </div>
 
               <!-- Tab: Công việc & Hợp đồng -->
               <div id="ptab-contract" class="hrm-ptab-panel">
-                <div class="hrm-tab-placeholder">
-                  <svg viewBox="0 0 24 24"><path d="M19,3H5C3.89,3 3,3.89 3,5V19A2,2 0 0,0 5,21H19A2,2 0 0,0 21,19V5C21,3.89 20.1,3 19,3M19,19H5V5H19V19M17,12H7V10H17V12M17,16H7V14H17V16M14,8H7V6H14V8Z"/></svg>
-                  <h3>Công việc &amp; Hợp đồng</h3>
-                  <p>Chức năng đang được phát triển</p>
+                <div class="hrm-profile-tab-grid">
+                  <!-- Card 1: Hợp đồng lao động -->
+                  <div class="hrm-metric-card" style="margin-bottom: 0;">
+                    <div class="metric-card-header"><h4>HỢP ĐỒNG LAO ĐỘNG</h4></div>
+                    <div class="profile-info-rows">
+                      <div class="profile-info-row"><span class="info-label">Loại hợp đồng</span><span class="info-val" id="profileContractType">--</span></div>
+                      <div class="profile-info-row"><span class="info-label">Ngày bắt đầu</span><span class="info-val" id="profileContractStartDate">--</span></div>
+                      <div class="profile-info-row"><span class="info-label">Ngày kết thúc</span><span class="info-val" id="profileContractEndDate">--</span></div>
+                      <div class="profile-info-row"><span class="info-label">Trạng thái HĐ</span><span class="info-val" id="profileContractStatus">--</span></div>
+                    </div>
+                  </div>
+                  <!-- Card 2: Thông tin vị trí -->
+                  <div class="hrm-metric-card" style="margin-bottom: 0;">
+                    <div class="metric-card-header"><h4>VỊ TRÍ CÔNG VIỆC</h4></div>
+                    <div class="profile-info-rows">
+                      <div class="profile-info-row"><span class="info-label">Phòng ban</span><span class="info-val" id="profileDept">--</span></div>
+                      <div class="profile-info-row"><span class="info-label">Chức danh</span><span class="info-val" id="profilePos">--</span></div>
+                      <div class="profile-info-row"><span class="info-label">Người quản lý</span><span class="info-val" id="profileManager">--</span></div>
+                      <div class="profile-info-row"><span class="info-label">Ngày nhận việc</span><span class="info-val" id="profileJoinDate2">--</span></div>
+                    </div>
+                  </div>
                 </div>
               </div>
 
               <!-- Tab: Lương & Phúc lợi -->
               <div id="ptab-salary" class="hrm-ptab-panel">
-                <div class="hrm-tab-placeholder">
-                  <svg viewBox="0 0 24 24"><path d="M11.5,2C6.81,2 3,5.81 3,10.5C3,14.63 5.75,18.1 9.5,19.22V20H8V22H16V20H14.5V19.22C18.25,18.1 21,14.63 21,10.5C21,5.81 17.19,2 12.5,2H11.5M11.5,4H12.5C16.09,4 19,6.91 19,10.5C19,14.09 16.09,17 12.5,17H11.5C7.91,17 5,14.09 5,10.5C5,6.91 7.91,4 11.5,4M12,6V7.19C11,7.37 10,8.12 10,9.25C10,10.5 11,11.12 12.25,11.5C13.5,11.87 13.75,12.25 13.75,12.75C13.75,13.37 13.12,13.75 12.25,13.75C11.37,13.75 10.87,13.37 10.75,12.75H9.25C9.37,13.87 10.19,14.75 11.25,15V16H12.75V15C13.87,14.75 14.75,13.87 14.75,12.75C14.75,11.5 13.75,10.87 12.5,10.5C11.25,10.12 11,9.75 11,9.25C11,8.75 11.5,8.25 12.25,8.25C12.87,8.25 13.37,8.62 13.5,9.25H15C14.87,8.12 14.06,7.31 13,7.06V6H12Z"/></svg>
-                  <h3>Lương &amp; Phúc lợi</h3>
-                  <p>Chức năng đang được phát triển</p>
+                <div class="hrm-profile-tab-grid">
+                  <!-- Card 1: Lương & Phúc lợi -->
+                  <div class="hrm-metric-card" style="margin-bottom: 0;">
+                    <div class="metric-card-header"><h4>MỨC LƯƠNG &amp; PHÚC LỢI</h4></div>
+                    <div class="profile-info-rows">
+                      <div class="profile-info-row"><span class="info-label">Lương cơ bản</span><span class="info-val" id="profileBaseSalary" style="font-weight: 600; color: var(--accent);">--</span></div>
+                      <div class="profile-info-row"><span class="info-label">Phụ cấp</span><span class="info-val" id="profileAllowanceLunch">--</span></div>
+                      <div class="profile-info-row"><span class="info-label">Đóng BHXH</span><span class="info-val" id="profileInsurance">--</span></div>
+                    </div>
+                  </div>
+                  <!-- Card 2: Tài khoản nhận lương -->
+                  <div class="hrm-metric-card" style="margin-bottom: 0;">
+                    <div class="metric-card-header"><h4>TÀI KHOẢN NGÂN HÀNG &amp; THUẾ</h4></div>
+                    <div class="profile-info-rows">
+                      <div class="profile-info-row"><span class="info-label">Số tài khoản</span><span class="info-val" id="profileBankNo">--</span></div>
+                      <div class="profile-info-row"><span class="info-label">Ngân hàng</span><span class="info-val" id="profileBankName">--</span></div>
+                      <div class="profile-info-row"><span class="info-label">Chủ tài khoản</span><span class="info-val" id="profileBankAccountName">--</span></div>
+                      <div class="profile-info-row"><span class="info-label">Mã số thuế cá nhân</span><span class="info-val" id="profileTaxCode">--</span></div>
+                    </div>
+                  </div>
                 </div>
               </div>
 
@@ -3180,7 +3222,7 @@
                       <button class="ioc-icon-btn" id="btnIocSearchMsg" title="Tìm kiếm">
                         <svg viewBox="0 0 24 24"><path d="M9.5,3A6.5,6.5 0 0,1 16,9.5C16,11.11 15.41,12.59 14.44,13.73L14.71,14H15.5L20.5,19L19,20.5L14,15.5V14.71L13.73,14.44C12.59,15.41 11.11,16 9.5,16A6.5,6.5 0 0,1 3,9.5A6.5,6.5 0 0,1 9.5,3M9.5,5C7,5 5,7 5,9.5C5,12 7,14 9.5,14C12,14 14,12 14,9.5C14,7 12,5 9.5,5Z"/></svg>
                       </button>
-                      <button class="ioc-icon-btn" title="Thành viên">
+                      <button class="ioc-icon-btn" id="btnIocShowMembersHdr" title="Thành viên">
                         <svg viewBox="0 0 24 24"><path d="M16,13C15.71,13 15.38,13 15.03,13.05C16.19,13.89 17,15 17,16.5V19H23V16.5C23,14.17 18.33,13 16,13M8,13C5.67,13 1,14.17 1,16.5V19H15V16.5C15,14.17 10.33,13 8,13M8,11A3,3 0 0,0 11,8A3,3 0 0,0 8,5A3,3 0 0,0 5,8A3,3 0 0,0 8,11M16,11A3,3 0 0,0 19,8A3,3 0 0,0 16,5A3,3 0 0,0 13,8A3,3 0 0,0 16,11Z"/></svg>
                       </button>
                       <button class="ioc-icon-btn" id="btnToggleIocInfo" title="Thông tin nhóm">
@@ -7140,6 +7182,8 @@
         </div>
         <form id="hrmStaffForm" class="hrm-modal-form" style="overflow-y: auto; flex: 1; padding-right: 4px;">
           <input type="hidden" id="hrmStaffEditId" />
+          
+          <h4 style="margin: 0.5rem 0 0.75rem; border-bottom: 1px solid var(--border); padding-bottom: 0.25rem; color: var(--accent); font-size: 0.85rem; text-transform: uppercase; font-weight: 600;">Thông tin cơ bản</h4>
           <div class="hrm-form-row">
             <div class="form-group-login"><label for="hrmStaffName">Họ và tên *</label><input type="text" id="hrmStaffName" placeholder="Nguyễn Văn A" required /></div>
             <div class="form-group-login"><label for="hrmStaffEmail">Email *</label><input type="email" id="hrmStaffEmail" placeholder="nhanvien@aladdin.vn" required /></div>
@@ -7193,10 +7237,73 @@
             </div>
           </div>
           <div class="hrm-form-row">
-            <div class="form-group-login"><label for="hrmStaffEducation">Học vấn</label><input type="text" id="hrmStaffEducation" placeholder="VD: Cử nhân ĐH Kinh tế quốc dân" /></div>
-            <div class="form-group-login"><label for="hrmStaffSalary">Lương cơ bản (VNĐ)</label><input type="number" id="hrmStaffSalary" placeholder="0" min="0" /></div>
+            <div class="form-group-login" style="grid-column: 1 / 3;"><label for="hrmStaffEducation">Học vấn</label><input type="text" id="hrmStaffEducation" placeholder="VD: Cử nhân ĐH Kinh tế quốc dân" /></div>
           </div>
-          <button type="submit" class="btn-submit-login" style="width: 100%; margin-top: 0.5rem; flex-shrink: 0;">LƯU THÔNG TIN NHÂN SỰ</button>
+
+          <h4 style="margin: 1.25rem 0 0.75rem; border-bottom: 1px solid var(--border); padding-bottom: 0.25rem; color: var(--accent); font-size: 0.85rem; text-transform: uppercase; font-weight: 600;">Sơ yếu lý lịch (Resume/CV)</h4>
+          <div class="hrm-form-row">
+            <div class="form-group-login"><label for="hrmStaffIdNumber">Số CCCD/Hộ chiếu</label><input type="text" id="hrmStaffIdNumber" placeholder="Nhập số CCCD" /></div>
+            <div class="form-group-login"><label for="hrmStaffIdDate">Ngày cấp</label><input type="date" id="hrmStaffIdDate" /></div>
+          </div>
+          <div class="hrm-form-row">
+            <div class="form-group-login" style="grid-column: 1 / 3;"><label for="hrmStaffIdPlace">Nơi cấp</label><input type="text" id="hrmStaffIdPlace" placeholder="VD: Cục Cảnh sát Quản lý hành chính" /></div>
+          </div>
+          <div class="hrm-form-row">
+            <div class="form-group-login" style="grid-column: 1 / 3;"><label for="hrmStaffAddressPermanent">Địa chỉ thường trú</label><input type="text" id="hrmStaffAddressPermanent" placeholder="Nhập địa chỉ thường trú theo sổ hộ khẩu" /></div>
+          </div>
+          <div class="hrm-form-row">
+            <div class="form-group-login" style="grid-column: 1 / 3;"><label for="hrmStaffAddressCurrent">Chỗ ở hiện tại</label><input type="text" id="hrmStaffAddressCurrent" placeholder="Nhập địa chỉ cư trú hiện tại" /></div>
+          </div>
+          <div class="hrm-form-row">
+            <div class="form-group-login"><label for="hrmStaffEmergencyName">Liên hệ khẩn cấp (Họ tên)</label><input type="text" id="hrmStaffEmergencyName" placeholder="VD: Nguyễn Văn B" /></div>
+            <div class="form-group-login"><label for="hrmStaffEmergencyPhone">Số điện thoại khẩn cấp</label><input type="text" id="hrmStaffEmergencyPhone" placeholder="0987654321" /></div>
+          </div>
+          <div class="hrm-form-row">
+            <div class="form-group-login" style="grid-column: 1 / 3;"><label for="hrmStaffEmergencyRelation">Mối quan hệ</label><input type="text" id="hrmStaffEmergencyRelation" placeholder="VD: Bố / Mẹ / Vợ / Chồng" /></div>
+          </div>
+
+          <h4 style="margin: 1.25rem 0 0.75rem; border-bottom: 1px solid var(--border); padding-bottom: 0.25rem; color: var(--accent); font-size: 0.85rem; text-transform: uppercase; font-weight: 600;">Công việc &amp; Hợp đồng</h4>
+          <div class="hrm-form-row">
+            <div class="form-group-login"><label for="hrmStaffContractType">Loại hợp đồng</label>
+              <select id="hrmStaffContractType">
+                <option value="">-- Chọn --</option>
+                <option value="Thử việc">Thử việc</option>
+                <option value="Hợp đồng 1 năm">Hợp đồng xác định thời hạn 1 năm</option>
+                <option value="Hợp đồng 2 năm">Hợp đồng xác định thời hạn 2 năm</option>
+                <option value="Không xác định thời hạn">Hợp đồng không xác định thời hạn</option>
+                <option value="Cộng tác viên">Cộng tác viên</option>
+              </select>
+            </div>
+            <div class="form-group-login"><label for="hrmStaffManager">Người quản lý</label><input type="text" id="hrmStaffManager" placeholder="Tên người quản lý trực tiếp" /></div>
+          </div>
+          <div class="hrm-form-row">
+            <div class="form-group-login"><label for="hrmStaffContractStart">Ngày bắt đầu hợp đồng</label><input type="date" id="hrmStaffContractStart" /></div>
+            <div class="form-group-login"><label for="hrmStaffContractEnd">Ngày kết thúc hợp đồng</label><input type="date" id="hrmStaffContractEnd" /></div>
+          </div>
+
+          <h4 style="margin: 1.25rem 0 0.75rem; border-bottom: 1px solid var(--border); padding-bottom: 0.25rem; color: var(--accent); font-size: 0.85rem; text-transform: uppercase; font-weight: 600;">Lương, Phúc lợi &amp; Tài khoản</h4>
+          <div class="hrm-form-row">
+            <div class="form-group-login"><label for="hrmStaffSalary">Lương cơ bản (VNĐ)</label><input type="number" id="hrmStaffSalary" placeholder="0" min="0" /></div>
+            <div class="form-group-login"><label for="hrmStaffAllowance">Phụ cấp (VNĐ)</label><input type="number" id="hrmStaffAllowance" placeholder="0" min="0" /></div>
+          </div>
+          <div class="hrm-form-row">
+            <div class="form-group-login"><label for="hrmStaffInsurance">Đóng BHXH</label>
+              <select id="hrmStaffInsurance">
+                <option value="Có">Có đóng BHXH</option>
+                <option value="Không">Không đóng BHXH</option>
+              </select>
+            </div>
+            <div class="form-group-login"><label for="hrmStaffTaxCode">Mã số thuế cá nhân</label><input type="text" id="hrmStaffTaxCode" placeholder="Nhập mã số thuế cá nhân" /></div>
+          </div>
+          <div class="hrm-form-row">
+            <div class="form-group-login"><label for="hrmStaffBankNo">Số tài khoản ngân hàng</label><input type="text" id="hrmStaffBankNo" placeholder="Nhập số tài khoản" /></div>
+            <div class="form-group-login"><label for="hrmStaffBankName">Ngân hàng</label><input type="text" id="hrmStaffBankName" placeholder="VD: Vietcombank, Techcombank..." /></div>
+          </div>
+          <div class="hrm-form-row">
+            <div class="form-group-login" style="grid-column: 1 / 3;"><label for="hrmStaffBankAccountName">Chủ tài khoản ngân hàng</label><input type="text" id="hrmStaffBankAccountName" placeholder="Nhập tên viết hoa không dấu" /></div>
+          </div>
+
+          <button type="submit" class="btn-submit-login" style="width: 100%; margin-top: 1rem; flex-shrink: 0;">LƯU THÔNG TIN NHÂN SỰ</button>
         </form>
       </div>
     </div>
@@ -7324,25 +7431,84 @@
 
       <!-- Tab: Sơ yếu lý lịch -->
       <div id="cptab-resume" class="crmsp-panel">
-        <div class="hrm-tab-placeholder">
-          <svg viewBox="0 0 24 24"><path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z"/></svg>
-          <h3>Sơ yếu lý lịch</h3><p>Chức năng đang được phát triển</p>
+        <div class="hrm-profile-tab-grid">
+          <!-- Card 1: Giấy tờ tùy thân -->
+          <div class="hrm-metric-card" style="margin-bottom: 0;">
+            <div class="metric-card-header"><h4>GIẤY TỜ TÙY THÂN</h4></div>
+            <div class="profile-info-rows">
+              <div class="profile-info-row"><span class="info-label">Số CCCD/Hộ chiếu</span><span class="info-val" id="crmProfileIdNumber">--</span></div>
+              <div class="profile-info-row"><span class="info-label">Ngày cấp</span><span class="info-val" id="crmProfileIdDate">--</span></div>
+              <div class="profile-info-row"><span class="info-label">Nơi cấp</span><span class="info-val" id="crmProfileIdPlace">--</span></div>
+            </div>
+          </div>
+          <!-- Card 2: Thông tin cư trú -->
+          <div class="hrm-metric-card" style="margin-bottom: 0;">
+            <div class="metric-card-header"><h4>ĐỊA CHỈ CƯ TRÚ</h4></div>
+            <div class="profile-info-rows">
+              <div class="profile-info-row"><span class="info-label">Địa chỉ thường trú</span><span class="info-val" id="crmProfileAddressPermanent">--</span></div>
+              <div class="profile-info-row"><span class="info-label">Chỗ ở hiện tại</span><span class="info-val" id="crmProfileAddressCurrent">--</span></div>
+            </div>
+          </div>
+          <!-- Card 3: Liên hệ khẩn cấp -->
+          <div class="hrm-metric-card" style="margin-bottom: 0;">
+            <div class="metric-card-header"><h4>LIÊN HỆ KHẨN CẤP</h4></div>
+            <div class="profile-info-rows">
+              <div class="profile-info-row"><span class="info-label">Họ tên người liên hệ</span><span class="info-val" id="crmProfileEmergencyName">--</span></div>
+              <div class="profile-info-row"><span class="info-label">Số điện thoại</span><span class="info-val" id="crmProfileEmergencyPhone">--</span></div>
+              <div class="profile-info-row"><span class="info-label">Mối quan hệ</span><span class="info-val" id="crmProfileEmergencyRelation">--</span></div>
+            </div>
+          </div>
         </div>
       </div>
 
       <!-- Tab: Công việc & Hợp đồng -->
       <div id="cptab-contract" class="crmsp-panel">
-        <div class="hrm-tab-placeholder">
-          <svg viewBox="0 0 24 24"><path d="M19,3H5C3.89,3 3,3.89 3,5V19A2,2 0 0,0 5,21H19A2,2 0 0,0 21,19V5C21,3.89 20.1,3 19,3M19,19H5V5H19V19M17,12H7V10H17V12M17,16H7V14H17V16M14,8H7V6H14V8Z"/></svg>
-          <h3>Công việc &amp; Hợp đồng</h3><p>Chức năng đang được phát triển</p>
+        <div class="hrm-profile-tab-grid">
+          <!-- Card 1: Hợp đồng lao động -->
+          <div class="hrm-metric-card" style="margin-bottom: 0;">
+            <div class="metric-card-header"><h4>HỢP ĐỒNG LAO ĐỘNG</h4></div>
+            <div class="profile-info-rows">
+              <div class="profile-info-row"><span class="info-label">Loại hợp đồng</span><span class="info-val" id="crmProfileContractType">--</span></div>
+              <div class="profile-info-row"><span class="info-label">Ngày bắt đầu</span><span class="info-val" id="crmProfileContractStartDate">--</span></div>
+              <div class="profile-info-row"><span class="info-label">Ngày kết thúc</span><span class="info-val" id="crmProfileContractEndDate">--</span></div>
+              <div class="profile-info-row"><span class="info-label">Trạng thái HĐ</span><span class="info-val" id="crmProfileContractStatus">--</span></div>
+            </div>
+          </div>
+          <!-- Card 2: Thông tin vị trí -->
+          <div class="hrm-metric-card" style="margin-bottom: 0;">
+            <div class="metric-card-header"><h4>VỊ TRÍ CÔNG VIỆC</h4></div>
+            <div class="profile-info-rows">
+              <div class="profile-info-row"><span class="info-label">Phòng ban</span><span class="info-val" id="crmProfileDept">--</span></div>
+              <div class="profile-info-row"><span class="info-label">Chức danh</span><span class="info-val" id="crmProfilePos">--</span></div>
+              <div class="profile-info-row"><span class="info-label">Người quản lý</span><span class="info-val" id="crmProfileManager">--</span></div>
+              <div class="profile-info-row"><span class="info-label">Ngày nhận việc</span><span class="info-val" id="crmProfileJoinDate2">--</span></div>
+            </div>
+          </div>
         </div>
       </div>
 
       <!-- Tab: Lương & Phúc lợi -->
       <div id="cptab-salary" class="crmsp-panel">
-        <div class="hrm-tab-placeholder">
-          <svg viewBox="0 0 24 24"><path d="M11.5,2C6.81,2 3,5.81 3,10.5C3,14.63 5.75,18.1 9.5,19.22V20H8V22H16V20H14.5V19.22C18.25,18.1 21,14.63 21,10.5C21,5.81 17.19,2 12.5,2H11.5M11.5,4H12.5C16.09,4 19,6.91 19,10.5C19,14.09 16.09,17 12.5,17H11.5C7.91,17 5,14.09 5,10.5C5,6.91 7.91,4 11.5,4M12,6V7.19C11,7.37 10,8.12 10,9.25C10,10.5 11,11.12 12.25,11.5C13.5,11.87 13.75,12.25 13.75,12.75C13.75,13.37 13.12,13.75 12.25,13.75C11.37,13.75 10.87,13.37 10.75,12.75H9.25C9.37,13.87 10.19,14.75 11.25,15V16H12.75V15C13.87,14.75 14.75,13.87 14.75,12.75C14.75,11.5 13.75,10.87 12.5,10.5C11.25,10.12 11,9.75 11,9.25C11,8.75 11.5,8.25 12.25,8.25C12.87,8.25 13.37,8.62 13.5,9.25H15C14.87,8.12 14.06,7.31 13,7.06V6H12Z"/></svg>
-          <h3>Lương &amp; Phúc lợi</h3><p>Chức năng đang được phát triển</p>
+        <div class="hrm-profile-tab-grid">
+          <!-- Card 1: Lương & Phúc lợi -->
+          <div class="hrm-metric-card" style="margin-bottom: 0;">
+            <div class="metric-card-header"><h4>MỨC LƯƠNG &amp; PHÚC LỢI</h4></div>
+            <div class="profile-info-rows">
+              <div class="profile-info-row"><span class="info-label">Lương cơ bản</span><span class="info-val" id="crmProfileBaseSalary" style="font-weight: 600; color: var(--accent);">--</span></div>
+              <div class="profile-info-row"><span class="info-label">Phụ cấp</span><span class="info-val" id="crmProfileAllowanceLunch">--</span></div>
+              <div class="profile-info-row"><span class="info-label">Đóng BHXH</span><span class="info-val" id="crmProfileInsurance">--</span></div>
+            </div>
+          </div>
+          <!-- Card 2: Tài khoản nhận lương -->
+          <div class="hrm-metric-card" style="margin-bottom: 0;">
+            <div class="metric-card-header"><h4>TÀI KHOẢN NGÂN HÀNG &amp; THUẾ</h4></div>
+            <div class="profile-info-rows">
+              <div class="profile-info-row"><span class="info-label">Số tài khoản</span><span class="info-val" id="crmProfileBankNo">--</span></div>
+              <div class="profile-info-row"><span class="info-label">Ngân hàng</span><span class="info-val" id="crmProfileBankName">--</span></div>
+              <div class="profile-info-row"><span class="info-label">Chủ tài khoản</span><span class="info-val" id="crmProfileBankAccountName">--</span></div>
+              <div class="profile-info-row"><span class="info-label">Mã số thuế cá nhân</span><span class="info-val" id="crmProfileTaxCode">--</span></div>
+            </div>
+          </div>
         </div>
       </div>
 

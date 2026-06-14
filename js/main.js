@@ -5316,13 +5316,23 @@ document.addEventListener('DOMContentLoaded', () => {
     if (avatarEl) { avatarEl.textContent = initials; avatarEl.style.background = bg; }
 
     const setText = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val || '--'; };
+    const fmtDate = (dateStr) => {
+      if (!dateStr) return '--';
+      const parts = dateStr.split('-');
+      if (parts.length === 3) return `${parts[2]}/${parts[1]}/${parts[0]}`;
+      return dateStr;
+    };
+    const fmtCurrency = (val) => {
+      return (val || 0).toLocaleString('vi-VN') + ' đ';
+    };
+
     setText('profileFullName', s.name);
     document.getElementById('profileEmpCode').textContent = s.employeeCode ? `Mã ${s.employeeCode}` : 'Mã --';
     document.getElementById('profilePositions').textContent = s.position
       ? `${s.position} • ${s.department || ''}` : '--';
     setText('profileUsername', s.username);
-    setText('profileJoinDate', s.joinDate);
-    setText('profileBirthday', s.birthday);
+    setText('profileJoinDate', fmtDate(s.joinDate));
+    setText('profileBirthday', fmtDate(s.birthday));
     setText('profileHometown', s.hometown);
     setText('profileGender', s.gender);
     setText('profileMarital', s.maritalStatus);
@@ -5370,6 +5380,33 @@ document.addEventListener('DOMContentLoaded', () => {
     if (legOnTime) legOnTime.textContent = onTime + '%';
     if (legLate) legLate.textContent = late + '%';
     if (legPending) legPending.textContent = pending + '%';
+
+    // Populate detail tabs
+    setText('profileIdNumber', s.idNumber);
+    setText('profileIdDate', fmtDate(s.idDate));
+    setText('profileIdPlace', s.idPlace);
+    setText('profileAddressPermanent', s.addressPermanent);
+    setText('profileAddressCurrent', s.addressCurrent);
+    setText('profileEmergencyName', s.emergencyContactName);
+    setText('profileEmergencyPhone', s.emergencyContactPhone);
+    setText('profileEmergencyRelation', s.emergencyContactRelation);
+
+    setText('profileContractType', s.contractType);
+    setText('profileContractStartDate', fmtDate(s.contractStartDate || s.joinDate));
+    setText('profileContractEndDate', s.contractEndDate ? fmtDate(s.contractEndDate) : 'Vô thời hạn');
+    setText('profileContractStatus', s.status === 'Đã nghỉ việc' ? 'Hết hiệu lực' : 'Đang hiệu lực');
+    setText('profileDept', s.department);
+    setText('profilePos', s.position);
+    setText('profileManager', s.manager || 'Ban Giám đốc');
+    setText('profileJoinDate2', fmtDate(s.joinDate));
+
+    setText('profileBaseSalary', fmtCurrency(s.salary));
+    setText('profileAllowanceLunch', s.allowanceSalary ? fmtCurrency(s.allowanceSalary) : '0 đ');
+    setText('profileInsurance', s.insuranceSalary || 'Không');
+    setText('profileBankNo', s.bankAccountNo);
+    setText('profileBankName', s.bankName);
+    setText('profileBankAccountName', s.bankAccountName);
+    setText('profileTaxCode', s.taxCode);
 
     requestAnimationFrame(() => {
       drawDonutChart('workEfficiencyChart', totalTasks, [
@@ -5573,16 +5610,356 @@ document.addEventListener('DOMContentLoaded', () => {
       if (!staffSnap.empty) return;
 
       const mockStaff = [
-        { name: 'Nguyễn Minh Đăng', email: 'dang.nm@aladdin.vn', department: 'Ban Giám đốc', position: 'Giám đốc điều hành', phone: '0901234567', status: 'Đang làm việc', joinDate: '2024-01-15' },
-        { name: 'Trần Thị Hương', email: 'huong.tt@aladdin.vn', department: 'Tuyển dụng', position: 'Trưởng phòng', phone: '0912345678', status: 'Đang làm việc', joinDate: '2024-03-01' },
-        { name: 'Lê Văn Quốc', email: 'quoc.lv@aladdin.vn', department: 'Đào tạo', position: 'Trưởng phòng', phone: '0923456789', status: 'Đang làm việc', joinDate: '2024-02-10' },
-        { name: 'Phạm Đức Hoàng', email: 'hoang.pd@aladdin.vn', department: 'Hành chính', position: 'Nhân viên', phone: '0934567890', status: 'Đang làm việc', joinDate: '2024-06-20' },
-        { name: 'Nguyễn Thảo Na', email: 'na.nt@aladdin.vn', department: 'Tư vấn Visa', position: 'Trưởng nhóm', phone: '0945678901', status: 'Đang làm việc', joinDate: '2024-04-05' },
-        { name: 'Võ Hoàng Anh', email: 'anh.vh@aladdin.vn', department: 'Tuyển dụng', position: 'Nhân viên', phone: '0956789012', status: 'Đang làm việc', joinDate: '2025-01-10' },
-        { name: 'Đặng Thị Mai', email: 'mai.dt@aladdin.vn', department: 'Đào tạo', position: 'Giảng viên', phone: '0967890123', status: 'Nghỉ phép', joinDate: '2024-09-15' },
-        { name: 'Bùi Thanh Tùng', email: 'tung.bt@aladdin.vn', department: 'Tư vấn Visa', position: 'Nhân viên', phone: '0978901234', status: 'Đang làm việc', joinDate: '2025-03-20' },
-        { name: 'Hoàng Thị Linh', email: 'linh.ht@aladdin.vn', department: 'Hành chính', position: 'Kế toán', phone: '0989012345', status: 'Đang làm việc', joinDate: '2024-07-01' },
-        { name: 'Trịnh Văn Khoa', email: 'khoa.tv@aladdin.vn', department: 'Tuyển dụng', position: 'Nhân viên', phone: '0990123456', status: 'Đã nghỉ việc', joinDate: '2024-05-12' }
+        {
+          name: 'Nguyễn Minh Đăng',
+          email: 'dang.nm@aladdin.vn',
+          department: 'Ban Giám đốc',
+          position: 'Giám đốc điều hành',
+          phone: '0901234567',
+          status: 'Đang làm việc',
+          joinDate: '2024-01-15',
+          employeeCode: '0001/BGĐ.0001',
+          username: 'dang.nm',
+          birthday: '1988-05-12',
+          gender: 'Nam',
+          hometown: 'P. Hàng Bông, Q. Hoàn Kiếm, TP. Hà Nội',
+          maritalStatus: 'Đã kết hôn',
+          education: 'Thạc sĩ Quản trị kinh doanh - Đại học Ngoại thương',
+          salary: 45000000,
+          idNumber: '001088012345',
+          idDate: '2021-06-15',
+          idPlace: 'Cục Cảnh sát Quản lý hành chính về trật tự xã hội',
+          addressPermanent: '12 Hàng Bông, Q. Hoàn Kiếm, TP. Hà Nội',
+          addressCurrent: 'Chung cư Vinhomes Ocean Park, Gia Lâm, Hà Nội',
+          emergencyContactName: 'Lê Thu Trang',
+          emergencyContactPhone: '0909998887',
+          emergencyContactRelation: 'Vợ',
+          contractType: 'Không xác định thời hạn',
+          manager: 'Hội đồng quản trị',
+          contractStartDate: '2024-01-15',
+          contractEndDate: '',
+          allowanceSalary: 5000000,
+          insuranceSalary: 'Có',
+          taxCode: '8123456789',
+          bankAccountNo: '1903456789012',
+          bankName: 'Techcombank',
+          bankAccountName: 'NGUYEN MINH DANG'
+        },
+        {
+          name: 'Trần Thị Hương',
+          email: 'huong.tt@aladdin.vn',
+          department: 'Tuyển dụng',
+          position: 'Trưởng phòng',
+          phone: '0912345678',
+          status: 'Đang làm việc',
+          joinDate: '2024-03-01',
+          employeeCode: '0267/HN.0267',
+          username: 'huong.tt',
+          birthday: '1992-10-24',
+          gender: 'Nữ',
+          hometown: 'Huyện Gia Lộc, Tỉnh Hải Dương',
+          maritalStatus: 'Độc thân',
+          education: 'Cử nhân QNLĐ - Đại học Kinh tế quốc dân',
+          salary: 20000000,
+          idNumber: '030092004567',
+          idDate: '2018-04-12',
+          idPlace: 'Công an tỉnh Hải Dương',
+          addressPermanent: 'Phường Lê Thanh Nghị, TP. Hải Dương',
+          addressCurrent: '45 Trần Thái Tông, Dịch Vọng, Cầu Giấy, Hà Nội',
+          emergencyContactName: 'Trần Văn Bình',
+          emergencyContactPhone: '0912223334',
+          emergencyContactRelation: 'Bố',
+          contractType: 'Hợp đồng 2 năm',
+          manager: 'Nguyễn Minh Đăng',
+          contractStartDate: '2024-03-01',
+          contractEndDate: '2026-03-01',
+          allowanceSalary: 2000000,
+          insuranceSalary: 'Có',
+          taxCode: '8123456780',
+          bankAccountNo: '1012345678',
+          bankName: 'Vietcombank',
+          bankAccountName: 'TRAN THI HUONG'
+        },
+        {
+          name: 'Lê Văn Quốc',
+          email: 'quoc.lv@aladdin.vn',
+          department: 'Đào tạo',
+          position: 'Trưởng phòng',
+          phone: '0923456789',
+          status: 'Đang làm việc',
+          joinDate: '2024-02-10',
+          employeeCode: '0189/HN.0189',
+          username: 'quoc.lv',
+          birthday: '1990-08-15',
+          gender: 'Nam',
+          hometown: 'Huyện Hưng Nguyên, Tỉnh Nghệ An',
+          maritalStatus: 'Đã kết hôn',
+          education: 'Cử nhân Sư phạm - Đại học Sư phạm Hà Nội',
+          salary: 18000000,
+          idNumber: '040090001234',
+          idDate: '2019-11-20',
+          idPlace: 'Công an tỉnh Nghệ An',
+          addressPermanent: 'Phường Hưng Bình, TP. Vinh, Tỉnh Nghệ An',
+          addressCurrent: '88 Nguyễn Khánh Toàn, Quan Hoa, Cầu Giấy, Hà Nội',
+          emergencyContactName: 'Lê Thị Xuân',
+          emergencyContactPhone: '0923334445',
+          emergencyContactRelation: 'Mẹ',
+          contractType: 'Hợp đồng 2 năm',
+          manager: 'Nguyễn Minh Đăng',
+          contractStartDate: '2024-02-10',
+          contractEndDate: '2026-02-10',
+          allowanceSalary: 2500000,
+          insuranceSalary: 'Có',
+          taxCode: '8123456781',
+          bankAccountNo: '1903345678901',
+          bankName: 'Techcombank',
+          bankAccountName: 'LE VAN QUOC'
+        },
+        {
+          name: 'Phạm Đức Hoàng',
+          email: 'hoang.pd@aladdin.vn',
+          department: 'Hành chính',
+          position: 'Nhân viên',
+          phone: '0934567890',
+          status: 'Đang làm việc',
+          joinDate: '2024-06-20',
+          employeeCode: '0312/HN.0312',
+          username: 'hoang.pd',
+          birthday: '1995-12-05',
+          gender: 'Nam',
+          hometown: 'Huyện Lý Nhân, Tỉnh Hà Nam',
+          maritalStatus: 'Độc thân',
+          education: 'Cử nhân Hành chính học - Học viện Hành chính Quốc gia',
+          salary: 10000000,
+          idNumber: '035095007890',
+          idDate: '2020-03-10',
+          idPlace: 'Cục Cảnh sát Quản lý hành chính về trật tự xã hội',
+          addressPermanent: 'Thị trấn Vĩnh Trụ, Lý Nhân, Hà Nam',
+          addressCurrent: '15 ngõ 119 Trung Kính, Yên Hòa, Cầu Giấy, Hà Nội',
+          emergencyContactName: 'Phạm Văn Hùng',
+          emergencyContactPhone: '0932223334',
+          emergencyContactRelation: 'Anh trai',
+          contractType: 'Hợp đồng 1 năm',
+          manager: 'Hoàng Thị Linh',
+          contractStartDate: '2024-06-20',
+          contractEndDate: '2025-06-20',
+          allowanceSalary: 1500000,
+          insuranceSalary: 'Có',
+          taxCode: '8123456782',
+          bankAccountNo: '0011004321098',
+          bankName: 'Vietcombank',
+          bankAccountName: 'PHAM DUC HOANG'
+        },
+        {
+          name: 'Nguyễn Thảo Na',
+          email: 'na.nt@aladdin.vn',
+          department: 'Tư vấn Visa',
+          position: 'Trưởng nhóm',
+          phone: '0945678901',
+          status: 'Đang làm việc',
+          joinDate: '2024-04-05',
+          employeeCode: '0256/HN.0256',
+          username: 'na.nt',
+          birthday: '1993-04-18',
+          gender: 'Nữ',
+          hometown: 'Huyện Hải Hậu, Tỉnh Nam Định',
+          maritalStatus: 'Đã kết hôn',
+          education: 'Cử nhân Quan hệ quốc tế - Học viện Ngoại giao',
+          salary: 15000000,
+          idNumber: '036093006789',
+          idDate: '2017-08-25',
+          idPlace: 'Công an tỉnh Nam Định',
+          addressPermanent: 'Thị trấn Thịnh Long, Hải Hậu, Nam Định',
+          addressCurrent: 'Chung cư Goldmark City, Phú Diễn, Bắc Từ Liêm, Hà Nội',
+          emergencyContactName: 'Nguyễn Thảo Vy',
+          emergencyContactPhone: '0942223334',
+          emergencyContactRelation: 'Em gái',
+          contractType: 'Hợp đồng 2 năm',
+          manager: 'Nguyễn Minh Đăng',
+          contractStartDate: '2024-04-05',
+          contractEndDate: '2026-04-05',
+          allowanceSalary: 2000000,
+          insuranceSalary: 'Có',
+          taxCode: '8123456783',
+          bankAccountNo: '1023456789',
+          bankName: 'Vietcombank',
+          bankAccountName: 'NGUYEN THAO NA'
+        },
+        {
+          name: 'Võ Hoàng Anh',
+          email: 'anh.vh@aladdin.vn',
+          department: 'Tuyển dụng',
+          position: 'Nhân viên',
+          phone: '0956789012',
+          status: 'Đang làm việc',
+          joinDate: '2025-01-10',
+          employeeCode: '0405/HN.0405',
+          username: 'anh.vh',
+          birthday: '1997-03-22',
+          gender: 'Nam',
+          hometown: 'TP. Hạ Long, Tỉnh Quảng Ninh',
+          maritalStatus: 'Độc thân',
+          education: 'Cử nhân Quản trị nhân lực - Đại học Thương mại',
+          salary: 9000000,
+          idNumber: '022097003456',
+          idDate: '2022-09-18',
+          idPlace: 'Cục Cảnh sát Quản lý hành chính về trật tự xã hội',
+          addressPermanent: 'Phường Bãi Cháy, TP. Hạ Long, Tỉnh Quảng Ninh',
+          addressCurrent: '120 Cầu Giấy, Quan Hoa, Cầu Giấy, Hà Nội',
+          emergencyContactName: 'Võ Hoàng Hải',
+          emergencyContactPhone: '0951112223',
+          emergencyContactRelation: 'Bố',
+          contractType: 'Thử việc',
+          manager: 'Trần Thị Hương',
+          contractStartDate: '2025-01-10',
+          contractEndDate: '2025-03-10',
+          allowanceSalary: 1200000,
+          insuranceSalary: 'Không',
+          taxCode: '8123456784',
+          bankAccountNo: '1903567890123',
+          bankName: 'Techcombank',
+          bankAccountName: 'VO HOANG ANH'
+        },
+        {
+          name: 'Đặng Thị Mai',
+          email: 'mai.dt@aladdin.vn',
+          department: 'Đào tạo',
+          position: 'Giảng viên',
+          phone: '0967890123',
+          status: 'Nghỉ phép',
+          joinDate: '2024-09-15',
+          employeeCode: '0355/HN.0355',
+          username: 'mai.dt',
+          birthday: '1991-11-30',
+          gender: 'Nữ',
+          hometown: 'Huyện Yên Mỹ, Tỉnh Hưng Yên',
+          maritalStatus: 'Đã kết hôn',
+          education: 'Cử nhân Sư phạm Tiếng Nhật - ĐH Ngoại ngữ ĐHQGHN',
+          salary: 14000000,
+          idNumber: '009091001234',
+          idDate: '2018-05-20',
+          idPlace: 'Công an tỉnh Hưng Yên',
+          addressPermanent: 'Thị trấn Yên Mỹ, Huyện Yên Mỹ, Tỉnh Hưng Yên',
+          addressCurrent: '18 Xuân Thủy, Dịch Vọng, Cầu Giấy, Hà Nội',
+          emergencyContactName: 'Đặng Văn Tiến',
+          emergencyContactPhone: '0961112223',
+          emergencyContactRelation: 'Bố',
+          contractType: 'Hợp đồng 2 năm',
+          manager: 'Lê Văn Quốc',
+          contractStartDate: '2024-09-15',
+          contractEndDate: '2026-09-15',
+          allowanceSalary: 1800000,
+          insuranceSalary: 'Có',
+          taxCode: '8123456785',
+          bankAccountNo: '1045678901',
+          bankName: 'Vietcombank',
+          bankAccountName: 'DANG THI MAI'
+        },
+        {
+          name: 'Bùi Thanh Tùng',
+          email: 'tung.bt@aladdin.vn',
+          department: 'Tư vấn Visa',
+          position: 'Nhân viên',
+          phone: '0978901234',
+          status: 'Đang làm việc',
+          joinDate: '2025-03-20',
+          employeeCode: '0462/HN.0462',
+          username: 'tung.bt',
+          birthday: '1998-07-14',
+          gender: 'Nam',
+          hometown: 'Huyện Kiến Xương, Tỉnh Thái Bình',
+          maritalStatus: 'Độc thân',
+          education: 'Cử nhân Ngôn ngữ Nhật - Đại học Hà Nội',
+          salary: 9500000,
+          idNumber: '034098005678',
+          idDate: '2023-01-15',
+          idPlace: 'Cục Cảnh sát Quản lý hành chính về trật tự xã hội',
+          addressPermanent: 'Thị trấn Thanh Nê, Kiến Xương, Thái Bình',
+          addressCurrent: '250 Kim Mã, Kim Mã, Ba Đình, Hà Nội',
+          emergencyContactName: 'Bùi Thị Loan',
+          emergencyContactPhone: '0971112223',
+          emergencyContactRelation: 'Mẹ',
+          contractType: 'Hợp đồng 1 năm',
+          manager: 'Nguyễn Thảo Na',
+          contractStartDate: '2025-03-20',
+          contractEndDate: '2026-03-20',
+          allowanceSalary: 1300000,
+          insuranceSalary: 'Có',
+          taxCode: '8123456786',
+          bankAccountNo: '1056789012',
+          bankName: 'Vietcombank',
+          bankAccountName: 'BUI THANH TUNG'
+        },
+        {
+          name: 'Hoàng Thị Linh',
+          email: 'linh.ht@aladdin.vn',
+          department: 'Hành chính',
+          position: 'Kế toán',
+          phone: '0989012345',
+          status: 'Đang làm việc',
+          joinDate: '2024-07-01',
+          employeeCode: '0320/HN.0320',
+          username: 'linh.ht',
+          birthday: '1994-01-05',
+          gender: 'Nữ',
+          hometown: 'TP. Vĩnh Yên, Tỉnh Vĩnh Phúc',
+          maritalStatus: 'Đã kết hôn',
+          education: 'Cử nhân Kế toán - Đại học Kinh tế quốc dân',
+          salary: 16000000,
+          idNumber: '026094002345',
+          idDate: '2019-02-12',
+          idPlace: 'Công an tỉnh Vĩnh Phúc',
+          addressPermanent: 'Phường Liên Bảo, TP. Vĩnh Yên, Tỉnh Vĩnh Phúc',
+          addressCurrent: 'Chung cư Times City, Vĩnh Tuy, Hai Bà Trưng, Hà Nội',
+          emergencyContactName: 'Hoàng Văn Nam',
+          emergencyContactPhone: '0981112223',
+          emergencyContactRelation: 'Chồng',
+          contractType: 'Không xác định thời hạn',
+          manager: 'Nguyễn Minh Đăng',
+          contractStartDate: '2024-07-01',
+          contractEndDate: '',
+          allowanceSalary: 2200000,
+          insuranceSalary: 'Có',
+          taxCode: '8123456787',
+          bankAccountNo: '1903678901234',
+          bankName: 'Techcombank',
+          bankAccountName: 'HOANG THI LINH'
+        },
+        {
+          name: 'Trịnh Văn Khoa',
+          email: 'khoa.tv@aladdin.vn',
+          department: 'Tuyển dụng',
+          position: 'Nhân viên',
+          phone: '0990123456',
+          status: 'Đã nghỉ việc',
+          joinDate: '2024-05-12',
+          employeeCode: '0299/HN.0299',
+          username: 'khoa.tv',
+          birthday: '1996-09-08',
+          gender: 'Nam',
+          hometown: 'TP. Lạng Sơn, Tỉnh Lạng Sơn',
+          maritalStatus: 'Độc thân',
+          education: 'Cử nhân Luật kinh tế - Đại học Luật Hà Nội',
+          salary: 9500000,
+          idNumber: '020096001234',
+          idDate: '2021-10-18',
+          idPlace: 'Công an tỉnh Lạng Sơn',
+          addressPermanent: 'Phường Tam Thanh, TP. Lạng Sơn, Tỉnh Lạng Sơn',
+          addressCurrent: '55 Lê Văn Lương, Nhân Chính, Thanh Xuân, Hà Nội',
+          emergencyContactName: 'Trịnh Văn Chiến',
+          emergencyContactPhone: '0991112223',
+          emergencyContactRelation: 'Bố',
+          contractType: 'Hợp đồng 1 năm',
+          manager: 'Trần Thị Hương',
+          contractStartDate: '2024-05-12',
+          contractEndDate: '2025-05-12',
+          allowanceSalary: 1200000,
+          insuranceSalary: 'Có',
+          taxCode: '8123456788',
+          bankAccountNo: '1067890123',
+          bankName: 'Vietcombank',
+          bankAccountName: 'TRINH VAN KHOA'
+        }
       ];
       const batch1 = db.batch();
       mockStaff.forEach(s => {
@@ -5712,9 +6089,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // ---- Render Staff ----
   const renderHrmStaffList = async () => {
-    const tbody = document.getElementById('hrmStaffTableBody');
-    if (!tbody) return;
-    tbody.innerHTML = '';
+    const grid = document.getElementById('hrmStaffGrid');
+    if (!grid) return;
+    grid.innerHTML = '';
     try {
       const snap = await db.collection('hrm_staff').orderBy('createdAt', 'desc').get();
       let staffList = [];
@@ -5730,7 +6107,7 @@ document.addEventListener('DOMContentLoaded', () => {
       });
 
       if (staffList.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:2rem;color:var(--text-muted);font-size:0.85rem;">Không tìm thấy nhân sự phù hợp.</td></tr>';
+        grid.innerHTML = '<div style="grid-column: 1/-1; text-align:center; padding:3rem; color:var(--text-muted); font-size:0.9rem; background: var(--bg-card); border-radius: 8px; border: 1px dashed var(--border);">Không tìm thấy nhân sự phù hợp.</div>';
         return;
       }
 
@@ -5741,23 +6118,51 @@ document.addEventListener('DOMContentLoaded', () => {
         if (s.status === 'Nghỉ phép') badgeCls = 'hrm-badge-onleave';
         else if (s.status === 'Đã nghỉ việc') badgeCls = 'hrm-badge-inactive';
 
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
-          <td><div class="hrm-staff-info"><div class="hrm-staff-avatar" style="background:${bg}">${initials}</div><div><div class="hrm-staff-name">${s.name}</div><div class="hrm-staff-email">${s.email || ''}</div></div></div></td>
-          <td>${s.department || ''}</td>
-          <td>${s.position || ''}</td>
-          <td>${s.joinDate || 'N/A'}</td>
-          <td><span class="hrm-badge ${badgeCls}">${s.status}</span></td>
-          <td style="text-align:center">
-            <button class="hrm-action-btn btn-view-hrm-staff" data-id="${s.id}" title="Xem hồ sơ"><svg viewBox="0 0 24 24"><path d="M12,9A3,3 0 0,0 9,12A3,3 0 0,0 12,15A3,3 0 0,0 15,12A3,3 0 0,0 12,9M12,17A5,5 0 0,1 7,12A5,5 0 0,1 12,7A5,5 0 0,1 17,12A5,5 0 0,1 12,17M12,4.5C7,4.5 2.73,7.61 1,12C2.73,16.39 7,19.5 12,19.5C17,19.5 21.27,16.39 23,12C21.27,7.61 17,7.61 12,4.5Z"/></svg></button>
-            <button class="hrm-action-btn btn-edit-hrm-staff" data-id="${s.id}" title="Sửa"><svg viewBox="0 0 24 24"><path d="M20.71,7.04C21.1,6.65 21.1,6 20.71,5.63L18.37,3.29C18,2.9 17.35,2.9 16.96,3.29L15.12,5.12L18.87,8.87M3,17.25V21H6.75L17.81,9.93L14.06,6.18L3,17.25Z"/></svg></button>
-            <button class="hrm-action-btn danger btn-del-hrm-staff" data-id="${s.id}" data-name="${s.name}" title="Xóa"><svg viewBox="0 0 24 24"><path d="M19,4H15.5L14.5,3H9.5L8.5,4H5V6H19M6,19A2,2 0 0,0 8,21H16A2,2 0 0,0 18,19V7H6V19Z"/></svg></button>
-          </td>`;
+        const card = document.createElement('div');
+        card.className = 'hrm-staff-card';
+        card.innerHTML = `
+          <div class="hrm-staff-card-header">
+            <div class="hrm-staff-card-avatar" style="background:${bg}">${initials}</div>
+            <div class="hrm-staff-card-title">
+              <div class="hrm-staff-card-name">${s.name}</div>
+              <div class="hrm-staff-card-code">${s.employeeCode || 'Mã --'}</div>
+            </div>
+            <span class="hrm-badge ${badgeCls}">${s.status}</span>
+          </div>
+          <div class="hrm-staff-card-body">
+            <div class="hrm-staff-card-field">
+              <span class="field-label">Phòng ban:</span>
+              <span class="field-value">${s.department || '--'}</span>
+            </div>
+            <div class="hrm-staff-card-field">
+              <span class="field-label">Chức vụ:</span>
+              <span class="field-value">${s.position || '--'}</span>
+            </div>
+            <div class="hrm-staff-card-field">
+              <span class="field-label">Email:</span>
+              <span class="field-value">${s.email || '--'}</span>
+            </div>
+            <div class="hrm-staff-card-field">
+              <span class="field-label">Điện thoại:</span>
+              <span class="field-value">${s.phone || '--'}</span>
+            </div>
+          </div>
+          <div class="hrm-staff-card-footer">
+            <button class="hrm-card-btn btn-view-hrm-staff" data-id="${s.id}"><svg viewBox="0 0 24 24"><path d="M12,9A3,3 0 0,0 9,12A3,3 0 0,0 12,15A3,3 0 0,0 15,12A3,3 0 0,0 12,9M12,17A5,5 0 0,1 7,12A5,5 0 0,1 12,7A5,5 0 0,1 17,12A5,5 0 0,1 12,17M12,4.5C7,4.5 2.73,7.61 1,12C2.73,16.39 7,19.5 12,19.5C17,19.5 21.27,16.39 23,12C21.27,7.61 17,7.61 12,4.5Z"/></svg> Hồ sơ</button>
+            <button class="hrm-card-btn btn-edit-hrm-staff" data-id="${s.id}"><svg viewBox="0 0 24 24"><path d="M20.71,7.04C21.1,6.65 21.1,6 20.71,5.63L18.37,3.29C18,2.9 17.35,2.9 16.96,3.29L15.12,5.12L18.87,8.87M3,17.25V21H6.75L17.81,9.93L14.06,6.18L3,17.25Z"/></svg> Sửa</button>
+            <button class="hrm-card-btn danger btn-del-hrm-staff" data-id="${s.id}" data-name="${s.name}"><svg viewBox="0 0 24 24"><path d="M19,4H15.5L14.5,3H9.5L8.5,4H5V6H19M6,19A2,2 0 0,0 8,21H16A2,2 0 0,0 18,19V7H6V19Z"/></svg> Xóa</button>
+          </div>`;
 
-        tr.querySelector('.btn-view-hrm-staff')?.addEventListener('click', () => openHrmProfile(s));
-        tr.querySelector('.btn-edit-hrm-staff')?.addEventListener('click', () => editHrmStaff(s));
-        tr.querySelector('.btn-del-hrm-staff')?.addEventListener('click', () => deleteHrmStaff(s.id, s.name));
-        tbody.appendChild(tr);
+        card.addEventListener('click', (e) => {
+          if (!e.target.closest('.hrm-card-btn')) {
+            openHrmProfile(s);
+          }
+        });
+
+        card.querySelector('.btn-view-hrm-staff')?.addEventListener('click', () => openHrmProfile(s));
+        card.querySelector('.btn-edit-hrm-staff')?.addEventListener('click', () => editHrmStaff(s));
+        card.querySelector('.btn-del-hrm-staff')?.addEventListener('click', () => deleteHrmStaff(s.id, s.name));
+        grid.appendChild(card);
       });
     } catch (err) {
       console.error('HRM staff list error:', err);
@@ -5780,6 +6185,27 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('hrmStaffMarital').value = s.maritalStatus || '';
     document.getElementById('hrmStaffEducation').value = s.education || '';
     document.getElementById('hrmStaffSalary').value = s.salary || '';
+
+    // New fields
+    document.getElementById('hrmStaffIdNumber').value = s.idNumber || '';
+    document.getElementById('hrmStaffIdDate').value = s.idDate || '';
+    document.getElementById('hrmStaffIdPlace').value = s.idPlace || '';
+    document.getElementById('hrmStaffAddressPermanent').value = s.addressPermanent || '';
+    document.getElementById('hrmStaffAddressCurrent').value = s.addressCurrent || '';
+    document.getElementById('hrmStaffEmergencyName').value = s.emergencyContactName || '';
+    document.getElementById('hrmStaffEmergencyPhone').value = s.emergencyContactPhone || '';
+    document.getElementById('hrmStaffEmergencyRelation').value = s.emergencyContactRelation || '';
+    document.getElementById('hrmStaffContractType').value = s.contractType || '';
+    document.getElementById('hrmStaffManager').value = s.manager || '';
+    document.getElementById('hrmStaffContractStart').value = s.contractStartDate || '';
+    document.getElementById('hrmStaffContractEnd').value = s.contractEndDate || '';
+    document.getElementById('hrmStaffAllowance').value = s.allowanceSalary || '';
+    document.getElementById('hrmStaffInsurance').value = s.insuranceSalary || 'Có';
+    document.getElementById('hrmStaffTaxCode').value = s.taxCode || '';
+    document.getElementById('hrmStaffBankNo').value = s.bankAccountNo || '';
+    document.getElementById('hrmStaffBankName').value = s.bankName || '';
+    document.getElementById('hrmStaffBankAccountName').value = s.bankAccountName || '';
+
     document.getElementById('hrmStaffModalTitle').textContent = '✏️ SỬA THÔNG TIN NHÂN SỰ';
     document.getElementById('hrmStaffModal').style.display = 'flex';
   };
@@ -6408,6 +6834,16 @@ document.addEventListener('DOMContentLoaded', () => {
     if (avatarEl) { avatarEl.textContent = initials; avatarEl.style.background = bg; }
 
     const setText = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val || '--'; };
+    const fmtDate = (dateStr) => {
+      if (!dateStr) return '--';
+      const parts = dateStr.split('-');
+      if (parts.length === 3) return `${parts[2]}/${parts[1]}/${parts[0]}`;
+      return dateStr;
+    };
+    const fmtCurrency = (val) => {
+      return (val || 0).toLocaleString('vi-VN') + ' đ';
+    };
+
     setText('crmProfileFullName', s.name);
 
     const empCode = document.getElementById('crmProfileEmpCode');
@@ -6417,8 +6853,8 @@ document.addEventListener('DOMContentLoaded', () => {
     if (positions) positions.textContent = s.position ? `${s.position} • ${s.department || ''}` : '--';
 
     setText('crmPUsername', s.username);
-    setText('crmPJoinDate', s.joinDate);
-    setText('crmPBirthday', s.birthday);
+    setText('crmPJoinDate', fmtDate(s.joinDate));
+    setText('crmPBirthday', fmtDate(s.birthday));
     setText('crmPHometown', s.hometown);
     setText('crmPGender', s.gender);
     setText('crmPMarital', s.maritalStatus);
@@ -6457,6 +6893,33 @@ document.addEventListener('DOMContentLoaded', () => {
     setText('crmLegOnTime', onTime + '%');
     setText('crmLegLate', late + '%');
     setText('crmLegPending', pending + '%');
+
+    // Populate detail tabs
+    setText('crmProfileIdNumber', s.idNumber);
+    setText('crmProfileIdDate', fmtDate(s.idDate));
+    setText('crmProfileIdPlace', s.idPlace);
+    setText('crmProfileAddressPermanent', s.addressPermanent);
+    setText('crmProfileAddressCurrent', s.addressCurrent);
+    setText('crmProfileEmergencyName', s.emergencyContactName);
+    setText('crmProfileEmergencyPhone', s.emergencyContactPhone);
+    setText('crmProfileEmergencyRelation', s.emergencyContactRelation);
+
+    setText('crmProfileContractType', s.contractType);
+    setText('crmProfileContractStartDate', fmtDate(s.contractStartDate || s.joinDate));
+    setText('crmProfileContractEndDate', s.contractEndDate ? fmtDate(s.contractEndDate) : 'Vô thời hạn');
+    setText('crmProfileContractStatus', s.status === 'Đã nghỉ việc' ? 'Hết hiệu lực' : 'Đang hiệu lực');
+    setText('crmProfileDept', s.department);
+    setText('crmProfilePos', s.position);
+    setText('crmProfileManager', s.manager || 'Ban Giám đốc');
+    setText('crmProfileJoinDate2', fmtDate(s.joinDate));
+
+    setText('crmProfileBaseSalary', fmtCurrency(s.salary));
+    setText('crmProfileAllowanceLunch', s.allowanceSalary ? fmtCurrency(s.allowanceSalary) : '0 đ');
+    setText('crmProfileInsurance', s.insuranceSalary || 'Không');
+    setText('crmProfileBankNo', s.bankAccountNo);
+    setText('crmProfileBankName', s.bankName);
+    setText('crmProfileBankAccountName', s.bankAccountName);
+    setText('crmProfileTaxCode', s.taxCode);
 
     requestAnimationFrame(() => {
       drawDonutChart('crmWorkEfficiencyChart', totalTasks, [
@@ -6611,18 +7074,33 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const esc = (s) => (s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 
+  // Returns the best available member list (staff DB first, then users cache)
+  const iocGetMembers = () => {
+    if (_allCrmStaff && _allCrmStaff.length) return _allCrmStaff;
+    if (allUsersList.length) return allUsersList;
+    return currentUser ? [currentUser] : [];
+  };
+
   // ── Render conversation list ──
   const iocRenderConvList = () => {
-    const favEl  = document.getElementById('iocConvList');
-    const recEl  = document.getElementById('iocRecentList');
+    const favEl = document.getElementById('iocConvList');
+    const recEl = document.getElementById('iocRecentList');
     if (!favEl || !recEl) return;
 
-    const lastMsg  = _iocMsgs.length ? _iocMsgs[_iocMsgs.length - 1] : null;
-    const preview  = lastMsg ? esc(lastMsg.recalled ? 'Tin nhắn đã được thu hồi' : lastMsg.content || '') : 'Chưa có tin nhắn';
-    const timeStr  = lastMsg?.createdAt?.toDate ? lastMsg.createdAt.toDate().toLocaleTimeString('vi-VN',{hour:'2-digit',minute:'2-digit'}) : '';
-    const members  = allUsersList.length ? allUsersList : (currentUser ? [currentUser] : []);
+    const lastMsg = _iocMsgs.length ? _iocMsgs[_iocMsgs.length - 1] : null;
+    const lastActive = _iocMsgs.filter(m => !m.recalled).slice(-1)[0] || lastMsg;
+    let preview = 'Chưa có tin nhắn';
+    if (lastActive) {
+      if (lastActive.recalled) preview = 'Tin nhắn đã được thu hồi';
+      else if (lastActive.imageUrl) preview = '📷 Hình ảnh';
+      else if (lastActive.fileName) preview = `📎 ${lastActive.fileName}`;
+      else preview = esc(lastActive.content || '');
+    }
+    const timeStr = lastActive?.createdAt?.toDate
+      ? lastActive.createdAt.toDate().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })
+      : '';
+    const members = iocGetMembers();
 
-    // Favourite: the group
     favEl.innerHTML = `<div class="ioc-conv-item active">
       <div class="ioc-conv-av" style="background:#2563EB">N<span class="ioc-online"></span></div>
       <div class="ioc-conv-body">
@@ -6632,25 +7110,24 @@ document.addEventListener('DOMContentLoaded', () => {
       <div class="ioc-conv-meta"><span class="ioc-conv-time">${timeStr}</span></div>
     </div>`;
 
-    // Recent: individual members
-    recEl.innerHTML = members.slice(0, 8).map(u => {
-      const ini   = (u.name || 'U').split(' ').map(w => w[0]).join('').slice(0,2).toUpperCase();
+    const search = (document.getElementById('crmChatSearch')?.value || '').toLowerCase();
+    const filtered = members.filter(u => !search || (u.name || '').toLowerCase().includes(search) || (u.department || u.dept || '').toLowerCase().includes(search));
+
+    recEl.innerHTML = filtered.slice(0, 10).map(u => {
+      const ini   = (u.name || 'U').split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
       const color = iocAvatarColor(u.name || 'U');
-      const role  = u.role === 'admin' ? 'Quản trị viên' : 'Nhân viên';
+      const sub   = u.position || u.dept || u.department || (u.role === 'admin' ? 'Quản trị viên' : 'Nhân viên');
       return `<div class="ioc-conv-item">
         <div class="ioc-conv-av" style="background:${color}">${ini}<span class="ioc-online"></span></div>
         <div class="ioc-conv-body">
           <div class="ioc-conv-name">${esc(u.name || 'Người dùng')}</div>
-          <div class="ioc-conv-preview">${role}</div>
+          <div class="ioc-conv-preview">${esc(sub)}</div>
         </div>
       </div>`;
-    }).join('');
+    }).join('') || '<div class="ioc-empty-list">Không tìm thấy nhân viên</div>';
 
-    // Header sub-title
-    const sub = document.getElementById('iocActiveThreadSub');
-    if (sub) sub.textContent = `${members.length} người tham dự`;
-
-    // Member count badge
+    const subEl = document.getElementById('iocActiveThreadSub');
+    if (subEl) subEl.textContent = `${members.length} thành viên`;
     const badge = document.getElementById('crmMemberCount');
     if (badge) badge.textContent = members.length;
   };
@@ -6668,14 +7145,13 @@ document.addEventListener('DOMContentLoaded', () => {
       return;
     }
 
-    const myName  = currentUser?.name  || '';
-    const myEmail = currentUser?.email || '';
-    let lastDate  = '';
+    let lastDate   = '';
     let lastSender = '';
-    const parts   = [];
+    const parts    = [];
 
-    msgs.forEach((msg, idx) => {
-      if (searchTerm && !(msg.content || '').toLowerCase().includes(searchTerm.toLowerCase())) return;
+    msgs.forEach(msg => {
+      const matchesSearch = !searchTerm || [msg.content, msg.fileName].some(v => (v || '').toLowerCase().includes(searchTerm.toLowerCase()));
+      if (!matchesSearch) return;
 
       const ts      = msg.createdAt?.toDate ? msg.createdAt.toDate() : new Date();
       const dateStr = ts.toLocaleDateString('vi-VN', { weekday:'long', day:'2-digit', month:'2-digit', year:'numeric' });
@@ -6767,6 +7243,17 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     if (wasAtBottom) container.scrollTop = container.scrollHeight;
+
+    // Image click → open lightbox
+    container.querySelectorAll('.ioc-msg-img').forEach(img => {
+      img.addEventListener('click', () => {
+        const overlay = document.createElement('div');
+        overlay.className = 'ioc-lightbox';
+        overlay.innerHTML = `<img src="${img.src}" alt="" /><button class="ioc-lightbox-close">&times;</button>`;
+        document.body.appendChild(overlay);
+        overlay.addEventListener('click', () => overlay.remove());
+      });
+    });
   };
 
   // ── Context menu ──
@@ -6776,6 +7263,13 @@ document.addEventListener('DOMContentLoaded', () => {
     const menu = document.getElementById('iocCtxMenu');
     if (!menu) return;
     menu.querySelectorAll('.ioc-ctx-mine-only').forEach(el => { el.style.display = isMine ? 'flex' : 'none'; });
+    // Dynamic pin label
+    const msg    = _iocMsgs.find(m => m.id === msgId);
+    const pinBtn = menu.querySelector('[data-action="pin"]');
+    if (pinBtn && msg) {
+      const textNode = [...pinBtn.childNodes].find(n => n.nodeType === Node.TEXT_NODE);
+      if (textNode) textNode.textContent = msg.pinned ? ' Bỏ ghim' : ' Ghim tin nhắn';
+    }
     const vw = window.innerWidth, vh = window.innerHeight;
     let x = e.clientX, y = e.clientY;
     menu.style.display = 'block';
@@ -6835,17 +7329,18 @@ document.addEventListener('DOMContentLoaded', () => {
     const list = document.getElementById('iocMembersList');
     const cnt  = document.getElementById('iocMemberListCount');
     if (!list) return;
-    const members = allUsersList.length ? allUsersList : (currentUser ? [currentUser] : []);
+    const members = iocGetMembers();
     if (cnt) cnt.textContent = members.length;
     list.innerHTML = members.map(u => {
-      const ini   = (u.name || 'U').split(' ').map(w => w[0]).join('').slice(0,2).toUpperCase();
+      const ini  = (u.name || 'U').split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
       const color = iocAvatarColor(u.name || 'U');
-      const role  = u.role === 'admin' ? 'Quản trị viên' : 'Nhân viên';
+      const sub  = u.position || u.dept || u.department || (u.role === 'admin' ? 'Quản trị viên' : 'Nhân viên');
+      const dept = u.department || u.dept || '';
       return `<div class="ioc-member-item">
         <div class="ioc-member-av" style="background:${color}">${ini}<span class="ioc-member-online"></span></div>
-        <div>
+        <div class="ioc-member-info">
           <div class="ioc-member-name">${esc(u.name || 'Người dùng')}</div>
-          <div class="ioc-member-role">${role}</div>
+          <div class="ioc-member-role">${esc(sub)}${dept ? ` · ${esc(dept)}` : ''}</div>
         </div>
       </div>`;
     }).join('');
@@ -7102,6 +7597,9 @@ document.addEventListener('DOMContentLoaded', () => {
       iocRenderMessages(_iocMsgs, e.target.value);
     });
 
+    // Sidebar search
+    document.getElementById('crmChatSearch')?.addEventListener('input', iocRenderConvList);
+
     // Info panel toggle
     document.getElementById('btnToggleIocInfo')?.addEventListener('click', () => {
       document.getElementById('iocInfoPanel')?.classList.toggle('hidden');
@@ -7109,6 +7607,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Info sub-panels
     document.getElementById('btnIocShowMembers')?.addEventListener('click', iocShowMembers);
+    document.getElementById('btnIocShowMembersHdr')?.addEventListener('click', () => {
+      document.getElementById('iocInfoPanel')?.classList.remove('hidden');
+      iocShowMembers();
+    });
     document.getElementById('btnIocBackFromMembers')?.addEventListener('click', iocShowInfoMain);
     document.getElementById('btnIocShowPinned')?.addEventListener('click', iocShowPinned);
     document.getElementById('btnIocBackFromPinned')?.addEventListener('click', iocShowInfoMain);

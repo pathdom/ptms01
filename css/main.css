@@ -4607,11 +4607,13 @@ body.dark-theme-crm {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  padding: 0.5rem 0.75rem;
+  padding: 0.45rem 0.75rem;
   background: var(--bg-card);
   border-top: 1px solid var(--border);
+  border-bottom: none;
   animation: hrmFadeIn 0.15s ease;
 }
+.ioc-input-bar { border-top: 1px solid var(--border); }
 .ioc-file-preview-inner {
   display: flex;
   align-items: center;
@@ -4901,8 +4903,11 @@ body.dark-theme-crm {
   background: #16A34A;
   border: 2px solid var(--bg-card);
 }
-.ioc-member-name { font-size: 0.81rem; font-weight: 600; color: var(--text-main); }
-.ioc-member-role { font-size: 0.71rem; color: var(--text-muted); }
+.ioc-member-info { min-width: 0; }
+.ioc-member-name { font-size: 0.81rem; font-weight: 600; color: var(--text-main); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ioc-member-role { font-size: 0.71rem; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+.ioc-empty-list { padding: 1.2rem 1rem; font-size: 0.78rem; color: var(--text-muted); text-align: center; }
 
 .ioc-pinned-list { padding: 0.5rem 0; overflow-y: auto; }
 .ioc-pinned-item {
@@ -4914,6 +4919,45 @@ body.dark-theme-crm {
 .ioc-pinned-item:hover { background: var(--crm-blue-light); }
 .ioc-pinned-item-sender { font-size: 0.72rem; font-weight: 600; color: var(--crm-blue); }
 .ioc-pinned-item-text { font-size: 0.8rem; color: var(--text-main); margin-top: 0.15rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* ── Image lightbox ── */
+.ioc-lightbox {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: rgba(0,0,0,0.85);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: zoom-out;
+  animation: hrmFadeIn 0.18s ease;
+}
+.ioc-lightbox img {
+  max-width: 90vw;
+  max-height: 88vh;
+  border-radius: 10px;
+  object-fit: contain;
+  box-shadow: 0 8px 40px rgba(0,0,0,0.6);
+}
+.ioc-lightbox-close {
+  position: absolute;
+  top: 1.5rem;
+  right: 1.5rem;
+  background: rgba(255,255,255,0.15);
+  border: none;
+  color: #fff;
+  font-size: 1.6rem;
+  line-height: 1;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s;
+}
+.ioc-lightbox-close:hover { background: rgba(255,255,255,0.28); }
 
 /* ── Context Menu ── */
 .ioc-ctx-menu {
@@ -5035,4 +5079,174 @@ body.dark-theme-crm {
   .crm-ptab-panel { padding: 1rem; }
   .ioc-layout { grid-template-columns: 1fr; }
   .ioc-sidebar { display: none; }
-}
+}
+
+/* ==========================================
+   HRM REDESIGN STAFF LIST & DETAIL TABS
+   ========================================== */
+
+.hrm-staff-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1.25rem;
+  margin-top: 1rem;
+}
+
+.hrm-staff-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--border-radius-lg);
+  padding: 1.25rem;
+  box-shadow: var(--shadow-sm);
+  transition: var(--transition-smooth);
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  position: relative;
+  overflow: hidden;
+}
+
+.hrm-staff-card:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-md);
+  border-color: var(--accent);
+}
+
+.hrm-staff-card-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  min-width: 0;
+  padding-right: 4.5rem; /* Space for the badge */
+}
+
+.hrm-staff-card-avatar {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.95rem;
+  color: #fff;
+  flex-shrink: 0;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.hrm-staff-card-title {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.hrm-staff-card-name {
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: var(--text-main);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.hrm-staff-card-code {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+.hrm-staff-card-header .hrm-badge {
+  position: absolute;
+  top: 1.25rem;
+  right: 1.25rem;
+  margin: 0;
+}
+
+.hrm-staff-card-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  font-size: 0.8rem;
+  color: var(--text-main);
+  flex: 1;
+}
+
+.hrm-staff-card-field {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.5rem;
+  border-bottom: 1px dashed var(--border-light);
+  padding-bottom: 0.35rem;
+}
+
+.hrm-staff-card-field:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.hrm-staff-card-field .field-label {
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+.hrm-staff-card-field .field-value {
+  font-weight: 600;
+  text-align: right;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 170px;
+}
+
+.hrm-staff-card-footer {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.5rem;
+  border-top: 1px solid var(--border-light);
+  padding-top: 0.75rem;
+}
+
+.hrm-card-btn {
+  flex: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  padding: 0.45rem 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  border-radius: var(--border-radius-sm);
+  border: 1px solid var(--border);
+  background: var(--bg-primary);
+  color: var(--text-main);
+  cursor: pointer;
+  transition: var(--transition-fast);
+}
+
+.hrm-card-btn:hover {
+  background: var(--accent-light);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.hrm-card-btn svg {
+  width: 14px;
+  height: 14px;
+  fill: currentColor;
+}
+
+.hrm-card-btn.danger:hover {
+  background: rgba(239, 68, 68, 0.08);
+  border-color: rgba(239, 68, 68, 0.4);
+  color: #EF4444;
+}
+
+/* Grid layout for tabs inside HRM and CRM Profile views */
+.hrm-profile-tab-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 1.25rem;
+  align-items: start;
+}
+
