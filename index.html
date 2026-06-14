@@ -3088,7 +3088,13 @@
               <div class="crm-metric-card crm-customers-section">
                 <div class="crm-card-header">
                   <h4>DANH SÁCH NHÂN VIÊN NỘI BỘ</h4>
-                  <span class="crm-card-subtitle" id="crmStaffCount">Đang tải...</span>
+                  <div class="crm-header-actions">
+                    <span class="crm-card-subtitle" id="crmStaffCount">Đang tải...</span>
+                    <button id="btnCrmAddStaff" class="crm-btn-accent" style="font-size:0.75rem;padding:0.45rem 0.9rem">
+                      <svg viewBox="0 0 24 24"><path d="M19,13H13V19H11V13H5V11H11V5H13V11H19V13Z"/></svg>
+                      Thêm nhân viên
+                    </button>
+                  </div>
                 </div>
                 <div class="crm-filter-bar">
                   <div class="crm-search-wrap">
@@ -3120,6 +3126,7 @@
                         <th>LIÊN HỆ</th>
                         <th>NGÀY VÀO LÀM</th>
                         <th>TRẠNG THÁI</th>
+                        <th>HÀNH ĐỘNG</th>
                       </tr>
                     </thead>
                     <tbody id="crmStaffTableBody">
@@ -7174,6 +7181,27 @@
           </div>
           <button type="submit" class="btn-submit-login" style="width: 100%; margin-top: 0.5rem; flex-shrink: 0;">LƯU THÔNG TIN NHÂN SỰ</button>
         </form>
+      </div>
+    </div>
+
+    <!-- CRM Staff View Detail Modal -->
+    <div class="modal-overlay" id="crmStaffViewModal" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.5); z-index:1000; justify-content:center; align-items:center; padding:2rem; backdrop-filter:blur(4px);">
+      <div class="login-card" style="max-width:500px; padding:2.5rem; width:100%; border-radius:var(--border-radius-lg); box-shadow:var(--shadow-lg); max-height:88vh; overflow-y:auto;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem;">
+          <h3 style="font-family:var(--font-serif); font-size:1.2rem; font-weight:500; color:var(--text-main);">THÔNG TIN NHÂN VIÊN</h3>
+          <button id="btnCloseCrmStaffView" style="font-size:1.6rem; color:var(--text-muted); cursor:pointer; background:none; border:none; line-height:1; padding:0;">&times;</button>
+        </div>
+        <div id="crmStaffViewContent"></div>
+        <div style="display:flex; gap:0.75rem; margin-top:1.5rem; padding-top:1.25rem; border-top:1px solid var(--border);">
+          <button id="btnCrmStaffViewEdit" class="crm-btn-accent" style="flex:1; justify-content:center;">
+            <svg viewBox="0 0 24 24"><path d="M20.71,7.04C21.1,6.65 21.1,6 20.71,5.63L18.37,3.29C18,2.9 17.35,2.9 16.96,3.29L15.12,5.12L18.87,8.87M3,17.25V21H6.75L17.81,9.93L14.06,6.18L3,17.25Z"/></svg>
+            Chỉnh sửa
+          </button>
+          <button id="btnCrmStaffViewDelete" class="crm-btn-secondary" style="flex:1; justify-content:center; color:#DC2626; border-color:#FCA5A5;">
+            <svg viewBox="0 0 24 24" style="fill:#DC2626"><path d="M19,4H15.5L14.5,3H9.5L8.5,4H5V6H19M6,19A2,2 0 0,0 8,21H16A2,2 0 0,0 18,19V7H6V19Z"/></svg>
+            Xóa nhân viên
+          </button>
+        </div>
       </div>
     </div>
 

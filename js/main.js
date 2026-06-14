@@ -5503,6 +5503,7 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('hrmStaffModal').style.display = 'none';
         renderHrmStaffList();
         renderHrmKpi();
+        reloadCrmStaff();
       } catch (err) {
         console.error('HRM staff save error:', err);
         showToast('Lỗi khi lưu nhân sự: ' + err.message, 'error');
@@ -5790,6 +5791,7 @@ document.addEventListener('DOMContentLoaded', () => {
       showToast(`Đã xóa nhân sự ${name}!`, 'warning');
       renderHrmStaffList();
       renderHrmKpi();
+      reloadCrmStaff();
     } catch (err) {
       showToast('Lỗi khi xóa nhân sự!', 'error');
     }
@@ -6380,6 +6382,56 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // ── CRM Staff ──────────────────────────────────────────────────────────────
   let _allCrmStaff = [];
+  let _crmViewStaff = null;
+
+  const reloadCrmStaff = () => {
+    db.collection('hrm_staff').orderBy('name').get()
+      .then(snap => {
+        _allCrmStaff = [];
+        snap.forEach(doc => { const d = doc.data(); d.id = doc.id; _allCrmStaff.push(d); });
+        renderCrmStaff();
+      })
+      .catch(err => console.error('CRM staff reload error:', err));
+  };
+
+  const openCrmStaffView = (s) => {
+    _crmViewStaff = s;
+    const modal = document.getElementById('crmStaffViewModal');
+    const content = document.getElementById('crmStaffViewContent');
+    if (!modal || !content) return;
+    const COLORS = ['#2563EB','#7C3AED','#DB2777','#D97706','#059669','#0891B2'];
+    const initials = (s.name || 'N').split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
+    const color = COLORS[(s.name || '').charCodeAt(0) % COLORS.length];
+    const st = s.status === 'Đang làm việc' ? 'active' : s.status === 'Nghỉ phép' ? 'leave' : 'left';
+    const joinDate = s.joinDate ? new Date(s.joinDate).toLocaleDateString('vi-VN') : null;
+    const birthday = s.birthday ? new Date(s.birthday).toLocaleDateString('vi-VN') : null;
+    const salary = s.salary ? Number(s.salary).toLocaleString('vi-VN') + ' VNĐ' : null;
+    const field = (label, val) => val ? `<div class="crm-view-field"><span class="crm-view-label">${label}</span><span class="crm-view-val">${val}</span></div>` : '';
+    content.innerHTML = `
+      <div class="crm-view-header">
+        <div style="width:52px;height:52px;border-radius:50%;background:${color};display:flex;align-items:center;justify-content:center;font-size:1rem;font-weight:700;color:#fff;flex-shrink:0">${initials}</div>
+        <div>
+          <div style="font-weight:700;font-size:1rem;color:var(--text-main)">${s.name || '--'}</div>
+          <div style="font-size:0.8rem;color:var(--text-muted);margin-top:0.2rem">${s.email || ''}</div>
+          <span class="crm-staff-badge ${st}" style="margin-top:0.4rem;display:inline-block">${s.status || '--'}</span>
+        </div>
+      </div>
+      <div class="crm-view-fields">
+        ${field('Phòng ban', s.department)}
+        ${field('Chức vụ', s.position)}
+        ${field('Điện thoại', s.phone)}
+        ${field('Ngày vào làm', joinDate)}
+        ${field('Mã nhân viên', s.employeeCode)}
+        ${field('Tên tài khoản', s.username)}
+        ${field('Ngày sinh', birthday)}
+        ${field('Giới tính', s.gender)}
+        ${field('Nguyên quán', s.hometown)}
+        ${field('Hôn nhân', s.maritalStatus)}
+        ${field('Học vấn', s.education)}
+        ${field('Lương cơ bản', salary)}
+      </div>`;
+    modal.style.display = 'flex';
+  };
   let crmStaffPage = 1;
 
   const renderCrmStaff = (resetPage = false) => {
@@ -6404,7 +6456,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (counter) counter.textContent = `${filtered.length} / ${_allCrmStaff.length} nhân viên`;
 
     if (!filtered.length) {
-      tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--text-muted);padding:2rem">Không tìm thấy nhân viên nào</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--text-muted);padding:2rem">Không tìm thấy nhân viên nào</td></tr>';
       renderPagination('crmStaffPagination', 1, 0, () => {});
       return;
     }
@@ -6436,8 +6488,32 @@ document.addEventListener('DOMContentLoaded', () => {
         <td style="font-size:0.78rem;color:var(--text-muted)">${s.phone || '--'}</td>
         <td style="font-size:0.78rem">${joinDate}</td>
         <td><span class="crm-staff-badge ${st}">${s.status || '--'}</span></td>
+        <td>
+          <div style="display:flex;gap:0.3rem;align-items:center">
+            <button class="crm-row-action-btn view" data-id="${s.id}" title="Xem chi tiết">
+              <svg viewBox="0 0 24 24"><path d="M12,9A3,3 0 0,0 9,12A3,3 0 0,0 12,15A3,3 0 0,0 15,12A3,3 0 0,0 12,9M12,17A5,5 0 0,1 7,12A5,5 0 0,1 12,7A5,5 0 0,1 17,12A5,5 0 0,1 12,17M12,4.5C7,4.5 2.73,7.61 1,12C2.73,16.39 7,19.5 12,19.5C17,19.5 21.27,16.39 23,12C21.27,7.61 17,4.5 12,4.5Z"/></svg>
+            </button>
+            <button class="crm-row-action-btn edit" data-id="${s.id}" title="Chỉnh sửa">
+              <svg viewBox="0 0 24 24"><path d="M20.71,7.04C21.1,6.65 21.1,6 20.71,5.63L18.37,3.29C18,2.9 17.35,2.9 16.96,3.29L15.12,5.12L18.87,8.87M3,17.25V21H6.75L17.81,9.93L14.06,6.18L3,17.25Z"/></svg>
+            </button>
+            <button class="crm-row-action-btn delete" data-id="${s.id}" data-name="${(s.name || '').replace(/"/g, '&quot;')}" title="Xóa">
+              <svg viewBox="0 0 24 24"><path d="M19,4H15.5L14.5,3H9.5L8.5,4H5V6H19M6,19A2,2 0 0,0 8,21H16A2,2 0 0,0 18,19V7H6V19Z"/></svg>
+            </button>
+          </div>
+        </td>
       </tr>`;
     }).join('');
+
+    tbody.querySelectorAll('.crm-row-action-btn').forEach(btn => {
+      btn.addEventListener('click', e => {
+        e.stopPropagation();
+        const staff = _allCrmStaff.find(s => s.id === btn.dataset.id);
+        if (!staff) return;
+        if (btn.classList.contains('view')) openCrmStaffView(staff);
+        else if (btn.classList.contains('edit')) editHrmStaff(staff);
+        else if (btn.classList.contains('delete')) deleteHrmStaff(staff.id, staff.name);
+      });
+    });
 
     renderPagination('crmStaffPagination', crmStaffPage, filtered.length, (p) => {
       crmStaffPage = p;
@@ -6979,6 +7055,28 @@ document.addEventListener('DOMContentLoaded', () => {
       document.getElementById('crmStaffSearch')?.addEventListener('input', () => renderCrmStaff(true));
       document.getElementById('crmStaffDeptFilter')?.addEventListener('change', () => renderCrmStaff(true));
       document.getElementById('crmStaffStatusFilter')?.addEventListener('change', () => renderCrmStaff(true));
+
+      document.getElementById('btnCrmAddStaff')?.addEventListener('click', () => {
+        document.getElementById('hrmStaffEditId').value = '';
+        document.getElementById('hrmStaffForm').reset();
+        document.getElementById('hrmStaffModalTitle').textContent = '+ THÊM NHÂN SỰ MỚI';
+        document.getElementById('hrmStaffModal').style.display = 'flex';
+      });
+
+      const crmViewModal = document.getElementById('crmStaffViewModal');
+      document.getElementById('btnCloseCrmStaffView')?.addEventListener('click', () => { crmViewModal.style.display = 'none'; });
+      crmViewModal?.addEventListener('click', e => { if (e.target === crmViewModal) crmViewModal.style.display = 'none'; });
+
+      document.getElementById('btnCrmStaffViewEdit')?.addEventListener('click', () => {
+        crmViewModal.style.display = 'none';
+        if (_crmViewStaff) editHrmStaff(_crmViewStaff);
+      });
+
+      document.getElementById('btnCrmStaffViewDelete')?.addEventListener('click', () => {
+        if (!_crmViewStaff) return;
+        crmViewModal.style.display = 'none';
+        deleteHrmStaff(_crmViewStaff.id, _crmViewStaff.name);
+      });
 
       iocBindEvents();
 

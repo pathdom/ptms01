@@ -4107,6 +4107,23 @@ body.dark-theme-crm {
 .crm-staff-badge.leave  { background: #FEF9C3; color: #854D0E; }
 .crm-staff-badge.left   { background: #FEE2E2; color: #DC2626; }
 
+.crm-row-action-btn {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 28px; height: 28px; border-radius: 6px; border: none; cursor: pointer;
+  background: transparent; color: var(--text-muted);
+  transition: background 0.15s, color 0.15s;
+}
+.crm-row-action-btn svg { width: 14px; height: 14px; fill: currentColor; pointer-events: none; }
+.crm-row-action-btn.view:hover  { background: #EFF6FF; color: #2563EB; }
+.crm-row-action-btn.edit:hover  { background: #F0FDF4; color: #16A34A; }
+.crm-row-action-btn.delete:hover { background: #FEF2F2; color: #DC2626; }
+
+.crm-view-header { display: flex; align-items: center; gap: 1rem; margin-bottom: 1.25rem; padding-bottom: 1.25rem; border-bottom: 1px solid var(--border); }
+.crm-view-fields { display: flex; flex-direction: column; }
+.crm-view-field  { display: flex; padding: 0.5rem 0; border-bottom: 1px solid var(--border); }
+.crm-view-label  { width: 140px; flex-shrink: 0; font-size: 0.75rem; color: var(--text-muted); font-weight: 500; }
+.crm-view-val    { font-size: 0.82rem; color: var(--text-main); }
+
 /* ---- Pagination ---- */
 .crm-pagination {
   display: flex;
