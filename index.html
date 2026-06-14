@@ -264,6 +264,12 @@
               </svg>
               <span>Quản lý HRM</span>
             </li>
+            <li class="menu-item" data-target="crm-dashboard" id="menuItemCRM">
+              <svg viewBox="0 0 24 24" style="width: 20px; height: 20px; fill: currentColor">
+                <path d="M16,11C17.66,11 18.99,9.66 18.99,8C18.99,6.34 17.66,5 16,5C14.34,5 13,6.34 13,8C13,9.66 14.34,11 16,11M8,11C9.66,11 10.99,9.66 10.99,8C10.99,6.34 9.66,5 8,5C6.34,5 5,6.34 5,8C5,9.66 6.34,11 8,11M8,13C5.67,13 1,14.17 1,16.5V18H15V16.5C15,14.17 10.33,13 8,13M16,13C15.71,13 15.38,13.02 15.03,13.05C16.19,13.89 17,15.02 17,16.5V18H23V16.5C23,14.17 18.33,13 16,13Z"/>
+              </svg>
+              <span>Quản lý CRM</span>
+            </li>
           </ul>
         </nav>
 
@@ -2503,20 +2509,27 @@
 
             <!-- ===== TAB 1: STAFF & KPI ===== -->
             <div id="hrm-staff-tab" class="hrm-tab-content" style="display: block">
-              <!-- KPI Summary -->
-              <div class="hrm-section-header">
-                <span class="hrm-section-title">TỔNG QUAN KPI THEO PHÒNG BAN</span>
-              </div>
-              <div class="hrm-kpi-grid" id="hrmKpiGrid">
-                <!-- Rendered via JS -->
+
+              <!-- Overview Stats Bar -->
+              <div class="hrm-overview-bar" id="hrmOverviewBar"></div>
+
+              <!-- KPI Section Card -->
+              <div class="hrm-metric-card hrm-kpi-section">
+                <div class="metric-card-header">
+                  <h4>TỔNG QUAN KPI THEO PHÒNG BAN</h4>
+                </div>
+                <div class="hrm-kpi-grid" id="hrmKpiGrid"></div>
               </div>
 
-              <!-- Staff List -->
-              <div class="hrm-section-header">
-                <span class="hrm-section-title">DANH SÁCH NHÂN SỰ NỘI BỘ</span>
-                <button type="button" class="btn-submit-login" id="btnOpenHrmStaffModal" style="margin-top:0; width:auto; padding: 0.6rem 1.2rem; font-size: 0.8rem;">+ THÊM NHÂN SỰ</button>
-              </div>
-              <div class="hrm-staff-container">
+              <!-- Staff List Section Card -->
+              <div class="hrm-metric-card hrm-staff-section">
+                <div class="metric-card-header">
+                  <h4>DANH SÁCH NHÂN SỰ NỘI BỘ</h4>
+                  <button type="button" id="btnOpenHrmStaffModal" class="hrm-btn-icon-action">
+                    <svg viewBox="0 0 24 24"><path d="M19,13H13V19H11V13H5V11H11V5H13V11H19V13Z"/></svg>
+                    Thêm nhân sự
+                  </button>
+                </div>
                 <div class="hrm-filter-bar">
                   <input type="text" id="hrmStaffSearch" placeholder="Tìm theo tên, email, chức vụ..." />
                   <select id="hrmStaffDeptFilter">
@@ -2528,7 +2541,7 @@
                     <option value="Ban Giám đốc">Ban Giám đốc</option>
                   </select>
                 </div>
-                <div class="mini-table-container" style="max-height: 500px; overflow-y: auto">
+                <div class="mini-table-container" style="max-height: 480px; overflow-y: auto">
                   <table class="hrm-table">
                     <thead>
                       <tr>
@@ -2546,6 +2559,7 @@
                   </table>
                 </div>
               </div>
+
             </div>
 
             <!-- ===== TAB 2: PROJECTS ===== -->
@@ -2824,6 +2838,251 @@
             </div>
           </div>
         </div>
+
+        <!-- ==========================================
+           TAB CRM. CUSTOMER RELATIONSHIP MANAGEMENT
+           ========================================== -->
+        <div id="crm-dashboard" class="dashboard-wrapper crm-page-wrapper" style="display: none">
+          <div class="dashboard-container">
+
+            <!-- Topbar Header -->
+            <div class="dashboard-topbar">
+              <div class="topbar-left">
+                <div class="topbar-title-group">
+                  <h2>Quản Lý Khách Hàng (CRM)</h2>
+                  <div class="breadcrumbs">
+                    <span class="portal-breadcrumb-home">Cổng thông tin</span>
+                    <span class="sep">/</span>
+                    <span class="active-crumb">CRM</span>
+                  </div>
+                </div>
+              </div>
+              <div class="topbar-right">
+                <div class="topbar-user-wrapper">
+                  <div class="user-profile-badge-inline" style="cursor:pointer;padding:0.5rem 0.8rem;border-radius:var(--border-radius-md);display:flex;align-items:center;gap:0.75rem;">
+                    <div class="profile-avatar" id="miniCrmAvatar">DM</div>
+                    <div class="profile-info-desktop">
+                      <span class="name" id="miniCrmName">Đang tải...</span>
+                      <span class="role" id="miniCrmRole">Nhân viên</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- CRM Sub-tabs -->
+            <div class="crm-subtabs">
+              <button class="crm-subtab active" data-tab="crm-overview-tab">📊 Tổng quan</button>
+              <button class="crm-subtab" data-tab="crm-customers-tab">👥 Quản lý Khách hàng</button>
+            </div>
+
+            <!-- ===== TAB 1: OVERVIEW ===== -->
+            <div id="crm-overview-tab" class="crm-tab-content" style="display: block">
+
+              <!-- Stats Bar -->
+              <div class="crm-stats-bar" id="crmStatsBar"></div>
+
+              <!-- Overview Grid -->
+              <div class="crm-overview-grid">
+
+                <!-- Bar Chart: By Country -->
+                <div class="crm-metric-card crm-chart-area">
+                  <div class="crm-card-header">
+                    <h4>PHÂN BỐ THEO QUỐC GIA</h4>
+                    <span class="crm-card-subtitle">Cập nhật thời gian thực</span>
+                  </div>
+                  <div class="crm-chart-wrapper">
+                    <canvas id="crmCountryChart" width="380" height="200"></canvas>
+                  </div>
+                </div>
+
+                <!-- Status Breakdown -->
+                <div class="crm-metric-card">
+                  <div class="crm-card-header"><h4>TRẠNG THÁI HỌC VIÊN</h4></div>
+                  <div id="crmStatusBreakdown" class="crm-status-list"></div>
+                </div>
+
+                <!-- Recent Customers -->
+                <div class="crm-metric-card">
+                  <div class="crm-card-header"><h4>KHÁCH HÀNG MỚI NHẤT</h4></div>
+                  <div id="crmRecentList" class="crm-recent-list"></div>
+                </div>
+
+              </div>
+            </div>
+
+            <!-- ===== TAB 2: CUSTOMER LIST ===== -->
+            <div id="crm-customers-tab" class="crm-tab-content" style="display: none">
+              <div class="crm-metric-card crm-customers-section">
+                <div class="crm-card-header">
+                  <h4>DANH SÁCH KHÁCH HÀNG</h4>
+                  <div class="crm-header-actions">
+                    <button type="button" id="btnExportCrm" class="crm-btn-secondary">
+                      <svg viewBox="0 0 24 24"><path d="M5,20H19V18H5M19,9H15V3H9V9H5L12,16L19,9Z"/></svg>
+                      Xuất Excel
+                    </button>
+                  </div>
+                </div>
+
+                <!-- Filter Bar -->
+                <div class="crm-filter-bar">
+                  <div class="crm-search-wrap">
+                    <svg viewBox="0 0 24 24"><path d="M9.5,3A6.5,6.5 0 0,1 16,9.5C16,11.11 15.41,12.59 14.44,13.73L14.71,14H15.5L20.5,19L19,20.5L14,15.5V14.71L13.73,14.44C12.59,15.41 11.11,16 9.5,16A6.5,6.5 0 0,1 3,9.5A6.5,6.5 0 0,1 9.5,3M9.5,5C7,5 5,7 5,9.5C5,12 7,14 9.5,14C12,14 14,12 14,9.5C14,7 12,5 9.5,5Z"/></svg>
+                    <input type="text" id="crmSearchInput" placeholder="Tìm theo tên, email, mã học viên..." />
+                  </div>
+                  <select id="crmCountryFilter">
+                    <option value="All">Tất cả quốc gia</option>
+                    <option value="Nhật">🇯🇵 Nhật Bản</option>
+                    <option value="Đài">🇹🇼 Đài Loan</option>
+                    <option value="Hàn">🇰🇷 Hàn Quốc</option>
+                  </select>
+                  <select id="crmStatusFilter">
+                    <option value="All">Tất cả trạng thái</option>
+                    <option value="Đang học">Đang học</option>
+                    <option value="Đang làm hồ sơ">Đang làm hồ sơ</option>
+                    <option value="Chờ phỏng vấn">Chờ phỏng vấn</option>
+                    <option value="Đã trúng tuyển">Đã trúng tuyển</option>
+                  </select>
+                </div>
+
+                <!-- Table -->
+                <div class="mini-table-container" style="max-height: 520px; overflow-y: auto">
+                  <table class="crm-table">
+                    <thead>
+                      <tr>
+                        <th>MÃ</th>
+                        <th>HỌC VIÊN</th>
+                        <th>LIÊN HỆ</th>
+                        <th>QUỐC GIA</th>
+                        <th>TRẠNG THÁI</th>
+                        <th>NGÀY ĐĂNG KÝ</th>
+                        <th style="text-align:center">HÀNH ĐỘNG</th>
+                      </tr>
+                    </thead>
+                    <tbody id="crmCustomerTableBody">
+                      <!-- Populated via JS -->
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+
+            <!-- ===== CUSTOMER PROFILE VIEW ===== -->
+            <div id="crmCustomerProfile" class="crm-profile-view" style="display: none">
+
+              <!-- Profile Top Navigation -->
+              <div class="crm-profile-topbar">
+                <button class="crm-back-btn" id="btnBackToCrmList">
+                  <svg viewBox="0 0 24 24"><path d="M20,11V13H8L13.5,18.5L12.08,19.92L4.16,12L12.08,4.08L13.5,5.5L8,11H20Z"/></svg>
+                  Quay lại
+                </button>
+                <div class="crm-profile-nav-tabs">
+                  <button class="crm-ptab active" data-ctab="ctab-info">Thông tin chung</button>
+                  <button class="crm-ptab" data-ctab="ctab-journey">Hành trình tư vấn</button>
+                  <button class="crm-ptab" data-ctab="ctab-docs">Hồ sơ &amp; Tài liệu</button>
+                  <button class="crm-ptab" data-ctab="ctab-notes">Ghi chú</button>
+                </div>
+                <div class="crm-profile-header-actions">
+                  <button class="crm-btn-accent" id="btnEditCrmCustomer">
+                    <svg viewBox="0 0 24 24"><path d="M20.71,7.04C21.1,6.65 21.1,6 20.71,5.63L18.37,3.29C18,2.9 17.35,2.9 16.96,3.29L15.12,5.12L18.87,8.87M3,17.25V21H6.75L17.81,9.93L14.06,6.18L3,17.25Z"/></svg>
+                    Chỉnh sửa
+                  </button>
+                </div>
+              </div>
+
+              <!-- Tab: Thông tin chung -->
+              <div id="ctab-info" class="crm-ptab-panel active">
+                <div class="crm-profile-grid">
+
+                  <!-- Left: Profile Info Card -->
+                  <div class="crm-profile-info-card">
+                    <div class="crm-avatar-section">
+                      <div class="crm-avatar-lg" id="crmProfileAvatar">KH</div>
+                      <div class="crm-name-block">
+                        <h2 id="crmProfileName">--</h2>
+                        <span id="crmProfileCode">--</span>
+                        <div class="crm-country-badge">
+                          <svg viewBox="0 0 24 24"><path d="M12,2C8.13,2 5,5.13 5,9C5,14.25 12,22 12,22C12,22 19,14.25 19,9C19,5.13 15.87,2 12,2M12,11.5C10.62,11.5 9.5,10.38 9.5,9C9.5,7.62 10.62,6.5 12,6.5C13.38,6.5 14.5,7.62 14.5,9C14.5,10.38 13.38,11.5 12,11.5Z"/></svg>
+                          <span id="crmProfileCountry">--</span>
+                        </div>
+                      </div>
+                      <span class="crm-status-badge" id="crmProfileStatusBadge">--</span>
+                    </div>
+                    <div class="crm-info-rows">
+                      <div class="crm-info-row"><span class="crm-info-label">Email</span><span class="crm-info-val" id="crmProfileEmail">--</span></div>
+                      <div class="crm-info-row"><span class="crm-info-label">Điện thoại</span><span class="crm-info-val" id="crmProfilePhone">--</span></div>
+                      <div class="crm-info-row"><span class="crm-info-label">Quốc gia DH</span><span class="crm-info-val" id="crmProfileCountryVal">--</span></div>
+                      <div class="crm-info-row"><span class="crm-info-label">Tháng học</span><span class="crm-info-val" id="crmProfileLearningMonth">--</span></div>
+                      <div class="crm-info-row"><span class="crm-info-label">Tư vấn viên</span><span class="crm-info-val" id="crmProfileCounselor">--</span></div>
+                      <div class="crm-info-row"><span class="crm-info-label">Ngày đăng ký</span><span class="crm-info-val" id="crmProfileCreatedAt">--</span></div>
+                    </div>
+                  </div>
+
+                  <!-- Middle: Pipeline + Personal Stats -->
+                  <div class="crm-profile-mid-col">
+                    <div class="crm-metric-card">
+                      <div class="crm-card-header"><h4>PIPELINE TƯ VẤN</h4></div>
+                      <div class="crm-pipeline-stages" id="crmPipelineStages"></div>
+                    </div>
+                    <div class="crm-metric-card">
+                      <div class="crm-card-header"><h4>THỐNG KÊ CÁ NHÂN</h4></div>
+                      <div class="crm-personal-stats" id="crmPersonalStats"></div>
+                    </div>
+                  </div>
+
+                  <!-- Right: Notes + Progress -->
+                  <div class="crm-profile-right-col">
+                    <div class="crm-metric-card">
+                      <div class="crm-card-header"><h4>GHI CHÚ NHANH</h4></div>
+                      <div class="crm-notes-display" id="crmProfileNotes">
+                        <p style="color:var(--text-muted);font-size:0.82rem;font-style:italic">Chưa có ghi chú.</p>
+                      </div>
+                    </div>
+                    <div class="crm-metric-card">
+                      <div class="crm-card-header"><h4>TIẾN ĐỘ HỒ SƠ</h4></div>
+                      <div class="crm-progress-wrapper">
+                        <canvas id="crmProgressChart" width="180" height="180"></canvas>
+                      </div>
+                      <div class="crm-progress-legend" id="crmProgressLegend"></div>
+                    </div>
+                  </div>
+
+                </div>
+              </div>
+
+              <!-- Tab: Hành trình tư vấn -->
+              <div id="ctab-journey" class="crm-ptab-panel">
+                <div class="crm-metric-card" style="margin:1.25rem">
+                  <div class="crm-card-header"><h4>HÀNH TRÌNH TƯ VẤN</h4></div>
+                  <div class="crm-journey-timeline" id="crmJourneyTimeline"></div>
+                </div>
+              </div>
+
+              <!-- Tab: Hồ sơ & Tài liệu -->
+              <div id="ctab-docs" class="crm-ptab-panel">
+                <div class="crm-tab-placeholder">
+                  <svg viewBox="0 0 24 24"><path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z"/></svg>
+                  <h3>Hồ sơ &amp; Tài liệu</h3>
+                  <p>Chức năng đang được phát triển</p>
+                </div>
+              </div>
+
+              <!-- Tab: Ghi chú -->
+              <div id="ctab-notes" class="crm-ptab-panel">
+                <div class="crm-tab-placeholder">
+                  <svg viewBox="0 0 24 24"><path d="M20.71,7.04C21.1,6.65 21.1,6 20.71,5.63L18.37,3.29C18,2.9 17.35,2.9 16.96,3.29L15.12,5.12L18.87,8.87M3,17.25V21H6.75L17.81,9.93L14.06,6.18L3,17.25Z"/></svg>
+                  <h3>Ghi chú tư vấn</h3>
+                  <p>Chức năng đang được phát triển</p>
+                </div>
+              </div>
+
+            </div>
+            <!-- end crmCustomerProfile -->
+
+          </div>
+        </div>
+        <!-- end crm-dashboard -->
+
       </div>
     </div>
 

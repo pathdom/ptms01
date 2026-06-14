@@ -1128,6 +1128,8 @@ document.addEventListener('DOMContentLoaded', () => {
       renderAdminBlogsList();
     } else if (targetViewId === 'hrm-dashboard') {
       initHrmModule();
+    } else if (targetViewId === 'crm-dashboard') {
+      initCrmModule();
     }
   };
 
@@ -5631,28 +5633,74 @@ document.addEventListener('DOMContentLoaded', () => {
       const snap = await db.collection('hrm_staff').get();
       const allStaff = [];
       snap.forEach(doc => allStaff.push(doc.data()));
-      const active = allStaff.filter(s => s.status === 'Đang làm việc');
+
+      const totalCount  = allStaff.length;
+      const activeCount = allStaff.filter(s => s.status === 'Đang làm việc').length;
+      const leaveCount  = allStaff.filter(s => s.status === 'Nghỉ phép').length;
+      const resignCount = allStaff.filter(s => s.status === 'Đã nghỉ việc').length;
+
+      const overviewBar = document.getElementById('hrmOverviewBar');
+      if (overviewBar) {
+        overviewBar.innerHTML = `
+          <div class="overview-stat-item">
+            <span class="overview-num">${totalCount}</span>
+            <span class="overview-label">Tổng nhân sự</span>
+          </div>
+          <div class="overview-divider"></div>
+          <div class="overview-stat-item">
+            <span class="overview-num" style="color:#10B981">${activeCount}</span>
+            <span class="overview-label">Đang làm việc</span>
+          </div>
+          <div class="overview-divider"></div>
+          <div class="overview-stat-item">
+            <span class="overview-num" style="color:#F59E0B">${leaveCount}</span>
+            <span class="overview-label">Nghỉ phép</span>
+          </div>
+          <div class="overview-divider"></div>
+          <div class="overview-stat-item">
+            <span class="overview-num" style="color:#EF4444">${resignCount}</span>
+            <span class="overview-label">Đã nghỉ việc</span>
+          </div>`;
+      }
 
       const depts = [
-        { key: 'Tuyển dụng', cls: 'kpi-tuyendung', icon: '<svg viewBox="0 0 24 24"><path d="M15,14C12.33,14 7,15.33 7,18V20H23V18C23,15.33 17.67,14 15,14M6,8.17V5H4V8.17C2.78,8.58 2,9.7 2,11C2,12.3 2.78,13.42 4,13.83V17H6V13.83C7.22,13.42 8,12.3 8,11C8,9.7 7.22,8.58 6,8.17M15,12A4,4 0 0,0 19,8A4,4 0 0,0 15,4A4,4 0 0,0 11,8A4,4 0 0,0 15,12Z"/></svg>' },
-        { key: 'Đào tạo', cls: 'kpi-daotao', icon: '<svg viewBox="0 0 24 24"><path d="M12,3L1,9L12,15L21,10.09V17H23V9M5,13.18V17.18L12,21L19,17.18V13.18L12,17L5,13.18Z"/></svg>' },
-        { key: 'Hành chính', cls: 'kpi-hanhchinh', icon: '<svg viewBox="0 0 24 24"><path d="M19,3H5C3.89,3 3,3.89 3,5V19A2,2 0 0,0 5,21H19A2,2 0 0,0 21,19V5C21,3.89 20.1,3 19,3M19,19H5V5H19V19M17,12H7V10H17V12M17,16H7V14H17V16M14,8H7V6H14V8Z"/></svg>' },
-        { key: 'Tư vấn Visa', cls: 'kpi-visa', icon: '<svg viewBox="0 0 24 24"><path d="M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M12,20C7.59,20 4,16.41 4,12C4,7.59 7.59,4 12,4C16.41,4 20,7.59 20,12C20,16.41 16.41,20 12,20M12.5,7H11V13L16.75,16.5L17.5,15.25L12.5,12.25V7Z"/></svg>' }
+        { key: 'Tuyển dụng',  color: '#3FA2F6', bg: 'rgba(63,162,246,0.12)',
+          icon: '<svg viewBox="0 0 24 24"><path d="M15,14C12.33,14 7,15.33 7,18V20H23V18C23,15.33 17.67,14 15,14M6,8.17V5H4V8.17C2.78,8.58 2,9.7 2,11C2,12.3 2.78,13.42 4,13.83V17H6V13.83C7.22,13.42 8,12.3 8,11C8,9.7 7.22,8.58 6,8.17M15,12A4,4 0 0,0 19,8A4,4 0 0,0 15,4A4,4 0 0,0 11,8A4,4 0 0,0 15,12Z"/></svg>' },
+        { key: 'Đào tạo',     color: '#10B981', bg: 'rgba(16,185,129,0.12)',
+          icon: '<svg viewBox="0 0 24 24"><path d="M12,3L1,9L12,15L21,10.09V17H23V9M5,13.18V17.18L12,21L19,17.18V13.18L12,17L5,13.18Z"/></svg>' },
+        { key: 'Hành chính',  color: '#F59E0B', bg: 'rgba(245,158,11,0.12)',
+          icon: '<svg viewBox="0 0 24 24"><path d="M19,3H5C3.89,3 3,3.89 3,5V19A2,2 0 0,0 5,21H19A2,2 0 0,0 21,19V5C21,3.89 20.1,3 19,3M19,19H5V5H19V19M17,12H7V10H17V12M17,16H7V14H17V16M14,8H7V6H14V8Z"/></svg>' },
+        { key: 'Tư vấn Visa', color: '#8B5CF6', bg: 'rgba(139,92,246,0.12)',
+          icon: '<svg viewBox="0 0 24 24"><path d="M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M12,20C7.59,20 4,16.41 4,12C4,7.59 7.59,4 12,4C16.41,4 20,7.59 20,12C20,16.41 16.41,20 12,20M12.5,7H11V13L16.75,16.5L17.5,15.25L12.5,12.25V7Z"/></svg>' }
       ];
 
       grid.innerHTML = depts.map(dept => {
-        const total = allStaff.filter(s => s.department === dept.key).length;
-        const activeCount = active.filter(s => s.department === dept.key).length;
-        const pct = total > 0 ? Math.round((activeCount / total) * 100) : 0;
-        const colors = { 'kpi-tuyendung': '#3FA2F6', 'kpi-daotao': '#10B981', 'kpi-hanhchinh': '#F59E0B', 'kpi-visa': '#8B5CF6' };
+        const deptAll    = allStaff.filter(s => s.department === dept.key);
+        const deptTotal  = deptAll.length;
+        const deptActive = deptAll.filter(s => s.status === 'Đang làm việc').length;
+        const deptLeave  = deptAll.filter(s => s.status === 'Nghỉ phép').length;
+        const pct = deptTotal > 0 ? Math.round((deptActive / deptTotal) * 100) : 0;
         return `
-          <div class="hrm-kpi-card ${dept.cls}">
-            <div class="hrm-kpi-icon">${dept.icon}</div>
-            <div class="hrm-kpi-info">
-              <span class="hrm-kpi-label">${dept.key}</span>
-              <span class="hrm-kpi-value">${activeCount}<span style="font-size:0.9rem; font-weight:500; color:var(--text-muted)">/${total}</span></span>
-              <span class="hrm-kpi-sub">nhân sự đang hoạt động</span>
-              <div class="hrm-kpi-progress"><div class="hrm-kpi-progress-fill" style="width:${pct}%; background:${colors[dept.cls]}"></div></div>
+          <div class="kpi-card-v2">
+            <div class="kpi-v2-accent" style="background:${dept.color}"></div>
+            <div class="kpi-v2-body">
+              <div class="kpi-v2-top">
+                <div class="kpi-v2-icon" style="background:${dept.bg}; color:${dept.color}">${dept.icon}</div>
+                <span class="kpi-v2-pct" style="color:${dept.color}">${pct}%</span>
+              </div>
+              <div class="kpi-v2-dept">${dept.key}</div>
+              <div class="kpi-v2-count">
+                <span class="kpi-v2-active-num" style="color:${dept.color}">${deptActive}</span>
+                <span class="kpi-v2-total-num">/${deptTotal}</span>
+              </div>
+              <span class="kpi-v2-sub">nhân sự đang hoạt động</span>
+              <div class="kpi-v2-progress">
+                <div class="kpi-v2-progress-fill" style="width:${pct}%; background:${dept.color}"></div>
+              </div>
+              <div class="kpi-v2-tags">
+                <span class="kpi-v2-tag" style="background:rgba(16,185,129,0.1);color:#10B981">${deptActive} làm việc</span>
+                ${deptLeave > 0 ? `<span class="kpi-v2-tag" style="background:rgba(245,158,11,0.1);color:#F59E0B">${deptLeave} nghỉ phép</span>` : ''}
+              </div>
             </div>
           </div>`;
       }).join('');
@@ -5890,6 +5938,486 @@ document.addEventListener('DOMContentLoaded', () => {
     } catch (err) {
       console.error('HRM payments render error:', err);
     }
+  };
+
+  // ===================================================
+  //  CRM MODULE — Customer Relationship Management
+  // ===================================================
+
+  let crmInitialized = false;
+  let _currentCrmCustomer = null;
+  let _allCrmCustomers = [];
+
+  const drawCrmBarChart = (canvasId, labels, values, colors) => {
+    const canvas = document.getElementById(canvasId);
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    const W = canvas.width;
+    const H = canvas.height;
+    ctx.clearRect(0, 0, W, H);
+
+    const maxVal = Math.max(...values, 1);
+    const barCount = labels.length;
+    const gap = Math.floor((W - 50) / barCount);
+    const barWidth = Math.floor(gap * 0.55);
+    const maxBarH = H - 55;
+    const baseline = H - 28;
+
+    ctx.strokeStyle = 'rgba(0,0,0,0.06)';
+    ctx.lineWidth = 1;
+    for (let i = 1; i <= 4; i++) {
+      const y = baseline - (maxBarH * i / 4);
+      ctx.beginPath(); ctx.moveTo(42, y); ctx.lineTo(W - 8, y); ctx.stroke();
+      ctx.fillStyle = '#9CA3AF';
+      ctx.font = '10px system-ui';
+      ctx.textAlign = 'right';
+      ctx.fillText(Math.round(maxVal * i / 4), 38, y + 4);
+    }
+
+    values.forEach((val, i) => {
+      const x = 48 + i * gap + (gap - barWidth) / 2;
+      const barH = maxBarH * (val / maxVal);
+      const y = baseline - barH;
+
+      const grad = ctx.createLinearGradient(0, y, 0, baseline);
+      grad.addColorStop(0, colors[i % colors.length]);
+      grad.addColorStop(1, colors[i % colors.length] + '60');
+      ctx.fillStyle = grad;
+      ctx.beginPath();
+      if (ctx.roundRect) {
+        ctx.roundRect(x, y, barWidth, barH, [4, 4, 0, 0]);
+      } else {
+        ctx.rect(x, y, barWidth, barH);
+      }
+      ctx.fill();
+
+      ctx.fillStyle = '#374151';
+      ctx.font = 'bold 12px system-ui';
+      ctx.textAlign = 'center';
+      ctx.fillText(val, x + barWidth / 2, y - 6);
+
+      ctx.fillStyle = '#6B7280';
+      ctx.font = '10px system-ui';
+      ctx.fillText(labels[i], x + barWidth / 2, baseline + 16);
+    });
+  };
+
+  const openCrmProfile = (customer) => {
+    _currentCrmCustomer = customer;
+    const subtabs = document.querySelector('.crm-subtabs');
+    if (subtabs) subtabs.style.display = 'none';
+    document.querySelectorAll('.crm-tab-content').forEach(el => el.style.display = 'none');
+    const pv = document.getElementById('crmCustomerProfile');
+    if (pv) { pv.style.display = 'flex'; pv.style.flexDirection = 'column'; }
+    document.querySelectorAll('.crm-ptab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.crm-ptab-panel').forEach(p => p.classList.remove('active'));
+    const firstTab = document.querySelector('.crm-ptab[data-ctab="ctab-info"]');
+    if (firstTab) firstTab.classList.add('active');
+    const firstPanel = document.getElementById('ctab-info');
+    if (firstPanel) firstPanel.classList.add('active');
+    populateCrmProfile(customer);
+  };
+
+  const closeCrmProfile = () => {
+    const pv = document.getElementById('crmCustomerProfile');
+    if (pv) pv.style.display = 'none';
+    const subtabs = document.querySelector('.crm-subtabs');
+    if (subtabs) subtabs.style.display = 'flex';
+    const activeSubtab = document.querySelector('.crm-subtab.active');
+    const targetTab = activeSubtab ? activeSubtab.getAttribute('data-tab') : 'crm-overview-tab';
+    const el = document.getElementById(targetTab);
+    if (el) el.style.display = 'flex';
+  };
+
+  const populateCrmProfile = (c) => {
+    const getEl = (id) => document.getElementById(id);
+
+    const initials = (c.name || 'KH').split(' ').map(w => w[0]).filter(Boolean).slice(-2).join('').toUpperCase();
+    const avatarColors = ['#2563EB', '#7C3AED', '#059669', '#D97706', '#DC2626', '#0891B2'];
+    const colorIdx = (c.name || '').charCodeAt(0) % avatarColors.length;
+    const av = getEl('crmProfileAvatar');
+    if (av) { av.textContent = initials; av.style.background = avatarColors[colorIdx]; }
+
+    if (getEl('crmProfileName')) getEl('crmProfileName').textContent = c.name || '--';
+    if (getEl('crmProfileCode')) getEl('crmProfileCode').textContent = c.code || '--';
+    if (getEl('crmProfileCountry')) getEl('crmProfileCountry').textContent = c.country || '--';
+    if (getEl('crmProfileEmail')) getEl('crmProfileEmail').textContent = c.email || '--';
+    if (getEl('crmProfilePhone')) getEl('crmProfilePhone').textContent = c.phone || '--';
+    if (getEl('crmProfileCountryVal')) getEl('crmProfileCountryVal').textContent = c.country || '--';
+    if (getEl('crmProfileLearningMonth')) getEl('crmProfileLearningMonth').textContent = c.learningMonth || '--';
+    if (getEl('crmProfileCounselor')) getEl('crmProfileCounselor').textContent = 'Chưa phân công';
+
+    let createdStr = '--';
+    if (c.createdAt && c.createdAt.toDate) {
+      const d = c.createdAt.toDate();
+      createdStr = `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}/${d.getFullYear()}`;
+    }
+    if (getEl('crmProfileCreatedAt')) getEl('crmProfileCreatedAt').textContent = createdStr;
+
+    const badge = getEl('crmProfileStatusBadge');
+    if (badge) {
+      badge.textContent = c.status || '--';
+      badge.className = 'crm-status-badge';
+      if (c.status === 'Đang học') badge.classList.add('active');
+      else if (c.status === 'Đang làm hồ sơ') badge.classList.add('processing');
+      else if (c.status === 'Chờ phỏng vấn') badge.classList.add('waiting');
+      else if (c.status === 'Đã trúng tuyển') badge.classList.add('selected');
+      else badge.classList.add('inactive');
+    }
+
+    const notesEl = getEl('crmProfileNotes');
+    if (notesEl) {
+      notesEl.innerHTML = c.notes
+        ? `<p style="font-size:0.82rem;line-height:1.75;color:var(--text-main)">${c.notes}</p>`
+        : `<p style="color:var(--text-muted);font-size:0.82rem;font-style:italic">Chưa có ghi chú.</p>`;
+    }
+
+    const allStages = ['Tiếp nhận', 'Tư vấn sơ bộ', 'Đang làm hồ sơ', 'Chờ phỏng vấn', 'Đã trúng tuyển', 'Đang học'];
+    const stageMap = { 'Tiếp nhận': 0, 'Tư vấn sơ bộ': 1, 'Đang làm hồ sơ': 2, 'Chờ phỏng vấn': 3, 'Đã trúng tuyển': 4, 'Đang học': 5 };
+    const currentStageIdx = stageMap[c.status] ?? 1;
+    const pipelineEl = getEl('crmPipelineStages');
+    if (pipelineEl) {
+      pipelineEl.innerHTML = allStages.map((stage, idx) => {
+        let cls = '';
+        if (idx < currentStageIdx) cls = 'done';
+        else if (idx === currentStageIdx) cls = 'current';
+        const icon = idx < currentStageIdx ? '✓' : idx + 1;
+        return `<div class="crm-pipeline-step ${cls}"><span class="crm-pipeline-indicator">${icon}</span><span class="crm-pipeline-label">${stage}</span></div>`;
+      }).join('');
+    }
+
+    const seed = (c.name || '').split('').reduce((acc, ch) => acc + ch.charCodeAt(0), 0);
+    const statsEl = getEl('crmPersonalStats');
+    if (statsEl) {
+      statsEl.innerHTML = `
+        <div class="crm-pstat-row"><span class="crm-pstat-label">Số lần tư vấn</span><span class="crm-pstat-val">${3 + (seed % 8)} lần</span></div>
+        <div class="crm-pstat-row"><span class="crm-pstat-label">Số buổi phỏng vấn</span><span class="crm-pstat-val">${1 + (seed % 3)} lần</span></div>
+        <div class="crm-pstat-row"><span class="crm-pstat-label">Ngày theo dõi</span><span class="crm-pstat-val">${30 + (seed % 90)} ngày</span></div>
+        <div class="crm-pstat-row"><span class="crm-pstat-label">Quốc gia mục tiêu</span><span class="crm-pstat-val">${c.country || '--'}</span></div>`;
+    }
+
+    const pctMap = { 'Tiếp nhận': 10, 'Tư vấn sơ bộ': 25, 'Đang làm hồ sơ': 45, 'Chờ phỏng vấn': 65, 'Đã trúng tuyển': 85, 'Đang học': 100 };
+    const pct = pctMap[c.status] || 15;
+    const legendEl = getEl('crmProgressLegend');
+    if (legendEl) {
+      legendEl.innerHTML = `
+        <div class="crm-leg-item"><span class="crm-leg-dot" style="background:#2563EB"></span><span class="crm-leg-label">Tiến độ</span><span class="crm-leg-val">${pct}%</span></div>
+        <div class="crm-leg-item"><span class="crm-leg-dot" style="background:#E5E7EB"></span><span class="crm-leg-label">Còn lại</span><span class="crm-leg-val">${100 - pct}%</span></div>`;
+    }
+    requestAnimationFrame(() => {
+      drawDonutChart('crmProgressChart', pct, [
+        { value: pct, color: '#2563EB' },
+        { value: 100 - pct, color: '#E5E7EB' }
+      ]);
+    });
+
+    const journeyEl = getEl('crmJourneyTimeline');
+    if (journeyEl) {
+      const dStart = c.createdAt?.toDate ? c.createdAt.toDate() : new Date(Date.now() - (30 + seed % 90) * 86400000);
+      const fmt = (d) => `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}/${d.getFullYear()}`;
+      const events = [
+        { title: 'Tiếp nhận hồ sơ', date: fmt(dStart), color: '#2563EB', bg: '#DBEAFE' },
+        { title: 'Tư vấn ban đầu', date: fmt(new Date(dStart.getTime() + 7 * 86400000)), color: '#7C3AED', bg: '#F3E8FF' },
+      ];
+      if (currentStageIdx >= 2) events.push({ title: 'Bắt đầu làm hồ sơ', date: fmt(new Date(dStart.getTime() + 14 * 86400000)), color: '#059669', bg: '#DCFCE7' });
+      if (currentStageIdx >= 3) events.push({ title: 'Phỏng vấn Visa', date: fmt(new Date(dStart.getTime() + 30 * 86400000)), color: '#D97706', bg: '#FEF3C7' });
+      if (currentStageIdx >= 4) events.push({ title: 'Trúng tuyển', date: fmt(new Date(dStart.getTime() + 45 * 86400000)), color: '#16A34A', bg: '#DCFCE7' });
+      if (currentStageIdx >= 5) events.push({ title: 'Xuất cảnh đi học', date: fmt(new Date(dStart.getTime() + 60 * 86400000)), color: '#2563EB', bg: '#DBEAFE' });
+
+      journeyEl.innerHTML = events.map(ev => `
+        <div class="crm-timeline-item">
+          <div class="crm-timeline-dot" style="background:${ev.bg};border:2px solid ${ev.color}"></div>
+          <div class="crm-timeline-content">
+            <div class="crm-timeline-title">${ev.title}</div>
+            <div class="crm-timeline-date">${ev.date}</div>
+          </div>
+        </div>`).join('');
+    }
+  };
+
+  const renderCrmOverview = () => {
+    const data = _allCrmCustomers;
+    const total = data.length;
+    const active = data.filter(c => c.status === 'Đang học').length;
+    const processing = data.filter(c => c.status === 'Đang làm hồ sơ').length;
+    const waiting = data.filter(c => c.status === 'Chờ phỏng vấn').length;
+    const selected = data.filter(c => c.status === 'Đã trúng tuyển').length;
+    const convRate = total > 0 ? Math.round((selected + active) / total * 100) : 0;
+
+    const statsBar = document.getElementById('crmStatsBar');
+    if (statsBar) {
+      statsBar.innerHTML = `
+        <div class="crm-stat-card" style="border-left-color:#2563EB">
+          <div class="crm-stat-icon" style="background:#EFF6FF;color:#2563EB">
+            <svg viewBox="0 0 24 24"><path d="M16,11C17.66,11 18.99,9.66 18.99,8C18.99,6.34 17.66,5 16,5C14.34,5 13,6.34 13,8C13,9.66 14.34,11 16,11M8,11C9.66,11 10.99,9.66 10.99,8C10.99,6.34 9.66,5 8,5C6.34,5 5,6.34 5,8C5,9.66 6.34,11 8,11M8,13C5.67,13 1,14.17 1,16.5V18H15V16.5C15,14.17 10.33,13 8,13M16,13C15.71,13 15.38,13.02 15.03,13.05C16.19,13.89 17,15.02 17,16.5V18H23V16.5C23,14.17 18.33,13 16,13Z"/></svg>
+          </div>
+          <div class="crm-stat-body">
+            <span class="crm-stat-label">Tổng khách hàng</span>
+            <span class="crm-stat-value">${total}</span>
+            <span class="crm-stat-delta">Tất cả học viên</span>
+          </div>
+        </div>
+        <div class="crm-stat-card" style="border-left-color:#16A34A">
+          <div class="crm-stat-icon" style="background:#DCFCE7;color:#16A34A">
+            <svg viewBox="0 0 24 24"><path d="M12,2A10,10 0 0,1 22,12A10,10 0 0,1 12,22A10,10 0 0,1 2,12A10,10 0 0,1 12,2M11,16.5L18,9.5L16.59,8.09L11,13.67L7.91,10.59L6.5,12L11,16.5Z"/></svg>
+          </div>
+          <div class="crm-stat-body">
+            <span class="crm-stat-label">Đang học</span>
+            <span class="crm-stat-value">${active}</span>
+            <span class="crm-stat-delta">Đã xuất cảnh du học</span>
+          </div>
+        </div>
+        <div class="crm-stat-card" style="border-left-color:#D97706">
+          <div class="crm-stat-icon" style="background:#FEF9C3;color:#D97706">
+            <svg viewBox="0 0 24 24"><path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20M12,11L13,13H15L13.5,14.5L14,17L12,15.5L10,17L10.5,14.5L9,13H11L12,11Z"/></svg>
+          </div>
+          <div class="crm-stat-body">
+            <span class="crm-stat-label">Đang xử lý</span>
+            <span class="crm-stat-value">${processing + waiting}</span>
+            <span class="crm-stat-delta">Hồ sơ + Chờ phỏng vấn</span>
+          </div>
+        </div>
+        <div class="crm-stat-card" style="border-left-color:#7C3AED">
+          <div class="crm-stat-icon" style="background:#F3E8FF;color:#7C3AED">
+            <svg viewBox="0 0 24 24"><path d="M16,6L18.29,8.29L13.41,13.17L9.41,9.17L2,16.59L3.41,18L9.41,12L13.41,16L19.71,9.71L22,12V6H16Z"/></svg>
+          </div>
+          <div class="crm-stat-body">
+            <span class="crm-stat-label">Tỷ lệ chuyển đổi</span>
+            <span class="crm-stat-value">${convRate}%</span>
+            <span class="crm-stat-delta">${selected} đã trúng tuyển</span>
+          </div>
+        </div>`;
+    }
+
+    const countryMap = {};
+    data.forEach(c => { countryMap[c.country] = (countryMap[c.country] || 0) + 1; });
+    setTimeout(() => {
+      drawCrmBarChart('crmCountryChart',
+        ['Nhật Bản', 'Đài Loan', 'Hàn Quốc'],
+        ['Nhật', 'Đài', 'Hàn'].map(k => countryMap[k] || 0),
+        ['#EF4444', '#3B82F6', '#10B981']
+      );
+    }, 80);
+
+    const statusEl = document.getElementById('crmStatusBreakdown');
+    if (statusEl) {
+      const statuses = [
+        { label: 'Đang học', count: active, color: '#16A34A' },
+        { label: 'Chờ phỏng vấn', count: waiting, color: '#D97706' },
+        { label: 'Đang làm hồ sơ', count: processing, color: '#2563EB' },
+        { label: 'Đã trúng tuyển', count: selected, color: '#7C3AED' },
+      ];
+      statusEl.innerHTML = statuses.map(s => {
+        const p = total > 0 ? Math.round(s.count / total * 100) : 0;
+        return `
+          <div class="crm-status-item">
+            <span class="crm-status-dot" style="background:${s.color}"></span>
+            <div style="flex:1;min-width:0">
+              <div style="display:flex;justify-content:space-between;margin-bottom:0.25rem">
+                <span class="crm-status-name">${s.label}</span>
+                <span class="crm-status-count">${s.count}</span>
+              </div>
+              <div class="crm-status-bar-track">
+                <div class="crm-status-bar-fill" style="width:${p}%;background:${s.color}"></div>
+              </div>
+            </div>
+          </div>`;
+      }).join('');
+    }
+
+    const recentEl = document.getElementById('crmRecentList');
+    if (recentEl) {
+      const sorted = [...data].sort((a, b) => {
+        const ta = a.createdAt?.toDate?.()?.getTime?.() || 0;
+        const tb = b.createdAt?.toDate?.()?.getTime?.() || 0;
+        return tb - ta;
+      }).slice(0, 6);
+      const rColors = ['#2563EB', '#7C3AED', '#059669', '#D97706', '#DC2626', '#0891B2'];
+      const badgeCls = { 'Đang học': 'crm-badge-active', 'Chờ phỏng vấn': 'crm-badge-waiting', 'Đang làm hồ sơ': 'crm-badge-processing', 'Đã trúng tuyển': 'crm-badge-selected' };
+      recentEl.innerHTML = sorted.length > 0 ? sorted.map((c, i) => {
+        const ini = (c.name || 'KH').split(' ').map(w => w[0]).filter(Boolean).slice(-2).join('').toUpperCase();
+        const bc = badgeCls[c.status] || 'crm-badge-processing';
+        return `
+          <div class="crm-recent-item">
+            <div class="crm-recent-avatar" style="background:${rColors[i % rColors.length]}">${ini}</div>
+            <div class="crm-recent-info">
+              <div class="crm-recent-name">${c.name || '--'}</div>
+              <div class="crm-recent-meta">${c.code || ''} • ${c.country || ''}</div>
+            </div>
+            <span class="crm-recent-badge crm-pill ${bc}">${c.status || ''}</span>
+          </div>`;
+      }).join('') : '<p style="color:var(--text-muted);font-size:0.82rem;text-align:center;padding:1rem">Chưa có dữ liệu.</p>';
+    }
+  };
+
+  const renderCrmCustomers = () => {
+    const tbody = document.getElementById('crmCustomerTableBody');
+    if (!tbody) return;
+
+    const search = (document.getElementById('crmSearchInput')?.value || '').toLowerCase().trim();
+    const countryF = document.getElementById('crmCountryFilter')?.value || 'All';
+    const statusF = document.getElementById('crmStatusFilter')?.value || 'All';
+
+    const filtered = _allCrmCustomers.filter(c => {
+      if (countryF !== 'All' && c.country !== countryF) return false;
+      if (statusF !== 'All' && c.status !== statusF) return false;
+      if (search && !`${c.name} ${c.email} ${c.code}`.toLowerCase().includes(search)) return false;
+      return true;
+    });
+
+    if (filtered.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:2.5rem;color:var(--text-muted);font-size:0.82rem">Không tìm thấy khách hàng phù hợp.</td></tr>`;
+      return;
+    }
+
+    const badgeCls = { 'Đang học': 'crm-badge-active', 'Chờ phỏng vấn': 'crm-badge-waiting', 'Đang làm hồ sơ': 'crm-badge-processing', 'Đã trúng tuyển': 'crm-badge-selected' };
+    const flags = { 'Nhật': '🇯🇵', 'Đài': '🇹🇼', 'Hàn': '🇰🇷' };
+    const avColors = ['#2563EB', '#7C3AED', '#059669', '#D97706', '#DC2626', '#0891B2'];
+
+    tbody.innerHTML = filtered.map((c, i) => {
+      const ini = (c.name || 'KH').split(' ').map(w => w[0]).filter(Boolean).slice(-2).join('').toUpperCase();
+      const bc = badgeCls[c.status] || 'crm-badge-processing';
+      const flag = flags[c.country] || '🌏';
+      let dateStr = '--';
+      if (c.createdAt?.toDate) {
+        const d = c.createdAt.toDate();
+        dateStr = `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}/${d.getFullYear()}`;
+      }
+      return `
+        <tr>
+          <td><span style="font-family:monospace;font-size:0.78rem;font-weight:600;color:var(--crm-blue)">${c.code || '--'}</span></td>
+          <td>
+            <div style="display:flex;align-items:center;gap:0.65rem">
+              <div style="width:32px;height:32px;border-radius:50%;background:${avColors[i % avColors.length]};color:#fff;display:flex;align-items:center;justify-content:center;font-size:0.7rem;font-weight:700;flex-shrink:0">${ini}</div>
+              <span style="font-weight:600;font-size:0.83rem">${c.name || '--'}</span>
+            </div>
+          </td>
+          <td>
+            <div style="font-size:0.79rem">${c.email || '--'}</div>
+            <div style="font-size:0.73rem;color:var(--text-muted)">${c.phone || ''}</div>
+          </td>
+          <td><span class="crm-country-flag">${flag} ${c.country || '--'}</span></td>
+          <td><span class="crm-pill ${bc}">${c.status || '--'}</span></td>
+          <td style="font-size:0.79rem">${dateStr}</td>
+          <td style="text-align:center">
+            <button class="crm-action-btn view btn-view-crm" data-crmidx="${i}" title="Xem hồ sơ">
+              <svg viewBox="0 0 24 24"><path d="M12,4.5C7,4.5 2.73,7.61 1,12C2.73,16.39 7,19.5 12,19.5C17,19.5 21.27,16.39 23,12C21.27,7.61 17,4.5 12,4.5M12,17A5,5 0 0,1 7,12A5,5 0 0,1 12,7A5,5 0 0,1 17,12A5,5 0 0,1 12,17M12,9A3,3 0 0,0 9,12A3,3 0 0,0 12,15A3,3 0 0,0 15,12A3,3 0 0,0 12,9Z"/></svg>
+            </button>
+            <button class="crm-action-btn edit btn-edit-crm" data-crmidx="${i}" title="Chỉnh sửa">
+              <svg viewBox="0 0 24 24"><path d="M20.71,7.04C21.1,6.65 21.1,6 20.71,5.63L18.37,3.29C18,2.9 17.35,2.9 16.96,3.29L15.12,5.12L18.87,8.87M3,17.25V21H6.75L17.81,9.93L14.06,6.18L3,17.25Z"/></svg>
+            </button>
+          </td>
+        </tr>`;
+    }).join('');
+
+    tbody.querySelectorAll('.btn-view-crm').forEach(btn => {
+      btn.addEventListener('click', () => openCrmProfile(filtered[parseInt(btn.dataset.crmidx)]));
+    });
+
+    tbody.querySelectorAll('.btn-edit-crm').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const c = filtered[parseInt(btn.dataset.crmidx)];
+        if (!c) return;
+        const modal = document.getElementById('studentModal');
+        if (!modal) return;
+        document.getElementById('studentEditId').value = c.id || '';
+        document.getElementById('studentModalTitle').textContent = 'CHỈNH SỬA KHÁCH HÀNG';
+        document.getElementById('studentName').value = c.name || '';
+        document.getElementById('studentCode').value = c.code || '';
+        document.getElementById('studentEmail').value = c.email || '';
+        document.getElementById('studentPhone').value = c.phone || '';
+        document.getElementById('studentCountry').value = c.country || 'Nhật';
+        document.getElementById('studentStatus').value = c.status || 'Đang học';
+        document.getElementById('studentLearningMonth').value = c.learningMonth || '';
+        document.getElementById('studentNotes').value = c.notes || '';
+        modal.style.display = 'flex';
+      });
+    });
+  };
+
+  const initCrmModule = () => {
+    if (!crmInitialized) {
+      crmInitialized = true;
+
+      document.querySelectorAll('.crm-subtab').forEach(btn => {
+        btn.addEventListener('click', () => {
+          document.querySelectorAll('.crm-subtab').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          const target = btn.getAttribute('data-tab');
+          document.querySelectorAll('.crm-tab-content').forEach(tc => tc.style.display = 'none');
+          const el = document.getElementById(target);
+          if (el) el.style.display = 'flex';
+        });
+      });
+
+      document.querySelectorAll('.crm-ptab').forEach(tab => {
+        tab.addEventListener('click', () => {
+          const target = tab.dataset.ctab;
+          document.querySelectorAll('.crm-ptab').forEach(t => t.classList.remove('active'));
+          document.querySelectorAll('.crm-ptab-panel').forEach(p => p.classList.remove('active'));
+          tab.classList.add('active');
+          const panel = document.getElementById(target);
+          if (panel) panel.classList.add('active');
+        });
+      });
+
+      document.getElementById('btnBackToCrmList')?.addEventListener('click', closeCrmProfile);
+
+      document.getElementById('btnEditCrmCustomer')?.addEventListener('click', () => {
+        if (!_currentCrmCustomer) return;
+        closeCrmProfile();
+        const c = _currentCrmCustomer;
+        const modal = document.getElementById('studentModal');
+        if (!modal) return;
+        document.getElementById('studentEditId').value = c.id || '';
+        document.getElementById('studentModalTitle').textContent = 'CHỈNH SỬA KHÁCH HÀNG';
+        document.getElementById('studentName').value = c.name || '';
+        document.getElementById('studentCode').value = c.code || '';
+        document.getElementById('studentEmail').value = c.email || '';
+        document.getElementById('studentPhone').value = c.phone || '';
+        document.getElementById('studentCountry').value = c.country || 'Nhật';
+        document.getElementById('studentStatus').value = c.status || 'Đang học';
+        document.getElementById('studentLearningMonth').value = c.learningMonth || '';
+        document.getElementById('studentNotes').value = c.notes || '';
+        modal.style.display = 'flex';
+      });
+
+      document.getElementById('btnExportCrm')?.addEventListener('click', () => {
+        if (!window.XLSX) { showToast('Thư viện Excel chưa sẵn sàng!', 'warning'); return; }
+        const rows = _allCrmCustomers.map(c => ({
+          'Mã HV': c.code || '', 'Họ tên': c.name || '', 'Email': c.email || '',
+          'Điện thoại': c.phone || '', 'Quốc gia': c.country || '',
+          'Trạng thái': c.status || '', 'Tháng học': c.learningMonth || '', 'Ghi chú': c.notes || '',
+        }));
+        const ws = XLSX.utils.json_to_sheet(rows);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, 'KhachHang_CRM');
+        XLSX.writeFile(wb, `CRM_KhachHang_${new Date().toISOString().split('T')[0]}.xlsx`);
+        showToast('Đã xuất Excel thành công!', 'success');
+      });
+
+      document.getElementById('crmSearchInput')?.addEventListener('input', renderCrmCustomers);
+      document.getElementById('crmCountryFilter')?.addEventListener('change', renderCrmCustomers);
+      document.getElementById('crmStatusFilter')?.addEventListener('change', renderCrmCustomers);
+
+      if (currentUser) {
+        const av = document.getElementById('miniCrmAvatar');
+        const nm = document.getElementById('miniCrmName');
+        const rl = document.getElementById('miniCrmRole');
+        if (av) av.textContent = (currentUser.name || 'U').slice(0, 2).toUpperCase();
+        if (nm) nm.textContent = currentUser.name || 'Người dùng';
+        if (rl) rl.textContent = currentUser.role === 'admin' ? 'Quản trị viên' : 'Nhân viên';
+      }
+    }
+
+    db.collection('students').orderBy('createdAt', 'desc').get()
+      .then(snap => {
+        _allCrmCustomers = [];
+        snap.forEach(doc => { const d = doc.data(); d.id = doc.id; _allCrmCustomers.push(d); });
+        renderCrmOverview();
+        renderCrmCustomers();
+      })
+      .catch(err => console.error('CRM data load error:', err));
   };
 
 });
