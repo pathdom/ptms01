@@ -7053,10 +7053,11 @@ document.addEventListener('DOMContentLoaded', () => {
   // 1OFFICE-STYLE INTERNAL CHAT
   // ══════════════════════════════════════════════════════════════════════════
   let crmChatSubscription = null;
-  let _iocMsgs = [];          // live message cache
-  let _iocReplyTo = null;     // { id, senderName, content }
-  let _iocEditingId = null;   // message id being edited
-  let _iocCtxMsgId = null;    // message id for context menu
+  let _iocMsgs         = [];
+  let _iocReplyTo      = null;
+  let _iocEditingId    = null;
+  let _iocCtxMsgId     = null;
+  let _iocActiveThread = { id: 'group-global', name: 'Nhóm Nội bộ Aladdin', av: 'N', color: '#2563EB', type: 'group' };
 
   const iocAvatarColor = (str) => {
     const C = ['#2563EB','#7C3AED','#DB2777','#D97706','#059669','#0891B2','#DC2626','#7E22CE'];
@@ -7081,6 +7082,25 @@ document.addEventListener('DOMContentLoaded', () => {
     return currentUser ? [currentUser] : [];
   };
 
+  // ── Switch thread (group or DM) ──
+  const iocOpenThread = (id, name, av, color, type = 'dm') => {
+    if (_iocActiveThread.id === id) return;
+    _iocActiveThread = { id, name, av: av || (name || 'U')[0].toUpperCase(), color: color || iocAvatarColor(name), type };
+    // Update header
+    const avEl   = document.getElementById('iocActiveAv');
+    const nameEl = document.getElementById('iocActiveThreadName');
+    const subEl  = document.getElementById('iocActiveThreadSub');
+    if (avEl)   { avEl.textContent = _iocActiveThread.av; avEl.style.background = _iocActiveThread.color; }
+    if (nameEl) nameEl.textContent = name;
+    if (subEl)  subEl.textContent = type === 'group' ? `${iocGetMembers().length} thành viên` : 'Trực tiếp';
+    // Show/hide back button
+    const backBtn = document.getElementById('btnIocThreadBack');
+    if (backBtn) backBtn.style.display = type === 'dm' ? 'flex' : 'none';
+    // Restart subscription with new thread
+    teardownCrmChat();
+    setupCrmChat();
+  };
+
   // ── Render conversation list ──
   const iocRenderConvList = () => {
     const favEl = document.getElementById('iocConvList');
@@ -7101,7 +7121,8 @@ document.addEventListener('DOMContentLoaded', () => {
       : '';
     const members = iocGetMembers();
 
-    favEl.innerHTML = `<div class="ioc-conv-item active">
+    const isGroupActive = _iocActiveThread.type === 'group';
+    favEl.innerHTML = `<div class="ioc-conv-item${isGroupActive ? ' active' : ''}" data-thread-id="group-global">
       <div class="ioc-conv-av" style="background:#2563EB">N<span class="ioc-online"></span></div>
       <div class="ioc-conv-body">
         <div class="ioc-conv-name">Nhóm Nội bộ Aladdin</div>
@@ -7109,15 +7130,20 @@ document.addEventListener('DOMContentLoaded', () => {
       </div>
       <div class="ioc-conv-meta"><span class="ioc-conv-time">${timeStr}</span></div>
     </div>`;
+    favEl.querySelector('[data-thread-id]')?.addEventListener('click', () =>
+      iocOpenThread('group-global', 'Nhóm Nội bộ Aladdin', 'N', '#2563EB', 'group')
+    );
 
     const search = (document.getElementById('crmChatSearch')?.value || '').toLowerCase();
     const filtered = members.filter(u => !search || (u.name || '').toLowerCase().includes(search) || (u.department || u.dept || '').toLowerCase().includes(search));
 
     recEl.innerHTML = filtered.slice(0, 10).map(u => {
-      const ini   = (u.name || 'U').split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
-      const color = iocAvatarColor(u.name || 'U');
-      const sub   = u.position || u.dept || u.department || (u.role === 'admin' ? 'Quản trị viên' : 'Nhân viên');
-      return `<div class="ioc-conv-item">
+      const ini     = (u.name || 'U').split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
+      const color   = iocAvatarColor(u.name || 'U');
+      const sub     = u.position || u.dept || u.department || (u.role === 'admin' ? 'Quản trị viên' : 'Nhân viên');
+      const dmId    = 'dm-' + [currentUser?.uid || currentUser?.email || 'me', u.id || u.uid].sort().join('__');
+      const isActive = _iocActiveThread.id === dmId;
+      return `<div class="ioc-conv-item${isActive ? ' active' : ''}" data-dm-id="${dmId}" data-dm-name="${esc(u.name || 'Người dùng')}" data-dm-av="${ini}" data-dm-color="${color}">
         <div class="ioc-conv-av" style="background:${color}">${ini}<span class="ioc-online"></span></div>
         <div class="ioc-conv-body">
           <div class="ioc-conv-name">${esc(u.name || 'Người dùng')}</div>
@@ -7126,8 +7152,14 @@ document.addEventListener('DOMContentLoaded', () => {
       </div>`;
     }).join('') || '<div class="ioc-empty-list">Không tìm thấy nhân viên</div>';
 
+    recEl.querySelectorAll('[data-dm-id]').forEach(el => {
+      el.addEventListener('click', () =>
+        iocOpenThread(el.dataset.dmId, el.dataset.dmName, el.dataset.dmAv, el.dataset.dmColor, 'dm')
+      );
+    });
+
     const subEl = document.getElementById('iocActiveThreadSub');
-    if (subEl) subEl.textContent = `${members.length} thành viên`;
+    if (subEl && _iocActiveThread.type === 'group') subEl.textContent = `${members.length} thành viên`;
     const badge = document.getElementById('crmMemberCount');
     if (badge) badge.textContent = members.length;
   };
@@ -7187,7 +7219,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const pinnedBadge = msg.pinned ? `<span class="ioc-msg-pinned-badge">📌 Đã ghim</span>` : '';
         let mediaHtml = '';
         if (msg.imageUrl) {
-          mediaHtml = `<div class="ioc-msg-img-wrap"><img src="${msg.imageUrl}" class="ioc-msg-img" alt="ảnh" loading="lazy" /></div>`;
+          mediaHtml = `<div class="ioc-msg-img-wrap"><img src="${msg.imageUrl}" class="ioc-msg-img" alt="ảnh" /></div>`;
         } else if (msg.fileName) {
           mediaHtml = `<div class="ioc-msg-file-pill"><svg viewBox="0 0 24 24"><path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z"/></svg>${esc(msg.fileName)}</div>`;
         }
@@ -7332,18 +7364,27 @@ document.addEventListener('DOMContentLoaded', () => {
     const members = iocGetMembers();
     if (cnt) cnt.textContent = members.length;
     list.innerHTML = members.map(u => {
-      const ini  = (u.name || 'U').split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
+      const ini   = (u.name || 'U').split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
       const color = iocAvatarColor(u.name || 'U');
-      const sub  = u.position || u.dept || u.department || (u.role === 'admin' ? 'Quản trị viên' : 'Nhân viên');
-      const dept = u.department || u.dept || '';
-      return `<div class="ioc-member-item">
+      const sub   = u.position || u.dept || u.department || (u.role === 'admin' ? 'Quản trị viên' : 'Nhân viên');
+      const dept  = u.department || u.dept || '';
+      const dmId  = 'dm-' + [currentUser?.uid || currentUser?.email || 'me', u.id || u.uid].sort().join('__');
+      return `<div class="ioc-member-item" data-dm-id="${dmId}" data-dm-name="${esc(u.name || 'Người dùng')}" data-dm-av="${ini}" data-dm-color="${color}" title="Nhắn tin với ${esc(u.name || '')}">
         <div class="ioc-member-av" style="background:${color}">${ini}<span class="ioc-member-online"></span></div>
         <div class="ioc-member-info">
           <div class="ioc-member-name">${esc(u.name || 'Người dùng')}</div>
           <div class="ioc-member-role">${esc(sub)}${dept ? ` · ${esc(dept)}` : ''}</div>
         </div>
+        <svg class="ioc-member-dm-icon" viewBox="0 0 24 24"><path d="M2,21L23,12L2,3V10L17,12L2,14V21Z"/></svg>
       </div>`;
     }).join('');
+
+    list.querySelectorAll('[data-dm-id]').forEach(el => {
+      el.addEventListener('click', () => {
+        iocOpenThread(el.dataset.dmId, el.dataset.dmName, el.dataset.dmAv, el.dataset.dmColor, 'dm');
+        iocShowInfoMain();
+      });
+    });
   };
 
   // ── Info panel navigation ──
@@ -7474,8 +7515,8 @@ document.addEventListener('DOMContentLoaded', () => {
       senderName:  currentUser.name,
       senderEmail: currentUser.email,
       senderRole:  currentUser.role === 'admin' ? 'quản trị viên' : 'nhân viên',
-      threadId:    'group-global',
-      createdAt:   firebase.firestore.FieldValue.serverTimestamp(),
+      threadId:    _iocActiveThread.id,
+      createdAt:   firebase.firestore.Timestamp.now(),
       recalled:    false,
       edited:      false,
       pinned:      false,
@@ -7499,10 +7540,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // ── Setup / teardown ──
   const setupCrmChat = () => {
-    if (crmChatSubscription) { iocRenderConvList(); return; }
+    if (crmChatSubscription) teardownCrmChat();
+    _iocMsgs = [];
     iocRenderConvList();
+    const container = document.getElementById('crmChatMessages');
+    if (container) container.innerHTML = '<div class="crm-chat-loading">Đang tải tin nhắn...</div>';
     crmChatSubscription = db.collection('messages')
-      .where('threadId', '==', 'group-global')
+      .where('threadId', '==', _iocActiveThread.id)
       .orderBy('createdAt', 'asc')
       .limitToLast(100)
       .onSnapshot(snap => {
@@ -7599,6 +7643,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Sidebar search
     document.getElementById('crmChatSearch')?.addEventListener('input', iocRenderConvList);
+
+    // Back to group chat from DM
+    document.getElementById('btnIocThreadBack')?.addEventListener('click', () =>
+      iocOpenThread('group-global', 'Nhóm Nội bộ Aladdin', 'N', '#2563EB', 'group')
+    );
 
     // Info panel toggle
     document.getElementById('btnToggleIocInfo')?.addEventListener('click', () => {

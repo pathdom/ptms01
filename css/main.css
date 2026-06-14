@@ -4443,10 +4443,9 @@ body.dark-theme-crm {
 .ioc-messages {
   flex: 1;
   overflow-y: auto;
-  padding: 1rem 1.25rem;
+  padding: 0.75rem 0;
   display: flex;
   flex-direction: column;
-  gap: 0.25rem;
 }
 
 /* Date divider */
@@ -4454,7 +4453,7 @@ body.dark-theme-crm {
   display: flex;
   align-items: center;
   gap: 0.75rem;
-  margin: 1rem 0 0.5rem;
+  margin: 1.2rem 1rem 0.4rem;
 }
 .ioc-date-divider::before, .ioc-date-divider::after { content: ''; flex: 1; height: 1px; background: var(--border); }
 .ioc-date-divider span { font-size: 0.7rem; color: var(--text-muted); white-space: nowrap; background: var(--bg-primary); padding: 0 0.5rem; border-radius: 20px; border: 1px solid var(--border); }
@@ -4466,21 +4465,26 @@ body.dark-theme-crm {
 .ioc-msg-row {
   display: flex;
   align-items: flex-end;
-  gap: 0.5rem;
-  padding: 0.1rem 0;
+  gap: 0.45rem;
+  padding: 0.08rem 1rem;
   position: relative;
 }
+.ioc-msg-row.condensed { padding-top: 0.04rem; padding-bottom: 0.04rem; }
 .ioc-msg-row.self { flex-direction: row-reverse; }
 .ioc-msg-row:hover .ioc-msg-actions { opacity: 1; }
 
+/* First message in a group gets slight top margin */
+.ioc-date-divider + .ioc-msg-row,
+.ioc-msg-row:not(.condensed) { margin-top: 0.6rem; }
+
 .ioc-msg-av {
-  width: 32px;
-  height: 32px;
+  width: 30px;
+  height: 30px;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 0.65rem;
+  font-size: 0.62rem;
   font-weight: 700;
   color: #fff;
   flex-shrink: 0;
@@ -4488,11 +4492,12 @@ body.dark-theme-crm {
   margin-bottom: 2px;
 }
 .ioc-msg-row.condensed .ioc-msg-av { visibility: hidden; }
+.ioc-msg-row.self .ioc-msg-av { display: none; }
 
-.ioc-msg-body { display: flex; flex-direction: column; gap: 0.2rem; max-width: 60%; }
+.ioc-msg-body { display: flex; flex-direction: column; gap: 0.15rem; max-width: 68%; min-width: 0; }
 .ioc-msg-row.self .ioc-msg-body { align-items: flex-end; }
 
-.ioc-msg-name { font-size: 0.7rem; font-weight: 600; color: var(--text-muted); padding: 0 0.3rem; }
+.ioc-msg-name { font-size: 0.69rem; font-weight: 600; color: var(--text-muted); padding: 0 0.35rem; margin-bottom: 0.05rem; }
 .ioc-msg-row.self .ioc-msg-name { display: none; }
 .ioc-msg-row.condensed .ioc-msg-name { display: none; }
 
@@ -4652,8 +4657,17 @@ body.dark-theme-crm {
 }
 .ioc-file-preview-pill svg { width: 14px; height: 14px; fill: var(--text-muted); flex-shrink: 0; }
 
-.ioc-msg-meta { display: flex; align-items: center; gap: 0.15rem; padding: 0 0.3rem; }
-.ioc-msg-time { font-size: 0.67rem; color: var(--text-muted); }
+.ioc-msg-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.15rem;
+  padding: 0 0.35rem;
+  opacity: 0;
+  transition: opacity 0.15s;
+  height: 14px;
+}
+.ioc-msg-row:hover .ioc-msg-meta { opacity: 1; }
+.ioc-msg-time { font-size: 0.66rem; color: var(--text-muted); white-space: nowrap; }
 
 /* Hover action bar */
 .ioc-msg-actions {
@@ -4903,9 +4917,12 @@ body.dark-theme-crm {
   background: #16A34A;
   border: 2px solid var(--bg-card);
 }
-.ioc-member-info { min-width: 0; }
+.ioc-member-info { min-width: 0; flex: 1; }
 .ioc-member-name { font-size: 0.81rem; font-weight: 600; color: var(--text-main); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .ioc-member-role { font-size: 0.71rem; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ioc-member-item { cursor: pointer; }
+.ioc-member-dm-icon { width: 14px; height: 14px; fill: var(--text-muted); opacity: 0; transition: opacity 0.15s; flex-shrink: 0; }
+.ioc-member-item:hover .ioc-member-dm-icon { opacity: 1; color: var(--crm-blue); fill: var(--crm-blue); }
 
 .ioc-empty-list { padding: 1.2rem 1rem; font-size: 0.78rem; color: var(--text-muted); text-align: center; }
 
