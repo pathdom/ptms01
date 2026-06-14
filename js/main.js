@@ -1127,6 +1127,9 @@ document.addEventListener('DOMContentLoaded', () => {
       initHrmModule();
     } else if (targetViewId === 'crm-dashboard') {
       initCrmModule();
+      // Re-subscribe to chat if the chat tab is currently visible (user returning from another section)
+      const chatTabEl = document.getElementById('crm-chat-tab');
+      if (chatTabEl && chatTabEl.style.display !== 'none') setupCrmChat();
     } else {
       if (typeof teardownCrmChat === 'function') teardownCrmChat();
     }
@@ -7710,7 +7713,7 @@ document.addEventListener('DOMContentLoaded', () => {
           if (el) el.style.display = 'flex';
           if (target === 'crm-staff-tab') renderCrmStaff();
           if (target === 'crm-chat-tab') setupCrmChat();
-          else teardownCrmChat();
+          else if (target !== 'crm-staff-tab') teardownCrmChat();
         });
       });
 
