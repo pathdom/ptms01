@@ -1115,10 +1115,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // Initialize specific module views when active
-    if (targetViewId === 'chat-dashboard') {
-      renderThreadList();
-      renderMessages(activeThreadId);
-    } else if (targetViewId === 'users-dashboard') {
+    if (targetViewId === 'users-dashboard') {
       renderStaffUsersList();
     } else if (targetViewId === 'student-users-dashboard') {
       renderStudentUsersList();
@@ -1156,10 +1153,6 @@ document.addEventListener('DOMContentLoaded', () => {
   // Logout actions
   const handlePortalLogout = async () => {
     try {
-      if (chatSubscription) {
-        chatSubscription(); // Unsubscribe chat
-        chatSubscription = null;
-      }
       if (usersSubscription) {
         usersSubscription(); // Unsubscribe users
         usersSubscription = null;
@@ -1171,8 +1164,6 @@ document.addEventListener('DOMContentLoaded', () => {
       usersCache = {};
       allUsersList = [];
       myContacts = [];
-      allLoadedMessages = [];
-      chatThreads = [];
       await auth.signOut();
       if (portalLoginForm) portalLoginForm.reset();
       showToast("Bạn đã đăng xuất tài khoản thành công!", "info");
@@ -1186,11 +1177,11 @@ document.addEventListener('DOMContentLoaded', () => {
     btnLogoutPortal.addEventListener('click', handlePortalLogout);
   }
 
-  // Support breadcrumb home redirection to Chat
+  // Support breadcrumb home redirection to CRM
   document.querySelectorAll('.portal-breadcrumb-home').forEach(link => {
     link.addEventListener('click', (e) => {
       e.preventDefault();
-      switchPortalView('chat-dashboard');
+      switchPortalView('crm-dashboard');
     });
   });
 
@@ -5090,17 +5081,14 @@ document.addEventListener('DOMContentLoaded', () => {
             subscribeToContacts();
             subscribeToFriendRequests();
 
-            // Subscribe to real-time chat updates
-            subscribeToChatMessages();
-
             // Subscribe to real-time students updates
             subscribeToStudents();
 
             // Subscribe to real-time blogs updates
             subscribeToBlogs();
 
-            // Navigate to Chat group dashboard by default
-            switchPortalView('chat-dashboard');
+            // Navigate to CRM dashboard by default
+            switchPortalView('crm-dashboard');
           }
         } catch (e) {
           console.error("Error setting up logged in user session:", e);
@@ -5108,10 +5096,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
       } else {
         currentUser = null;
-        if (chatSubscription) {
-          chatSubscription();
-          chatSubscription = null;
-        }
         if (usersSubscription) {
           usersSubscription();
           usersSubscription = null;
