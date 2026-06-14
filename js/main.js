@@ -7168,8 +7168,10 @@ document.addEventListener('DOMContentLoaded', () => {
   const iocRenderMessages = (msgs, searchTerm = '') => {
     const container = document.getElementById('crmChatMessages');
     if (!container) return;
+    const prevCount = _iocMsgs.length;
     _iocMsgs = msgs;
-    iocRenderConvList();
+    // Only update sidebar when message count changes (not on every optimistic re-render)
+    if (msgs.length !== prevCount) iocRenderConvList();
     iocUpdatePinnedCount();
 
     if (!msgs.length) {
@@ -7223,12 +7225,14 @@ document.addEventListener('DOMContentLoaded', () => {
         } else if (msg.fileName) {
           mediaHtml = `<div class="ioc-msg-file-pill"><svg viewBox="0 0 24 24"><path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z"/></svg>${esc(msg.fileName)}</div>`;
         }
-        const textPart = msg.content ? `<span class="ioc-msg-text">${esc(msg.content)}</span>` : '';
-        bubbleContent = `<div class="ioc-msg-bubble" data-msgid="${msg.id}">${quoteHtml}${mediaHtml}${textPart}${editedBadge}${pinnedBadge}</div>`;
+        const textPart    = msg.content ? `<span class="ioc-msg-text">${esc(msg.content)}</span>` : '';
+        const optClass    = msg.id.startsWith('__opt_') ? ' sending' : '';
+        bubbleContent = `<div class="ioc-msg-bubble${optClass}" data-msgid="${msg.id}">${quoteHtml}${mediaHtml}${textPart}${editedBadge}${pinnedBadge}</div>`;
       }
 
-      // Hover action bar
-      const actionBar = msg.recalled ? '' : `
+      // Hover action bar (skip for optimistic messages still being written)
+      const isOptimistic = msg.id.startsWith('__opt_');
+      const actionBar = (msg.recalled || isOptimistic) ? '' : `
         <div class="ioc-msg-actions">
           <button class="ioc-msg-action-btn" data-msgid="${msg.id}" data-act="reply" title="Trả lời">
             <svg viewBox="0 0 24 24"><path d="M10,9V5L3,12L10,19V14.9C15,14.9 18.5,16.5 21,20C20,15 17,10 10,9Z"/></svg>
@@ -7267,6 +7271,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Right-click on bubble
     container.querySelectorAll('.ioc-msg-bubble[data-msgid]').forEach(bubble => {
+      if (bubble.dataset.msgid.startsWith('__opt_')) return; // skip optimistic
       bubble.addEventListener('contextmenu', (e) => {
         e.preventDefault();
         const row = bubble.closest('.ioc-msg-row');
@@ -7511,31 +7516,37 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!content && !_iocPendingFile) return;
     input.value = '';
 
-    const base = {
+    const now = firebase.firestore.Timestamp.now();
+    const payload = {
+      content:     content || '',
       senderName:  currentUser.name,
       senderEmail: currentUser.email,
       senderRole:  currentUser.role === 'admin' ? 'quản trị viên' : 'nhân viên',
       threadId:    _iocActiveThread.id,
-      createdAt:   firebase.firestore.Timestamp.now(),
+      createdAt:   now,
       recalled:    false,
       edited:      false,
       pinned:      false,
     };
-    if (_iocReplyTo) { base.replyTo = { ..._iocReplyTo }; iocCancelReply(); }
-
-    // If there's a pending file, send it first
+    if (_iocReplyTo) { payload.replyTo = { ..._iocReplyTo }; iocCancelReply(); }
     if (_iocPendingFile) {
-      const filePayload = { ...base, content: content || '' };
-      if (_iocPendingFile.isImage) filePayload.imageUrl = _iocPendingFile.dataUrl;
-      else filePayload.fileName = _iocPendingFile.fileName;
+      if (_iocPendingFile.isImage) payload.imageUrl = _iocPendingFile.dataUrl;
+      else payload.fileName = _iocPendingFile.fileName;
       iocClearFilePreview();
-      try { await db.collection('messages').add(filePayload); }
-      catch(e) { showToast('Lỗi gửi file!', 'error'); }
-      return;
     }
 
-    try { await db.collection('messages').add({ ...base, content }); }
-    catch(e) { console.error('CRM chat send error:', e); showToast('Lỗi gửi tin nhắn!', 'error'); }
+    // Optimistic render: show immediately, snapshot will replace with real doc
+    const tempId = '__opt_' + now.toMillis();
+    _iocMsgs = [..._iocMsgs, { id: tempId, ...payload }];
+    iocRenderMessages(_iocMsgs, '');
+
+    try {
+      await db.collection('messages').add(payload);
+    } catch(e) {
+      _iocMsgs = _iocMsgs.filter(m => m.id !== tempId);
+      iocRenderMessages(_iocMsgs, '');
+      showToast('Lỗi gửi tin nhắn!', 'error');
+    }
   };
 
   // ── Setup / teardown ──
@@ -7549,11 +7560,14 @@ document.addEventListener('DOMContentLoaded', () => {
       .where('threadId', '==', _iocActiveThread.id)
       .orderBy('createdAt', 'asc')
       .limitToLast(100)
-      .onSnapshot(snap => {
-        const msgs = [];
-        snap.forEach(doc => msgs.push({ id: doc.id, ...doc.data() }));
+      .onSnapshot({ includeMetadataChanges: false }, snap => {
+        const serverMsgs = [];
+        snap.forEach(doc => serverMsgs.push({ id: doc.id, ...doc.data() }));
+        // Keep any optimistic messages whose content is not yet confirmed by server
+        const optimistic = _iocMsgs.filter(m => m.id.startsWith('__opt_') &&
+          !serverMsgs.some(s => s.senderEmail === m.senderEmail && s.createdAt?.toMillis?.() === m.createdAt?.toMillis?.()));
         const searchTerm = document.getElementById('iocMsgSearchInput')?.value || '';
-        iocRenderMessages(msgs, searchTerm);
+        iocRenderMessages([...serverMsgs, ...optimistic], searchTerm);
       }, err => console.error('CRM chat error:', err));
   };
 

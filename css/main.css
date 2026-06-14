@@ -4541,6 +4541,7 @@ body.dark-theme-crm {
   color: #fff;
   border-bottom-right-radius: 5px;
 }
+.ioc-msg-bubble.sending { opacity: 0.65; }
 .ioc-msg-bubble.recalled {
   background: none !important;
   border: 1px dashed var(--border) !important;
