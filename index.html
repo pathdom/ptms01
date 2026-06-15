@@ -193,6 +193,12 @@
         <!-- Menu Navigation -->
         <nav class="sidebar-menu">
           <ul>
+            <li class="menu-item staff-only" data-target="staff-profile-dashboard" id="menuItemStaffProfile">
+              <svg viewBox="0 0 24 24" style="width: 20px; height: 20px; fill: currentColor">
+                <path d="M12,4A4,4 0 0,1 16,8A4,4 0 0,1 12,12A4,4 0 0,1 8,8A4,4 0 0,1 12,4M12,14C16.42,14 20,15.79 20,18V20H4V18C4,15.79 7.58,14 12,14Z"/>
+              </svg>
+              <span>Thông tin cá nhân</span>
+            </li>
             <li
               class="menu-item"
               data-target="students-dashboard"
@@ -5879,6 +5885,191 @@
 
           <button type="submit" class="btn-submit-login" style="width: 100%; margin-top: 1rem; flex-shrink: 0;">LƯU THÔNG TIN NHÂN SỰ</button>
         </form>
+      </div>
+    </div>
+
+    <!-- STAFF PORTAL: Personal Profile Dashboard -->
+    <div id="staff-profile-dashboard" class="dashboard-wrapper" style="display:none; flex-direction:column; height:100%;">
+      <!-- Tab Navigation Bar -->
+      <div class="hrm-profile-topbar">
+        <div class="hrm-profile-nav-tabs">
+          <button class="sp-tab active" data-sptab="sptab-general">Thông tin chung</button>
+          <button class="sp-tab" data-sptab="sptab-resume">Sơ yếu lý lịch</button>
+          <button class="sp-tab" data-sptab="sptab-contract">Công việc &amp; Hợp đồng</button>
+          <button class="sp-tab" data-sptab="sptab-salary">Lương &amp; Phúc lợi</button>
+          <button class="sp-tab" data-sptab="sptab-leave">Thông tin phép</button>
+          <button class="sp-tab" data-sptab="sptab-compensatory">Thông tin nghỉ bù</button>
+        </div>
+        <div class="hrm-profile-header-actions">
+          <div style="display:flex;align-items:center;gap:0.75rem;padding:0.5rem 0.8rem;">
+            <div class="profile-avatar" id="miniSpAvatar">NV</div>
+            <div class="profile-info-desktop">
+              <span class="name" id="miniSpName">Đang tải...</span>
+              <span class="role" id="miniSpRole">Nhân viên</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tab: Thông tin chung -->
+      <div id="sptab-general" class="crmsp-panel active">
+        <div class="hrm-profile-grid">
+
+          <!-- Left: Basic Info Card -->
+          <div class="hrm-profile-info-card">
+            <div class="profile-avatar-section">
+              <div class="profile-avatar-lg" id="spProfileAvatarLg">NV</div>
+              <div class="profile-name-block">
+                <h2 id="spProfileFullName">--</h2>
+                <span class="profile-emp-code" id="spProfileEmpCode">Mã --</span>
+                <div class="profile-positions" id="spProfilePositions">--</div>
+                <span class="profile-status-badge active-badge" id="spProfileStatusBadge">Đang làm việc</span>
+              </div>
+            </div>
+            <div class="profile-info-rows">
+              <div class="profile-info-row"><span class="info-label">Tên tài khoản</span><span class="info-val" id="spPUsername">--</span></div>
+              <div class="profile-info-row"><span class="info-label">Ngày nhận việc</span><span class="info-val" id="spPJoinDate">--</span></div>
+              <div class="profile-info-row"><span class="info-label">Email</span><a class="info-val link" id="spPEmail" href="#">--</a></div>
+              <div class="profile-info-row"><span class="info-label">Ngày sinh</span><span class="info-val" id="spPBirthday">--</span></div>
+              <div class="profile-info-row"><span class="info-label">Điện thoại</span><a class="info-val link" id="spPPhone" href="#">--</a></div>
+              <div class="profile-info-row"><span class="info-label">Nguyên quán</span><span class="info-val" id="spPHometown">--</span></div>
+              <div class="profile-info-row"><span class="info-label">Giới tính</span><span class="info-val" id="spPGender">--</span></div>
+              <div class="profile-info-row"><span class="info-label">Hôn nhân</span><span class="info-val" id="spPMarital">--</span></div>
+              <div class="profile-info-row"><span class="info-label">Học vấn</span><span class="info-val" id="spPEducation">--</span></div>
+            </div>
+          </div>
+
+          <!-- Middle Column -->
+          <div class="hrm-profile-mid-col">
+            <div class="hrm-metric-card">
+              <div class="metric-card-header"><h4>Kỹ năng làm việc</h4></div>
+              <div class="radar-chart-wrapper">
+                <canvas id="spSkillsRadarChart" width="260" height="230"></canvas>
+              </div>
+            </div>
+          </div>
+
+          <!-- Right Column -->
+          <div class="hrm-profile-right-col">
+            <div class="hrm-metric-card">
+              <div class="metric-card-header"><h4>Hiệu quả công việc</h4></div>
+              <div class="donut-chart-wrapper">
+                <canvas id="spWorkEfficiencyChart" width="180" height="180"></canvas>
+              </div>
+              <div class="efficiency-legend">
+                <div class="legend-item"><span class="legend-dot" style="background:#4CAF50"></span>Hoàn thành trước hạn<strong id="spLegEarly">--</strong></div>
+                <div class="legend-item"><span class="legend-dot" style="background:#3FA2F6"></span>Hoàn thành đúng hạn<strong id="spLegOnTime">--</strong></div>
+                <div class="legend-item"><span class="legend-dot" style="background:#FFC107"></span>Hoàn thành quá hạn<strong id="spLegLate">--</strong></div>
+                <div class="legend-item"><span class="legend-dot" style="background:#F44336"></span>Chưa hoàn thành<strong id="spLegPending">--</strong></div>
+              </div>
+            </div>
+            <div class="hrm-metric-card">
+              <div class="metric-card-header"><h4>Thu nhập</h4></div>
+              <div class="income-display">
+                <span class="income-label">
+                  <span class="income-icon">
+                    <svg viewBox="0 0 24 24"><path d="M11.5,2C6.81,2 3,5.81 3,10.5C3,14.63 5.75,18.1 9.5,19.22V20H8V22H16V20H14.5V19.22C18.25,18.1 21,14.63 21,10.5C21,5.81 17.19,2 12.5,2H11.5M11.5,4H12.5C16.09,4 19,6.91 19,10.5C19,14.09 16.09,17 12.5,17H11.5C7.91,17 5,14.09 5,10.5C5,6.91 7.91,4 11.5,4M12,6V7.19C11,7.37 10,8.12 10,9.25C10,10.5 11,11.12 12.25,11.5C13.5,11.87 13.75,12.25 13.75,12.75C13.75,13.37 13.12,13.75 12.25,13.75C11.37,13.75 10.87,13.37 10.75,12.75H9.25C9.37,13.87 10.19,14.75 11.25,15V16H12.75V15C13.87,14.75 14.75,13.87 14.75,12.75C14.75,11.5 13.75,10.87 12.5,10.5C11.25,10.12 11,9.75 11,9.25C11,8.75 11.5,8.25 12.25,8.25C12.87,8.25 13.37,8.62 13.5,9.25H15C14.87,8.12 14.06,7.31 13,7.06V6H12Z"/></svg>
+                  </span>
+                  Tổng thu nhập
+                </span>
+                <span class="income-amount" id="spPIncome">-- đ</span>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Tab: Sơ yếu lý lịch -->
+      <div id="sptab-resume" class="crmsp-panel">
+        <div class="hrm-profile-tab-grid">
+          <div class="hrm-metric-card" style="margin-bottom: 0;">
+            <div class="metric-card-header"><h4>GIẤY TỜ TÙY THÂN</h4></div>
+            <div class="profile-info-rows">
+              <div class="profile-info-row"><span class="info-label">Số CCCD/Hộ chiếu</span><span class="info-val" id="spProfileIdNumber">--</span></div>
+              <div class="profile-info-row"><span class="info-label">Ngày cấp</span><span class="info-val" id="spProfileIdDate">--</span></div>
+              <div class="profile-info-row"><span class="info-label">Nơi cấp</span><span class="info-val" id="spProfileIdPlace">--</span></div>
+            </div>
+          </div>
+          <div class="hrm-metric-card" style="margin-bottom: 0;">
+            <div class="metric-card-header"><h4>ĐỊA CHỈ CƯ TRÚ</h4></div>
+            <div class="profile-info-rows">
+              <div class="profile-info-row"><span class="info-label">Địa chỉ thường trú</span><span class="info-val" id="spProfileAddressPermanent">--</span></div>
+              <div class="profile-info-row"><span class="info-label">Chỗ ở hiện tại</span><span class="info-val" id="spProfileAddressCurrent">--</span></div>
+            </div>
+          </div>
+          <div class="hrm-metric-card" style="margin-bottom: 0;">
+            <div class="metric-card-header"><h4>LIÊN HỆ KHẨN CẤP</h4></div>
+            <div class="profile-info-rows">
+              <div class="profile-info-row"><span class="info-label">Họ tên người liên hệ</span><span class="info-val" id="spProfileEmergencyName">--</span></div>
+              <div class="profile-info-row"><span class="info-label">Số điện thoại</span><span class="info-val" id="spProfileEmergencyPhone">--</span></div>
+              <div class="profile-info-row"><span class="info-label">Mối quan hệ</span><span class="info-val" id="spProfileEmergencyRelation">--</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tab: Công việc & Hợp đồng -->
+      <div id="sptab-contract" class="crmsp-panel">
+        <div class="hrm-profile-tab-grid">
+          <div class="hrm-metric-card" style="margin-bottom: 0;">
+            <div class="metric-card-header"><h4>HỢP ĐỒNG LAO ĐỘNG</h4></div>
+            <div class="profile-info-rows">
+              <div class="profile-info-row"><span class="info-label">Loại hợp đồng</span><span class="info-val" id="spProfileContractType">--</span></div>
+              <div class="profile-info-row"><span class="info-label">Ngày bắt đầu</span><span class="info-val" id="spProfileContractStartDate">--</span></div>
+              <div class="profile-info-row"><span class="info-label">Ngày kết thúc</span><span class="info-val" id="spProfileContractEndDate">--</span></div>
+              <div class="profile-info-row"><span class="info-label">Trạng thái HĐ</span><span class="info-val" id="spProfileContractStatus">--</span></div>
+            </div>
+          </div>
+          <div class="hrm-metric-card" style="margin-bottom: 0;">
+            <div class="metric-card-header"><h4>VỊ TRÍ CÔNG VIỆC</h4></div>
+            <div class="profile-info-rows">
+              <div class="profile-info-row"><span class="info-label">Phòng ban</span><span class="info-val" id="spProfileDept">--</span></div>
+              <div class="profile-info-row"><span class="info-label">Chức danh</span><span class="info-val" id="spProfilePos">--</span></div>
+              <div class="profile-info-row"><span class="info-label">Người quản lý</span><span class="info-val" id="spProfileManager">--</span></div>
+              <div class="profile-info-row"><span class="info-label">Ngày nhận việc</span><span class="info-val" id="spProfileJoinDate2">--</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tab: Lương & Phúc lợi -->
+      <div id="sptab-salary" class="crmsp-panel">
+        <div class="hrm-profile-tab-grid">
+          <div class="hrm-metric-card" style="margin-bottom: 0;">
+            <div class="metric-card-header"><h4>MỨC LƯƠNG &amp; PHÚC LỢI</h4></div>
+            <div class="profile-info-rows">
+              <div class="profile-info-row"><span class="info-label">Lương cơ bản</span><span class="info-val" id="spProfileBaseSalary" style="font-weight:600;color:var(--accent);">--</span></div>
+              <div class="profile-info-row"><span class="info-label">Phụ cấp</span><span class="info-val" id="spProfileAllowanceLunch">--</span></div>
+              <div class="profile-info-row"><span class="info-label">Đóng BHXH</span><span class="info-val" id="spProfileInsurance">--</span></div>
+            </div>
+          </div>
+          <div class="hrm-metric-card" style="margin-bottom: 0;">
+            <div class="metric-card-header"><h4>TÀI KHOẢN NGÂN HÀNG &amp; THUẾ</h4></div>
+            <div class="profile-info-rows">
+              <div class="profile-info-row"><span class="info-label">Số tài khoản</span><span class="info-val" id="spProfileBankNo">--</span></div>
+              <div class="profile-info-row"><span class="info-label">Ngân hàng</span><span class="info-val" id="spProfileBankName">--</span></div>
+              <div class="profile-info-row"><span class="info-label">Chủ tài khoản</span><span class="info-val" id="spProfileBankAccountName">--</span></div>
+              <div class="profile-info-row"><span class="info-label">Mã số thuế cá nhân</span><span class="info-val" id="spProfileTaxCode">--</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tab: Thông tin phép -->
+      <div id="sptab-leave" class="crmsp-panel">
+        <div class="hrm-tab-placeholder">
+          <svg viewBox="0 0 24 24"><path d="M19,4H18V2H16V4H8V2H6V4H5C3.89,4 3,4.9 3,6V20A2,2 0 0,0 5,22H19A2,2 0 0,0 21,20V6A2,2 0 0,0 19,4M19,20H5V10H19V20M19,8H5V6H19V8Z"/></svg>
+          <h3>Thông tin phép</h3><p>Chức năng đang được phát triển</p>
+        </div>
+      </div>
+
+      <!-- Tab: Thông tin nghỉ bù -->
+      <div id="sptab-compensatory" class="crmsp-panel">
+        <div class="hrm-tab-placeholder">
+          <svg viewBox="0 0 24 24"><path d="M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M16.2,16.2L11,13V7H12.5V12.2L17,14.9L16.2,16.2Z"/></svg>
+          <h3>Thông tin nghỉ bù</h3><p>Chức năng đang được phát triển</p>
+        </div>
       </div>
     </div>
 

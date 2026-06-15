@@ -5260,6 +5260,39 @@ body.dark-theme-crm {
   color: #EF4444;
 }
 
+/* Staff Portal Mode: hide admin-only menu items, show staff-only items */
+.menu-item.staff-only { display: none; }
+.staff-mode .menu-item.staff-only { display: flex !important; }
+.staff-mode #menuItemBlogs,
+.staff-mode #menuItemHRM { display: none !important; }
+
+/* Staff portal tab buttons (mirrors .crmsp-tab) */
+.sp-tab {
+  padding: 1rem 1.1rem;
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: var(--text-muted);
+  border: none;
+  background: none;
+  cursor: pointer;
+  transition: var(--transition-fast);
+  white-space: nowrap;
+  position: relative;
+}
+.sp-tab::after {
+  content: '';
+  position: absolute;
+  bottom: 0; left: 50%;
+  transform: translateX(-50%);
+  width: 0; height: 2px;
+  background: var(--accent);
+  border-radius: 2px 2px 0 0;
+  transition: width 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.sp-tab:hover { color: var(--text-main); background: var(--accent-light); }
+.sp-tab.active { color: var(--accent); font-weight: 600; }
+.sp-tab.active::after { width: 75%; }
+
 /* Grid layout for tabs inside HRM and CRM Profile views */
 .hrm-profile-tab-grid {
   display: grid;
