@@ -5373,6 +5373,12 @@ document.addEventListener('DOMContentLoaded', () => {
       document.getElementById('hrmStaffEditId').value = '';
       document.getElementById('hrmStaffForm').reset();
       document.getElementById('hrmStaffModalTitle').textContent = '+ THÊM NHÂN SỰ MỚI';
+      const pwSection = document.getElementById('hrmStaffPasswordSection');
+      if (pwSection) pwSection.style.display = 'block';
+      const pwInput = document.getElementById('hrmStaffPassword');
+      const pwConfirm = document.getElementById('hrmStaffPasswordConfirm');
+      if (pwInput) pwInput.required = true;
+      if (pwConfirm) pwConfirm.required = true;
       if (staffModal) staffModal.style.display = 'flex';
     });
     document.getElementById('btnCloseHrmStaffModal')?.addEventListener('click', () => {
@@ -5418,9 +5424,12 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('hrmStaffForm')?.addEventListener('submit', async (e) => {
       e.preventDefault();
       const editId = document.getElementById('hrmStaffEditId').value;
+      const email = document.getElementById('hrmStaffEmail').value.trim();
+      const name = document.getElementById('hrmStaffName').value.trim();
+
       const data = {
-        name: document.getElementById('hrmStaffName').value.trim(),
-        email: document.getElementById('hrmStaffEmail').value.trim(),
+        name,
+        email,
         department: document.getElementById('hrmStaffDept').value,
         position: document.getElementById('hrmStaffPosition').value.trim(),
         phone: document.getElementById('hrmStaffPhone').value.trim(),
@@ -5433,18 +5442,77 @@ document.addEventListener('DOMContentLoaded', () => {
         maritalStatus: document.getElementById('hrmStaffMarital').value,
         education: document.getElementById('hrmStaffEducation').value.trim(),
         salary: parseInt(document.getElementById('hrmStaffSalary').value) || 0,
+        allowanceSalary: parseInt(document.getElementById('hrmStaffAllowance').value) || 0,
+        insuranceSalary: document.getElementById('hrmStaffInsurance').value,
+        taxCode: document.getElementById('hrmStaffTaxCode').value.trim(),
+        bankAccountNo: document.getElementById('hrmStaffBankNo').value.trim(),
+        bankName: document.getElementById('hrmStaffBankName').value.trim(),
+        bankAccountName: document.getElementById('hrmStaffBankAccountName').value.trim(),
+        idNumber: document.getElementById('hrmStaffIdNumber').value.trim(),
+        idDate: document.getElementById('hrmStaffIdDate').value,
+        idPlace: document.getElementById('hrmStaffIdPlace').value.trim(),
+        addressPermanent: document.getElementById('hrmStaffAddressPermanent').value.trim(),
+        addressCurrent: document.getElementById('hrmStaffAddressCurrent').value.trim(),
+        emergencyContactName: document.getElementById('hrmStaffEmergencyName').value.trim(),
+        emergencyContactPhone: document.getElementById('hrmStaffEmergencyPhone').value.trim(),
+        emergencyContactRelation: document.getElementById('hrmStaffEmergencyRelation').value.trim(),
+        contractType: document.getElementById('hrmStaffContractType').value,
+        contractStartDate: document.getElementById('hrmStaffContractStart').value,
+        contractEndDate: document.getElementById('hrmStaffContractEnd').value,
+        manager: document.getElementById('hrmStaffManager').value.trim(),
         updatedAt: firebase.firestore.FieldValue.serverTimestamp()
       };
+
       try {
         if (editId) {
           await db.collection('hrm_staff').doc(editId).update(data);
           showToast('Đã cập nhật thông tin nhân sự!', 'success');
         } else {
-          data.createdAt = firebase.firestore.FieldValue.serverTimestamp();
-          data.joinDate = new Date().toISOString().split('T')[0];
-          await db.collection('hrm_staff').add(data);
-          showToast('Đã thêm nhân sự mới thành công!', 'success');
+          // Validate password
+          const password = document.getElementById('hrmStaffPassword').value;
+          const passwordConfirm = document.getElementById('hrmStaffPasswordConfirm').value;
+          if (!password || password.length < 6) {
+            showToast('Mật khẩu phải có ít nhất 6 ký tự!', 'error');
+            return;
+          }
+          if (password !== passwordConfirm) {
+            showToast('Mật khẩu xác nhận không khớp!', 'error');
+            return;
+          }
+
+          // Create Firebase Auth account via secondary app (keeps admin signed in)
+          let secondaryApp;
+          try {
+            secondaryApp = firebase.initializeApp(firebase.app().options, `staff-create-${Date.now()}`);
+            const secondaryAuth = secondaryApp.auth();
+            const userCredential = await secondaryAuth.createUserWithEmailAndPassword(email, password);
+            const newUid = userCredential.user.uid;
+            await secondaryAuth.signOut();
+            await secondaryApp.delete();
+
+            // Create users doc so staff can log in to portal
+            await db.collection('users').doc(newUid).set({
+              name,
+              email,
+              role: 'staff',
+              createdAt: firebase.firestore.FieldValue.serverTimestamp()
+            });
+
+            data.createdAt = firebase.firestore.FieldValue.serverTimestamp();
+            data.joinDate = new Date().toISOString().split('T')[0];
+            await db.collection('hrm_staff').add(data);
+            showToast(`Đã tạo tài khoản nhân viên cho ${name}!`, 'success');
+          } catch (authErr) {
+            if (secondaryApp) await secondaryApp.delete().catch(() => {});
+            if (authErr.code === 'auth/email-already-in-use') {
+              showToast('Email này đã có tài khoản. Hãy dùng email khác!', 'error');
+            } else {
+              throw authErr;
+            }
+            return;
+          }
         }
+
         document.getElementById('hrmStaffModal').style.display = 'none';
         renderHrmStaffList();
         renderHrmKpi();
@@ -5731,6 +5799,13 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('hrmStaffBankAccountName').value = s.bankAccountName || '';
 
     document.getElementById('hrmStaffModalTitle').textContent = '✏️ SỬA THÔNG TIN NHÂN SỰ';
+    // Hide password section in edit mode
+    const pwSection = document.getElementById('hrmStaffPasswordSection');
+    if (pwSection) pwSection.style.display = 'none';
+    const pwInput = document.getElementById('hrmStaffPassword');
+    const pwConfirm = document.getElementById('hrmStaffPasswordConfirm');
+    if (pwInput) { pwInput.required = false; pwInput.value = ''; }
+    if (pwConfirm) { pwConfirm.required = false; pwConfirm.value = ''; }
     document.getElementById('hrmStaffModal').style.display = 'flex';
   };
 
