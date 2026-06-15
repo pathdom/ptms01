@@ -1089,11 +1089,9 @@ document.addEventListener('DOMContentLoaded', () => {
       e.preventDefault();
       let emailVal = document.getElementById('loginUsername').value.trim().toLowerCase();
       const passwordVal = document.getElementById('loginPassword').value;
-      
-      // Auto-append @ptms.hv domain for non-admin accounts if not explicitly typed by the user
-      if (emailVal !== 'admin@domain.com' && !emailVal.endsWith('@ptms.hv')) {
-        const parts = emailVal.split('@');
-        emailVal = parts[0] + '@ptms.hv';
+      // Học viên có thể gõ tắt (không có @) → tự thêm @aladdin.hv
+      if (!emailVal.includes('@')) {
+        emailVal = emailVal + '@aladdin.hv';
       }
       
       handlePortalLogin(emailVal, passwordVal);
