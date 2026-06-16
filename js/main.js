@@ -5354,6 +5354,35 @@ document.addEventListener('DOMContentLoaded', () => {
   const setupHrmModals = () => {
     const staffModal = document.getElementById('hrmStaffModal');
     const projectModal = document.getElementById('hrmProjectModal');
+
+    document.getElementById('btnPurgeOldStaff')?.addEventListener('click', async () => {
+      if (!confirm('Xác nhận XÓA TOÀN BỘ nhân sự cũ?\n\nSẽ xóa hết dữ liệu trong "hrm_staff" và các tài khoản "users" có role employee. Hành động này KHÔNG THỂ hoàn tác (chỉ xóa dữ liệu Firestore, tài khoản đăng nhập Firebase Auth cũ sẽ không còn dùng được do mất role).')) return;
+      const btn = document.getElementById('btnPurgeOldStaff');
+      const originalLabel = btn.innerHTML;
+      btn.disabled = true;
+      btn.innerHTML = '⏳ Đang xóa...';
+      try {
+        const staffSnap = await db.collection('hrm_staff').get();
+        const usersSnap = await db.collection('users').where('role', '==', 'employee').get();
+        const allRefs = [...staffSnap.docs.map(d => d.ref), ...usersSnap.docs.map(d => d.ref)];
+
+        const CHUNK_SIZE = 450;
+        for (let i = 0; i < allRefs.length; i += CHUNK_SIZE) {
+          const batch = db.batch();
+          allRefs.slice(i, i + CHUNK_SIZE).forEach(ref => batch.delete(ref));
+          await batch.commit();
+        }
+
+        showToast(`Đã xóa ${staffSnap.size} nhân sự và ${usersSnap.size} tài khoản nhân viên cũ!`, 'success');
+      } catch (err) {
+        console.error('Lỗi xóa nhân sự cũ:', err);
+        showToast('Lỗi xóa nhân sự cũ: ' + err.message, 'error');
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = originalLabel;
+      }
+    });
+
     document.getElementById('btnOpenHrmStaffModal')?.addEventListener('click', () => {
       document.getElementById('hrmStaffEditId').value = '';
       document.getElementById('hrmStaffForm').reset();
