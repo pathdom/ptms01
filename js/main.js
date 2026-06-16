@@ -5365,10 +5365,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const staffModal = document.getElementById('hrmStaffModal');
     const projectModal = document.getElementById('hrmProjectModal');
 
-    document.getElementById('btnPurgeOldStaff')?.addEventListener('click', () => {
-      window.AdminTools.purgeOldStaff();
-    });
-
     document.getElementById('btnOpenHrmStaffModal')?.addEventListener('click', () => {
       document.getElementById('hrmStaffEditId').value = '';
       document.getElementById('hrmStaffForm').reset();
@@ -7796,42 +7792,6 @@ document.addEventListener('DOMContentLoaded', () => {
       monthInput.addEventListener('change', () => subscribeToStaffAttendance(monthInput.value));
       document.getElementById('btnSpAttPrevMonth')?.addEventListener('click', () => shiftMonthInput('spAttendanceMonth', -1, subscribeToStaffAttendance));
       document.getElementById('btnSpAttNextMonth')?.addEventListener('click', () => shiftMonthInput('spAttendanceMonth', 1, subscribeToStaffAttendance));
-    }
-  };
-
-  // ---- Công cụ dọn dữ liệu nhân sự cũ (chỉ gọi qua console, không có nút UI) ----
-  // Cách dùng: mở DevTools Console (F12) khi đang đăng nhập Admin, gõ: AdminTools.purgeOldStaff()
-  window.AdminTools = {
-    purgeOldStaff: async () => {
-      try {
-        const staffSnap = await db.collection('hrm_staff').get();
-        const usersSnap = await db.collection('users').where('role', 'in', ['employee', 'staff']).get();
-        const allRefs = [...staffSnap.docs.map(d => d.ref), ...usersSnap.docs.map(d => d.ref)];
-
-        const CHUNK_SIZE = 450;
-        for (let i = 0; i < allRefs.length; i += CHUNK_SIZE) {
-          const batch = db.batch();
-          allRefs.slice(i, i + CHUNK_SIZE).forEach(ref => batch.delete(ref));
-          await batch.commit();
-        }
-
-        // Làm mới mọi cache liên quan và render lại ngay — không cần F5
-        _allCrmStaff = [];
-        await subscribeToUsersCache();
-        if (typeof reloadCrmStaff === 'function') reloadCrmStaff();
-        if (typeof renderThreadList === 'function') renderThreadList();
-        if (typeof iocRenderConvList === 'function') iocRenderConvList();
-        if (typeof iocRenderMembers === 'function') iocRenderMembers();
-        if (typeof renderHrmStaffList === 'function') renderHrmStaffList();
-        if (typeof renderHrmKpi === 'function') renderHrmKpi();
-
-        const msg = `Đã xóa ${staffSnap.size} nhân sự (hrm_staff) và ${usersSnap.size} tài khoản nhân viên cũ (users)!`;
-        console.log(msg);
-        showToast(msg, 'success');
-      } catch (err) {
-        console.error('Lỗi xóa nhân sự cũ:', err);
-        showToast('Lỗi xóa nhân sự cũ: ' + err.message, 'error');
-      }
     }
   };
 
