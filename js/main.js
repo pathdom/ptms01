@@ -5438,22 +5438,29 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
           }
 
-          // 1. Tạo tài khoản Firebase Auth qua Secondary App Instance (không ảnh hưởng phiên đăng nhập của Admin)
-          const secondaryAppName = 'hrm_secondary_' + Math.random().toString(36).substring(7);
-          const secondaryApp = firebase.initializeApp(firebaseConfig, secondaryAppName);
-          const secondaryAuth = secondaryApp.auth();
+          // 1. Tạo tài khoản Firebase Auth qua REST API (Identity Toolkit) — KHÔNG khởi tạo bất kỳ
+          // Auth instance nào ở client nên tuyệt đối không thể ảnh hưởng phiên đăng nhập của Admin.
+          const apiKey = firebase.app().options.apiKey;
           let newUid;
           try {
-            const userCredential = await secondaryAuth.createUserWithEmailAndPassword(email, password);
-            newUid = userCredential.user.uid;
+            const res = await fetch(
+              `https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=${apiKey}`,
+              {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email, password, returnSecureToken: false })
+              }
+            );
+            const authResult = await res.json();
+            if (authResult.error) throw authResult.error;
+            newUid = authResult.localId;
           } catch (authErr) {
-            console.error('Lỗi tạo tài khoản Auth (secondary app):', authErr);
-            if (authErr.code === 'auth/email-already-in-use') {
+            console.error('Lỗi tạo tài khoản Auth (REST API):', authErr);
+            if (authErr.message === 'EMAIL_EXISTS') {
               showToast('Email này đã có tài khoản. Hãy dùng email khác!', 'error');
             } else {
               showToast('Lỗi tạo tài khoản: ' + authErr.message, 'error');
             }
-            await secondaryApp.delete().catch(() => {});
             return;
           }
 
@@ -5469,14 +5476,8 @@ document.addEventListener('DOMContentLoaded', () => {
           } catch (firestoreErr) {
             console.error('Lỗi lưu Firestore (kiểm tra Security Rules cho "users"/"hrm_staff"):', firestoreErr);
             showToast('Tài khoản đăng nhập đã tạo nhưng KHÔNG lưu được vào Firestore (lỗi quyền: ' + firestoreErr.message + ').', 'error');
-            await secondaryAuth.signOut().catch(() => {});
-            await secondaryApp.delete().catch(() => {});
             return;
           }
-
-          // 3. Đăng xuất khỏi secondary app ngay sau khi lưu xong — Admin ở app chính không bị ảnh hưởng
-          await secondaryAuth.signOut().catch(() => {});
-          await secondaryApp.delete().catch(() => {});
 
           showToast(`Đã tạo tài khoản nhân viên cho ${name}!`, 'success');
         }
