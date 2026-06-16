@@ -5451,6 +5451,7 @@ document.addEventListener('DOMContentLoaded', () => {
           const authResult = await res.json();
           if (authResult.error) {
             const code = authResult.error.message;
+            console.error('Identity Toolkit signUp error:', authResult.error);
             if (code === 'EMAIL_EXISTS') {
               showToast('Email này đã có tài khoản. Hãy dùng email khác!', 'error');
             } else {
@@ -5461,14 +5462,26 @@ document.addEventListener('DOMContentLoaded', () => {
           const newUid = authResult.localId;
 
           // Tạo users doc để nhân viên đăng nhập vào portal
-          await db.collection('users').doc(newUid).set({
-            name, email, role: 'staff',
-            createdAt: firebase.firestore.FieldValue.serverTimestamp()
-          });
+          try {
+            await db.collection('users').doc(newUid).set({
+              name, email, role: 'staff',
+              createdAt: firebase.firestore.FieldValue.serverTimestamp()
+            });
+          } catch (userDocErr) {
+            console.error('Lỗi tạo users doc (kiểm tra Firestore Security Rules cho collection "users"):', userDocErr);
+            showToast('Tài khoản đăng nhập đã tạo nhưng KHÔNG lưu được hồ sơ (lỗi quyền Firestore: ' + userDocErr.message + '). Vào Firebase Console > Firestore > Rules để kiểm tra.', 'error');
+            return;
+          }
 
-          data.createdAt = firebase.firestore.FieldValue.serverTimestamp();
-          data.joinDate = new Date().toISOString().split('T')[0];
-          await db.collection('hrm_staff').add(data);
+          try {
+            data.createdAt = firebase.firestore.FieldValue.serverTimestamp();
+            data.joinDate = new Date().toISOString().split('T')[0];
+            await db.collection('hrm_staff').add(data);
+          } catch (hrmDocErr) {
+            console.error('Lỗi tạo hrm_staff doc (kiểm tra Firestore Security Rules cho collection "hrm_staff"):', hrmDocErr);
+            showToast('Đã tạo tài khoản đăng nhập nhưng KHÔNG lưu được vào bảng nhân sự (lỗi quyền Firestore: ' + hrmDocErr.message + ').', 'error');
+            return;
+          }
           showToast(`Đã tạo tài khoản nhân viên cho ${name}!`, 'success');
         }
 
