@@ -1,8 +1,9 @@
 /* ==========================================================================
-   ATTENDANCE SERVICE — Chấm công theo IP mạng văn phòng (Firebase Firestore)
-   - Admin: lưu IP Public hiện tại của mạng làm IP văn phòng chuẩn.
-   - Nhân viên: bấm chấm công -> lấy IP hiện tại -> so khớp với IP văn phòng
-     trong Firestore -> chỉ ghi nhận lịch sử nếu khớp, sai IP thì chặn lại.
+   ATTENDANCE SERVICE — Chấm công bằng IP mạng nội bộ (Firebase Firestore)
+   - Admin: saveCompanyIP() lấy IP Public hiện tại qua ipify, lưu vào
+     company_config/wifi_config (trường allowed_ip).
+   - Nhân viên: checkInAttendance() lấy IP hiện tại, so khớp với allowed_ip,
+     nếu khớp ghi UID + Tên + Timestamp vào collection attendance.
    ========================================================================== */
 (() => {
   const db = firebase.firestore();
@@ -48,26 +49,35 @@
     return data.ip;
   };
 
-  // ---- ADMIN: Lưu IP mạng văn phòng hiện tại vào Firestore ----
-  const saveOfficeWifiIP = async () => {
+  // ==========================================================================
+  // 1. ADMIN: Thiết lập IP văn phòng
+  // ==========================================================================
+  const saveCompanyIP = async () => {
+    const btn = document.getElementById('btnSaveOfficeIp');
+    const originalLabel = btn ? btn.innerHTML : null;
+    if (btn) { btn.disabled = true; btn.innerHTML = '⏳ Đang lấy IP...'; }
+
     try {
       const ip = await fetchPublicIP();
       await db.collection('company_config').doc('wifi_config').set({
-        officeIp: ip,
+        allowed_ip: ip,
         updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
         updatedBy: auth.currentUser ? auth.currentUser.email : null
       }, { merge: true });
-      showServiceToast(`Đã lưu IP văn phòng hiện tại: ${ip}`, 'success');
+      showServiceToast(`Đã cập nhật IP văn phòng: ${ip}`, 'success');
       return ip;
     } catch (err) {
-      console.error('Lỗi lưu IP văn phòng:', err);
-      showServiceToast('Lỗi lưu IP văn phòng: ' + err.message, 'error');
+      console.error('Lỗi cập nhật IP văn phòng:', err);
+      showServiceToast('Lỗi cập nhật IP văn phòng: ' + err.message, 'error');
       throw err;
+    } finally {
+      if (btn) { btn.disabled = false; btn.innerHTML = originalLabel; }
     }
   };
 
-  // ---- NHÂN VIÊN: Chấm công — chỉ ghi nhận nếu IP khớp IP văn phòng ----
-  // Chấm công = xác thực kết hợp UID đang đăng nhập (Firebase Auth) + IP mạng văn phòng hiện tại
+  // ==========================================================================
+  // 2. NHÂN VIÊN: Bấm chấm công
+  // ==========================================================================
   const checkInAttendance = async () => {
     const user = auth.currentUser;
     if (!user || !user.uid) {
@@ -81,32 +91,33 @@
     if (btn) { btn.disabled = true; btn.innerHTML = '⏳ Đang xử lý...'; }
 
     try {
-      // 1. Xác thực UID -> lấy thông tin user + role từ Firestore
-      const userDoc = await db.collection('users').doc(uid).get();
-      if (!userDoc.exists || userDoc.data().role !== 'employee') {
-        showServiceToast('Tài khoản này không có quyền chấm công nhân viên!', 'error');
+      // a. + b. Lấy IP hiện tại và IP văn phòng đã lưu — chạy đồng thời
+      const [currentIp, configDoc, userDoc] = await Promise.all([
+        fetchPublicIP(),
+        db.collection('company_config').doc('wifi_config').get(),
+        db.collection('users').doc(uid).get()
+      ]);
+
+      if (!userDoc.exists) {
+        showServiceToast('Không tìm thấy thông tin tài khoản nhân viên!', 'error');
         return;
       }
       const userInfo = userDoc.data();
 
-      // 2. Lấy IP Public hiện tại + IP văn phòng đã cấu hình, so khớp
-      const [currentIp, configDoc] = await Promise.all([
-        fetchPublicIP(),
-        db.collection('company_config').doc('wifi_config').get()
-      ]);
-
-      if (!configDoc.exists || !configDoc.data().officeIp) {
+      if (!configDoc.exists || !configDoc.data().allowed_ip) {
         showServiceToast('Quản trị viên chưa cấu hình IP mạng văn phòng!', 'error');
         return;
       }
+      const allowedIp = configDoc.data().allowed_ip;
 
-      const officeIp = configDoc.data().officeIp;
-      if (currentIp !== officeIp) {
-        showServiceToast(`Chấm công thất bại! Bạn không ở trong mạng văn phòng (IP hiện tại: ${currentIp}).`, 'error');
+      // c. So sánh hai địa chỉ IP
+      if (currentIp !== allowedIp) {
+        showServiceToast('Bạn không kết nối đúng Wifi văn phòng', 'error');
         return;
       }
 
-      // 3. UID + IP đều hợp lệ -> tìm hồ sơ nhân sự (hrm_staff) tương ứng để ghi nhận
+      // Trùng khớp -> lấy UID, Tên nhân viên + Timestamp, ghi nhận vào attendance
+      // (doc gắn theo hồ sơ hrm_staff để đồng bộ với bảng chấm công cá nhân/admin)
       const staffSnap = await db.collection('hrm_staff').where('email', '==', userInfo.email || user.email).limit(1).get();
       if (staffSnap.empty) {
         showServiceToast('Không tìm thấy hồ sơ nhân sự liên kết với tài khoản này!', 'error');
@@ -120,11 +131,11 @@
       const monthStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
       const day = String(now.getDate());
 
-      // 4. Ghi nhận chấm công Realtime vào Firestore (onSnapshot phía nhân viên sẽ tự cập nhật UI)
       await db.collection('attendance').doc(`${staffId}_${monthStr}`).set({
         staffId,
-        staffName,
         uid,
+        staffName,
+        email: userInfo.email || user.email,
         month: monthStr,
         days: { [day]: '1' },
         checkLogs: {
@@ -142,10 +153,10 @@
     }
   };
 
-  window.AttendanceService = { fetchPublicIP, saveOfficeWifiIP, checkInAttendance };
+  window.AttendanceService = { fetchPublicIP, saveCompanyIP, checkInAttendance };
 
   document.addEventListener('DOMContentLoaded', () => {
-    document.getElementById('btnSaveOfficeIp')?.addEventListener('click', saveOfficeWifiIP);
+    document.getElementById('btnSaveOfficeIp')?.addEventListener('click', saveCompanyIP);
     document.getElementById('btnEmployeeCheckIn')?.addEventListener('click', checkInAttendance);
   });
 })();
