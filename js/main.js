@@ -5327,7 +5327,7 @@ document.addEventListener('DOMContentLoaded', () => {
       await clearOldHrmStaff();
     }
     renderHrmKpi();
-    renderHrmStaffList();
+    subscribeToHrmStaff();
   };
 
   // ---- HRM Sub-tabs ----
@@ -5340,7 +5340,7 @@ document.addEventListener('DOMContentLoaded', () => {
         document.querySelectorAll('.hrm-tab-content').forEach(tc => tc.style.display = 'none');
         const el = document.getElementById(target);
         if (el) el.style.display = 'block';
-        if (target === 'hrm-staff-tab') { renderHrmKpi(); renderHrmStaffList(); }
+        if (target === 'hrm-staff-tab') { renderHrmKpi(); subscribeToHrmStaff(); renderHrmStaffList(); }
         else if (target === 'hrm-projects-tab') { renderHrmProjects(); }
         else if (target === 'hrm-payments-tab') { renderHrmPayments(); }
       });
@@ -5438,7 +5438,7 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
           }
 
-          // Tạo tài khoản Firebase Auth qua Secondary App Instance (không ảnh hưởng phiên đăng nhập của Admin)
+          // 1. Tạo tài khoản Firebase Auth qua Secondary App Instance (không ảnh hưởng phiên đăng nhập của Admin)
           const secondaryAppName = 'hrm_secondary_' + Math.random().toString(36).substring(7);
           const secondaryApp = firebase.initializeApp(firebaseConfig, secondaryAppName);
           const secondaryAuth = secondaryApp.auth();
@@ -5453,38 +5453,35 @@ document.addEventListener('DOMContentLoaded', () => {
             } else {
               showToast('Lỗi tạo tài khoản: ' + authErr.message, 'error');
             }
-            return;
-          } finally {
-            await secondaryAuth.signOut().catch(() => {});
             await secondaryApp.delete().catch(() => {});
+            return;
           }
 
-          // Tạo users doc để nhân viên đăng nhập vào portal
+          // 2. Ghi thông tin nhân viên vào Firestore với role: "employee"
           try {
             await db.collection('users').doc(newUid).set({
               name, email, role: 'employee',
               createdAt: firebase.firestore.FieldValue.serverTimestamp()
             });
-          } catch (userDocErr) {
-            console.error('Lỗi tạo users doc (kiểm tra Firestore Security Rules cho collection "users"):', userDocErr);
-            showToast('Tài khoản đăng nhập đã tạo nhưng KHÔNG lưu được hồ sơ (lỗi quyền Firestore: ' + userDocErr.message + '). Vào Firebase Console > Firestore > Rules để kiểm tra.', 'error');
-            return;
-          }
-
-          try {
             data.createdAt = firebase.firestore.FieldValue.serverTimestamp();
             data.joinDate = new Date().toISOString().split('T')[0];
             await db.collection('hrm_staff').add(data);
-          } catch (hrmDocErr) {
-            console.error('Lỗi tạo hrm_staff doc (kiểm tra Firestore Security Rules cho collection "hrm_staff"):', hrmDocErr);
-            showToast('Đã tạo tài khoản đăng nhập nhưng KHÔNG lưu được vào bảng nhân sự (lỗi quyền Firestore: ' + hrmDocErr.message + ').', 'error');
+          } catch (firestoreErr) {
+            console.error('Lỗi lưu Firestore (kiểm tra Security Rules cho "users"/"hrm_staff"):', firestoreErr);
+            showToast('Tài khoản đăng nhập đã tạo nhưng KHÔNG lưu được vào Firestore (lỗi quyền: ' + firestoreErr.message + ').', 'error');
+            await secondaryAuth.signOut().catch(() => {});
+            await secondaryApp.delete().catch(() => {});
             return;
           }
+
+          // 3. Đăng xuất khỏi secondary app ngay sau khi lưu xong — Admin ở app chính không bị ảnh hưởng
+          await secondaryAuth.signOut().catch(() => {});
+          await secondaryApp.delete().catch(() => {});
+
           showToast(`Đã tạo tài khoản nhân viên cho ${name}!`, 'success');
         }
 
         document.getElementById('hrmStaffModal').style.display = 'none';
-        renderHrmStaffList();
         renderHrmKpi();
         reloadCrmStaff();
       } catch (err) {
@@ -5649,20 +5646,31 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   };
 
-  // ---- Render Staff ----
-  const renderHrmStaffList = async () => {
+  // ---- Realtime Staff Subscription ----
+  let hrmStaffCache = [];
+  let hrmStaffSubscription = null;
+
+  const subscribeToHrmStaff = () => {
+    if (hrmStaffSubscription) return;
+    hrmStaffSubscription = db.collection('hrm_staff').orderBy('createdAt', 'desc')
+      .onSnapshot((snap) => {
+        hrmStaffCache = [];
+        snap.forEach(doc => { const d = doc.data(); d.id = doc.id; hrmStaffCache.push(d); });
+        renderHrmStaffList();
+        renderHrmKpi();
+      }, (err) => console.error('HRM staff realtime listener error:', err));
+  };
+
+  // ---- Render Staff (from realtime cache, no Firestore fetch) ----
+  const renderHrmStaffList = () => {
     const tableBody = document.getElementById('hrmStaffTableBody');
     if (!tableBody) return;
     tableBody.innerHTML = '';
     try {
-      const snap = await db.collection('hrm_staff').orderBy('createdAt', 'desc').get();
-      let staffList = [];
-      snap.forEach(doc => { const d = doc.data(); d.id = doc.id; staffList.push(d); });
-
       const query = (document.getElementById('hrmStaffSearch')?.value || '').trim().toLowerCase();
       const deptFilter = document.getElementById('hrmStaffDeptFilter')?.value || 'All';
 
-      staffList = staffList.filter(s => {
+      const staffList = hrmStaffCache.filter(s => {
         const matchQuery = !query || s.name.toLowerCase().includes(query) || (s.email && s.email.toLowerCase().includes(query)) || (s.position && s.position.toLowerCase().includes(query));
         const matchDept = deptFilter === 'All' || s.department === deptFilter;
         return matchQuery && matchDept;
@@ -5746,8 +5754,6 @@ document.addEventListener('DOMContentLoaded', () => {
     try {
       await db.collection('hrm_staff').doc(id).delete();
       showToast(`Đã xóa nhân sự ${name}!`, 'warning');
-      renderHrmStaffList();
-      renderHrmKpi();
       reloadCrmStaff();
     } catch (err) {
       showToast('Lỗi khi xóa nhân sự!', 'error');
