@@ -6816,9 +6816,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const esc = s => (s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 
+  // Danh bạ "Chat nội bộ" PHẢI lấy đúng từ hồ sơ nhân sự thật (hrm_staff) — KHÔNG
+  // được fallback sang allUsersList (toàn bộ collection "users", gồm cả học viên/
+  // tài khoản không liên quan), nếu không sẽ hiện người không phải nhân sự.
   const iocGetMembers = () => {
     if (_allCrmStaff && _allCrmStaff.length) return _allCrmStaff;
-    if (allUsersList.length) return allUsersList;
     return currentUser ? [currentUser] : [];
   };
 
