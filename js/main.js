@@ -1207,8 +1207,8 @@ document.addEventListener('DOMContentLoaded', () => {
       snapshot.forEach(doc => {
         const user = doc.data();
         user.uid = doc.id;
-        // Only list users with role === 'staff' (and ensure it's not the admin)
-        if (user.role === 'staff' && user.email !== 'admin@domain.com') {
+        // Only list users with role === 'employee' (and ensure it's not the admin)
+        if (user.role === 'employee' && user.email !== 'admin@domain.com') {
           staffMembers.push(user);
         }
       });
@@ -1288,7 +1288,7 @@ document.addEventListener('DOMContentLoaded', () => {
       await db.collection("users").doc(newUid).set({
         name: name,
         email: email,
-        role: "staff",
+        role: "employee",
         defaultPassword: password,
         passwordChanged: false,
         createdAt: firebase.firestore.FieldValue.serverTimestamp()
@@ -1637,7 +1637,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // 1. Verify user exists and is staff
         const userSnap = await db.collection("users")
           .where("email", "==", email)
-          .where("role", "==", "staff")
+          .where("role", "==", "employee")
           .get();
 
         if (userSnap.empty) {
@@ -4614,7 +4614,7 @@ document.addEventListener('DOMContentLoaded', () => {
               currentUser = {
                 name: user.email === 'admin@domain.com' ? "Admin Aladdin Group" : "Nhân viên Aladdin",
                 email: user.email,
-                role: user.email === 'admin@domain.com' ? 'admin' : 'staff'
+                role: user.email === 'admin@domain.com' ? 'admin' : 'employee'
               };
             }
           }
@@ -4988,7 +4988,7 @@ document.addEventListener('DOMContentLoaded', () => {
             subscribeToBlogs();
 
             // Navigate based on role
-            if (currentUser.role === 'staff') {
+            if (currentUser.role === 'employee') {
               appRoot.classList.add('staff-mode');
               switchPortalView('staff-profile-dashboard');
             } else {
@@ -5453,7 +5453,6 @@ document.addEventListener('DOMContentLoaded', () => {
             } else {
               showToast('Lỗi tạo tài khoản: ' + authErr.message, 'error');
             }
-            await secondaryApp.delete().catch(() => {});
             return;
           } finally {
             await secondaryAuth.signOut().catch(() => {});
@@ -5463,7 +5462,7 @@ document.addEventListener('DOMContentLoaded', () => {
           // Tạo users doc để nhân viên đăng nhập vào portal
           try {
             await db.collection('users').doc(newUid).set({
-              name, email, role: 'staff',
+              name, email, role: 'employee',
               createdAt: firebase.firestore.FieldValue.serverTimestamp()
             });
           } catch (userDocErr) {
