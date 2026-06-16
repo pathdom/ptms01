@@ -5337,7 +5337,6 @@ document.addEventListener('DOMContentLoaded', () => {
       setupHrmSubtabs();
       setupHrmModals();
       setupHrmForms();
-      await clearOldHrmStaff();
     }
     renderHrmKpi();
     subscribeToHrmStaff();
@@ -5575,22 +5574,6 @@ document.addEventListener('DOMContentLoaded', () => {
         showToast('Lỗi khi gửi đề xuất: ' + err.message, 'error');
       }
     });
-  };
-
-  // ---- One-time cleanup: remove all old mock staff from Firestore ----
-  const clearOldHrmStaff = async () => {
-    if (localStorage.getItem('hrm_staff_cleared_v1')) return;
-    try {
-      const snap = await db.collection('hrm_staff').get();
-      if (!snap.empty) {
-        const batch = db.batch();
-        snap.forEach(doc => batch.delete(doc.ref));
-        await batch.commit();
-      }
-      localStorage.setItem('hrm_staff_cleared_v1', '1');
-    } catch(err) {
-      console.error('HRM staff clear error:', err);
-    }
   };
 
   // ---- Render KPI ----
