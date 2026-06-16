@@ -5482,11 +5482,32 @@ document.addEventListener('DOMContentLoaded', () => {
           } catch (authErr) {
             console.error('Lỗi tạo tài khoản Auth (REST API):', authErr);
             if (authErr.message === 'EMAIL_EXISTS') {
-              showToast('Email này đã có tài khoản. Hãy dùng email khác!', 'error');
+              // Tài khoản Auth của email này đã tồn tại từ trước (vd: hồ sơ Firestore cũ đã bị xóa
+              // nhưng tài khoản Auth thì không xóa được qua client). Thử đăng nhập lại bằng đúng
+              // email/mật khẩu vừa nhập để lấy lại UID cũ, rồi "hồi sinh" hồ sơ Firestore cho UID đó
+              // — KHÔNG dùng SDK client nên vẫn không ảnh hưởng phiên đăng nhập của Admin.
+              try {
+                const signInRes = await fetch(
+                  `https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=${apiKey}`,
+                  {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password, returnSecureToken: false })
+                  }
+                );
+                const signInResult = await signInRes.json();
+                if (signInResult.error) throw signInResult.error;
+                newUid = signInResult.localId;
+                showToast('Email này đã có tài khoản đăng nhập cũ — đang khôi phục hồ sơ nhân sự cho tài khoản đó...', 'info');
+              } catch (signInErr) {
+                console.error('Lỗi đăng nhập khôi phục tài khoản cũ:', signInErr);
+                showToast('Email này đã có tài khoản nhưng mật khẩu vừa nhập không khớp với mật khẩu cũ. Hãy nhập đúng mật khẩu cũ của tài khoản này, hoặc xóa tài khoản đó trong Firebase Console > Authentication rồi thử lại.', 'error');
+                return;
+              }
             } else {
               showToast('Lỗi tạo tài khoản: ' + authErr.message, 'error');
+              return;
             }
-            return;
           }
 
           // 2. Ghi thông tin nhân viên vào Firestore với role: "employee"
