@@ -5438,28 +5438,27 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
           }
 
-          // Tạo tài khoản Firebase Auth qua REST API (không ảnh hưởng phiên admin đang đăng nhập)
-          const apiKey = firebase.app().options.apiKey;
-          const res = await fetch(
-            `https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=${apiKey}`,
-            {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ email, password, returnSecureToken: false })
-            }
-          );
-          const authResult = await res.json();
-          if (authResult.error) {
-            const code = authResult.error.message;
-            console.error('Identity Toolkit signUp error:', authResult.error);
-            if (code === 'EMAIL_EXISTS') {
+          // Tạo tài khoản Firebase Auth qua Secondary App Instance (không ảnh hưởng phiên đăng nhập của Admin)
+          const secondaryAppName = 'hrm_secondary_' + Math.random().toString(36).substring(7);
+          const secondaryApp = firebase.initializeApp(firebaseConfig, secondaryAppName);
+          const secondaryAuth = secondaryApp.auth();
+          let newUid;
+          try {
+            const userCredential = await secondaryAuth.createUserWithEmailAndPassword(email, password);
+            newUid = userCredential.user.uid;
+          } catch (authErr) {
+            console.error('Lỗi tạo tài khoản Auth (secondary app):', authErr);
+            if (authErr.code === 'auth/email-already-in-use') {
               showToast('Email này đã có tài khoản. Hãy dùng email khác!', 'error');
             } else {
-              showToast('Lỗi tạo tài khoản: ' + code, 'error');
+              showToast('Lỗi tạo tài khoản: ' + authErr.message, 'error');
             }
+            await secondaryApp.delete().catch(() => {});
             return;
+          } finally {
+            await secondaryAuth.signOut().catch(() => {});
+            await secondaryApp.delete().catch(() => {});
           }
-          const newUid = authResult.localId;
 
           // Tạo users doc để nhân viên đăng nhập vào portal
           try {
@@ -5653,9 +5652,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // ---- Render Staff ----
   const renderHrmStaffList = async () => {
-    const grid = document.getElementById('hrmStaffGrid');
-    if (!grid) return;
-    grid.innerHTML = '';
+    const tableBody = document.getElementById('hrmStaffTableBody');
+    if (!tableBody) return;
+    tableBody.innerHTML = '';
     try {
       const snap = await db.collection('hrm_staff').orderBy('createdAt', 'desc').get();
       let staffList = [];
@@ -5671,9 +5670,15 @@ document.addEventListener('DOMContentLoaded', () => {
       });
 
       if (staffList.length === 0) {
-        grid.innerHTML = '<div style="grid-column: 1/-1; text-align:center; padding:3rem; color:var(--text-muted); font-size:0.9rem; background: var(--bg-card); border-radius: 8px; border: 1px dashed var(--border);">Không tìm thấy nhân sự phù hợp.</div>';
+        tableBody.innerHTML = '<tr><td colspan="7" style="text-align:center; padding:3rem; color:var(--text-muted); font-size:0.9rem;">Không tìm thấy nhân sự phù hợp.</td></tr>';
         return;
       }
+
+      const fmtDate = (dateStr) => {
+        if (!dateStr) return '--';
+        const parts = dateStr.split('-');
+        return parts.length === 3 ? `${parts[2]}/${parts[1]}/${parts[0]}` : dateStr;
+      };
 
       staffList.forEach(s => {
         const initials = s.name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
@@ -5682,51 +5687,34 @@ document.addEventListener('DOMContentLoaded', () => {
         if (s.status === 'Nghỉ phép') badgeCls = 'hrm-badge-onleave';
         else if (s.status === 'Đã nghỉ việc') badgeCls = 'hrm-badge-inactive';
 
-        const card = document.createElement('div');
-        card.className = 'hrm-staff-card';
-        card.innerHTML = `
-          <div class="hrm-staff-card-header">
-            <div class="hrm-staff-card-avatar" style="background:${bg}">${initials}</div>
-            <div class="hrm-staff-card-title">
-              <div class="hrm-staff-card-name">${s.name}</div>
-              <div class="hrm-staff-card-code">${s.employeeCode || 'Mã --'}</div>
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>
+            <div style="display:flex; align-items:center; gap:0.6rem;">
+              <div class="hrm-staff-card-avatar" style="width:34px; height:34px; font-size:0.75rem; flex-shrink:0; background:${bg}">${initials}</div>
+              <div>
+                <div style="font-weight:600; font-size:0.85rem;">${s.name}</div>
+                <div style="font-size:0.75rem; color:var(--text-muted);">${s.email || '--'}</div>
+              </div>
             </div>
-            <span class="hrm-badge ${badgeCls}">${s.status}</span>
-          </div>
-          <div class="hrm-staff-card-body">
-            <div class="hrm-staff-card-field">
-              <span class="field-label">Phòng ban:</span>
-              <span class="field-value">${s.department || '--'}</span>
+          </td>
+          <td>${s.department || '--'}</td>
+          <td>${s.position || '--'}</td>
+          <td>${s.phone || '--'}</td>
+          <td>${fmtDate(s.joinDate)}</td>
+          <td><span class="hrm-badge ${badgeCls}">${s.status}</span></td>
+          <td style="text-align:center;">
+            <div style="display:flex; gap:0.4rem; justify-content:center; align-items:center;">
+              <button class="action-icon-btn btn-view-hrm-staff" data-id="${s.id}" title="Hồ sơ" style="padding:6px; color:var(--accent); background:none; border:none; cursor:pointer;"><svg viewBox="0 0 24 24" style="width:18px;height:18px;fill:currentColor;"><path d="M12,9A3,3 0 0,0 9,12A3,3 0 0,0 12,15A3,3 0 0,0 15,12A3,3 0 0,0 12,9M12,17A5,5 0 0,1 7,12A5,5 0 0,1 12,7A5,5 0 0,1 17,12A5,5 0 0,1 12,17M12,4.5C7,4.5 2.73,7.61 1,12C2.73,16.39 7,19.5 12,19.5C17,19.5 21.27,16.39 23,12C21.27,7.61 17,4.5 12,4.5Z"/></svg></button>
+              <button class="action-icon-btn btn-edit-hrm-staff" data-id="${s.id}" title="Sửa" style="padding:6px; color:var(--text-main); background:none; border:none; cursor:pointer;"><svg viewBox="0 0 24 24" style="width:18px;height:18px;fill:currentColor;"><path d="M20.71,7.04C21.1,6.65 21.1,6 20.71,5.63L18.37,3.29C18,2.9 17.35,2.9 16.96,3.29L15.12,5.12L18.87,8.87M3,17.25V21H6.75L17.81,9.93L14.06,6.18L3,17.25Z"/></svg></button>
+              <button class="action-icon-btn btn-del-hrm-staff" data-id="${s.id}" data-name="${s.name}" title="Xóa" style="padding:6px; color:#EF4444; background:none; border:none; cursor:pointer;"><svg viewBox="0 0 24 24" style="width:18px;height:18px;fill:currentColor;"><path d="M19,4H15.5L14.5,3H9.5L8.5,4H5V6H19M6,19A2,2 0 0,0 8,21H16A2,2 0 0,0 18,19V7H6V19Z"/></svg></button>
             </div>
-            <div class="hrm-staff-card-field">
-              <span class="field-label">Chức vụ:</span>
-              <span class="field-value">${s.position || '--'}</span>
-            </div>
-            <div class="hrm-staff-card-field">
-              <span class="field-label">Email:</span>
-              <span class="field-value">${s.email || '--'}</span>
-            </div>
-            <div class="hrm-staff-card-field">
-              <span class="field-label">Điện thoại:</span>
-              <span class="field-value">${s.phone || '--'}</span>
-            </div>
-          </div>
-          <div class="hrm-staff-card-footer">
-            <button class="hrm-card-btn btn-view-hrm-staff" data-id="${s.id}"><svg viewBox="0 0 24 24"><path d="M12,9A3,3 0 0,0 9,12A3,3 0 0,0 12,15A3,3 0 0,0 15,12A3,3 0 0,0 12,9M12,17A5,5 0 0,1 7,12A5,5 0 0,1 12,7A5,5 0 0,1 17,12A5,5 0 0,1 12,17M12,4.5C7,4.5 2.73,7.61 1,12C2.73,16.39 7,19.5 12,19.5C17,19.5 21.27,16.39 23,12C21.27,7.61 17,7.61 12,4.5Z"/></svg> Hồ sơ</button>
-            <button class="hrm-card-btn btn-edit-hrm-staff" data-id="${s.id}"><svg viewBox="0 0 24 24"><path d="M20.71,7.04C21.1,6.65 21.1,6 20.71,5.63L18.37,3.29C18,2.9 17.35,2.9 16.96,3.29L15.12,5.12L18.87,8.87M3,17.25V21H6.75L17.81,9.93L14.06,6.18L3,17.25Z"/></svg> Sửa</button>
-            <button class="hrm-card-btn danger btn-del-hrm-staff" data-id="${s.id}" data-name="${s.name}"><svg viewBox="0 0 24 24"><path d="M19,4H15.5L14.5,3H9.5L8.5,4H5V6H19M6,19A2,2 0 0,0 8,21H16A2,2 0 0,0 18,19V7H6V19Z"/></svg> Xóa</button>
-          </div>`;
+          </td>`;
 
-        card.addEventListener('click', (e) => {
-          if (!e.target.closest('.hrm-card-btn')) {
-            openHrmProfile(s);
-          }
-        });
-
-        card.querySelector('.btn-view-hrm-staff')?.addEventListener('click', () => openHrmProfile(s));
-        card.querySelector('.btn-edit-hrm-staff')?.addEventListener('click', () => editHrmStaff(s));
-        card.querySelector('.btn-del-hrm-staff')?.addEventListener('click', () => deleteHrmStaff(s.id, s.name));
-        grid.appendChild(card);
+        tr.querySelector('.btn-view-hrm-staff')?.addEventListener('click', () => openHrmProfile(s));
+        tr.querySelector('.btn-edit-hrm-staff')?.addEventListener('click', () => editHrmStaff(s));
+        tr.querySelector('.btn-del-hrm-staff')?.addEventListener('click', () => deleteHrmStaff(s.id, s.name));
+        tableBody.appendChild(tr);
       });
     } catch (err) {
       console.error('HRM staff list error:', err);
