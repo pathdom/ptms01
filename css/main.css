@@ -1414,27 +1414,69 @@ button {
     width: 100%;
     height: auto;
     flex-direction: row;
-    justify-content: space-between;
-    padding: 1rem 2rem;
+    align-items: center;
+    padding: 0.6rem 0.75rem;
     border-right: none;
     border-bottom: 1px solid var(--border);
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    gap: 0.5rem;
   }
-  .sidebar-logo, .sidebar-user-badge, .sidebar-footer {
+  .portal-sidebar::-webkit-scrollbar { display: none; }
+  .sidebar-logo, .sidebar-user-badge {
     display: none;
+  }
+  .sidebar-menu {
+    flex-shrink: 0;
   }
   .sidebar-menu ul {
     flex-direction: row;
+    gap: 0.25rem;
+  }
+  .menu-item {
+    flex-shrink: 0;
+  }
+  /* Giữ lại Đổi giao diện / Đăng xuất, gộp vào cùng hàng thay vì ẩn hoàn toàn */
+  .sidebar-footer {
+    display: flex;
+    flex-direction: row;
+    flex-shrink: 0;
+    gap: 0.25rem;
+    margin-top: 0;
+    margin-left: auto;
+    padding-top: 0;
+    border-top: none;
+    border-left: 1px solid var(--border);
+    padding-left: 0.5rem;
   }
   .chat-sidebar {
     display: none; /* Hide threads list on mobile for full chat canvas */
   }
   .dashboard-topbar {
-    padding: 0 1.5rem;
+    padding: 0 1.25rem;
+    height: 64px;
   }
+  .profile-info-desktop {
+    display: none;
+  }
+}
+
+@media (max-width: 480px) {
+  .login-wrapper { padding: 1rem; }
+  .login-card { padding: 2.25rem 1.5rem; }
+  .modal-overlay { padding: 0.75rem !important; }
+  .modal-overlay > .login-card { padding: 1.75rem 1.25rem !important; max-height: 96vh !important; }
 }
 
 /* Topbar User Profile Hover Dropdown */
 .topbar-user-wrapper:hover .topbar-user-dropdown {
+  display: block !important;
+  animation: slideUp 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Tap-to-open fallback for touch devices (hover không hoạt động ổn định trên mobile) */
+.topbar-user-wrapper.open .topbar-user-dropdown {
   display: block !important;
   animation: slideUp 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
@@ -2357,6 +2399,10 @@ body.dark-theme-crm .student-header-navbar {
   margin-bottom: 1.5rem;
   flex-wrap: wrap;
   gap: 1rem;
+}
+
+.hrm-section-header > div {
+  flex-wrap: wrap;
 }
 
 .hrm-section-title {
@@ -3553,7 +3599,12 @@ body.dark-theme-crm {
   border-bottom: 1px solid var(--border);
   background: var(--bg-card);
   flex-shrink: 0;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
 }
+.crm-subtabs::-webkit-scrollbar { display: none; }
+.crm-subtab { flex-shrink: 0; }
 
 .crm-subtab {
   padding: 1rem 1.4rem;
