@@ -4161,6 +4161,30 @@ body.dark-theme-crm {
 .crmsp-panel { display: none; flex: 1; overflow-y: auto; padding: 1.5rem; }
 .crmsp-panel.active { display: block; }
 
+/* Attendance (Chấm công) */
+.hrm-attendance-legend {
+  display: flex; gap: 1.2rem; flex-wrap: wrap;
+  font-size: 0.78rem; color: var(--text-muted);
+  margin: 0.75rem 0 1.25rem;
+}
+.att-dot { display: inline-block; width: 9px; height: 9px; border-radius: 50%; margin-right: 5px; vertical-align: middle; }
+.att-dot.att-full { background: #10B981; }
+.att-dot.att-half { background: #F59E0B; }
+.att-dot.att-absent { background: #EF4444; }
+.att-dot.att-off { background: #8B5CF6; }
+.att-dot.att-empty { background: var(--text-muted); opacity: 0.4; }
+
+.hrm-attendance-table th, .hrm-attendance-table td { text-align: center; white-space: nowrap; padding: 0.5rem 0.55rem; font-size: 0.8rem; }
+.hrm-attendance-table .att-name-cell { text-align: left; min-width: 180px; }
+.att-cell { font-weight: 600; border-radius: 4px; }
+.att-cell.att-full { color: #10B981; }
+.att-cell.att-half { color: #F59E0B; }
+.att-cell.att-absent { color: #EF4444; }
+.att-cell.att-off { color: #8B5CF6; }
+.att-cell.att-empty { color: var(--text-muted); opacity: 0.45; }
+#hrmAttendanceBody .att-cell { cursor: pointer; transition: background 0.15s; }
+#hrmAttendanceBody .att-cell:hover { background: var(--accent-light); }
+
 /* ---- Pagination ---- */
 .crm-pagination {
   display: flex;

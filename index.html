@@ -199,6 +199,12 @@
               </svg>
               <span>Thông tin cá nhân</span>
             </li>
+            <li class="menu-item staff-only" data-target="staff-attendance-dashboard" id="menuItemStaffAttendance">
+              <svg viewBox="0 0 24 24" style="width: 20px; height: 20px; fill: currentColor">
+                <path d="M19,4H18V2H16V4H8V2H6V4H5C3.89,4 3,4.9 3,6V20A2,2 0 0,0 5,22H19A2,2 0 0,0 21,20V6A2,2 0 0,0 19,4M19,20H5V10H19V20M19,8H5V6H19V8Z"/>
+              </svg>
+              <span>Chấm công</span>
+            </li>
             <li
               class="menu-item"
               data-target="students-dashboard"
@@ -1082,6 +1088,7 @@
               <button class="hrm-subtab active" data-tab="hrm-staff-tab">👥 Nhân sự & KPI</button>
               <button class="hrm-subtab" data-tab="hrm-projects-tab">📋 Quản trị Dự án</button>
               <button class="hrm-subtab" data-tab="hrm-payments-tab">💳 Quy trình Thanh toán</button>
+              <button class="hrm-subtab" data-tab="hrm-attendance-tab">🗓️ Chấm công</button>
             </div>
 
             <!-- ===== TAB 1: STAFF & KPI ===== -->
@@ -1210,6 +1217,31 @@
                     </table>
                   </div>
                 </div>
+              </div>
+            </div>
+
+            <!-- ===== TAB 4: ATTENDANCE (CHẤM CÔNG) ===== -->
+            <div id="hrm-attendance-tab" class="hrm-tab-content" style="display: none">
+              <div class="hrm-section-header">
+                <span class="hrm-section-title">BẢNG CHẤM CÔNG NHÂN VIÊN</span>
+                <div style="display:flex; align-items:center; gap:0.6rem;">
+                  <button type="button" id="btnAttPrevMonth" class="hrm-btn-icon-action" style="padding:0.5rem 0.8rem;">‹</button>
+                  <input type="month" id="hrmAttendanceMonth" style="padding:0.5rem 0.8rem; border-radius: var(--border-radius-md); border:1px solid var(--border); background:var(--bg-primary); color:var(--text-main); font-family: inherit;" />
+                  <button type="button" id="btnAttNextMonth" class="hrm-btn-icon-action" style="padding:0.5rem 0.8rem;">›</button>
+                </div>
+              </div>
+              <div class="hrm-attendance-legend">
+                <span><span class="att-dot att-full"></span>Đủ công (1)</span>
+                <span><span class="att-dot att-half"></span>Nửa công (0.5)</span>
+                <span><span class="att-dot att-absent"></span>Vắng (0)</span>
+                <span><span class="att-dot att-off"></span>Nghỉ phép (N)</span>
+                <span><span class="att-dot att-empty"></span>Chưa chấm (x)</span>
+              </div>
+              <div class="mini-table-container" style="max-height: 620px;">
+                <table class="financial-table hrm-attendance-table">
+                  <thead id="hrmAttendanceHead"></thead>
+                  <tbody id="hrmAttendanceBody"></tbody>
+                </table>
               </div>
             </div>
 
@@ -2140,6 +2172,32 @@
               <svg viewBox="0 0 24 24"><path d="M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M16.2,16.2L11,13V7H12.5V12.2L17,14.9L16.2,16.2Z"/></svg>
               <h3>Thông tin nghỉ bù</h3><p>Chức năng đang được phát triển</p>
             </div>
+          </div>
+        </div>
+
+        <!-- STAFF PORTAL: Personal Attendance -->
+        <div id="staff-attendance-dashboard" class="dashboard-wrapper" style="display:none; flex-direction:column; height:100%; padding: 2rem;">
+          <div class="hrm-section-header">
+            <span class="hrm-section-title">CHẤM CÔNG CÁ NHÂN</span>
+            <div style="display:flex; align-items:center; gap:0.6rem;">
+              <button type="button" id="btnSpAttPrevMonth" class="hrm-btn-icon-action" style="padding:0.5rem 0.8rem;">‹</button>
+              <input type="month" id="spAttendanceMonth" style="padding:0.5rem 0.8rem; border-radius: var(--border-radius-md); border:1px solid var(--border); background:var(--bg-primary); color:var(--text-main); font-family: inherit;" />
+              <button type="button" id="btnSpAttNextMonth" class="hrm-btn-icon-action" style="padding:0.5rem 0.8rem;">›</button>
+            </div>
+          </div>
+          <div class="hrm-attendance-legend">
+            <span><span class="att-dot att-full"></span>Đủ công (1)</span>
+            <span><span class="att-dot att-half"></span>Nửa công (0.5)</span>
+            <span><span class="att-dot att-absent"></span>Vắng (0)</span>
+            <span><span class="att-dot att-off"></span>Nghỉ phép (N)</span>
+            <span><span class="att-dot att-empty"></span>Chưa chấm (x)</span>
+          </div>
+          <div class="hrm-kpi-grid" id="spAttendanceSummary" style="margin-bottom:1.25rem;"></div>
+          <div class="mini-table-container">
+            <table class="financial-table hrm-attendance-table">
+              <thead id="spAttendanceHead"></thead>
+              <tbody id="spAttendanceBody"></tbody>
+            </table>
           </div>
         </div>
 

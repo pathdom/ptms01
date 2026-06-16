@@ -1137,6 +1137,8 @@ document.addEventListener('DOMContentLoaded', () => {
       if (chatTabEl && chatTabEl.style.display !== 'none') setupCrmChat();
     } else if (targetViewId === 'staff-profile-dashboard') {
       initStaffProfileDashboard();
+    } else if (targetViewId === 'staff-attendance-dashboard') {
+      initStaffAttendanceDashboard();
     } else {
       if (typeof teardownCrmChat === 'function') teardownCrmChat();
     }
@@ -5343,6 +5345,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (target === 'hrm-staff-tab') { renderHrmKpi(); subscribeToHrmStaff(); renderHrmStaffList(); }
         else if (target === 'hrm-projects-tab') { renderHrmProjects(); }
         else if (target === 'hrm-payments-tab') { renderHrmPayments(); }
+        else if (target === 'hrm-attendance-tab') { initHrmAttendanceTab(); }
       });
     });
   };
@@ -5401,6 +5404,17 @@ document.addEventListener('DOMContentLoaded', () => {
   const setupHrmForms = () => {
     document.getElementById('hrmStaffSearch')?.addEventListener('input', () => renderHrmStaffList());
     document.getElementById('hrmStaffDeptFilter')?.addEventListener('change', () => renderHrmStaffList());
+
+    // Attendance month controls
+    document.getElementById('hrmAttendanceMonth')?.addEventListener('change', () => {
+      subscribeToHrmAttendance(document.getElementById('hrmAttendanceMonth').value);
+    });
+    document.getElementById('btnAttPrevMonth')?.addEventListener('click', () => {
+      shiftMonthInput('hrmAttendanceMonth', -1, subscribeToHrmAttendance);
+    });
+    document.getElementById('btnAttNextMonth')?.addEventListener('click', () => {
+      shiftMonthInput('hrmAttendanceMonth', 1, subscribeToHrmAttendance);
+    });
 
     // Staff form
     document.getElementById('hrmStaffForm')?.addEventListener('submit', async (e) => {
@@ -5727,6 +5741,121 @@ document.addEventListener('DOMContentLoaded', () => {
     } catch (err) {
       console.error('HRM staff list error:', err);
     }
+  };
+
+  // ---- Attendance (Chấm công) ----
+  const ATTENDANCE_STATUS_CYCLE = ['', '1', '0.5', '0', 'N'];
+  const ATTENDANCE_STATUS_META = {
+    '1':   { label: '1',   cls: 'att-full' },
+    '0.5': { label: '0.5', cls: 'att-half' },
+    '0':   { label: '0',   cls: 'att-absent' },
+    'N':   { label: 'N',   cls: 'att-off' },
+    '':    { label: 'x',   cls: 'att-empty' }
+  };
+  const ATTENDANCE_WEEKDAY_SHORT = ['CN', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7'];
+
+  const getDaysInMonth = (monthStr) => {
+    const [y, m] = monthStr.split('-').map(Number);
+    return new Date(y, m, 0).getDate();
+  };
+
+  const buildAttendanceTableHead = (theadEl, monthStr) => {
+    const [y, m] = monthStr.split('-').map(Number);
+    const daysInMonth = getDaysInMonth(monthStr);
+    let rowWeek = '<tr><th class="att-name-cell"></th>';
+    let rowDay = '<tr><th class="att-name-cell">NHÂN VIÊN</th>';
+    for (let d = 1; d <= daysInMonth; d++) {
+      const dateObj = new Date(y, m - 1, d);
+      rowWeek += `<th style="font-size:0.65rem; color:var(--text-muted); font-weight:500;">${ATTENDANCE_WEEKDAY_SHORT[dateObj.getDay()]}</th>`;
+      rowDay += `<th>${d}</th>`;
+    }
+    rowWeek += '</tr>';
+    rowDay += '</tr>';
+    theadEl.innerHTML = rowWeek + rowDay;
+  };
+
+  const getCurrentMonthStr = () => {
+    const now = new Date();
+    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+  };
+
+  const shiftMonthInput = (inputId, delta, callback) => {
+    const input = document.getElementById(inputId);
+    if (!input || !input.value) return;
+    const [y, m] = input.value.split('-').map(Number);
+    const d = new Date(y, m - 1 + delta, 1);
+    const newVal = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+    input.value = newVal;
+    callback(newVal);
+  };
+
+  let hrmAttendanceSub = null;
+  let hrmAttendanceCache = {};
+
+  const subscribeToHrmAttendance = (monthStr) => {
+    if (hrmAttendanceSub) { hrmAttendanceSub(); hrmAttendanceSub = null; }
+    hrmAttendanceSub = db.collection('attendance').where('month', '==', monthStr)
+      .onSnapshot((snap) => {
+        hrmAttendanceCache = {};
+        snap.forEach(doc => { hrmAttendanceCache[doc.data().staffId] = doc.data(); });
+        renderHrmAttendanceTable(monthStr);
+      }, (err) => console.error('Attendance realtime error:', err));
+  };
+
+  const renderHrmAttendanceTable = (monthStr) => {
+    const head = document.getElementById('hrmAttendanceHead');
+    const body = document.getElementById('hrmAttendanceBody');
+    if (!head || !body) return;
+    buildAttendanceTableHead(head, monthStr);
+    const daysInMonth = getDaysInMonth(monthStr);
+
+    body.innerHTML = '';
+    if (hrmStaffCache.length === 0) {
+      body.innerHTML = '<tr><td colspan="32" style="text-align:center; padding:2rem; color:var(--text-muted);">Chưa có nhân sự nào.</td></tr>';
+      return;
+    }
+
+    hrmStaffCache.forEach(s => {
+      const att = hrmAttendanceCache[s.id] || { days: {} };
+      const tr = document.createElement('tr');
+      let cellsHtml = '';
+      for (let d = 1; d <= daysInMonth; d++) {
+        const val = (att.days && att.days[d]) || '';
+        const meta = ATTENDANCE_STATUS_META[val] || ATTENDANCE_STATUS_META[''];
+        cellsHtml += `<td class="att-cell ${meta.cls}" data-staff-id="${s.id}" data-staff-name="${s.name}" data-day="${d}">${meta.label}</td>`;
+      }
+      tr.innerHTML = `<td class="att-name-cell"><strong>${s.name}</strong><div style="font-size:0.72rem;color:var(--text-muted);">${s.department || ''}</div></td>${cellsHtml}`;
+      body.appendChild(tr);
+    });
+
+    body.querySelectorAll('.att-cell').forEach(cell => {
+      cell.addEventListener('click', async () => {
+        const staffId = cell.dataset.staffId;
+        const staffName = cell.dataset.staffName;
+        const day = cell.dataset.day;
+        const att = hrmAttendanceCache[staffId] || { days: {} };
+        const current = (att.days && att.days[day]) || '';
+        const nextIdx = (ATTENDANCE_STATUS_CYCLE.indexOf(current) + 1) % ATTENDANCE_STATUS_CYCLE.length;
+        const nextVal = ATTENDANCE_STATUS_CYCLE[nextIdx];
+        try {
+          await db.collection('attendance').doc(`${staffId}_${monthStr}`).set({
+            staffId, staffName, month: monthStr,
+            days: { [day]: nextVal },
+            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+          }, { merge: true });
+        } catch (err) {
+          console.error('Lỗi cập nhật chấm công:', err);
+          showToast('Lỗi cập nhật chấm công: ' + err.message, 'error');
+        }
+      });
+    });
+  };
+
+  const initHrmAttendanceTab = () => {
+    const monthInput = document.getElementById('hrmAttendanceMonth');
+    if (!monthInput) return;
+    if (!monthInput.value) monthInput.value = getCurrentMonthStr();
+    subscribeToHrmAttendance(monthInput.value);
   };
 
   const editHrmStaff = (s) => {
@@ -7515,6 +7644,87 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     } catch (err) {
       console.error('Staff profile load error:', err);
+    }
+  };
+
+  // ---- Employee Personal Attendance ----
+  let _myStaffId = null;
+  let spAttendanceSub = null;
+
+  const renderStaffAttendanceTable = (att, monthStr) => {
+    const head = document.getElementById('spAttendanceHead');
+    const body = document.getElementById('spAttendanceBody');
+    if (!head || !body) return;
+    buildAttendanceTableHead(head, monthStr);
+    const daysInMonth = getDaysInMonth(monthStr);
+
+    let cellsHtml = '';
+    let countFull = 0, countHalf = 0, countAbsent = 0, countOff = 0;
+    for (let d = 1; d <= daysInMonth; d++) {
+      const val = (att && att.days && att.days[d]) || '';
+      if (val === '1') countFull++;
+      else if (val === '0.5') countHalf++;
+      else if (val === '0') countAbsent++;
+      else if (val === 'N') countOff++;
+      const meta = ATTENDANCE_STATUS_META[val] || ATTENDANCE_STATUS_META[''];
+      cellsHtml += `<td class="att-cell ${meta.cls}">${meta.label}</td>`;
+    }
+    body.innerHTML = `<tr><td class="att-name-cell"><strong>${currentUser?.name || ''}</strong></td>${cellsHtml}</tr>`;
+
+    const summary = document.getElementById('spAttendanceSummary');
+    if (summary) {
+      const statBox = (value, color, label) => `
+        <div style="background:var(--bg-card); border:1px solid var(--border); border-radius:var(--border-radius-md); padding:1rem 1.25rem; text-align:center;">
+          <div style="font-size:1.6rem; font-weight:700; color:${color};">${value}</div>
+          <div style="font-size:0.78rem; color:var(--text-muted); margin-top:0.25rem;">${label}</div>
+        </div>`;
+      summary.innerHTML =
+        statBox(countFull, '#10B981', 'Đủ công') +
+        statBox(countHalf, '#F59E0B', 'Nửa công') +
+        statBox(countAbsent, '#EF4444', 'Vắng') +
+        statBox(countOff, '#8B5CF6', 'Nghỉ phép');
+    }
+  };
+
+  const subscribeToStaffAttendance = (monthStr) => {
+    if (!_myStaffId) return;
+    if (spAttendanceSub) { spAttendanceSub(); spAttendanceSub = null; }
+    spAttendanceSub = db.collection('attendance').doc(`${_myStaffId}_${monthStr}`)
+      .onSnapshot((doc) => {
+        renderStaffAttendanceTable(doc.exists ? doc.data() : null, monthStr);
+      }, (err) => console.error('Staff attendance realtime error:', err));
+  };
+
+  const initStaffAttendanceDashboard = async () => {
+    const dashboard = document.getElementById('staff-attendance-dashboard');
+    if (dashboard) dashboard.style.display = 'flex';
+
+    const monthInput = document.getElementById('spAttendanceMonth');
+    if (!monthInput || !currentUser) return;
+    if (!monthInput.value) monthInput.value = getCurrentMonthStr();
+
+    if (!_myStaffId) {
+      try {
+        const snap = await db.collection('hrm_staff').where('email', '==', currentUser.email).limit(1).get();
+        if (!snap.empty) _myStaffId = snap.docs[0].id;
+      } catch (err) {
+        console.error('Lookup staffId error:', err);
+      }
+    }
+
+    if (!_myStaffId) {
+      const body = document.getElementById('spAttendanceBody');
+      if (body) body.innerHTML = '<tr><td style="padding:2rem;color:var(--text-muted);">Không tìm thấy hồ sơ nhân sự liên kết với tài khoản này.</td></tr>';
+      return;
+    }
+
+    subscribeToStaffAttendance(monthInput.value);
+
+    if (!monthInput.dataset.spAttBound) {
+      monthInput.dataset.spAttBound = '1';
+      monthInput.addEventListener('change', () => subscribeToStaffAttendance(monthInput.value));
+      document.getElementById('btnSpAttPrevMonth')?.addEventListener('click', () => shiftMonthInput('spAttendanceMonth', -1, subscribeToStaffAttendance));
+      document.getElementById('btnSpAttNextMonth')?.addEventListener('click', () => shiftMonthInput('spAttendanceMonth', 1, subscribeToStaffAttendance));
     }
   };
 
