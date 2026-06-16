@@ -1324,10 +1324,6 @@ document.addEventListener('DOMContentLoaded', () => {
       
       const newName = document.getElementById('newStaffName').value.trim();
       let newEmail = document.getElementById('newStaffEmail').value.trim().toLowerCase();
-      if (newEmail && !newEmail.endsWith('@ptms.hv')) {
-        const parts = newEmail.split('@');
-        newEmail = parts[0] + '@ptms.hv';
-      }
       const newPassword = document.getElementById('newStaffPassword').value;
 
       if (!newName || !newEmail || !newPassword) {
@@ -1532,9 +1528,8 @@ document.addEventListener('DOMContentLoaded', () => {
       const newName = document.getElementById('newStudentName').value.trim();
       const newCode = document.getElementById('newStudentCode').value.trim().toUpperCase();
       let newEmail = document.getElementById('newStudentEmail').value.trim().toLowerCase();
-      if (newEmail && !newEmail.endsWith('@ptms.hv')) {
-        const parts = newEmail.split('@');
-        newEmail = parts[0] + '@ptms.hv';
+      if (newEmail && !newEmail.includes('@')) {
+        newEmail = newEmail + '@aladdin.hv';
       }
       const newPhone = document.getElementById('newStudentPhone').value.trim();
       const newCountry = document.getElementById('newStudentCountry').value;
@@ -1564,9 +1559,8 @@ document.addEventListener('DOMContentLoaded', () => {
       e.preventDefault();
       
       let email = document.getElementById('resetStudentEmail').value.trim().toLowerCase();
-      if (email && !email.endsWith('@ptms.hv')) {
-        const parts = email.split('@');
-        email = parts[0] + '@ptms.hv';
+      if (email && !email.includes('@')) {
+        email = email + '@aladdin.hv';
       }
       const newDefaultPassword = document.getElementById('resetStudentNewPassword').value;
 
@@ -1625,10 +1619,6 @@ document.addEventListener('DOMContentLoaded', () => {
       e.preventDefault();
       
       let email = document.getElementById('resetStaffEmail').value.trim().toLowerCase();
-      if (email && !email.endsWith('@ptms.hv')) {
-        const parts = email.split('@');
-        email = parts[0] + '@ptms.hv';
-      }
       const newDefaultPassword = document.getElementById('resetStaffNewPassword').value;
 
       if (!email || !newDefaultPassword) {
@@ -2974,13 +2964,7 @@ document.addEventListener('DOMContentLoaded', () => {
       status: "Đang học",
       notes: "Đang hoàn tất các thủ tục khám sức khỏe lao phổi chuẩn bị xin visa du học Hàn Quốc."
     }
-  ].map(s => {
-    if (s.email) {
-      const parts = s.email.split('@');
-      s.email = parts[0] + "@ptms.hv";
-    }
-    return s;
-  });
+  ];
 
   // Setup Student Database real-time observer
   let currentPage = 1;
@@ -5434,30 +5418,6 @@ document.addEventListener('DOMContentLoaded', () => {
         status: document.getElementById('hrmStaffStatus').value,
         employeeCode: document.getElementById('hrmStaffCode').value.trim(),
         username: document.getElementById('hrmStaffUsername').value.trim(),
-        birthday: document.getElementById('hrmStaffBirthday').value,
-        gender: document.getElementById('hrmStaffGender').value,
-        hometown: document.getElementById('hrmStaffHometown').value.trim(),
-        maritalStatus: document.getElementById('hrmStaffMarital').value,
-        education: document.getElementById('hrmStaffEducation').value.trim(),
-        salary: parseInt(document.getElementById('hrmStaffSalary').value) || 0,
-        allowanceSalary: parseInt(document.getElementById('hrmStaffAllowance').value) || 0,
-        insuranceSalary: document.getElementById('hrmStaffInsurance').value,
-        taxCode: document.getElementById('hrmStaffTaxCode').value.trim(),
-        bankAccountNo: document.getElementById('hrmStaffBankNo').value.trim(),
-        bankName: document.getElementById('hrmStaffBankName').value.trim(),
-        bankAccountName: document.getElementById('hrmStaffBankAccountName').value.trim(),
-        idNumber: document.getElementById('hrmStaffIdNumber').value.trim(),
-        idDate: document.getElementById('hrmStaffIdDate').value,
-        idPlace: document.getElementById('hrmStaffIdPlace').value.trim(),
-        addressPermanent: document.getElementById('hrmStaffAddressPermanent').value.trim(),
-        addressCurrent: document.getElementById('hrmStaffAddressCurrent').value.trim(),
-        emergencyContactName: document.getElementById('hrmStaffEmergencyName').value.trim(),
-        emergencyContactPhone: document.getElementById('hrmStaffEmergencyPhone').value.trim(),
-        emergencyContactRelation: document.getElementById('hrmStaffEmergencyRelation').value.trim(),
-        contractType: document.getElementById('hrmStaffContractType').value,
-        contractStartDate: document.getElementById('hrmStaffContractStart').value,
-        contractEndDate: document.getElementById('hrmStaffContractEnd').value,
-        manager: document.getElementById('hrmStaffManager').value.trim(),
         updatedAt: firebase.firestore.FieldValue.serverTimestamp()
       };
 
@@ -5478,37 +5438,38 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
           }
 
-          // Create Firebase Auth account via secondary app (keeps admin signed in)
-          let secondaryApp;
-          try {
-            secondaryApp = firebase.initializeApp(firebase.app().options, `staff-create-${Date.now()}`);
-            const secondaryAuth = secondaryApp.auth();
-            const userCredential = await secondaryAuth.createUserWithEmailAndPassword(email, password);
-            const newUid = userCredential.user.uid;
-            await secondaryAuth.signOut();
-            await secondaryApp.delete();
-
-            // Create users doc so staff can log in to portal
-            await db.collection('users').doc(newUid).set({
-              name,
-              email,
-              role: 'staff',
-              createdAt: firebase.firestore.FieldValue.serverTimestamp()
-            });
-
-            data.createdAt = firebase.firestore.FieldValue.serverTimestamp();
-            data.joinDate = new Date().toISOString().split('T')[0];
-            await db.collection('hrm_staff').add(data);
-            showToast(`Đã tạo tài khoản nhân viên cho ${name}!`, 'success');
-          } catch (authErr) {
-            if (secondaryApp) await secondaryApp.delete().catch(() => {});
-            if (authErr.code === 'auth/email-already-in-use') {
+          // Tạo tài khoản Firebase Auth qua REST API (không ảnh hưởng phiên admin đang đăng nhập)
+          const apiKey = firebase.app().options.apiKey;
+          const res = await fetch(
+            `https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=${apiKey}`,
+            {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ email, password, returnSecureToken: false })
+            }
+          );
+          const authResult = await res.json();
+          if (authResult.error) {
+            const code = authResult.error.message;
+            if (code === 'EMAIL_EXISTS') {
               showToast('Email này đã có tài khoản. Hãy dùng email khác!', 'error');
             } else {
-              throw authErr;
+              showToast('Lỗi tạo tài khoản: ' + code, 'error');
             }
             return;
           }
+          const newUid = authResult.localId;
+
+          // Tạo users doc để nhân viên đăng nhập vào portal
+          await db.collection('users').doc(newUid).set({
+            name, email, role: 'staff',
+            createdAt: firebase.firestore.FieldValue.serverTimestamp()
+          });
+
+          data.createdAt = firebase.firestore.FieldValue.serverTimestamp();
+          data.joinDate = new Date().toISOString().split('T')[0];
+          await db.collection('hrm_staff').add(data);
+          showToast(`Đã tạo tài khoản nhân viên cho ${name}!`, 'success');
         }
 
         document.getElementById('hrmStaffModal').style.display = 'none';
@@ -5761,43 +5722,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const editHrmStaff = (s) => {
     document.getElementById('hrmStaffEditId').value = s.id;
-    document.getElementById('hrmStaffName').value = s.name;
+    document.getElementById('hrmStaffName').value = s.name || '';
     document.getElementById('hrmStaffEmail').value = s.email || '';
-    document.getElementById('hrmStaffDept').value = s.department;
+    document.getElementById('hrmStaffDept').value = s.department || 'Tuyển dụng';
     document.getElementById('hrmStaffPosition').value = s.position || '';
     document.getElementById('hrmStaffPhone').value = s.phone || '';
-    document.getElementById('hrmStaffStatus').value = s.status;
+    document.getElementById('hrmStaffStatus').value = s.status || 'Đang làm việc';
     document.getElementById('hrmStaffCode').value = s.employeeCode || '';
     document.getElementById('hrmStaffUsername').value = s.username || '';
-    document.getElementById('hrmStaffBirthday').value = s.birthday || '';
-    document.getElementById('hrmStaffGender').value = s.gender || '';
-    document.getElementById('hrmStaffHometown').value = s.hometown || '';
-    document.getElementById('hrmStaffMarital').value = s.maritalStatus || '';
-    document.getElementById('hrmStaffEducation').value = s.education || '';
-    document.getElementById('hrmStaffSalary').value = s.salary || '';
-
-    // New fields
-    document.getElementById('hrmStaffIdNumber').value = s.idNumber || '';
-    document.getElementById('hrmStaffIdDate').value = s.idDate || '';
-    document.getElementById('hrmStaffIdPlace').value = s.idPlace || '';
-    document.getElementById('hrmStaffAddressPermanent').value = s.addressPermanent || '';
-    document.getElementById('hrmStaffAddressCurrent').value = s.addressCurrent || '';
-    document.getElementById('hrmStaffEmergencyName').value = s.emergencyContactName || '';
-    document.getElementById('hrmStaffEmergencyPhone').value = s.emergencyContactPhone || '';
-    document.getElementById('hrmStaffEmergencyRelation').value = s.emergencyContactRelation || '';
-    document.getElementById('hrmStaffContractType').value = s.contractType || '';
-    document.getElementById('hrmStaffManager').value = s.manager || '';
-    document.getElementById('hrmStaffContractStart').value = s.contractStartDate || '';
-    document.getElementById('hrmStaffContractEnd').value = s.contractEndDate || '';
-    document.getElementById('hrmStaffAllowance').value = s.allowanceSalary || '';
-    document.getElementById('hrmStaffInsurance').value = s.insuranceSalary || 'Có';
-    document.getElementById('hrmStaffTaxCode').value = s.taxCode || '';
-    document.getElementById('hrmStaffBankNo').value = s.bankAccountNo || '';
-    document.getElementById('hrmStaffBankName').value = s.bankName || '';
-    document.getElementById('hrmStaffBankAccountName').value = s.bankAccountName || '';
 
     document.getElementById('hrmStaffModalTitle').textContent = '✏️ SỬA THÔNG TIN NHÂN SỰ';
-    // Hide password section in edit mode
     const pwSection = document.getElementById('hrmStaffPasswordSection');
     if (pwSection) pwSection.style.display = 'none';
     const pwInput = document.getElementById('hrmStaffPassword');

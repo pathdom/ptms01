@@ -5762,7 +5762,7 @@
         </div>
         <form id="hrmStaffForm" class="hrm-modal-form" style="overflow-y: auto; flex: 1; padding-right: 4px;">
           <input type="hidden" id="hrmStaffEditId" />
-          
+
           <h4 style="margin: 0.5rem 0 0.75rem; border-bottom: 1px solid var(--border); padding-bottom: 0.25rem; color: var(--accent); font-size: 0.85rem; text-transform: uppercase; font-weight: 600;">Thông tin cơ bản</h4>
           <div class="hrm-form-row">
             <div class="form-group-login"><label for="hrmStaffName">Họ và tên *</label><input type="text" id="hrmStaffName" placeholder="Nguyễn Văn A" required /></div>
@@ -5799,94 +5799,6 @@
           <div class="hrm-form-row">
             <div class="form-group-login"><label for="hrmStaffCode">Mã nhân viên</label><input type="text" id="hrmStaffCode" placeholder="VD: 0267/HN.0267" /></div>
             <div class="form-group-login"><label for="hrmStaffUsername">Tên tài khoản</label><input type="text" id="hrmStaffUsername" placeholder="VD: nguyenvana" /></div>
-          </div>
-          <div class="hrm-form-row">
-            <div class="form-group-login"><label for="hrmStaffBirthday">Ngày sinh</label><input type="date" id="hrmStaffBirthday" /></div>
-            <div class="form-group-login"><label for="hrmStaffGender">Giới tính</label>
-              <select id="hrmStaffGender">
-                <option value="">-- Chọn --</option>
-                <option value="Nam">Nam</option>
-                <option value="Nữ">Nữ</option>
-                <option value="Khác">Khác</option>
-              </select>
-            </div>
-          </div>
-          <div class="hrm-form-row">
-            <div class="form-group-login"><label for="hrmStaffHometown">Nguyên quán</label><input type="text" id="hrmStaffHometown" placeholder="VD: P. Minh Khai, TP. Hà Nội" /></div>
-            <div class="form-group-login"><label for="hrmStaffMarital">Hôn nhân</label>
-              <select id="hrmStaffMarital">
-                <option value="">-- Chọn --</option>
-                <option value="Độc thân">Độc thân</option>
-                <option value="Đã kết hôn">Đã kết hôn</option>
-                <option value="Đã ly hôn">Đã ly hôn</option>
-              </select>
-            </div>
-          </div>
-          <div class="hrm-form-row">
-            <div class="form-group-login" style="grid-column: 1 / 3;"><label for="hrmStaffEducation">Học vấn</label><input type="text" id="hrmStaffEducation" placeholder="VD: Cử nhân ĐH Kinh tế quốc dân" /></div>
-          </div>
-
-          <h4 style="margin: 1.25rem 0 0.75rem; border-bottom: 1px solid var(--border); padding-bottom: 0.25rem; color: var(--accent); font-size: 0.85rem; text-transform: uppercase; font-weight: 600;">Sơ yếu lý lịch (Resume/CV)</h4>
-          <div class="hrm-form-row">
-            <div class="form-group-login"><label for="hrmStaffIdNumber">Số CCCD/Hộ chiếu</label><input type="text" id="hrmStaffIdNumber" placeholder="Nhập số CCCD" /></div>
-            <div class="form-group-login"><label for="hrmStaffIdDate">Ngày cấp</label><input type="date" id="hrmStaffIdDate" /></div>
-          </div>
-          <div class="hrm-form-row">
-            <div class="form-group-login" style="grid-column: 1 / 3;"><label for="hrmStaffIdPlace">Nơi cấp</label><input type="text" id="hrmStaffIdPlace" placeholder="VD: Cục Cảnh sát Quản lý hành chính" /></div>
-          </div>
-          <div class="hrm-form-row">
-            <div class="form-group-login" style="grid-column: 1 / 3;"><label for="hrmStaffAddressPermanent">Địa chỉ thường trú</label><input type="text" id="hrmStaffAddressPermanent" placeholder="Nhập địa chỉ thường trú theo sổ hộ khẩu" /></div>
-          </div>
-          <div class="hrm-form-row">
-            <div class="form-group-login" style="grid-column: 1 / 3;"><label for="hrmStaffAddressCurrent">Chỗ ở hiện tại</label><input type="text" id="hrmStaffAddressCurrent" placeholder="Nhập địa chỉ cư trú hiện tại" /></div>
-          </div>
-          <div class="hrm-form-row">
-            <div class="form-group-login"><label for="hrmStaffEmergencyName">Liên hệ khẩn cấp (Họ tên)</label><input type="text" id="hrmStaffEmergencyName" placeholder="VD: Nguyễn Văn B" /></div>
-            <div class="form-group-login"><label for="hrmStaffEmergencyPhone">Số điện thoại khẩn cấp</label><input type="text" id="hrmStaffEmergencyPhone" placeholder="0987654321" /></div>
-          </div>
-          <div class="hrm-form-row">
-            <div class="form-group-login" style="grid-column: 1 / 3;"><label for="hrmStaffEmergencyRelation">Mối quan hệ</label><input type="text" id="hrmStaffEmergencyRelation" placeholder="VD: Bố / Mẹ / Vợ / Chồng" /></div>
-          </div>
-
-          <h4 style="margin: 1.25rem 0 0.75rem; border-bottom: 1px solid var(--border); padding-bottom: 0.25rem; color: var(--accent); font-size: 0.85rem; text-transform: uppercase; font-weight: 600;">Công việc &amp; Hợp đồng</h4>
-          <div class="hrm-form-row">
-            <div class="form-group-login"><label for="hrmStaffContractType">Loại hợp đồng</label>
-              <select id="hrmStaffContractType">
-                <option value="">-- Chọn --</option>
-                <option value="Thử việc">Thử việc</option>
-                <option value="Hợp đồng 1 năm">Hợp đồng xác định thời hạn 1 năm</option>
-                <option value="Hợp đồng 2 năm">Hợp đồng xác định thời hạn 2 năm</option>
-                <option value="Không xác định thời hạn">Hợp đồng không xác định thời hạn</option>
-                <option value="Cộng tác viên">Cộng tác viên</option>
-              </select>
-            </div>
-            <div class="form-group-login"><label for="hrmStaffManager">Người quản lý</label><input type="text" id="hrmStaffManager" placeholder="Tên người quản lý trực tiếp" /></div>
-          </div>
-          <div class="hrm-form-row">
-            <div class="form-group-login"><label for="hrmStaffContractStart">Ngày bắt đầu hợp đồng</label><input type="date" id="hrmStaffContractStart" /></div>
-            <div class="form-group-login"><label for="hrmStaffContractEnd">Ngày kết thúc hợp đồng</label><input type="date" id="hrmStaffContractEnd" /></div>
-          </div>
-
-          <h4 style="margin: 1.25rem 0 0.75rem; border-bottom: 1px solid var(--border); padding-bottom: 0.25rem; color: var(--accent); font-size: 0.85rem; text-transform: uppercase; font-weight: 600;">Lương, Phúc lợi &amp; Tài khoản</h4>
-          <div class="hrm-form-row">
-            <div class="form-group-login"><label for="hrmStaffSalary">Lương cơ bản (VNĐ)</label><input type="number" id="hrmStaffSalary" placeholder="0" min="0" /></div>
-            <div class="form-group-login"><label for="hrmStaffAllowance">Phụ cấp (VNĐ)</label><input type="number" id="hrmStaffAllowance" placeholder="0" min="0" /></div>
-          </div>
-          <div class="hrm-form-row">
-            <div class="form-group-login"><label for="hrmStaffInsurance">Đóng BHXH</label>
-              <select id="hrmStaffInsurance">
-                <option value="Có">Có đóng BHXH</option>
-                <option value="Không">Không đóng BHXH</option>
-              </select>
-            </div>
-            <div class="form-group-login"><label for="hrmStaffTaxCode">Mã số thuế cá nhân</label><input type="text" id="hrmStaffTaxCode" placeholder="Nhập mã số thuế cá nhân" /></div>
-          </div>
-          <div class="hrm-form-row">
-            <div class="form-group-login"><label for="hrmStaffBankNo">Số tài khoản ngân hàng</label><input type="text" id="hrmStaffBankNo" placeholder="Nhập số tài khoản" /></div>
-            <div class="form-group-login"><label for="hrmStaffBankName">Ngân hàng</label><input type="text" id="hrmStaffBankName" placeholder="VD: Vietcombank, Techcombank..." /></div>
-          </div>
-          <div class="hrm-form-row">
-            <div class="form-group-login" style="grid-column: 1 / 3;"><label for="hrmStaffBankAccountName">Chủ tài khoản ngân hàng</label><input type="text" id="hrmStaffBankAccountName" placeholder="Nhập tên viết hoa không dấu" /></div>
           </div>
 
           <button type="submit" class="btn-submit-login" style="width: 100%; margin-top: 1rem; flex-shrink: 0;">LƯU THÔNG TIN NHÂN SỰ</button>
