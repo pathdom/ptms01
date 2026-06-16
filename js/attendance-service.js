@@ -50,8 +50,23 @@
   };
 
   // ==========================================================================
-  // 1. ADMIN: Thiết lập IP văn phòng
+  // 1. ADMIN: Thiết lập IP văn phòng (IP tĩnh — giữ cố định cho đến khi cập nhật lại)
   // ==========================================================================
+  const renderOfficeIpDisplay = (ip) => {
+    const el = document.getElementById('hrmCurrentOfficeIp');
+    if (el) el.textContent = ip || 'Chưa cấu hình';
+  };
+
+  const loadOfficeIpDisplay = async () => {
+    try {
+      const doc = await db.collection('company_config').doc('wifi_config').get();
+      renderOfficeIpDisplay(doc.exists ? doc.data().allowed_ip : null);
+    } catch (err) {
+      console.error('Lỗi tải IP văn phòng:', err);
+      renderOfficeIpDisplay(null);
+    }
+  };
+
   const saveCompanyIP = async () => {
     const btn = document.getElementById('btnSaveOfficeIp');
     const originalLabel = btn ? btn.innerHTML : null;
@@ -64,6 +79,7 @@
         updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
         updatedBy: auth.currentUser ? auth.currentUser.email : null
       }, { merge: true });
+      renderOfficeIpDisplay(ip);
       showServiceToast(`Đã cập nhật IP văn phòng: ${ip}`, 'success');
       return ip;
     } catch (err) {
@@ -153,7 +169,7 @@
     }
   };
 
-  window.AttendanceService = { fetchPublicIP, saveCompanyIP, checkInAttendance };
+  window.AttendanceService = { fetchPublicIP, saveCompanyIP, checkInAttendance, loadOfficeIpDisplay };
 
   document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('btnSaveOfficeIp')?.addEventListener('click', saveCompanyIP);

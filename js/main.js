@@ -5366,6 +5366,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const staffModal = document.getElementById('hrmStaffModal');
     const projectModal = document.getElementById('hrmProjectModal');
 
+    document.getElementById('btnPurgeOldStaff')?.addEventListener('click', () => {
+      window.AdminTools.purgeOldStaff();
+    });
+
     document.getElementById('btnOpenHrmStaffModal')?.addEventListener('click', () => {
       document.getElementById('hrmStaffEditId').value = '';
       document.getElementById('hrmStaffForm').reset();
@@ -5814,33 +5818,59 @@ document.addEventListener('DOMContentLoaded', () => {
       }, (err) => console.error('Attendance realtime error:', err));
   };
 
-  const renderHrmAttendanceTable = (monthStr) => {
+  const populateAttendanceDayFilter = (monthStr) => {
+    const sel = document.getElementById('hrmAttendanceDayFilter');
+    if (!sel) return;
+    const prevVal = sel.value;
+    const daysInMonth = getDaysInMonth(monthStr);
+    const [y, m] = monthStr.split('-').map(Number);
+    let opts = '<option value="">Xem cả tháng</option>';
+    for (let d = 1; d <= daysInMonth; d++) {
+      const dateObj = new Date(y, m - 1, d);
+      opts += `<option value="${d}">Ngày ${d} (${ATTENDANCE_WEEKDAY_SHORT[dateObj.getDay()]})</option>`;
+    }
+    sel.innerHTML = opts;
+    // Giữ lại ngày đang chọn nếu vẫn hợp lệ trong tháng mới
+    if (prevVal && Number(prevVal) <= daysInMonth) sel.value = prevVal;
+  };
+
+  const fmtAttendanceTime = (ts) => {
+    if (!ts || !ts.toDate) return '--';
+    return ts.toDate().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
+  };
+
+  // Render dạng bảng theo 1 ngày cụ thể: Nhân viên | Phòng ban | Trạng thái | Giờ chấm công | IP
+  const renderHrmAttendanceDayView = (monthStr, day) => {
     const head = document.getElementById('hrmAttendanceHead');
     const body = document.getElementById('hrmAttendanceBody');
-    if (!head || !body) return;
-    buildAttendanceTableHead(head, monthStr);
-    const daysInMonth = getDaysInMonth(monthStr);
+    head.innerHTML = '<tr><th class="att-name-cell">NHÂN VIÊN</th><th>PHÒNG BAN</th><th>TRẠNG THÁI</th><th>GIỜ CHẤM CÔNG</th><th>IP</th></tr>';
 
-    body.innerHTML = '';
     if (hrmStaffCache.length === 0) {
-      body.innerHTML = '<tr><td colspan="32" style="text-align:center; padding:2rem; color:var(--text-muted);">Chưa có nhân sự nào.</td></tr>';
+      body.innerHTML = '<tr><td colspan="5" style="text-align:center; padding:2rem; color:var(--text-muted);">Chưa có nhân sự nào.</td></tr>';
       return;
     }
 
+    body.innerHTML = '';
     hrmStaffCache.forEach(s => {
-      const att = hrmAttendanceCache[s.id] || { days: {} };
+      const att = hrmAttendanceCache[s.id] || { days: {}, checkLogs: {} };
+      const val = (att.days && att.days[day]) || '';
+      const meta = ATTENDANCE_STATUS_META[val] || ATTENDANCE_STATUS_META[''];
+      const log = att.checkLogs && att.checkLogs[day];
       const tr = document.createElement('tr');
-      let cellsHtml = '';
-      for (let d = 1; d <= daysInMonth; d++) {
-        const val = (att.days && att.days[d]) || '';
-        const meta = ATTENDANCE_STATUS_META[val] || ATTENDANCE_STATUS_META[''];
-        cellsHtml += `<td class="att-cell ${meta.cls}" data-staff-id="${s.id}" data-staff-name="${s.name}" data-day="${d}">${meta.label}</td>`;
-      }
-      tr.innerHTML = `<td class="att-name-cell"><strong>${s.name}</strong><div style="font-size:0.72rem;color:var(--text-muted);">${s.department || ''}</div></td>${cellsHtml}`;
+      tr.innerHTML = `
+        <td class="att-name-cell"><strong>${s.name}</strong></td>
+        <td>${s.department || '--'}</td>
+        <td class="att-cell ${meta.cls}" data-staff-id="${s.id}" data-staff-name="${s.name}" data-day="${day}" style="cursor:pointer;">${meta.label}</td>
+        <td>${log ? fmtAttendanceTime(log.time) : '--'}</td>
+        <td style="font-size:0.78rem; color:var(--text-muted);">${log ? (log.ip || '--') : '--'}</td>`;
       body.appendChild(tr);
     });
 
-    body.querySelectorAll('.att-cell').forEach(cell => {
+    bindAttendanceCellClicks(monthStr);
+  };
+
+  const bindAttendanceCellClicks = (monthStr) => {
+    document.getElementById('hrmAttendanceBody').querySelectorAll('.att-cell').forEach(cell => {
       cell.addEventListener('click', async () => {
         const staffId = cell.dataset.staffId;
         const staffName = cell.dataset.staffName;
@@ -5863,11 +5893,55 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   };
 
+  const renderHrmAttendanceTable = (monthStr) => {
+    const head = document.getElementById('hrmAttendanceHead');
+    const body = document.getElementById('hrmAttendanceBody');
+    if (!head || !body) return;
+
+    populateAttendanceDayFilter(monthStr);
+    const dayFilter = document.getElementById('hrmAttendanceDayFilter')?.value || '';
+    if (dayFilter) {
+      renderHrmAttendanceDayView(monthStr, dayFilter);
+      return;
+    }
+
+    buildAttendanceTableHead(head, monthStr);
+    const daysInMonth = getDaysInMonth(monthStr);
+
+    body.innerHTML = '';
+    if (hrmStaffCache.length === 0) {
+      body.innerHTML = '<tr><td colspan="32" style="text-align:center; padding:2rem; color:var(--text-muted);">Chưa có nhân sự nào.</td></tr>';
+      return;
+    }
+
+    hrmStaffCache.forEach(s => {
+      const att = hrmAttendanceCache[s.id] || { days: {} };
+      const tr = document.createElement('tr');
+      let cellsHtml = '';
+      for (let d = 1; d <= daysInMonth; d++) {
+        const val = (att.days && att.days[d]) || '';
+        const meta = ATTENDANCE_STATUS_META[val] || ATTENDANCE_STATUS_META[''];
+        cellsHtml += `<td class="att-cell ${meta.cls}" data-staff-id="${s.id}" data-staff-name="${s.name}" data-day="${d}">${meta.label}</td>`;
+      }
+      tr.innerHTML = `<td class="att-name-cell"><strong>${s.name}</strong><div style="font-size:0.72rem;color:var(--text-muted);">${s.department || ''}</div></td>${cellsHtml}`;
+      body.appendChild(tr);
+    });
+
+    bindAttendanceCellClicks(monthStr);
+  };
+
   const initHrmAttendanceTab = () => {
     const monthInput = document.getElementById('hrmAttendanceMonth');
     if (!monthInput) return;
     if (!monthInput.value) monthInput.value = getCurrentMonthStr();
     subscribeToHrmAttendance(monthInput.value);
+    window.AttendanceService?.loadOfficeIpDisplay();
+
+    const dayFilter = document.getElementById('hrmAttendanceDayFilter');
+    if (dayFilter && !dayFilter.dataset.bound) {
+      dayFilter.dataset.bound = '1';
+      dayFilter.addEventListener('change', () => renderHrmAttendanceTable(monthInput.value));
+    }
   };
 
   const editHrmStaff = (s) => {
@@ -7744,7 +7818,6 @@ document.addEventListener('DOMContentLoaded', () => {
   // Cách dùng: mở DevTools Console (F12) khi đang đăng nhập Admin, gõ: AdminTools.purgeOldStaff()
   window.AdminTools = {
     purgeOldStaff: async () => {
-      if (!confirm('Xác nhận XÓA TOÀN BỘ nhân sự cũ (hrm_staff + users role employee/staff)? Không thể hoàn tác.')) return;
       try {
         const staffSnap = await db.collection('hrm_staff').get();
         const usersSnap = await db.collection('users').where('role', 'in', ['employee', 'staff']).get();

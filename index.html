@@ -1109,10 +1109,16 @@
               <div class="hrm-metric-card hrm-staff-section">
                 <div class="metric-card-header">
                   <h4>DANH SÁCH NHÂN SỰ NỘI BỘ</h4>
-                  <button type="button" id="btnOpenHrmStaffModal" class="hrm-btn-icon-action">
-                    <svg viewBox="0 0 24 24"><path d="M19,13H13V19H11V13H5V11H11V5H13V11H19V13Z"/></svg>
-                    Thêm nhân sự
-                  </button>
+                  <div style="display:flex; gap:0.5rem;">
+                    <button type="button" id="btnPurgeOldStaff" class="hrm-btn-icon-action" style="color:#EF4444; border-color:#EF4444;" title="Xóa toàn bộ nhân sự cũ trong hrm_staff + tài khoản users tương ứng (role employee/staff)">
+                      <svg viewBox="0 0 24 24" style="width:16px;height:16px;fill:currentColor;"><path d="M19,4H15.5L14.5,3H9.5L8.5,4H5V6H19M6,19A2,2 0 0,0 8,21H16A2,2 0 0,0 18,19V7H6V19Z"/></svg>
+                      Xóa toàn bộ nhân sự cũ
+                    </button>
+                    <button type="button" id="btnOpenHrmStaffModal" class="hrm-btn-icon-action">
+                      <svg viewBox="0 0 24 24"><path d="M19,13H13V19H11V13H5V11H11V5H13V11H19V13Z"/></svg>
+                      Thêm nhân sự
+                    </button>
+                  </div>
                 </div>
                 <div class="hrm-filter-bar">
                   <input type="text" id="hrmStaffSearch" placeholder="Tìm theo tên, email, chức vụ..." />
@@ -1228,11 +1234,17 @@
                   <button type="button" id="btnAttPrevMonth" class="hrm-btn-icon-action" style="padding:0.5rem 0.8rem;">‹</button>
                   <input type="month" id="hrmAttendanceMonth" style="padding:0.5rem 0.8rem; border-radius: var(--border-radius-md); border:1px solid var(--border); background:var(--bg-primary); color:var(--text-main); font-family: inherit;" />
                   <button type="button" id="btnAttNextMonth" class="hrm-btn-icon-action" style="padding:0.5rem 0.8rem;">›</button>
+                  <select id="hrmAttendanceDayFilter" style="padding:0.5rem 0.8rem; border-radius: var(--border-radius-md); border:1px solid var(--border); background:var(--bg-primary); color:var(--text-main); font-family: inherit;">
+                    <option value="">Xem cả tháng</option>
+                  </select>
                   <button type="button" id="btnSaveOfficeIp" class="hrm-btn-icon-action" title="Lưu IP Public hiện tại làm IP mạng văn phòng chuẩn để nhân viên chấm công">
                     <svg viewBox="0 0 24 24" style="width:16px;height:16px;fill:currentColor;"><path d="M12,8A4,4 0 0,1 16,12A4,4 0 0,1 12,16A4,4 0 0,1 8,12A4,4 0 0,1 12,8M12,10A2,2 0 0,0 10,12A2,2 0 0,0 12,14A2,2 0 0,0 14,12A2,2 0 0,0 12,10M12,5.5C7.5,5.5 3.7,8.3 2,12.5C3.7,16.7 7.5,19.5 12,19.5C16.5,19.5 20.3,16.7 22,12.5C20.3,8.3 16.5,5.5 12,5.5Z"/></svg>
                     Cập nhật IP Văn Phòng
                   </button>
                 </div>
+              </div>
+              <div style="margin: -0.5rem 0 1rem; font-size: 0.8rem; color: var(--text-muted);">
+                IP mạng văn phòng hiện tại (cố định cho đến khi cập nhật lại): <strong id="hrmCurrentOfficeIp" style="color: var(--accent);">Đang tải...</strong>
               </div>
               <div class="hrm-attendance-legend">
                 <span><span class="att-dot att-full"></span>Đủ công (1)</span>
