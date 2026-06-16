@@ -1,8 +1,11 @@
 {
   "scripts": {
-    "dev": "npx browser-sync start --server --files \"*.html, css/**/*.css, js/**/*.js\" --no-notify --port 3000"
+    "dev": "npx browser-sync start --server --files \"*.html, css/**/*.css, js/**/*.js\" --no-notify --port 3000",
+    "attendance-server": "node server/attendance-server.js"
   },
   "dependencies": {
+    "cors": "^2.8.6",
+    "express": "^4.22.2",
     "firebase": "^12.13.0"
   }
 }

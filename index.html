@@ -1237,14 +1237,21 @@
                   <select id="hrmAttendanceDayFilter" style="padding:0.5rem 0.8rem; border-radius: var(--border-radius-md); border:1px solid var(--border); background:var(--bg-primary); color:var(--text-main); font-family: inherit;">
                     <option value="">Xem cả tháng</option>
                   </select>
-                  <button type="button" id="btnSaveOfficeIp" class="hrm-btn-icon-action" title="Lưu IP Public hiện tại làm IP mạng văn phòng chuẩn để nhân viên chấm công">
-                    <svg viewBox="0 0 24 24" style="width:16px;height:16px;fill:currentColor;"><path d="M12,8A4,4 0 0,1 16,12A4,4 0 0,1 12,16A4,4 0 0,1 8,12A4,4 0 0,1 12,8M12,10A2,2 0 0,0 10,12A2,2 0 0,0 12,14A2,2 0 0,0 14,12A2,2 0 0,0 12,10M12,5.5C7.5,5.5 3.7,8.3 2,12.5C3.7,16.7 7.5,19.5 12,19.5C16.5,19.5 20.3,16.7 22,12.5C20.3,8.3 16.5,5.5 12,5.5Z"/></svg>
-                    Cập nhật IP Văn Phòng
-                  </button>
                 </div>
               </div>
-              <div style="margin: -0.5rem 0 1rem; font-size: 0.8rem; color: var(--text-muted);">
-                IP mạng văn phòng hiện tại (cố định cho đến khi cập nhật lại): <strong id="hrmCurrentOfficeIp" style="color: var(--accent);">Đang tải...</strong>
+
+              <!-- Cấu hình IP tĩnh mạng văn phòng (Gateway / Server máy chấm công nội bộ) -->
+              <div style="display:flex; flex-wrap:wrap; align-items:center; gap:0.6rem; margin: -0.5rem 0 1.25rem; padding: 0.9rem 1.1rem; background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--border-radius-md);">
+                <label for="hrmOfficeIpInput" style="font-size:0.8rem; color:var(--text-muted); white-space:nowrap;">IP tĩnh văn phòng (Gateway/Server chấm công):</label>
+                <input type="text" id="hrmOfficeIpInput" placeholder="VD: 192.168.1.1" style="padding:0.5rem 0.8rem; border-radius: var(--border-radius-md); border:1px solid var(--border); background:var(--bg-primary); color:var(--text-main); font-family: inherit; width: 160px;" />
+                <button type="button" id="btnSuggestPublicIp" class="hrm-btn-icon-action" title="Dò IP Public hiện tại để điền gợi ý (không tự lưu)">
+                  🔍 Dò IP
+                </button>
+                <button type="button" id="btnSaveOfficeIp" class="hrm-btn-icon-action" title="Lưu IP tĩnh văn phòng vào Firestore và đồng bộ tới máy chấm công nội bộ">
+                  <svg viewBox="0 0 24 24" style="width:16px;height:16px;fill:currentColor;"><path d="M12,8A4,4 0 0,1 16,12A4,4 0 0,1 12,16A4,4 0 0,1 8,12A4,4 0 0,1 12,8M12,10A2,2 0 0,0 10,12A2,2 0 0,0 12,14A2,2 0 0,0 14,12A2,2 0 0,0 12,10M12,5.5C7.5,5.5 3.7,8.3 2,12.5C3.7,16.7 7.5,19.5 12,19.5C16.5,19.5 20.3,16.7 22,12.5C20.3,8.3 16.5,5.5 12,5.5Z"/></svg>
+                  Lưu IP Văn Phòng
+                </button>
+                <span style="font-size:0.78rem; color:var(--text-muted);">Hiện tại: <strong id="hrmCurrentOfficeIp" style="color: var(--accent);">Đang tải...</strong></span>
               </div>
               <div class="hrm-attendance-legend">
                 <span><span class="att-dot att-full"></span>Đủ công (1)</span>
