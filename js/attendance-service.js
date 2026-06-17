@@ -295,10 +295,7 @@
   // INIT: Khởi động dashboard chấm công nhân viên
   // ==========================================================================
   const init = () => {
-    const user = auth.currentUser;
-    if (!user) return;
-
-    // Hiển thị ngày hôm nay
+    // Hiển thị ngày hôm nay (không cần user)
     const todayLabel = document.getElementById('att-today-label');
     if (todayLabel) {
       todayLabel.textContent = new Date().toLocaleDateString('vi-VN', {
@@ -310,13 +307,7 @@
     const monthInput = document.getElementById('attMonth');
     if (monthInput && !monthInput.value) monthInput.value = currentMonthStr();
 
-    // Real-time hôm nay
-    subscribeTodayStatus(user.uid);
-
-    // Load tháng
-    loadMonthData(monthInput?.value || currentMonthStr());
-
-    // Gắn sự kiện (chỉ 1 lần)
+    // Gắn sự kiện nút (chỉ 1 lần, không cần user ở đây)
     const once = (id, fn) => {
       const el = document.getElementById(id);
       if (el && !el.dataset.attBound) { el.dataset.attBound = '1'; el.addEventListener('click', fn); }
@@ -334,6 +325,20 @@
     if (monthInput && !monthInput.dataset.attBound) {
       monthInput.dataset.attBound = '1';
       monthInput.addEventListener('change', () => loadMonthData(monthInput.value));
+    }
+
+    // Lấy user để load dữ liệu — dùng onAuthStateChanged phòng trường hợp auth chưa sẵn sàng
+    const user = auth.currentUser;
+    if (user) {
+      subscribeTodayStatus(user.uid);
+      loadMonthData(monthInput?.value || currentMonthStr());
+    } else {
+      const unsub = auth.onAuthStateChanged((u) => {
+        unsub();
+        if (!u) return;
+        subscribeTodayStatus(u.uid);
+        loadMonthData(monthInput?.value || currentMonthStr());
+      });
     }
   };
 
