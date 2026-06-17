@@ -7736,84 +7736,10 @@ document.addEventListener('DOMContentLoaded', () => {
   };
 
   // ---- Employee Personal Attendance ----
-  let _myStaffId = null;
-  let spAttendanceSub = null;
-
-  const renderStaffAttendanceTable = (att, monthStr) => {
-    const head = document.getElementById('spAttendanceHead');
-    const body = document.getElementById('spAttendanceBody');
-    if (!head || !body) return;
-    buildAttendanceTableHead(head, monthStr);
-    const daysInMonth = getDaysInMonth(monthStr);
-
-    let cellsHtml = '';
-    let countFull = 0, countHalf = 0, countAbsent = 0, countOff = 0;
-    for (let d = 1; d <= daysInMonth; d++) {
-      const val = (att && att.days && att.days[d]) || '';
-      if (val === '1') countFull++;
-      else if (val === '0.5') countHalf++;
-      else if (val === '0') countAbsent++;
-      else if (val === 'N') countOff++;
-      const meta = ATTENDANCE_STATUS_META[val] || ATTENDANCE_STATUS_META[''];
-      cellsHtml += `<td class="att-cell ${meta.cls}">${meta.label}</td>`;
-    }
-    body.innerHTML = `<tr><td class="att-name-cell"><strong>${currentUser?.name || ''}</strong></td>${cellsHtml}</tr>`;
-
-    const summary = document.getElementById('spAttendanceSummary');
-    if (summary) {
-      const statBox = (value, color, label) => `
-        <div style="background:var(--bg-card); border:1px solid var(--border); border-radius:var(--border-radius-md); padding:1rem 1.25rem; text-align:center;">
-          <div style="font-size:1.6rem; font-weight:700; color:${color};">${value}</div>
-          <div style="font-size:0.78rem; color:var(--text-muted); margin-top:0.25rem;">${label}</div>
-        </div>`;
-      summary.innerHTML =
-        statBox(countFull, '#10B981', 'Đủ công') +
-        statBox(countHalf, '#F59E0B', 'Nửa công') +
-        statBox(countAbsent, '#EF4444', 'Vắng') +
-        statBox(countOff, '#8B5CF6', 'Nghỉ phép');
-    }
-  };
-
-  const subscribeToStaffAttendance = (monthStr) => {
-    if (!_myStaffId) return;
-    if (spAttendanceSub) { spAttendanceSub(); spAttendanceSub = null; }
-    spAttendanceSub = db.collection('attendance').doc(`${_myStaffId}_${monthStr}`)
-      .onSnapshot((doc) => {
-        renderStaffAttendanceTable(doc.exists ? doc.data() : null, monthStr);
-      }, (err) => console.error('Staff attendance realtime error:', err));
-  };
-
-  const initStaffAttendanceDashboard = async () => {
+  const initStaffAttendanceDashboard = () => {
     const dashboard = document.getElementById('staff-attendance-dashboard');
     if (dashboard) dashboard.style.display = 'flex';
-
-    const monthInput = document.getElementById('spAttendanceMonth');
-    if (!monthInput || !currentUser) return;
-    if (!monthInput.value) monthInput.value = getCurrentMonthStr();
-
-    if (!_myStaffId) {
-      try {
-        const snap = await db.collection('hrm_staff').where('email', '==', currentUser.email).limit(1).get();
-        if (!snap.empty) _myStaffId = snap.docs[0].id;
-      } catch (err) {
-        console.error('Lookup staffId error:', err);
-      }
-    }
-
-    if (!_myStaffId) {
-      const body = document.getElementById('spAttendanceBody');
-      if (body) body.innerHTML = '<tr><td style="padding:2rem;color:var(--text-muted);">Không tìm thấy hồ sơ nhân sự liên kết với tài khoản này.</td></tr>';
-      return;
-    }
-
-    subscribeToStaffAttendance(monthInput.value);
-
-    if (!monthInput.dataset.spAttBound) {
-      monthInput.dataset.spAttBound = '1';
-      monthInput.addEventListener('change', () => subscribeToStaffAttendance(monthInput.value));
-      document.getElementById('btnSpAttPrevMonth')?.addEventListener('click', () => shiftMonthInput('spAttendanceMonth', -1, subscribeToStaffAttendance));
-      document.getElementById('btnSpAttNextMonth')?.addEventListener('click', () => shiftMonthInput('spAttendanceMonth', 1, subscribeToStaffAttendance));
-    }
+    if (window.AttendanceService) AttendanceService.init();
   };
 
 });

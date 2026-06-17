@@ -4236,6 +4236,122 @@ body.dark-theme-crm {
 #hrmAttendanceBody .att-cell { cursor: pointer; transition: background 0.15s; }
 #hrmAttendanceBody .att-cell:hover { background: var(--accent-light); }
 
+/* ================================================================
+   ATTENDANCE DASHBOARD — Staff check-in UI
+   ================================================================ */
+
+/* Thẻ hôm nay */
+.att-today-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--border-radius-lg);
+  padding: 1.75rem 2rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.25rem;
+  box-shadow: var(--shadow-sm);
+}
+.att-today-date {
+  font-size: 0.9rem;
+  color: var(--text-muted);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.att-time-row {
+  display: flex;
+  align-items: center;
+  gap: 2.5rem;
+}
+.att-time-block {
+  text-align: center;
+}
+.att-time-label {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-bottom: 0.3rem;
+}
+.att-time-value {
+  font-size: 2rem;
+  font-weight: 700;
+  font-family: var(--font-serif);
+  color: var(--text-main);
+  letter-spacing: 0.02em;
+}
+.att-time-divider {
+  width: 1px;
+  height: 2.5rem;
+  background: var(--border);
+}
+.att-btn-row {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+.att-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.75rem;
+  border-radius: var(--border-radius-md);
+  font-size: 0.88rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  border: none;
+  cursor: pointer;
+  transition: opacity 0.2s, transform 0.15s;
+}
+.att-btn:disabled {
+  opacity: 0.38;
+  cursor: not-allowed;
+  transform: none !important;
+}
+.att-btn:not(:disabled):hover { transform: translateY(-1px); }
+.att-btn-in  { background: #10B981; color: #fff; }
+.att-btn-out { background: var(--text-main); color: var(--bg-primary); }
+
+/* KPI tháng */
+.att-kpi-grid {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+.att-kpi-box {
+  flex: 1;
+  min-width: 90px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--border-radius-md);
+  padding: 0.85rem 1rem;
+  text-align: center;
+}
+.att-kpi-val   { font-size: 1.65rem; font-weight: 700; }
+.att-kpi-label { font-size: 0.72rem; color: var(--text-muted); margin-top: 0.2rem; }
+
+/* Bảng tháng */
+.att-month-table .att-col-date { width: 52px; font-weight: 600; }
+.att-month-table .att-col-dow  { width: 42px; }
+.att-month-table .att-col-time { width: 80px; font-variant-numeric: tabular-nums; }
+.att-month-table .att-dash     { color: var(--text-muted); opacity: 0.4; }
+.att-month-table .att-row-weekend td { opacity: 0.42; }
+
+/* Badge trạng thái */
+.att-badge {
+  display: inline-block;
+  padding: 0.2rem 0.6rem;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+}
+.att-badge-full   { background: #D1FAE5; color: #065F46; }
+.att-badge-half   { background: #FEF3C7; color: #92400E; }
+.att-badge-absent { background: #F3F4F6; color: #6B7280; }
+.att-badge-off    { background: #EDE9FE; color: #5B21B6; }
+
 /* ---- Pagination ---- */
 .crm-pagination {
   display: flex;

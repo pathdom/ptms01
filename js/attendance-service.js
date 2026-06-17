@@ -1,252 +1,353 @@
 /* ==========================================================================
-   ATTENDANCE SERVICE — Chấm công bằng IP tĩnh mạng nội bộ (LAN) + Firestore
-   - Admin: saveCompanyIP() lưu IP tĩnh (Gateway/Server máy chấm công) do
-     Admin tự nhập vào Firestore (company_config/wifi_config, field allowed_ip),
-     đồng thời đồng bộ xuống LAN Server (server/attendance-server.js) để
-     server biết IP/subnet chuẩn dùng đối chiếu.
-   - Nhân viên: checkInAttendance() gọi trực tiếp tới LAN Server tại địa chỉ
-     allowed_ip (server đó tự bắt IP nguồn thật từ socket TCP, không qua
-     header có thể giả mạo). Server đối chiếu dải mạng (subnet) và trả về
-     kết quả hợp lệ/không hợp lệ. Hợp lệ -> ghi UID + Tên + Timestamp vào
-     Firestore collection "attendance".
+   ATTENDANCE SERVICE — Chấm công theo Public IP + Firestore
+   Schema:
+     wifi_configs/office          → { public_ip, label, updatedAt }
+     checkin_logs/{uid}_{date}    → { uid, name, email, date, month,
+                                      checkin_time, checkin_ip,
+                                      checkout_time, checkout_ip }
    ========================================================================== */
 (() => {
+  'use strict';
   const db = firebase.firestore();
   const auth = firebase.auth();
 
   const IPIFY_URL = 'https://api.ipify.org?format=json';
-  const LAN_SERVER_PORT = 4500;
-  const LAN_REQUEST_TIMEOUT_MS = 4000;
-  const ADMIN_KEY = 'aladdin-admin-key'; // phải khớp ATTENDANCE_ADMIN_KEY trên server/attendance-server.js
+  const WIFI_DOC  = 'wifi_configs/office';
 
-  // ---- Toast nội bộ (dùng lại #toastContainer + CSS .toast có sẵn trong dự án) ----
-  const showServiceToast = (message, type = 'info') => {
-    const container = document.getElementById('toastContainer');
-    if (!container) { alert(message); return; }
+  let _monthUnsubscribe = null;
+  let _todayUnsubscribe = null;
 
-    const toast = document.createElement('div');
-    toast.className = `toast toast-${type}`;
+  // ---- Helpers ----
+  const pad = (n) => String(n).padStart(2, '0');
 
-    let iconSvg = '<svg viewBox="0 0 24 24"><path d="M11,9H13V7H11V9M12,20C7.59,20 4,16.41 4,12C4,7.59 7.59,4 12,4C16.41,4 20,7.59 20,12C20,16.41 16.41,20 12,20M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M11,17H13V11H11V17Z"/></svg>';
-    if (type === 'success') iconSvg = '<svg viewBox="0 0 24 24"><path d="M21,7L9,19L3.5,13.5L4.91,12.09L9,16.17L19.59,5.59L21,7Z"/></svg>';
-    else if (type === 'error') iconSvg = '<svg viewBox="0 0 24 24"><path d="M12,2C5.9,2 1,6.9 1,13C1,19.1 5.9,24 12,24C18.1,24 23,19.1 23,13C23,6.9 18.1,2 12,2M13,18H11V16H13V18M13,14H11V8H13V14Z"/></svg>';
-
-    toast.innerHTML = `
-      <div class="toast-icon">${iconSvg}</div>
-      <div class="toast-message">${message}</div>
-      <button class="toast-close">&times;</button>
-    `;
-    toast.querySelector('.toast-close').addEventListener('click', () => {
-      toast.classList.add('toast-fade-out');
-      setTimeout(() => toast.remove(), 400);
-    });
-    container.appendChild(toast);
-    setTimeout(() => {
-      if (toast.parentElement) {
-        toast.classList.add('toast-fade-out');
-        setTimeout(() => toast.remove(), 400);
-      }
-    }, 4000);
+  const todayStr = () => {
+    const d = new Date();
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
   };
 
-  // ---- Lấy IP Public hiện tại qua ipify (chỉ dùng làm gợi ý điền sẵn ô nhập) ----
-  const fetchPublicIP = async () => {
+  const currentMonthStr = () => {
+    const d = new Date();
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}`;
+  };
+
+  const getDaysInMonth = (monthStr) => {
+    const [y, m] = monthStr.split('-').map(Number);
+    return new Date(y, m, 0).getDate();
+  };
+
+  const fmtTime = (ts) => {
+    if (!ts) return null;
+    const d = ts.toDate ? ts.toDate() : new Date(ts);
+    return d.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
+  };
+
+  const fmtDow = (dateStr) => {
+    const days = ['CN', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7'];
+    return days[new Date(dateStr + 'T00:00:00').getDay()];
+  };
+
+  const isWeekend = (dateStr) => {
+    const dow = fmtDow(dateStr);
+    return dow === 'CN' || dow === 'T7';
+  };
+
+  const shiftMonth = (monthStr, delta) => {
+    const [y, m] = monthStr.split('-').map(Number);
+    const d = new Date(y, m - 1 + delta, 1);
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}`;
+  };
+
+  const svcToast = (msg, type = 'info') => {
+    if (typeof showToast === 'function') { showToast(msg, type); return; }
+    const c = document.getElementById('toastContainer');
+    if (!c) { alert(msg); return; }
+    const el = document.createElement('div');
+    el.className = `toast toast-${type}`;
+    el.innerHTML = `<div class="toast-message">${msg}</div><button class="toast-close">&times;</button>`;
+    el.querySelector('.toast-close').addEventListener('click', () => el.remove());
+    c.appendChild(el);
+    setTimeout(() => el.remove(), 4500);
+  };
+
+  // ---- Fetch Public IP ----
+  const fetchPublicIp = async () => {
     const res = await fetch(IPIFY_URL);
-    if (!res.ok) throw new Error('Không thể lấy địa chỉ IP công khai.');
-    const data = await res.json();
-    return data.ip;
+    if (!res.ok) throw new Error('Không lấy được Public IP');
+    return (await res.json()).ip;
   };
 
-  const fetchWithTimeout = async (url, options = {}, timeoutMs = LAN_REQUEST_TIMEOUT_MS) => {
-    const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), timeoutMs);
-    try {
-      return await fetch(url, { ...options, signal: controller.signal });
-    } finally {
-      clearTimeout(timer);
+  // ==========================================================================
+  // RENDER: Thẻ trạng thái hôm nay
+  // ==========================================================================
+  const renderTodayCard = (data) => {
+    const elIn    = document.getElementById('att-checkin-time');
+    const elOut   = document.getElementById('att-checkout-time');
+    const btnIn   = document.getElementById('btnCheckin');
+    const btnOut  = document.getElementById('btnCheckout');
+
+    const timeIn  = fmtTime(data?.checkin_time);
+    const timeOut = fmtTime(data?.checkout_time);
+
+    if (elIn)  elIn.textContent  = timeIn  || '--:--';
+    if (elOut) elOut.textContent = timeOut || '--:--';
+
+    // Nút vào: disable khi đã chấm vào
+    if (btnIn)  btnIn.disabled  = !!data?.checkin_time;
+    // Nút ra: chỉ bật khi đã chấm vào nhưng chưa chấm ra
+    if (btnOut) btnOut.disabled = !data?.checkin_time || !!data?.checkout_time;
+  };
+
+  // ==========================================================================
+  // RENDER: Bảng + KPI tháng
+  // ==========================================================================
+  const renderMonthView = (logs, monthStr) => {
+    const body = document.getElementById('att-month-body');
+    const kpi  = document.getElementById('att-month-kpi');
+    if (!body) return;
+
+    const byDate = {};
+    logs.forEach(l => { byDate[l.date] = l; });
+
+    const daysInMonth = getDaysInMonth(monthStr);
+    let cntFull = 0, cntHalfOut = 0, cntAbsent = 0;
+    let rows = '';
+
+    for (let d = 1; d <= daysInMonth; d++) {
+      const dateStr = `${monthStr}-${pad(d)}`;
+      const log     = byDate[dateStr];
+      const dow     = fmtDow(dateStr);
+      const weekend = isWeekend(dateStr);
+
+      const hasIn  = !!log?.checkin_time;
+      const hasOut = !!log?.checkout_time;
+
+      let badge, rowCls = '';
+      if (weekend) {
+        badge = `<span class="att-badge att-badge-off">Nghỉ</span>`;
+        rowCls = 'att-row-weekend';
+      } else if (hasIn && hasOut) {
+        cntFull++;
+        badge = `<span class="att-badge att-badge-full">Đủ công</span>`;
+      } else if (hasIn) {
+        cntHalfOut++;
+        badge = `<span class="att-badge att-badge-half">Chưa ra</span>`;
+      } else {
+        cntAbsent++;
+        badge = `<span class="att-badge att-badge-absent">Chưa chấm</span>`;
+      }
+
+      rows += `
+        <tr class="${rowCls}">
+          <td class="att-col-date">${pad(d)}</td>
+          <td class="att-col-dow" style="color:${weekend ? '#EF4444' : 'var(--text-muted)'};">${dow}</td>
+          <td class="att-col-time">${hasIn  ? fmtTime(log.checkin_time)  : '<span class="att-dash">—</span>'}</td>
+          <td class="att-col-time">${hasOut ? fmtTime(log.checkout_time) : '<span class="att-dash">—</span>'}</td>
+          <td>${badge}</td>
+        </tr>`;
+    }
+    body.innerHTML = rows;
+
+    if (kpi) {
+      const box = (val, color, label) => `
+        <div class="att-kpi-box">
+          <div class="att-kpi-val" style="color:${color};">${val}</div>
+          <div class="att-kpi-label">${label}</div>
+        </div>`;
+      kpi.innerHTML =
+        box(cntFull + cntHalfOut, '#10B981', 'Ngày có mặt') +
+        box(cntFull,              '#3B82F6', 'Đủ công')      +
+        box(cntHalfOut,           '#F59E0B', 'Chưa ra')      +
+        box(cntAbsent,            '#6B7280', 'Vắng / chưa chấm');
     }
   };
 
   // ==========================================================================
-  // 1. ADMIN: Thiết lập IP tĩnh văn phòng (Gateway / Server máy chấm công LAN)
+  // SUBSCRIBE: Real-time theo dõi trạng thái hôm nay
   // ==========================================================================
-  const renderOfficeIpDisplay = (ip) => {
-    const el = document.getElementById('hrmCurrentOfficeIp');
-    if (el) el.textContent = ip || 'Chưa cấu hình';
+  const subscribeTodayStatus = (uid) => {
+    if (_todayUnsubscribe) { _todayUnsubscribe(); _todayUnsubscribe = null; }
+    const docId = `${uid}_${todayStr()}`;
+    _todayUnsubscribe = db.collection('checkin_logs').doc(docId)
+      .onSnapshot(doc => renderTodayCard(doc.exists ? doc.data() : null));
+  };
+
+  // ==========================================================================
+  // LOAD: Dữ liệu tháng
+  // ==========================================================================
+  const loadMonthData = async (monthStr) => {
+    const user = auth.currentUser;
+    if (!user) return;
+
+    const monthInput = document.getElementById('attMonth');
+    if (monthInput) monthInput.value = monthStr;
+
+    try {
+      const snap = await db.collection('checkin_logs')
+        .where('uid',   '==', user.uid)
+        .where('month', '==', monthStr)
+        .get();
+      renderMonthView(snap.docs.map(d => d.data()), monthStr);
+    } catch (err) {
+      console.error('Lỗi tải dữ liệu tháng:', err);
+    }
+  };
+
+  // ==========================================================================
+  // CORE: Chấm công vào / ra
+  // ==========================================================================
+  const doCheckin = async (type) => {
+    const user = auth.currentUser;
+    if (!user) { svcToast('Bạn chưa đăng nhập!', 'error'); return; }
+
+    const btnId = type === 'checkin' ? 'btnCheckin' : 'btnCheckout';
+    const btn   = document.getElementById(btnId);
+    const orig  = btn?.innerHTML;
+    if (btn) { btn.disabled = true; btn.innerHTML = '⏳ Đang xử lý...'; }
+
+    try {
+      const [clientIp, configDoc, userDoc] = await Promise.all([
+        fetchPublicIp(),
+        db.doc(WIFI_DOC).get(),
+        db.collection('users').doc(user.uid).get(),
+      ]);
+
+      if (!configDoc.exists || !configDoc.data().public_ip) {
+        svcToast('Admin chưa cấu hình IP văn phòng!', 'error'); return;
+      }
+
+      const allowedIp = configDoc.data().public_ip;
+      if (clientIp !== allowedIp) {
+        svcToast(`Không hợp lệ! IP của bạn (${clientIp}) không phải mạng văn phòng.`, 'error'); return;
+      }
+
+      const name    = userDoc.exists ? (userDoc.data().name || user.email) : user.email;
+      const dateStr = todayStr();
+      const month   = currentMonthStr();
+      const docId   = `${user.uid}_${dateStr}`;
+
+      const update = { uid: user.uid, name, email: user.email, date: dateStr, month };
+      if (type === 'checkin') {
+        update.checkin_time = firebase.firestore.FieldValue.serverTimestamp();
+        update.checkin_ip   = clientIp;
+      } else {
+        update.checkout_time = firebase.firestore.FieldValue.serverTimestamp();
+        update.checkout_ip   = clientIp;
+      }
+
+      await db.collection('checkin_logs').doc(docId).set(update, { merge: true });
+
+      const label = type === 'checkin' ? '✅ Chấm công vào thành công!' : '🚪 Chấm công ra thành công!';
+      svcToast(label, 'success');
+
+      const monthInput = document.getElementById('attMonth');
+      const shownMonth = monthInput?.value || currentMonthStr();
+      if (shownMonth === month) await loadMonthData(month);
+
+    } catch (err) {
+      console.error('Lỗi chấm công:', err);
+      svcToast('Lỗi: ' + err.message, 'error');
+      if (btn) { btn.disabled = false; btn.innerHTML = orig; }
+    }
+  };
+
+  // ==========================================================================
+  // ADMIN: Lưu IP văn phòng
+  // ==========================================================================
+  const saveOfficeIp = async () => {
     const input = document.getElementById('hrmOfficeIpInput');
-    if (input && !input.value) input.value = ip || '';
+    const ip = (input?.value || '').trim();
+    const IPV4 = /^(\d{1,3}\.){3}\d{1,3}$/;
+    if (!IPV4.test(ip) || ip.split('.').some(o => Number(o) > 255)) {
+      svcToast('IP không hợp lệ! Ví dụ: 14.161.22.33', 'error'); return;
+    }
+    const btn = document.getElementById('btnSaveOfficeIp');
+    const orig = btn?.innerHTML;
+    if (btn) { btn.disabled = true; btn.innerHTML = '⏳ Đang lưu...'; }
+    try {
+      await db.doc(WIFI_DOC).set({
+        public_ip: ip,
+        label: 'Văn phòng',
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+        updatedBy: auth.currentUser?.email || null,
+      });
+      const el = document.getElementById('hrmCurrentOfficeIp');
+      if (el) el.textContent = ip;
+      svcToast(`Đã lưu IP văn phòng: ${ip}`, 'success');
+    } catch (err) {
+      svcToast('Lỗi lưu IP: ' + err.message, 'error');
+    } finally {
+      if (btn) { btn.disabled = false; btn.innerHTML = orig; }
+    }
   };
 
   const loadOfficeIpDisplay = async () => {
     try {
-      const doc = await db.collection('company_config').doc('wifi_config').get();
-      renderOfficeIpDisplay(doc.exists ? doc.data().allowed_ip : null);
-    } catch (err) {
-      console.error('Lỗi tải IP văn phòng:', err);
-      renderOfficeIpDisplay(null);
-    }
-  };
-
-  const IPV4_REGEX = /^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/;
-  const isValidIPv4 = (ip) => {
-    if (!IPV4_REGEX.test(ip)) return false;
-    return ip.split('.').every(octet => Number(octet) >= 0 && Number(octet) <= 255);
-  };
-
-  // Admin nhập IP tĩnh (Gateway/Server LAN) -> lưu Firestore + đồng bộ xuống LAN Server
-  const saveCompanyIP = async () => {
-    const input = document.getElementById('hrmOfficeIpInput');
-    const ip = (input?.value || '').trim();
-
-    if (!isValidIPv4(ip)) {
-      showServiceToast('IP không hợp lệ! Nhập đúng định dạng VD: 192.168.1.1', 'error');
-      return;
-    }
-
-    const btn = document.getElementById('btnSaveOfficeIp');
-    const originalLabel = btn ? btn.innerHTML : null;
-    if (btn) { btn.disabled = true; btn.innerHTML = '⏳ Đang lưu...'; }
-
-    try {
-      await db.collection('company_config').doc('wifi_config').set({
-        allowed_ip: ip,
-        updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
-        updatedBy: auth.currentUser ? auth.currentUser.email : null
-      }, { merge: true });
-
-      // Đồng bộ IP tĩnh xuống LAN Server để server tự đối chiếu subnet khi nhân viên chấm công.
-      // Best-effort: nếu admin đang ở máy không gọi tới LAN Server được, Firestore vẫn lưu thành công.
-      try {
-        await fetchWithTimeout(`http://${ip}:${LAN_SERVER_PORT}/api/admin/set-ip`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'x-admin-key': ADMIN_KEY },
-          body: JSON.stringify({ allowed_ip: ip, subnet_octets: 3 })
-        }, 3000);
-      } catch (syncErr) {
-        console.warn('Không đồng bộ được tới LAN Server (server có thể chưa chạy):', syncErr);
-      }
-
-      renderOfficeIpDisplay(ip);
-      showServiceToast(`Đã lưu IP tĩnh văn phòng: ${ip}`, 'success');
-      return ip;
-    } catch (err) {
-      console.error('Lỗi lưu IP văn phòng:', err);
-      showServiceToast('Lỗi lưu IP văn phòng: ' + err.message, 'error');
-      throw err;
-    } finally {
-      if (btn) { btn.disabled = false; btn.innerHTML = originalLabel; }
-    }
-  };
-
-  // Nút phụ: dò IP Public hiện tại để điền gợi ý vào ô nhập (không tự lưu)
-  const suggestPublicIP = async () => {
-    try {
-      const ip = await fetchPublicIP();
+      const doc = await db.doc(WIFI_DOC).get();
+      const ip = doc.exists ? doc.data().public_ip : null;
+      const el = document.getElementById('hrmCurrentOfficeIp');
+      if (el) el.textContent = ip || 'Chưa cấu hình';
       const input = document.getElementById('hrmOfficeIpInput');
-      if (input) input.value = ip;
-      showServiceToast(`Đã điền gợi ý IP Public hiện tại: ${ip}. Kiểm tra lại rồi bấm Lưu.`, 'info');
-    } catch (err) {
-      showServiceToast('Không lấy được IP gợi ý: ' + err.message, 'error');
-    }
+      if (input && !input.value && ip) input.value = ip;
+    } catch {}
   };
 
   // ==========================================================================
-  // 2. NHÂN VIÊN: Bấm chấm công — gọi trực tiếp LAN Server, server tự bắt IP
-  //    nguồn thật từ socket TCP và đối chiếu dải mạng (subnet) với IP tĩnh.
+  // INIT: Khởi động dashboard chấm công nhân viên
   // ==========================================================================
-  const checkInAttendance = async () => {
+  const init = () => {
     const user = auth.currentUser;
-    if (!user || !user.uid) {
-      showServiceToast('Bạn chưa đăng nhập!', 'error');
-      return;
+    if (!user) return;
+
+    // Hiển thị ngày hôm nay
+    const todayLabel = document.getElementById('att-today-label');
+    if (todayLabel) {
+      todayLabel.textContent = new Date().toLocaleDateString('vi-VN', {
+        weekday: 'long', day: '2-digit', month: '2-digit', year: 'numeric'
+      });
     }
-    const uid = user.uid;
 
-    const btn = document.getElementById('btnEmployeeCheckIn');
-    const originalLabel = btn ? btn.innerHTML : null;
-    if (btn) { btn.disabled = true; btn.innerHTML = '⏳ Đang xử lý...'; }
+    // Month input
+    const monthInput = document.getElementById('attMonth');
+    if (monthInput && !monthInput.value) monthInput.value = currentMonthStr();
 
-    try {
-      const [configDoc, userDoc] = await Promise.all([
-        db.collection('company_config').doc('wifi_config').get(),
-        db.collection('users').doc(uid).get()
-      ]);
+    // Real-time hôm nay
+    subscribeTodayStatus(user.uid);
 
-      if (!userDoc.exists) {
-        showServiceToast('Không tìm thấy thông tin tài khoản nhân viên!', 'error');
-        return;
-      }
-      const userInfo = userDoc.data();
+    // Load tháng
+    loadMonthData(monthInput?.value || currentMonthStr());
 
-      if (!configDoc.exists || !configDoc.data().allowed_ip) {
-        showServiceToast('Quản trị viên chưa cấu hình IP tĩnh văn phòng!', 'error');
-        return;
-      }
-      const allowedIp = configDoc.data().allowed_ip;
-
-      // Gửi request trực tiếp tới Server máy chấm công trong mạng nội bộ.
-      // Server tự bắt IP nguồn từ socket và đối chiếu dải mạng (subnet) — không
-      // tin vào bất kỳ IP nào do client tự khai báo.
-      let result;
-      try {
-        const res = await fetchWithTimeout(`http://${allowedIp}:${LAN_SERVER_PORT}/api/checkin`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ uid, name: userInfo.name || user.email })
-        });
-        result = await res.json();
-      } catch (netErr) {
-        console.error('Không kết nối được tới máy chấm công nội bộ:', netErr);
-        showServiceToast('Chấm công thất bại! Không kết nối được tới máy chấm công trong mạng văn phòng (bạn có thể đang ở mạng khác hoặc 4G bên ngoài).', 'error');
-        return;
-      }
-
-      if (!result.valid) {
-        showServiceToast('Chấm công thất bại! Thiết bị của bạn không nằm trong dải mạng văn phòng.', 'error');
-        return;
-      }
-
-      // Hợp lệ -> lấy UID, Tên nhân viên + Timestamp, ghi nhận vào attendance
-      const staffSnap = await db.collection('hrm_staff').where('email', '==', userInfo.email || user.email).limit(1).get();
-      if (staffSnap.empty) {
-        showServiceToast('Không tìm thấy hồ sơ nhân sự liên kết với tài khoản này!', 'error');
-        return;
-      }
-      const staffDoc = staffSnap.docs[0];
-      const staffId = staffDoc.id;
-      const staffName = staffDoc.data().name || userInfo.name || user.email;
-
-      const now = new Date();
-      const monthStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
-      const day = String(now.getDate());
-
-      await db.collection('attendance').doc(`${staffId}_${monthStr}`).set({
-        staffId,
-        uid,
-        staffName,
-        email: userInfo.email || user.email,
-        month: monthStr,
-        days: { [day]: '1' },
-        checkLogs: {
-          [day]: { time: firebase.firestore.FieldValue.serverTimestamp(), ip: result.clientIp, uid }
-        },
-        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-      }, { merge: true });
-
-      showServiceToast(`Chấm công thành công lúc ${now.toLocaleTimeString('vi-VN')}!`, 'success');
-    } catch (err) {
-      console.error('Lỗi chấm công:', err);
-      showServiceToast('Lỗi chấm công: ' + err.message, 'error');
-    } finally {
-      if (btn) { btn.disabled = false; btn.innerHTML = originalLabel; }
+    // Gắn sự kiện (chỉ 1 lần)
+    const once = (id, fn) => {
+      const el = document.getElementById(id);
+      if (el && !el.dataset.attBound) { el.dataset.attBound = '1'; el.addEventListener('click', fn); }
+    };
+    once('btnCheckin',  () => doCheckin('checkin'));
+    once('btnCheckout', () => doCheckin('checkout'));
+    once('btnAttPrev',  () => {
+      const m = shiftMonth(monthInput?.value || currentMonthStr(), -1);
+      loadMonthData(m);
+    });
+    once('btnAttNext',  () => {
+      const m = shiftMonth(monthInput?.value || currentMonthStr(), 1);
+      loadMonthData(m);
+    });
+    if (monthInput && !monthInput.dataset.attBound) {
+      monthInput.dataset.attBound = '1';
+      monthInput.addEventListener('change', () => loadMonthData(monthInput.value));
     }
   };
 
-  window.AttendanceService = { fetchPublicIP, saveCompanyIP, suggestPublicIP, checkInAttendance, loadOfficeIpDisplay };
+  window.AttendanceService = { init, doCheckin, loadMonthData, saveOfficeIp, loadOfficeIpDisplay };
 
   document.addEventListener('DOMContentLoaded', () => {
-    document.getElementById('btnSaveOfficeIp')?.addEventListener('click', saveCompanyIP);
-    document.getElementById('btnSuggestPublicIp')?.addEventListener('click', suggestPublicIP);
-    document.getElementById('btnEmployeeCheckIn')?.addEventListener('click', checkInAttendance);
+    document.getElementById('btnSaveOfficeIp')?.addEventListener('click', saveOfficeIp);
+    document.getElementById('btnSuggestPublicIp')?.addEventListener('click', async () => {
+      try {
+        const ip = await fetchPublicIp();
+        const input = document.getElementById('hrmOfficeIpInput');
+        if (input) input.value = ip;
+        svcToast(`IP Public hiện tại: ${ip} — Kiểm tra rồi bấm Lưu.`, 'info');
+      } catch (e) { svcToast('Không lấy được IP: ' + e.message, 'error'); }
+    });
   });
 })();
