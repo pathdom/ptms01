@@ -249,6 +249,8 @@
     } catch (err) {
       console.error('Lỗi chấm công:', err);
       svcToast('Lỗi: ' + err.message, 'error');
+    } finally {
+      // Luôn khôi phục nút — kể cả khi thất bại hoặc return sớm
       if (btn) { btn.disabled = false; btn.innerHTML = orig; }
     }
   };
