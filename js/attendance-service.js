@@ -8,14 +8,17 @@
    ========================================================================== */
 (() => {
   'use strict';
-  const db = firebase.firestore();
-  const auth = firebase.auth();
 
   const IPIFY_URL = 'https://api.ipify.org?format=json';
   const WIFI_DOC  = 'wifi_configs/office';
 
+  let _db = null, _auth = null;
   let _monthUnsubscribe = null;
   let _todayUnsubscribe = null;
+
+  // Lazy-init: chỉ lấy db/auth sau khi firebase.initializeApp() đã chạy
+  const db   = () => _db   || (_db   = firebase.firestore());
+  const auth = () => _auth || (_auth = firebase.auth());
 
   // ---- Helpers ----
   const pad = (n) => String(n).padStart(2, '0');
@@ -167,7 +170,7 @@
   const subscribeTodayStatus = (uid) => {
     if (_todayUnsubscribe) { _todayUnsubscribe(); _todayUnsubscribe = null; }
     const docId = `${uid}_${todayStr()}`;
-    _todayUnsubscribe = db.collection('checkin_logs').doc(docId)
+    _todayUnsubscribe = db().collection('checkin_logs').doc(docId)
       .onSnapshot(doc => renderTodayCard(doc.exists ? doc.data() : null));
   };
 
@@ -175,14 +178,14 @@
   // LOAD: Dữ liệu tháng
   // ==========================================================================
   const loadMonthData = async (monthStr) => {
-    const user = auth.currentUser;
+    const user = auth().currentUser;
     if (!user) return;
 
     const monthInput = document.getElementById('attMonth');
     if (monthInput) monthInput.value = monthStr;
 
     try {
-      const snap = await db.collection('checkin_logs')
+      const snap = await db().collection('checkin_logs')
         .where('uid',   '==', user.uid)
         .where('month', '==', monthStr)
         .get();
@@ -196,7 +199,7 @@
   // CORE: Chấm công vào / ra
   // ==========================================================================
   const doCheckin = async (type) => {
-    const user = auth.currentUser;
+    const user = auth().currentUser;
     if (!user) { svcToast('Bạn chưa đăng nhập!', 'error'); return; }
 
     const btnId = type === 'checkin' ? 'btnCheckin' : 'btnCheckout';
@@ -207,8 +210,8 @@
     try {
       const [clientIp, configDoc, userDoc] = await Promise.all([
         fetchPublicIp(),
-        db.doc(WIFI_DOC).get(),
-        db.collection('users').doc(user.uid).get(),
+        db().doc(WIFI_DOC).get(),
+        db().collection('users').doc(user.uid).get(),
       ]);
 
       if (!configDoc.exists || !configDoc.data().public_ip) {
@@ -234,7 +237,7 @@
         update.checkout_ip   = clientIp;
       }
 
-      await db.collection('checkin_logs').doc(docId).set(update, { merge: true });
+      await db().collection('checkin_logs').doc(docId).set(update, { merge: true });
 
       const label = type === 'checkin' ? '✅ Chấm công vào thành công!' : '🚪 Chấm công ra thành công!';
       svcToast(label, 'success');
@@ -264,11 +267,11 @@
     const orig = btn?.innerHTML;
     if (btn) { btn.disabled = true; btn.innerHTML = '⏳ Đang lưu...'; }
     try {
-      await db.doc(WIFI_DOC).set({
+      await db().doc(WIFI_DOC).set({
         public_ip: ip,
         label: 'Văn phòng',
         updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
-        updatedBy: auth.currentUser?.email || null,
+        updatedBy: auth().currentUser?.email || null,
       });
       const el = document.getElementById('hrmCurrentOfficeIp');
       if (el) el.textContent = ip;
@@ -282,7 +285,7 @@
 
   const loadOfficeIpDisplay = async () => {
     try {
-      const doc = await db.doc(WIFI_DOC).get();
+      const doc = await db().doc(WIFI_DOC).get();
       const ip = doc.exists ? doc.data().public_ip : null;
       const el = document.getElementById('hrmCurrentOfficeIp');
       if (el) el.textContent = ip || 'Chưa cấu hình';
@@ -328,12 +331,12 @@
     }
 
     // Lấy user để load dữ liệu — dùng onAuthStateChanged phòng trường hợp auth chưa sẵn sàng
-    const user = auth.currentUser;
+    const user = auth().currentUser;
     if (user) {
       subscribeTodayStatus(user.uid);
       loadMonthData(monthInput?.value || currentMonthStr());
     } else {
-      const unsub = auth.onAuthStateChanged((u) => {
+      const unsub = auth().onAuthStateChanged((u) => {
         unsub();
         if (!u) return;
         subscribeTodayStatus(u.uid);
