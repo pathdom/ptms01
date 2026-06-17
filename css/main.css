@@ -5491,4 +5491,189 @@ body.dark-theme-crm {
   gap: 1.25rem;
   align-items: start;
 }
-
+
+/* ================================================================
+   MOBILE OPTIMIZATION — 768px and below
+   ================================================================ */
+
+@media (max-width: 768px) {
+
+  /* --- Staff Attendance Dashboard --- */
+  #staff-attendance-dashboard {
+    padding: 1rem !important;
+    gap: 1rem !important;
+  }
+
+  .att-today-card {
+    padding: 1.25rem 1rem;
+    gap: 1rem;
+  }
+
+  .att-today-date {
+    font-size: 0.8rem;
+  }
+
+  .att-time-row {
+    gap: 1.5rem;
+  }
+
+  .att-time-value {
+    font-size: 1.55rem;
+  }
+
+  .att-btn-row {
+    width: 100%;
+    flex-direction: column;
+    gap: 0.6rem;
+  }
+
+  .att-btn {
+    width: 100%;
+    justify-content: center;
+    padding: 0.7rem 1rem;
+    font-size: 0.85rem;
+  }
+
+  .att-kpi-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.6rem;
+  }
+
+  .att-kpi-box {
+    padding: 0.7rem 0.5rem;
+  }
+
+  .att-kpi-val   { font-size: 1.4rem; }
+  .att-kpi-label { font-size: 0.68rem; }
+
+  /* Bảng tháng: thu nhỏ font, fix cột */
+  .att-month-table th,
+  .att-month-table td {
+    font-size: 0.72rem;
+    padding: 0.5rem 0.4rem;
+  }
+
+  .att-month-table .att-col-date { width: 36px; }
+  .att-month-table .att-col-dow  { width: 30px; }
+  .att-month-table .att-col-time { width: 58px; }
+
+  .att-badge {
+    font-size: 0.65rem;
+    padding: 0.15rem 0.45rem;
+  }
+
+  /* Staff profile dashboard */
+  #staff-profile-dashboard {
+    padding: 1rem !important;
+  }
+
+  /* Tables chung */
+  .financial-table th,
+  .financial-table td {
+    font-size: 0.72rem;
+    padding: 0.55rem 0.5rem;
+  }
+
+  /* Section header */
+  .hrm-section-header {
+    flex-wrap: wrap;
+    gap: 0.6rem;
+  }
+
+  .hrm-section-title {
+    font-size: 0.78rem;
+  }
+
+  /* Toast */
+  #toastContainer {
+    bottom: 1rem !important;
+    right: 0.75rem !important;
+    left: 0.75rem !important;
+    width: auto !important;
+  }
+
+  .toast {
+    width: 100% !important;
+    max-width: 100% !important;
+    font-size: 0.82rem;
+  }
+
+  /* HRM KPI grid 2 cột trên mobile */
+  .hrm-kpi-grid {
+    grid-template-columns: 1fr 1fr !important;
+    gap: 0.6rem;
+  }
+
+  /* Month input + nav */
+  #attMonth {
+    font-size: 0.8rem;
+    padding: 0.4rem 0.5rem;
+  }
+}
+
+/* ================================================================
+   XS — 480px và nhỏ hơn (iPhone SE, Android nhỏ)
+   ================================================================ */
+
+@media (max-width: 480px) {
+
+  #staff-attendance-dashboard {
+    padding: 0.75rem !important;
+  }
+
+  .att-today-card {
+    padding: 1rem 0.75rem;
+  }
+
+  .att-time-value {
+    font-size: 1.35rem;
+  }
+
+  .att-time-row {
+    gap: 1rem;
+  }
+
+  /* KPI 2 cột giữ nguyên nhưng nhỏ hơn */
+  .att-kpi-val   { font-size: 1.2rem; }
+  .att-kpi-label { font-size: 0.63rem; }
+
+  /* Bảng tháng rất nhỏ */
+  .att-month-table th,
+  .att-month-table td {
+    font-size: 0.65rem;
+    padding: 0.4rem 0.25rem;
+  }
+
+  .att-badge {
+    font-size: 0.6rem;
+    padding: 0.1rem 0.3rem;
+  }
+
+  /* Ẩn cột Giờ ra trên màn hình cực nhỏ để bảng vừa */
+  .att-month-table .att-col-time:last-of-type {
+    display: none;
+  }
+
+  /* Topbar title */
+  .dashboard-topbar h2,
+  .dashboard-topbar .page-title {
+    font-size: 1rem;
+  }
+
+  /* Modal full screen */
+  .modal-overlay > .login-card {
+    max-height: 100dvh !important;
+    border-radius: 0 !important;
+    margin: 0 !important;
+  }
+
+  /* HRM KPI 1 cột trên phone rất nhỏ */
+  .hrm-kpi-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .att-kpi-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}

@@ -214,13 +214,21 @@
         db().collection('users').doc(user.uid).get(),
       ]);
 
-      if (!configDoc.exists || !configDoc.data().public_ip) {
+      const cfg = configDoc.exists ? configDoc.data() : null;
+      if (!cfg) {
         svcToast('Admin chưa cấu hình IP văn phòng!', 'error'); return;
       }
 
-      const allowedIp = configDoc.data().public_ip;
-      if (clientIp !== allowedIp) {
-        svcToast(`Không hợp lệ! IP của bạn (${clientIp}) không phải mạng văn phòng.`, 'error'); return;
+      // Hỗ trợ cả allowed_prefixes (dải) và public_ip (IP chính xác)
+      const prefixes = cfg.allowed_prefixes || (cfg.public_ip ? [cfg.public_ip] : []);
+      if (!prefixes.length) {
+        svcToast('Admin chưa cấu hình IP văn phòng!', 'error'); return;
+      }
+      const matched = prefixes.some(p =>
+        p.endsWith('.') ? clientIp.startsWith(p) : clientIp === p
+      );
+      if (!matched) {
+        svcToast(`Không hợp lệ! IP của bạn (${clientIp}) không thuộc mạng văn phòng.`, 'error'); return;
       }
 
       const name    = userDoc.exists ? (userDoc.data().name || user.email) : user.email;
@@ -238,6 +246,32 @@
       }
 
       await db().collection('checkin_logs').doc(docId).set(update, { merge: true });
+
+      // Đồng bộ lên bảng admin (collection "attendance" dùng staffId từ hrm_staff)
+      try {
+        const staffSnap = await db().collection('hrm_staff')
+          .where('email', '==', user.email).limit(1).get();
+        if (!staffSnap.empty) {
+          const staffId   = staffSnap.docs[0].id;
+          const staffName = staffSnap.docs[0].data().name || name;
+          const day       = String(parseInt(dateStr.split('-')[2])); // "07" → "7"
+          const logEntry  = {
+            time: firebase.firestore.FieldValue.serverTimestamp(),
+            ip: clientIp,
+            uid: user.uid,
+            type
+          };
+          await db().collection('attendance').doc(`${staffId}_${month}`).set({
+            staffId, staffName, uid: user.uid,
+            email: user.email, month,
+            days:      { [day]: '1' },
+            checkLogs: { [day]: logEntry },
+            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+          }, { merge: true });
+        }
+      } catch (syncErr) {
+        console.warn('Không đồng bộ được lên attendance:', syncErr);
+      }
 
       const label = type === 'checkin' ? '✅ Chấm công vào thành công!' : '🚪 Chấm công ra thành công!';
       svcToast(label, 'success');
