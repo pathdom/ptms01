@@ -5972,6 +5972,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // ==========================================================================
 
   // Tính số ngày công chuẩn S cho một tháng
+  // S = ngày T2–T6 + 1.5 (nếu 4 T7) hoặc + 2 (nếu 5 T7)
   const calcStandardDays = (monthStr) => {
     const [y, m] = monthStr.split('-').map(Number);
     const daysInMonth = new Date(y, m, 0).getDate();
@@ -5981,9 +5982,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (dow >= 1 && dow <= 5) weekdays++;
       if (dow === 6) saturdays++;
     }
-    const S = saturdays === 4
-      ? weekdays + 1.5 * 4
-      : weekdays + 2 * saturdays;
+    const S = weekdays + (saturdays >= 5 ? 2 : 1.5);
     return { S, weekdays, saturdays };
   };
 
@@ -5994,12 +5993,18 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!body) return;
 
     const { S, weekdays, saturdays } = calcStandardDays(monthStr);
-    document.getElementById('payrollStandardDays').textContent = S % 1 === 0 ? S : S.toFixed(1);
-    document.getElementById('payrollWeekdays').textContent  = weekdays;
-    document.getElementById('payrollSaturdays').textContent = saturdays;
+    const satBonus = saturdays >= 5 ? 2 : 1.5;
+    const elS   = document.getElementById('payrollStandardDays');
+    const elWd  = document.getElementById('payrollWeekdays');
+    const elSat = document.getElementById('payrollSaturdays');
+    const elSatNote = document.getElementById('payrollSatNote');
+    if (elS)   elS.textContent  = S % 1 === 0 ? S : S.toFixed(1);
+    if (elWd)  elWd.textContent = weekdays;
+    if (elSat) elSat.textContent = saturdays;
+    if (elSatNote) elSatNote.textContent = `+${satBonus} ngày công`;
 
     if (!hrmStaffCache.length) {
-      body.innerHTML = '<tr><td colspan="9" style="text-align:center;padding:2rem;color:var(--text-muted);">Chưa có nhân sự nào.</td></tr>';
+      body.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:2rem;color:var(--text-muted);">Chưa có nhân sự nào.</td></tr>';
       return;
     }
 
@@ -6026,71 +6031,97 @@ document.addEventListener('DOMContentLoaded', () => {
 
     body.innerHTML = '';
     hrmStaffCache.forEach(s => {
-      const lcb   = Number(s.salary) || 0;
-      const logs  = logsByEmail[s.email] || [];
-      const dayRate = S > 0 ? lcb / S : 0;
+      const lcb      = Number(s.salary) || 0;
+      const logs     = logsByEmail[s.email] || [];
+      const dayRate  = S > 0 ? lcb / S : 0;
+      const hourRate = S > 0 ? lcb / S / 7.5 : 0;
 
+      // Chỉ đếm T2–T6 cho ngày công thực tế
       let workedDays = 0, lateDays = 0, earlyDays = 0;
       logs.forEach(l => {
-        if (!l.checkin_time) return;
-        workedDays++;
+        if (!l.checkin_time || !l.date) return;
+        const dow = new Date(l.date + 'T00:00:00').getDay();
+        if (dow < 1 || dow > 5) return; // bỏ qua T7, CN
 
-        // Đi muộn
+        workedDays++;
         const cin = l.checkin_time.toDate ? l.checkin_time.toDate() : new Date(l.checkin_time);
         if (cin.getHours() > inH || (cin.getHours() === inH && cin.getMinutes() > inM)) lateDays++;
-
-        // Về sớm
         if (l.checkout_time) {
           const cout = l.checkout_time.toDate ? l.checkout_time.toDate() : new Date(l.checkout_time);
           if (cout.getHours() < outH || (cout.getHours() === outH && cout.getMinutes() < outM)) earlyDays++;
         }
       });
 
-      // Lấy giá trị tăng ca từ input (nếu đã nhập trước đó)
-      const rowId  = `pr_${s.id}`;
-      const prevOtWd  = document.getElementById(`${rowId}_otwd`)?.value || '0';
-      const prevOtWe  = document.getElementById(`${rowId}_otwe`)?.value || '0';
+      const rowId    = `pr_${s.id}`;
+      const prevOtWd = document.getElementById(`${rowId}_otwd`)?.value || '0';
+      const prevOtWe = document.getElementById(`${rowId}_otwe`)?.value || '0';
 
-      // Tính lương
+      // Tính lương theo đúng công thức
       const calcSalary = (otWd, otWe) => {
-        const base       = dayRate * workedDays;
-        const deductLate = dayRate * 0.5 * lateDays;
-        const deductEarly= dayRate * 0.5 * earlyDays;
-        const otWdPay    = dayRate * Number(otWd)  * 1.5;
-        const otWePay    = dayRate * Number(otWe)  * 2.0;
-        return Math.max(0, base - deductLate - deductEarly + otWdPay + otWePay);
+        const dayPay    = dayRate * workedDays;
+        const otWdPay   = hourRate * Number(otWd) * 1.5;
+        const otWePay   = hourRate * Number(otWe) * 2.0;
+        const penalty   = 50000 * (lateDays + earlyDays);
+        return { dayPay, otWdPay, otWePay, penalty,
+                 total: Math.max(0, dayPay + otWdPay + otWePay - penalty) };
       };
+
+      const renderSalaryCell = (otWd, otWe) => {
+        if (!lcb) return '<span style="color:var(--text-muted);font-weight:400;font-size:0.8rem;">Chưa có LCB</span>';
+        const { dayPay, otWdPay, otWePay, penalty, total } = calcSalary(otWd, otWe);
+        const hasBonuses = (otWdPay + otWePay + penalty) > 0;
+        return `
+          <div style="font-weight:700;color:var(--accent);font-size:0.95rem;">${fmtMoney(total)}</div>
+          ${hasBonuses ? `<div style="font-size:0.68rem;color:var(--text-muted);margin-top:2px;line-height:1.5;">
+            NC: ${fmtMoney(dayPay)}
+            ${otWdPay > 0 ? `<span style="color:#10B981"> +TC: ${fmtMoney(otWdPay + otWePay)}</span>` : ''}
+            ${penalty > 0  ? `<span style="color:#EF4444"> −Phạt: ${fmtMoney(penalty)}</span>` : ''}
+          </div>` : ''}`;
+      };
+
+      const penaltyColor = (lateDays + earlyDays) > 0 ? '#EF4444' : 'var(--text-muted)';
 
       const tr = document.createElement('tr');
       tr.innerHTML = `
-        <td><strong>${s.name}</strong><div style="font-size:0.7rem;color:var(--text-muted);">${s.department || ''}</div></td>
-        <td style="text-align:right;">${lcb > 0 ? Number(lcb).toLocaleString('vi-VN') : '<span style="color:var(--text-muted)">--</span>'}</td>
+        <td>
+          <strong>${s.name}</strong>
+          <div style="font-size:0.68rem;color:var(--text-muted);margin-top:2px;line-height:1.6;">
+            ${s.department ? s.department + ' &nbsp;|&nbsp; ' : ''}
+            ${lcb > 0 ? `ĐG công: ${fmtMoney(dayRate)} &nbsp;|&nbsp; ĐG giờ: ${fmtMoney(hourRate)}` : ''}
+          </div>
+        </td>
+        <td style="text-align:right;white-space:nowrap;">${lcb > 0 ? Number(lcb).toLocaleString('vi-VN') + ' đ' : '<span style="color:var(--text-muted)">--</span>'}</td>
         <td style="text-align:center;">${S % 1 === 0 ? S : S.toFixed(1)}</td>
-        <td style="text-align:center;font-weight:600;color:#10B981;">${workedDays}</td>
-        <td style="text-align:center;color:${lateDays > 0 ? '#F59E0B' : 'var(--text-muted)'};">${lateDays}</td>
-        <td style="text-align:center;color:${earlyDays > 0 ? '#EF4444' : 'var(--text-muted)'};">${earlyDays}</td>
+        <td style="text-align:center;font-weight:700;color:#10B981;font-size:1rem;">${workedDays}</td>
+        <td style="text-align:center;">
+          ${lateDays > 0 || earlyDays > 0
+            ? `<div style="font-size:0.78rem;color:${penaltyColor};line-height:1.7;">
+                ${lateDays > 0  ? `<div>⏰ Muộn: <strong>${lateDays}</strong> lần</div>` : ''}
+                ${earlyDays > 0 ? `<div>🏃 Sớm: <strong>${earlyDays}</strong> lần</div>` : ''}
+                <div style="color:#EF4444;font-size:0.72rem;">−${fmtMoney(50000*(lateDays+earlyDays))}</div>
+               </div>`
+            : `<span style="color:var(--text-muted);font-size:0.8rem;">—</span>`}
+        </td>
         <td style="text-align:center;">
           <input type="number" id="${rowId}_otwd" value="${prevOtWd}" min="0" step="0.5"
-            style="width:64px;padding:0.25rem 0.4rem;border:1px solid var(--border);border-radius:6px;background:var(--bg-primary);color:var(--text-main);font-size:0.8rem;text-align:center;"
+            style="width:68px;padding:0.3rem 0.4rem;border:1px solid var(--border);border-radius:6px;background:var(--bg-primary);color:var(--text-main);font-size:0.82rem;text-align:center;"
             data-row="${rowId}" class="payroll-ot-input" />
         </td>
         <td style="text-align:center;">
           <input type="number" id="${rowId}_otwe" value="${prevOtWe}" min="0" step="0.5"
-            style="width:64px;padding:0.25rem 0.4rem;border:1px solid var(--border);border-radius:6px;background:var(--bg-primary);color:var(--text-main);font-size:0.8rem;text-align:center;"
+            style="width:68px;padding:0.3rem 0.4rem;border:1px solid var(--border);border-radius:6px;background:var(--bg-primary);color:var(--text-main);font-size:0.82rem;text-align:center;"
             data-row="${rowId}" class="payroll-ot-input" />
         </td>
-        <td style="text-align:right;font-weight:700;color:var(--accent);" id="${rowId}_total">
-          ${lcb > 0 ? fmtMoney(calcSalary(prevOtWd, prevOtWe)) : '<span style="color:var(--text-muted);font-weight:400;">Chưa có LCB</span>'}
-        </td>`;
+        <td style="text-align:right;" id="${rowId}_total">${renderSalaryCell(prevOtWd, prevOtWe)}</td>`;
       body.appendChild(tr);
 
       // Cập nhật lương realtime khi nhập tăng ca
       tr.querySelectorAll('.payroll-ot-input').forEach(inp => {
         inp.addEventListener('input', () => {
-          const otWd = document.getElementById(`${rowId}_otwd`)?.value || '0';
-          const otWe = document.getElementById(`${rowId}_otwe`)?.value || '0';
+          const otWd    = document.getElementById(`${rowId}_otwd`)?.value || '0';
+          const otWe    = document.getElementById(`${rowId}_otwe`)?.value || '0';
           const totalEl = document.getElementById(`${rowId}_total`);
-          if (totalEl && lcb > 0) totalEl.innerHTML = fmtMoney(calcSalary(otWd, otWe));
+          if (totalEl) totalEl.innerHTML = renderSalaryCell(otWd, otWe);
         });
       });
     });

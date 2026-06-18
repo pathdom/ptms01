@@ -1285,16 +1285,18 @@
               <!-- KPI tháng -->
               <div style="display:flex;gap:1rem;flex-wrap:wrap;margin-bottom:1.25rem;">
                 <div class="att-kpi-box" style="flex:1;min-width:140px;">
-                  <div class="att-kpi-label">Ngày công chuẩn (S)</div>
+                  <div class="att-kpi-label">Số Công Tháng</div>
                   <div class="att-kpi-val" id="payrollStandardDays" style="color:var(--accent);">—</div>
+                  <div style="font-size:0.68rem;color:var(--text-muted);margin-top:4px;">T2–T6 + T7 (×0.375)</div>
                 </div>
                 <div class="att-kpi-box" style="flex:1;min-width:140px;">
-                  <div class="att-kpi-label">Ngày làm việc (T2–T6)</div>
+                  <div class="att-kpi-label">Ngày T2–T6</div>
                   <div class="att-kpi-val" id="payrollWeekdays" style="color:#3B82F6;">—</div>
                 </div>
                 <div class="att-kpi-box" style="flex:1;min-width:140px;">
-                  <div class="att-kpi-label">Số ngày T7 trong tháng</div>
+                  <div class="att-kpi-label">Số ngày T7</div>
                   <div class="att-kpi-val" id="payrollSaturdays" style="color:#8B5CF6;">—</div>
+                  <div style="font-size:0.68rem;color:var(--text-muted);margin-top:4px;" id="payrollSatNote">—</div>
                 </div>
                 <div class="att-kpi-box" style="flex:1;min-width:220px;">
                   <div class="att-kpi-label" style="margin-bottom:0.4rem;">Giờ chuẩn (đi muộn / về sớm)</div>
@@ -1311,24 +1313,27 @@
                 <table class="financial-table" id="payrollTable" style="min-width:900px;">
                   <thead>
                     <tr>
-                      <th style="min-width:140px;">NHÂN VIÊN</th>
-                      <th style="text-align:right;">LCB (đ)</th>
-                      <th style="text-align:center;">S</th>
-                      <th style="text-align:center;">Ngày công</th>
-                      <th style="text-align:center;">Đi muộn</th>
-                      <th style="text-align:center;">Về sớm</th>
-                      <th style="text-align:center;min-width:90px;">TG T2–T6 (h)</th>
-                      <th style="text-align:center;min-width:90px;">TG T7/CN (h)</th>
-                      <th style="text-align:right;min-width:130px;">LƯƠNG TÍNH ĐƯỢC</th>
+                      <th style="min-width:160px;">NHÂN VIÊN</th>
+                      <th style="text-align:right;min-width:110px;">LCB (đ)</th>
+                      <th style="text-align:center;min-width:80px;">SỐ CÔNG THÁNG</th>
+                      <th style="text-align:center;min-width:70px;">NGÀY CÔNG</th>
+                      <th style="text-align:center;min-width:110px;">MUỘN / SỚM</th>
+                      <th style="text-align:center;min-width:90px;">TC T2–T6 (h)</th>
+                      <th style="text-align:center;min-width:90px;">TC T7/CN (h)</th>
+                      <th style="text-align:right;min-width:150px;">TỔNG LƯƠNG</th>
                     </tr>
                   </thead>
                   <tbody id="payrollBody"></tbody>
                 </table>
               </div>
 
-              <p style="margin-top:1rem;font-size:0.75rem;color:var(--text-muted);">
-                * Đi muộn / Về sớm: khấu trừ 50% lương ngày đó &nbsp;|&nbsp;
-                TG T2–T6 × 150% &nbsp;|&nbsp; TG T7/CN × 200%
+              <p style="margin-top:1rem;font-size:0.75rem;color:var(--text-muted);line-height:1.8;">
+                📌 <strong>Số Công Tháng</strong> = Ngày T2–T6 + 1.5 (nếu 4 T7) hoặc + 2 (nếu 5 T7) &nbsp;|&nbsp;
+                <strong>Đơn giá công</strong> = LCB ÷ Số Công Tháng &nbsp;|&nbsp;
+                <strong>Đơn giá giờ</strong> = LCB ÷ Số Công Tháng ÷ 7.5<br>
+                ⏰ Đi muộn / Về sớm: phạt <strong>50.000đ / lần</strong> &nbsp;|&nbsp;
+                TC T2–T6: Đơn giá giờ × giờ × 1.5 &nbsp;|&nbsp;
+                TC T7/CN: Đơn giá giờ × giờ × 2.0
               </p>
             </div>
 
