@@ -5356,6 +5356,7 @@ document.addEventListener('DOMContentLoaded', () => {
         else if (target === 'hrm-projects-tab') { renderHrmProjects(); }
         else if (target === 'hrm-payments-tab') { renderHrmPayments(); }
         else if (target === 'hrm-attendance-tab') { initHrmAttendanceTab(); }
+        else if (target === 'hrm-payroll-tab') { initHrmPayrollTab(); }
       });
     });
   };
@@ -5810,10 +5811,32 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const subscribeToHrmAttendance = (monthStr) => {
     if (hrmAttendanceSub) { hrmAttendanceSub(); hrmAttendanceSub = null; }
-    hrmAttendanceSub = db.collection('attendance').where('month', '==', monthStr)
+
+    // Đọc từ checkin_logs (nhân viên tự ghi) — không cần quyền admin
+    hrmAttendanceSub = db.collection('checkin_logs')
+      .where('month', '==', monthStr)
       .onSnapshot((snap) => {
+        // Gom theo email: { [email]: { days, checkLogs } }
+        const byEmail = {};
+        snap.forEach(doc => {
+          const d = doc.data();
+          if (!d.email || !d.date) return;
+          if (!byEmail[d.email]) byEmail[d.email] = { days: {}, checkLogs: {} };
+          const day = String(parseInt(d.date.split('-')[2]));
+          if (d.checkin_time) {
+            byEmail[d.email].days[day] = '1';
+            byEmail[d.email].checkLogs[day] = { time: d.checkin_time, ip: d.checkin_ip || '' };
+          }
+        });
+
+        // Map email → staffId (dùng hrmStaffCache để giữ tương thích với renderer)
         hrmAttendanceCache = {};
-        snap.forEach(doc => { hrmAttendanceCache[doc.data().staffId] = doc.data(); });
+        hrmStaffCache.forEach(s => {
+          if (s.email && byEmail[s.email]) {
+            hrmAttendanceCache[s.id] = byEmail[s.email];
+          }
+        });
+
         renderHrmAttendanceTable(monthStr);
       }, (err) => console.error('Attendance realtime error:', err));
   };
@@ -5942,6 +5965,172 @@ document.addEventListener('DOMContentLoaded', () => {
       dayFilter.dataset.bound = '1';
       dayFilter.addEventListener('change', () => renderHrmAttendanceTable(monthInput.value));
     }
+  };
+
+  // ==========================================================================
+  // HRM PAYROLL TAB — Tính công & lương
+  // ==========================================================================
+
+  // Tính số ngày công chuẩn S cho một tháng
+  const calcStandardDays = (monthStr) => {
+    const [y, m] = monthStr.split('-').map(Number);
+    const daysInMonth = new Date(y, m, 0).getDate();
+    let weekdays = 0, saturdays = 0;
+    for (let d = 1; d <= daysInMonth; d++) {
+      const dow = new Date(y, m - 1, d).getDay(); // 0=CN, 6=T7
+      if (dow >= 1 && dow <= 5) weekdays++;
+      if (dow === 6) saturdays++;
+    }
+    const S = saturdays === 4
+      ? weekdays + 1.5 * 4
+      : weekdays + 2 * saturdays;
+    return { S, weekdays, saturdays };
+  };
+
+  const fmtMoney = (n) => Math.round(n).toLocaleString('vi-VN') + ' đ';
+
+  const renderPayrollTable = async (monthStr) => {
+    const body = document.getElementById('payrollBody');
+    if (!body) return;
+
+    const { S, weekdays, saturdays } = calcStandardDays(monthStr);
+    document.getElementById('payrollStandardDays').textContent = S % 1 === 0 ? S : S.toFixed(1);
+    document.getElementById('payrollWeekdays').textContent  = weekdays;
+    document.getElementById('payrollSaturdays').textContent = saturdays;
+
+    if (!hrmStaffCache.length) {
+      body.innerHTML = '<tr><td colspan="9" style="text-align:center;padding:2rem;color:var(--text-muted);">Chưa có nhân sự nào.</td></tr>';
+      return;
+    }
+
+    // Lấy giờ chuẩn từ input
+    const timeInStd  = document.getElementById('payrollTimeIn')?.value  || '08:30';
+    const timeOutStd = document.getElementById('payrollTimeOut')?.value || '17:30';
+    const [inH, inM]   = timeInStd.split(':').map(Number);
+    const [outH, outM] = timeOutStd.split(':').map(Number);
+
+    // Lấy toàn bộ checkin_logs của tháng
+    let allLogs = [];
+    try {
+      const snap = await db.collection('checkin_logs').where('month', '==', monthStr).get();
+      allLogs = snap.docs.map(d => d.data());
+    } catch (e) { console.error('Lỗi tải checkin_logs:', e); }
+
+    // Nhóm log theo email
+    const logsByEmail = {};
+    allLogs.forEach(l => {
+      if (!l.email) return;
+      if (!logsByEmail[l.email]) logsByEmail[l.email] = [];
+      logsByEmail[l.email].push(l);
+    });
+
+    body.innerHTML = '';
+    hrmStaffCache.forEach(s => {
+      const lcb   = Number(s.salary) || 0;
+      const logs  = logsByEmail[s.email] || [];
+      const dayRate = S > 0 ? lcb / S : 0;
+
+      let workedDays = 0, lateDays = 0, earlyDays = 0;
+      logs.forEach(l => {
+        if (!l.checkin_time) return;
+        workedDays++;
+
+        // Đi muộn
+        const cin = l.checkin_time.toDate ? l.checkin_time.toDate() : new Date(l.checkin_time);
+        if (cin.getHours() > inH || (cin.getHours() === inH && cin.getMinutes() > inM)) lateDays++;
+
+        // Về sớm
+        if (l.checkout_time) {
+          const cout = l.checkout_time.toDate ? l.checkout_time.toDate() : new Date(l.checkout_time);
+          if (cout.getHours() < outH || (cout.getHours() === outH && cout.getMinutes() < outM)) earlyDays++;
+        }
+      });
+
+      // Lấy giá trị tăng ca từ input (nếu đã nhập trước đó)
+      const rowId  = `pr_${s.id}`;
+      const prevOtWd  = document.getElementById(`${rowId}_otwd`)?.value || '0';
+      const prevOtWe  = document.getElementById(`${rowId}_otwe`)?.value || '0';
+
+      // Tính lương
+      const calcSalary = (otWd, otWe) => {
+        const base       = dayRate * workedDays;
+        const deductLate = dayRate * 0.5 * lateDays;
+        const deductEarly= dayRate * 0.5 * earlyDays;
+        const otWdPay    = dayRate * Number(otWd)  * 1.5;
+        const otWePay    = dayRate * Number(otWe)  * 2.0;
+        return Math.max(0, base - deductLate - deductEarly + otWdPay + otWePay);
+      };
+
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td><strong>${s.name}</strong><div style="font-size:0.7rem;color:var(--text-muted);">${s.department || ''}</div></td>
+        <td style="text-align:right;">${lcb > 0 ? Number(lcb).toLocaleString('vi-VN') : '<span style="color:var(--text-muted)">--</span>'}</td>
+        <td style="text-align:center;">${S % 1 === 0 ? S : S.toFixed(1)}</td>
+        <td style="text-align:center;font-weight:600;color:#10B981;">${workedDays}</td>
+        <td style="text-align:center;color:${lateDays > 0 ? '#F59E0B' : 'var(--text-muted)'};">${lateDays}</td>
+        <td style="text-align:center;color:${earlyDays > 0 ? '#EF4444' : 'var(--text-muted)'};">${earlyDays}</td>
+        <td style="text-align:center;">
+          <input type="number" id="${rowId}_otwd" value="${prevOtWd}" min="0" step="0.5"
+            style="width:64px;padding:0.25rem 0.4rem;border:1px solid var(--border);border-radius:6px;background:var(--bg-primary);color:var(--text-main);font-size:0.8rem;text-align:center;"
+            data-row="${rowId}" class="payroll-ot-input" />
+        </td>
+        <td style="text-align:center;">
+          <input type="number" id="${rowId}_otwe" value="${prevOtWe}" min="0" step="0.5"
+            style="width:64px;padding:0.25rem 0.4rem;border:1px solid var(--border);border-radius:6px;background:var(--bg-primary);color:var(--text-main);font-size:0.8rem;text-align:center;"
+            data-row="${rowId}" class="payroll-ot-input" />
+        </td>
+        <td style="text-align:right;font-weight:700;color:var(--accent);" id="${rowId}_total">
+          ${lcb > 0 ? fmtMoney(calcSalary(prevOtWd, prevOtWe)) : '<span style="color:var(--text-muted);font-weight:400;">Chưa có LCB</span>'}
+        </td>`;
+      body.appendChild(tr);
+
+      // Cập nhật lương realtime khi nhập tăng ca
+      tr.querySelectorAll('.payroll-ot-input').forEach(inp => {
+        inp.addEventListener('input', () => {
+          const otWd = document.getElementById(`${rowId}_otwd`)?.value || '0';
+          const otWe = document.getElementById(`${rowId}_otwe`)?.value || '0';
+          const totalEl = document.getElementById(`${rowId}_total`);
+          if (totalEl && lcb > 0) totalEl.innerHTML = fmtMoney(calcSalary(otWd, otWe));
+        });
+      });
+    });
+  };
+
+  const initHrmPayrollTab = () => {
+    const monthInput = document.getElementById('payrollMonth');
+    if (!monthInput) return;
+    if (!monthInput.value) monthInput.value = getCurrentMonthStr();
+
+    renderPayrollTable(monthInput.value);
+
+    const once = (id, fn) => {
+      const el = document.getElementById(id);
+      if (el && !el.dataset.prBound) { el.dataset.prBound = '1'; el.addEventListener('click', fn); }
+    };
+    once('btnPayrollPrevMonth', () => {
+      const [y, m] = monthInput.value.split('-').map(Number);
+      const d = new Date(y, m - 2, 1);
+      monthInput.value = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+      renderPayrollTable(monthInput.value);
+    });
+    once('btnPayrollNextMonth', () => {
+      const [y, m] = monthInput.value.split('-').map(Number);
+      const d = new Date(y, m, 1);
+      monthInput.value = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+      renderPayrollTable(monthInput.value);
+    });
+    if (!monthInput.dataset.prBound) {
+      monthInput.dataset.prBound = '1';
+      monthInput.addEventListener('change', () => renderPayrollTable(monthInput.value));
+    }
+    // Re-render khi đổi giờ chuẩn
+    ['payrollTimeIn','payrollTimeOut'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el && !el.dataset.prBound) {
+        el.dataset.prBound = '1';
+        el.addEventListener('change', () => renderPayrollTable(monthInput.value));
+      }
+    });
   };
 
   const editHrmStaff = (s) => {

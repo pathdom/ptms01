@@ -1097,6 +1097,7 @@
               <button class="hrm-subtab" data-tab="hrm-projects-tab">📋 Quản trị Dự án</button>
               <button class="hrm-subtab" data-tab="hrm-payments-tab">💳 Quy trình Thanh toán</button>
               <button class="hrm-subtab" data-tab="hrm-attendance-tab">🗓️ Chấm công</button>
+              <button class="hrm-subtab" data-tab="hrm-payroll-tab">💰 Tính công</button>
             </div>
 
             <!-- ===== TAB 1: STAFF & KPI ===== -->
@@ -1268,6 +1269,67 @@
                   <tbody id="hrmAttendanceBody"></tbody>
                 </table>
               </div>
+            </div>
+
+            <!-- ===== TAB 5: TÍNH CÔNG ===== -->
+            <div id="hrm-payroll-tab" class="hrm-tab-content" style="display:none">
+              <div class="hrm-section-header">
+                <span class="hrm-section-title">BẢNG TÍNH CÔNG & LƯƠNG</span>
+                <div style="display:flex;align-items:center;gap:0.6rem;">
+                  <button type="button" id="btnPayrollPrevMonth" class="hrm-btn-icon-action" style="padding:0.5rem 0.8rem;">‹</button>
+                  <input type="month" id="payrollMonth" style="padding:0.5rem 0.8rem;border-radius:var(--border-radius-md);border:1px solid var(--border);background:var(--bg-primary);color:var(--text-main);font-family:inherit;" />
+                  <button type="button" id="btnPayrollNextMonth" class="hrm-btn-icon-action" style="padding:0.5rem 0.8rem;">›</button>
+                </div>
+              </div>
+
+              <!-- KPI tháng -->
+              <div style="display:flex;gap:1rem;flex-wrap:wrap;margin-bottom:1.25rem;">
+                <div class="att-kpi-box" style="flex:1;min-width:140px;">
+                  <div class="att-kpi-label">Ngày công chuẩn (S)</div>
+                  <div class="att-kpi-val" id="payrollStandardDays" style="color:var(--accent);">—</div>
+                </div>
+                <div class="att-kpi-box" style="flex:1;min-width:140px;">
+                  <div class="att-kpi-label">Ngày làm việc (T2–T6)</div>
+                  <div class="att-kpi-val" id="payrollWeekdays" style="color:#3B82F6;">—</div>
+                </div>
+                <div class="att-kpi-box" style="flex:1;min-width:140px;">
+                  <div class="att-kpi-label">Số ngày T7 trong tháng</div>
+                  <div class="att-kpi-val" id="payrollSaturdays" style="color:#8B5CF6;">—</div>
+                </div>
+                <div class="att-kpi-box" style="flex:1;min-width:220px;">
+                  <div class="att-kpi-label" style="margin-bottom:0.4rem;">Giờ chuẩn (đi muộn / về sớm)</div>
+                  <div style="display:flex;gap:0.5rem;align-items:center;">
+                    <input type="time" id="payrollTimeIn"  value="08:30" style="width:90px;padding:0.25rem 0.4rem;border:1px solid var(--border);border-radius:6px;background:var(--bg-primary);color:var(--text-main);font-size:0.8rem;" />
+                    <span style="color:var(--text-muted);font-size:0.75rem;">→</span>
+                    <input type="time" id="payrollTimeOut" value="17:30" style="width:90px;padding:0.25rem 0.4rem;border:1px solid var(--border);border-radius:6px;background:var(--bg-primary);color:var(--text-main);font-size:0.8rem;" />
+                  </div>
+                </div>
+              </div>
+
+              <!-- Bảng tính lương -->
+              <div class="mini-table-container">
+                <table class="financial-table" id="payrollTable" style="min-width:900px;">
+                  <thead>
+                    <tr>
+                      <th style="min-width:140px;">NHÂN VIÊN</th>
+                      <th style="text-align:right;">LCB (đ)</th>
+                      <th style="text-align:center;">S</th>
+                      <th style="text-align:center;">Ngày công</th>
+                      <th style="text-align:center;">Đi muộn</th>
+                      <th style="text-align:center;">Về sớm</th>
+                      <th style="text-align:center;min-width:90px;">TG T2–T6 (h)</th>
+                      <th style="text-align:center;min-width:90px;">TG T7/CN (h)</th>
+                      <th style="text-align:right;min-width:130px;">LƯƠNG TÍNH ĐƯỢC</th>
+                    </tr>
+                  </thead>
+                  <tbody id="payrollBody"></tbody>
+                </table>
+              </div>
+
+              <p style="margin-top:1rem;font-size:0.75rem;color:var(--text-muted);">
+                * Đi muộn / Về sớm: khấu trừ 50% lương ngày đó &nbsp;|&nbsp;
+                TG T2–T6 × 150% &nbsp;|&nbsp; TG T7/CN × 200%
+              </p>
             </div>
 
             <!-- ===== EMPLOYEE PROFILE VIEW ===== -->

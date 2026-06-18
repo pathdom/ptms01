@@ -247,32 +247,6 @@
 
       await db().collection('checkin_logs').doc(docId).set(update, { merge: true });
 
-      // Đồng bộ lên bảng admin (collection "attendance" dùng staffId từ hrm_staff)
-      try {
-        const staffSnap = await db().collection('hrm_staff')
-          .where('email', '==', user.email).limit(1).get();
-        if (!staffSnap.empty) {
-          const staffId   = staffSnap.docs[0].id;
-          const staffName = staffSnap.docs[0].data().name || name;
-          const day       = String(parseInt(dateStr.split('-')[2])); // "07" → "7"
-          const logEntry  = {
-            time: firebase.firestore.FieldValue.serverTimestamp(),
-            ip: clientIp,
-            uid: user.uid,
-            type
-          };
-          await db().collection('attendance').doc(`${staffId}_${month}`).set({
-            staffId, staffName, uid: user.uid,
-            email: user.email, month,
-            days:      { [day]: '1' },
-            checkLogs: { [day]: logEntry },
-            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-          }, { merge: true });
-        }
-      } catch (syncErr) {
-        console.warn('Không đồng bộ được lên attendance:', syncErr);
-      }
-
       const label = type === 'checkin' ? '✅ Chấm công vào thành công!' : '🚪 Chấm công ra thành công!';
       svcToast(label, 'success');
 
@@ -308,7 +282,7 @@
         label: 'Văn phòng',
         updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
         updatedBy: auth().currentUser?.email || null,
-      });
+      }, { merge: true }); // merge để không xóa mất allowed_prefixes
       const el = document.getElementById('hrmCurrentOfficeIp');
       if (el) el.textContent = ip;
       svcToast(`Đã lưu IP văn phòng: ${ip}`, 'success');
