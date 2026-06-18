@@ -6416,7 +6416,7 @@ document.addEventListener('DOMContentLoaded', () => {
             <div style="font-size:0.79rem">${c.email || '--'}</div>
             <div style="font-size:0.73rem;color:var(--text-muted)">${c.phone || ''}</div>
           </td>
-          <td><span class="crm-country-flag">${flag} ${c.country || '--'}</span></td>
+          <td><span class="crm-country-flag">${c.country || '--'}</span></td>
           <td><span class="crm-pill ${bc}">${c.status || '--'}</span></td>
           <td style="font-size:0.79rem">${dateStr}</td>
           <td style="text-align:center">
@@ -6425,6 +6425,9 @@ document.addEventListener('DOMContentLoaded', () => {
             </button>
             <button class="crm-action-btn edit btn-edit-crm" data-fidx="${i}" title="Chỉnh sửa">
               <svg viewBox="0 0 24 24"><path d="M20.71,7.04C21.1,6.65 21.1,6 20.71,5.63L18.37,3.29C18,2.9 17.35,2.9 16.96,3.29L15.12,5.12L18.87,8.87M3,17.25V21H6.75L17.81,9.93L14.06,6.18L3,17.25Z"/></svg>
+            </button>
+            <button class="crm-action-btn delete btn-delete-crm" data-fidx="${i}" title="Xóa">
+              <svg viewBox="0 0 24 24"><path d="M9,3V4H4V6H5V19A2,2 0 0,0 7,21H17A2,2 0 0,0 19,19V6H20V4H15V3H9M7,6H17V19H7V6M9,8V17H11V8H9M13,8V17H15V8H13Z"/></svg>
             </button>
           </td>
         </tr>`;
@@ -6451,6 +6454,23 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('studentLearningMonth').value = c.learningMonth || '';
         document.getElementById('studentNotes').value = c.notes || '';
         modal.style.display = 'flex';
+      });
+    });
+
+    tbody.querySelectorAll('.btn-delete-crm').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const c = pageData[parseInt(btn.dataset.fidx)];
+        if (!c?.id) return;
+        if (!confirm(`Xóa học viên "${c.name}"?\nHành động này không thể hoàn tác.`)) return;
+        try {
+          await db.collection('students').doc(c.id).delete();
+          _allCrmCustomers = _allCrmCustomers.filter(x => x.id !== c.id);
+          renderCrmOverview();
+          renderCrmCustomers(true);
+          showToast(`Đã xóa "${c.name}"`, 'success');
+        } catch (e) {
+          showToast('Lỗi xóa: ' + e.message, 'error');
+        }
       });
     });
 
@@ -6521,7 +6541,7 @@ document.addEventListener('DOMContentLoaded', () => {
             <div style="font-size:0.79rem">${c.email || '--'}</div>
             <div style="font-size:0.73rem;color:var(--text-muted)">${c.phone || ''}</div>
           </td>
-          <td><span class="crm-country-flag">${flag} ${c.country || '--'}</span></td>
+          <td><span class="crm-country-flag">${c.country || '--'}</span></td>
           <td style="font-size:0.79rem">${dateStr}</td>
           <td>
             <div style="display:flex;align-items:center;gap:0.4rem;">
@@ -7486,6 +7506,22 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('studentStatus').value = c.status || 'Đang học';
         document.getElementById('studentLearningMonth').value = c.learningMonth || '';
         document.getElementById('studentNotes').value = c.notes || '';
+        modal.style.display = 'flex';
+      });
+
+      document.getElementById('btnAddCrmCustomer')?.addEventListener('click', () => {
+        const modal = document.getElementById('studentModal');
+        if (!modal) return;
+        document.getElementById('studentEditId').value = '';
+        document.getElementById('studentModalTitle').textContent = 'THÊM HỌC VIÊN MỚI';
+        document.getElementById('studentName').value = '';
+        document.getElementById('studentCode').value = '';
+        document.getElementById('studentEmail').value = '';
+        document.getElementById('studentPhone').value = '';
+        document.getElementById('studentCountry').value = 'Nhật';
+        document.getElementById('studentStatus').value = 'Đang học';
+        document.getElementById('studentLearningMonth').value = '';
+        document.getElementById('studentNotes').value = '';
         modal.style.display = 'flex';
       });
 

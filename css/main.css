@@ -3922,6 +3922,8 @@ body.dark-theme-crm {
 .crm-action-btn.view:hover { background: var(--crm-blue); color: #fff; }
 .crm-action-btn.edit { background: #FEF3C7; color: #D97706; }
 .crm-action-btn.edit:hover { background: #D97706; color: #fff; }
+.crm-action-btn.delete { background: #FEE2E2; color: #DC2626; }
+.crm-action-btn.delete:hover { background: #DC2626; color: #fff; }
 
 /* ---- CRM Customers Section ---- */
 .crm-customers-section { flex: 1; }
