@@ -2660,325 +2660,6 @@ document.addEventListener('DOMContentLoaded', () => {
   let students = [];
   let studentsSubscription = null;
 
-  // Default Student Profiles to pre-populate Firestore if empty
-  const defaultStudents = [
-    {
-      code: "TE-2026-001",
-      name: "Nguyễn Thảo Chi",
-      email: "chi.nguyen@gmail.com",
-      phone: "0912345678",
-      country: "Nhật",
-      status: "Đang học",
-      notes: "Học sinh xuất sắc, đang chuẩn bị hồ sơ visa du học Nhật Bản ngành Công nghệ thông tin."
-    },
-    {
-      code: "TE-2026-002",
-      name: "Trần Minh Hoàng",
-      email: "hoang.tran@outlook.com",
-      phone: "0987654321",
-      country: "Hàn",
-      status: "Chờ phỏng vấn",
-      notes: "Đã có thư mời nhập học của trường Đại học Quốc gia Seoul (SNU). Đang luyện phỏng vấn visa Hàn Quốc."
-    },
-    {
-      code: "TE-2026-003",
-      name: "Phạm Lê Quỳnh Anh",
-      email: "anh.pham@gmail.com",
-      phone: "0905558888",
-      country: "Đài",
-      status: "Đã trúng tuyển",
-      notes: "Trúng tuyển Đại học Quốc gia Đài Loan (NTU) với học bổng 20%. Chuẩn bị lên đường vào tháng 9."
-    },
-    {
-      code: "TE-2026-004",
-      name: "Vũ Đức Huy",
-      email: "huy.vu@domain.com",
-      phone: "0944112233",
-      country: "Nhật",
-      status: "Đang làm hồ sơ",
-      notes: "Đang học tiếng Nhật trình độ N3. Đang thẩm định hồ sơ COE Nhật Bản."
-    },
-    {
-      code: "TE-2026-005",
-      name: "Lê Thị Mai Chi",
-      email: "chi.le@gmail.com",
-      phone: "0933778899",
-      country: "Hàn",
-      status: "Đang học",
-      notes: "Đang làm hồ sơ xin visa Hàn Quốc. Học sinh đạt TOPIK 4."
-    },
-    {
-      code: "TE-2026-006",
-      name: "Nguyễn Hoàng Nam",
-      email: "nam.nguyen@gmail.com",
-      phone: "0901234567",
-      country: "Đài",
-      status: "Đang học",
-      notes: "Đang học khóa tiếng Trung TOCFL nâng cao để chuẩn bị nộp hồ sơ Đại học Sư phạm Đài Loan."
-    },
-    {
-      code: "TE-2026-007",
-      name: "Phạm Minh Thư",
-      email: "thu.pham@outlook.com",
-      phone: "0918889999",
-      country: "Nhật",
-      status: "Đang làm hồ sơ",
-      notes: "Hồ sơ Visa đang được thẩm định. Đã hoàn thành đóng học phí kỳ I trường Nhật ngữ tại Tokyo."
-    },
-    {
-      code: "TE-2026-008",
-      name: "Lê Khánh Linh",
-      email: "linh.le@gmail.com",
-      phone: "0934567890",
-      country: "Hàn",
-      status: "Chờ phỏng vấn",
-      notes: "Đã có lịch phỏng vấn học bổng với đại diện tuyển sinh trường Đại học Yonsei."
-    },
-    {
-      code: "TE-2026-009",
-      name: "Trần Anh Tuấn",
-      email: "tuan.tran@gmail.com",
-      phone: "0989998888",
-      country: "Đài",
-      status: "Đang học",
-      notes: "Học sinh đang học tiếng Trung TOCFL tại trung tâm ngoại ngữ ThinkEdu."
-    },
-    {
-      code: "TE-2026-010",
-      name: "Vũ Thùy Chi",
-      email: "chi.vu@gmail.com",
-      phone: "0966667777",
-      country: "Nhật",
-      status: "Đã trúng tuyển",
-      notes: "Nhận học bổng 50% học phí chương trình thạc sĩ của Đại học Waseda."
-    },
-    {
-      code: "TE-2026-011",
-      name: "Phan Hoàng Long",
-      email: "long.phan@gmail.com",
-      phone: "0977778888",
-      country: "Hàn",
-      status: "Đang làm hồ sơ",
-      notes: "Đang đợi kết quả thẩm định hồ sơ tài chính từ Đại học Korea (Korea University)."
-    },
-    {
-      code: "TE-2026-012",
-      name: "Đỗ Mai Phương",
-      email: "phuong.do@gmail.com",
-      phone: "0922223333",
-      country: "Đài",
-      status: "Đang học",
-      notes: "Học sinh đang theo học chương trình tiếng Trung dự bị tại Đài Bắc."
-    },
-    {
-      code: "TE-2026-013",
-      name: "Hoàng Quốc Bảo",
-      email: "bao.hoang@gmail.com",
-      phone: "0933334444",
-      country: "Nhật",
-      status: "Đang học",
-      notes: "Học sinh xuất sắc đạt chứng chỉ tiếng Nhật N2, chuẩn bị nộp hồ sơ visa du học."
-    },
-    {
-      code: "TE-2026-014",
-      name: "Bùi Yến Nhi",
-      email: "nhi.bui@gmail.com",
-      phone: "0944445555",
-      country: "Hàn",
-      status: "Chờ phỏng vấn",
-      notes: "Đang chuẩn bị hồ sơ phỏng vấn trực tiếp tại Đại sứ quán Hàn Quốc."
-    },
-    {
-      code: "TE-2026-015",
-      name: "Đặng Đức Minh",
-      email: "minh.dang@gmail.com",
-      phone: "0955556666",
-      country: "Đài",
-      status: "Đang làm hồ sơ",
-      notes: "Đang viết bài luận cá nhân xin học bổng trường Đại học Khoa học Kỹ thuật Đài Loan."
-    },
-    {
-      code: "TE-2026-016",
-      name: "Ngô Thanh Hằng",
-      email: "hang.ngo@gmail.com",
-      phone: "0966667777",
-      country: "Nhật",
-      status: "Đã trúng tuyển",
-      notes: "Nhận được tư cách lưu trú COE du học Nhật Bản, chuẩn bị bay vào cuối tháng 8."
-    },
-    {
-      code: "TE-2026-017",
-      name: "Dương Gia Huy",
-      email: "huy.duong@gmail.com",
-      phone: "0977778888",
-      country: "Hàn",
-      status: "Đang học",
-      notes: "Học sinh đang cải thiện điểm số GPA kỳ 2 lớp 11 để nộp hồ sơ du học Hàn Quốc."
-    },
-    {
-      code: "TE-2026-018",
-      name: "Lý Hương Giang",
-      email: "giang.ly@gmail.com",
-      phone: "0988889999",
-      country: "Đài",
-      status: "Đang làm hồ sơ",
-      notes: "Đang chờ dịch thuật công chứng học bạ trung học phổ thông để nộp sang Đài Loan."
-    },
-    {
-      code: "TE-2026-019",
-      name: "Đỗ Minh Triết",
-      email: "triet.do@gmail.com",
-      phone: "0999990000",
-      country: "Nhật",
-      status: "Đang học",
-      notes: "Đã đạt chứng chỉ tiếng Nhật N3, chuẩn bị nộp hồ sơ xin thư mời học."
-    },
-    {
-      code: "TE-2026-020",
-      name: "Trịnh Quỳnh Chi",
-      email: "chi.trinh@gmail.com",
-      phone: "0911112222",
-      country: "Hàn",
-      status: "Chờ phỏng vấn",
-      notes: "Đã nhận được thư mời phỏng vấn học bổng danh giá của Đại học Sogang."
-    },
-    {
-      code: "TE-2026-021",
-      name: "Lâm Thế Vinh",
-      email: "vinh.lam@gmail.com",
-      phone: "0922223333",
-      country: "Đài",
-      status: "Đang học",
-      notes: "Học sinh đang ôn tập để đạt chứng chỉ TOCFL cấp 4."
-    },
-    {
-      code: "TE-2026-022",
-      name: "Nguyễn Bích Ngọc",
-      email: "ngoc.nguyen@gmail.com",
-      phone: "0933334444",
-      country: "Nhật",
-      status: "Đã trúng tuyển",
-      notes: "Trúng tuyển ngành Truyền thông Đại học Nagoya kỳ học mùa xuân."
-    },
-    {
-      code: "TE-2026-023",
-      name: "Trần Đình Phong",
-      email: "phong.tran@gmail.com",
-      phone: "0944445555",
-      country: "Hàn",
-      status: "Đang làm hồ sơ",
-      notes: "Đang làm thủ tục chứng minh tài chính xin visa D-2 du học Hàn Quốc."
-    },
-    {
-      code: "TE-2026-024",
-      name: "Phạm Thu Thảo",
-      email: "thao.pham@gmail.com",
-      phone: "0955556666",
-      country: "Đài",
-      status: "Đang học",
-      notes: "Đang tham gia khóa học tiếng Trung giao tiếp trực tuyến với giáo viên bản xứ."
-    },
-    {
-      code: "TE-2026-025",
-      name: "Lê Minh Quân",
-      email: "quan.le@gmail.com",
-      phone: "0966667777",
-      country: "Nhật",
-      status: "Đang học",
-      notes: "Học sinh lớp 11 đang chuẩn bị hồ sơ du học tự túc tại Nhật Bản."
-    },
-    {
-      code: "TE-2026-026",
-      name: "Vũ Bảo Ngọc",
-      email: "ngoc.vu@gmail.com",
-      phone: "0977778888",
-      country: "Hàn",
-      status: "Chờ phỏng vấn",
-      notes: "Luyện phỏng vấn visa du học Hàn Quốc hàng tuần với cố vấn của ThinkEdu."
-    },
-    {
-      code: "TE-2026-027",
-      name: "Phan Hữu Phước",
-      email: "phuoc.phan@gmail.com",
-      phone: "0988889999",
-      country: "Đài",
-      status: "Đang làm hồ sơ",
-      notes: "Đang chuẩn bị hồ sơ nộp xin thư mời học từ Đại học Giao thông Đài Loan."
-    },
-    {
-      code: "TE-2026-028",
-      name: "Hoàng Thanh Trúc",
-      email: "truc.hoang@gmail.com",
-      phone: "0999990000",
-      country: "Nhật",
-      status: "Đã trúng tuyển",
-      notes: "Nhận VISA du học Nhật Bản thành công, xuất cảnh vào tháng 9."
-    },
-    {
-      code: "TE-2026-029",
-      name: "Bùi Tiến Dũng",
-      email: "dung.bui@gmail.com",
-      phone: "0911112222",
-      country: "Hàn",
-      status: "Đang học",
-      notes: "Học sinh đang theo học lớp tiếng Hàn TOPIK cấp tốc cả ngày."
-    },
-    {
-      code: "TE-2026-030",
-      name: "Nguyễn Khánh Huyền",
-      email: "huyen.nguyen@gmail.com",
-      phone: "0922223333",
-      country: "Đài",
-      status: "Đang làm hồ sơ",
-      notes: "Đang đợi kết quả phản hồi xin thư mời học vô điều kiện từ trường Đại học Tsing Hua Đài Loan."
-    },
-    {
-      code: "TE-2026-031",
-      name: "Đặng Quang Hải",
-      email: "hai.dang@gmail.com",
-      phone: "0933334444",
-      country: "Nhật",
-      status: "Đang học",
-      notes: "Đang hoàn tất bài kiểm tra năng lực tiếng Nhật đầu vào trường THPT nội trú Nhật Bản."
-    },
-    {
-      code: "TE-2026-032",
-      name: "Trịnh Mai Anh",
-      email: "anh.trinh@gmail.com",
-      phone: "0944445555",
-      country: "Hàn",
-      status: "Chờ phỏng vấn",
-      notes: "Lên lịch chuẩn bị phỏng vấn học bổng đầu vào của Đại học Hanyang."
-    },
-    {
-      code: "TE-2026-033",
-      name: "Ngô Văn Quyết",
-      email: "quyet.ngo@gmail.com",
-      phone: "0955556666",
-      country: "Đài",
-      status: "Đang học",
-      notes: "Học sinh tích cực tham gia các dự án nghiên cứu khoa học để làm đẹp hồ sơ du học Đài Loan."
-    },
-    {
-      code: "TE-2026-034",
-      name: "Lê Hồng Nhung",
-      email: "nhung.le@gmail.com",
-      phone: "0966667777",
-      country: "Nhật",
-      status: "Đã trúng tuyển",
-      notes: "Đã nộp thành công học phí kỳ đầu tiên cho trường Nhật ngữ tại Osaka."
-    },
-    {
-      code: "TE-2026-035",
-      name: "Phạm Hùng Anh",
-      email: "anh.pham.h@gmail.com",
-      phone: "0977778888",
-      country: "Hàn",
-      status: "Đang học",
-      notes: "Đang hoàn tất các thủ tục khám sức khỏe lao phổi chuẩn bị xin visa du học Hàn Quốc."
-    }
-  ];
-
   // Setup Student Database real-time observer
   let currentPage = 1;
   const itemsPerPage = 8;
@@ -6009,8 +5690,8 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Lấy giờ chuẩn từ input
-    const timeInStd  = document.getElementById('payrollTimeIn')?.value  || '08:30';
-    const timeOutStd = document.getElementById('payrollTimeOut')?.value || '17:30';
+    const timeInStd  = document.getElementById('payrollTimeIn')?.value  || '07:45';
+    const timeOutStd = document.getElementById('payrollTimeOut')?.value || '17:00';
     const [inH, inM]   = timeInStd.split(':').map(Number);
     const [outH, outM] = timeOutStd.split(':').map(Number);
 
@@ -6776,6 +6457,95 @@ document.addEventListener('DOMContentLoaded', () => {
     renderPagination('crmCustomerPagination', crmCustomerPage, filtered.length, (p) => {
       crmCustomerPage = p;
       renderCrmCustomers();
+    });
+  };
+
+  // ── Học viên nguồn (Source tab) ───────────────────────────────────────────
+  let crmSourcePage = 1;
+
+  const saveSourceRevenue = async (docId, value) => {
+    if (!docId) return;
+    try {
+      await db.collection('students').doc(docId).update({ revenue: Number(value) || 0 });
+    } catch (e) { console.error('Lỗi lưu doanh thu:', e); }
+  };
+
+  const renderCrmSource = (resetPage = false) => {
+    if (resetPage) crmSourcePage = 1;
+    const tbody = document.getElementById('crmSourceTableBody');
+    if (!tbody) return;
+
+    const search   = (document.getElementById('srcSearchInput')?.value   || '').toLowerCase().trim();
+    const countryF = document.getElementById('srcCountryFilter')?.value  || 'All';
+
+    const filtered = _allCrmCustomers.filter(c => {
+      if (countryF !== 'All' && c.country !== countryF) return false;
+      if (search && !`${c.name} ${c.email} ${c.code}`.toLowerCase().includes(search)) return false;
+      return true;
+    });
+
+    if (filtered.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:2.5rem;color:var(--text-muted);font-size:0.82rem">Không tìm thấy học viên.</td></tr>`;
+      renderPagination('crmSourcePagination', 1, 0, () => {});
+      return;
+    }
+
+    const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
+    crmSourcePage = Math.min(crmSourcePage, totalPages);
+    const pageData = filtered.slice((crmSourcePage - 1) * PAGE_SIZE, crmSourcePage * PAGE_SIZE);
+    const globalOffset = (crmSourcePage - 1) * PAGE_SIZE;
+
+    const flags    = { 'Nhật': '🇯🇵', 'Đài': '🇹🇼', 'Hàn': '🇰🇷' };
+    const avColors = ['#2563EB', '#7C3AED', '#059669', '#D97706', '#DC2626', '#0891B2'];
+
+    tbody.innerHTML = pageData.map((c, i) => {
+      const gi   = globalOffset + i;
+      const ini  = (c.name || 'KH').split(' ').map(w => w[0]).filter(Boolean).slice(-2).join('').toUpperCase();
+      const flag = flags[c.country] || '🌏';
+      let dateStr = '--';
+      if (c.createdAt?.toDate) {
+        const d = c.createdAt.toDate();
+        dateStr = `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}/${d.getFullYear()}`;
+      }
+      const rev = c.revenue != null ? c.revenue : '';
+      return `
+        <tr>
+          <td><span style="font-family:monospace;font-size:0.78rem;font-weight:600;color:var(--crm-blue)">${c.code || '--'}</span></td>
+          <td>
+            <div style="display:flex;align-items:center;gap:0.65rem">
+              <div style="width:32px;height:32px;border-radius:50%;background:${avColors[gi % avColors.length]};color:#fff;display:flex;align-items:center;justify-content:center;font-size:0.7rem;font-weight:700;flex-shrink:0">${ini}</div>
+              <span style="font-weight:600;font-size:0.83rem">${c.name || '--'}</span>
+            </div>
+          </td>
+          <td>
+            <div style="font-size:0.79rem">${c.email || '--'}</div>
+            <div style="font-size:0.73rem;color:var(--text-muted)">${c.phone || ''}</div>
+          </td>
+          <td><span class="crm-country-flag">${flag} ${c.country || '--'}</span></td>
+          <td style="font-size:0.79rem">${dateStr}</td>
+          <td>
+            <div style="display:flex;align-items:center;gap:0.4rem;">
+              <input type="number" class="src-revenue-input" data-id="${c.id}"
+                value="${rev}" min="0" step="1000" placeholder="Nhập doanh thu..."
+                style="width:140px;padding:0.35rem 0.6rem;border:1px solid var(--border);border-radius:8px;
+                       background:var(--bg-primary);color:var(--text-main);font-size:0.82rem;
+                       font-family:inherit;text-align:right;" />
+              <span style="font-size:0.72rem;color:var(--text-muted);white-space:nowrap;">đ</span>
+            </div>
+          </td>
+        </tr>`;
+    }).join('');
+
+    // Auto-save on blur or Enter
+    tbody.querySelectorAll('.src-revenue-input').forEach(inp => {
+      const save = () => saveSourceRevenue(inp.dataset.id, inp.value);
+      inp.addEventListener('blur', save);
+      inp.addEventListener('keydown', e => { if (e.key === 'Enter') { save(); inp.blur(); } });
+    });
+
+    renderPagination('crmSourcePagination', crmSourcePage, filtered.length, (p) => {
+      crmSourcePage = p;
+      renderCrmSource();
     });
   };
 
@@ -7680,7 +7450,8 @@ document.addEventListener('DOMContentLoaded', () => {
           document.querySelectorAll('.crm-tab-content').forEach(tc => tc.style.display = 'none');
           const el = document.getElementById(target);
           if (el) el.style.display = 'flex';
-          if (target === 'crm-staff-tab') renderCrmStaff();
+          if (target === 'crm-staff-tab')  renderCrmStaff();
+          if (target === 'crm-source-tab') renderCrmSource(true);
           if (target === 'crm-chat-tab') setupCrmChat();
           else if (target !== 'crm-staff-tab') teardownCrmChat();
         });
@@ -7736,6 +7507,9 @@ document.addEventListener('DOMContentLoaded', () => {
       document.getElementById('crmCountryFilter')?.addEventListener('change', () => renderCrmCustomers(true));
       document.getElementById('crmStatusFilter')?.addEventListener('change', () => renderCrmCustomers(true));
 
+      document.getElementById('srcSearchInput')?.addEventListener('input', () => renderCrmSource(true));
+      document.getElementById('srcCountryFilter')?.addEventListener('change', () => renderCrmSource(true));
+
       document.getElementById('crmStaffSearch')?.addEventListener('input', () => renderCrmStaff(true));
       document.getElementById('crmStaffDeptFilter')?.addEventListener('change', () => renderCrmStaff(true));
       document.getElementById('crmStaffStatusFilter')?.addEventListener('change', () => renderCrmStaff(true));
@@ -7783,6 +7557,8 @@ document.addEventListener('DOMContentLoaded', () => {
         snap.forEach(doc => { const d = doc.data(); d.id = doc.id; _allCrmCustomers.push(d); });
         renderCrmOverview();
         renderCrmCustomers();
+        // Re-render source tab if it's visible
+        if (document.getElementById('crm-source-tab')?.style.display !== 'none') renderCrmSource();
       })
       .catch(err => console.error('CRM data load error:', err));
 

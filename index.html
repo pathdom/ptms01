@@ -1301,9 +1301,9 @@
                 <div class="att-kpi-box" style="flex:1;min-width:220px;">
                   <div class="att-kpi-label" style="margin-bottom:0.4rem;">Giờ chuẩn (đi muộn / về sớm)</div>
                   <div style="display:flex;gap:0.5rem;align-items:center;">
-                    <input type="time" id="payrollTimeIn"  value="08:30" style="width:90px;padding:0.25rem 0.4rem;border:1px solid var(--border);border-radius:6px;background:var(--bg-primary);color:var(--text-main);font-size:0.8rem;" />
+                    <input type="time" id="payrollTimeIn"  value="07:45" style="width:90px;padding:0.25rem 0.4rem;border:1px solid var(--border);border-radius:6px;background:var(--bg-primary);color:var(--text-main);font-size:0.8rem;" />
                     <span style="color:var(--text-muted);font-size:0.75rem;">→</span>
-                    <input type="time" id="payrollTimeOut" value="17:30" style="width:90px;padding:0.25rem 0.4rem;border:1px solid var(--border);border-radius:6px;background:var(--bg-primary);color:var(--text-main);font-size:0.8rem;" />
+                    <input type="time" id="payrollTimeOut" value="17:00" style="width:90px;padding:0.25rem 0.4rem;border:1px solid var(--border);border-radius:6px;background:var(--bg-primary);color:var(--text-main);font-size:0.8rem;" />
                   </div>
                 </div>
               </div>
@@ -1632,6 +1632,7 @@
             <div class="crm-subtabs">
               <button class="crm-subtab active" data-tab="crm-overview-tab">📊 Tổng quan</button>
               <button class="crm-subtab" data-tab="crm-customers-tab">👥 Quản lý Khách hàng</button>
+              <button class="crm-subtab" data-tab="crm-source-tab">📈 Học viên nguồn</button>
               <button class="crm-subtab" data-tab="crm-chat-tab">💬 Chat Nội bộ</button>
             </div>
 
@@ -1725,6 +1726,53 @@
                 </div>
                 <!-- Pagination -->
                 <div class="crm-pagination" id="crmCustomerPagination"></div>
+              </div>
+            </div>
+
+            <!-- ===== TAB 3: HỌC VIÊN NGUỒN ===== -->
+            <div id="crm-source-tab" class="crm-tab-content" style="display:none">
+              <div class="crm-metric-card crm-customers-section">
+                <div class="crm-card-header">
+                  <h4>DANH SÁCH HỌC VIÊN NGUỒN</h4>
+                  <div class="crm-header-actions">
+                    <span style="font-size:0.75rem;color:var(--text-muted);">Doanh thu nhập tay — tự động lưu</span>
+                  </div>
+                </div>
+
+                <!-- Filter Bar -->
+                <div class="crm-filter-bar">
+                  <div class="crm-search-wrap">
+                    <svg viewBox="0 0 24 24"><path d="M9.5,3A6.5,6.5 0 0,1 16,9.5C16,11.11 15.41,12.59 14.44,13.73L14.71,14H15.5L20.5,19L19,20.5L14,15.5V14.71L13.73,14.44C12.59,15.41 11.11,16 9.5,16A6.5,6.5 0 0,1 3,9.5A6.5,6.5 0 0,1 9.5,3M9.5,5C7,5 5,7 5,9.5C5,12 7,14 9.5,14C12,14 14,12 14,9.5C14,7 12,5 9.5,5Z"/></svg>
+                    <input type="text" id="srcSearchInput" placeholder="Tìm theo tên, email, mã học viên..." />
+                  </div>
+                  <select id="srcCountryFilter">
+                    <option value="All">Tất cả quốc gia</option>
+                    <option value="Nhật">🇯🇵 Nhật Bản</option>
+                    <option value="Đài">🇹🇼 Đài Loan</option>
+                    <option value="Hàn">🇰🇷 Hàn Quốc</option>
+                  </select>
+                </div>
+
+                <!-- Table -->
+                <div class="mini-table-container">
+                  <table class="crm-table">
+                    <thead>
+                      <tr>
+                        <th>MÃ</th>
+                        <th>HỌC VIÊN</th>
+                        <th>LIÊN HỆ</th>
+                        <th>QUỐC GIA</th>
+                        <th>NGÀY ĐĂNG KÝ</th>
+                        <th style="min-width:160px;">DOANH THU (đ)</th>
+                      </tr>
+                    </thead>
+                    <tbody id="crmSourceTableBody">
+                      <!-- Populated via JS -->
+                    </tbody>
+                  </table>
+                </div>
+                <!-- Pagination -->
+                <div class="crm-pagination" id="crmSourcePagination"></div>
               </div>
             </div>
 
