@@ -6390,14 +6390,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const globalOffset = (crmCustomerPage - 1) * PAGE_SIZE;
 
     const badgeCls = { 'Đang học': 'crm-badge-active', 'Chờ phỏng vấn': 'crm-badge-waiting', 'Đang làm hồ sơ': 'crm-badge-processing', 'Đã trúng tuyển': 'crm-badge-selected' };
-    const flags = { 'Nhật': '🇯🇵', 'Đài': '🇹🇼', 'Hàn': '🇰🇷' };
     const avColors = ['#2563EB', '#7C3AED', '#059669', '#D97706', '#DC2626', '#0891B2'];
 
     tbody.innerHTML = pageData.map((c, i) => {
       const gi = globalOffset + i;
       const ini = (c.name || 'KH').split(' ').map(w => w[0]).filter(Boolean).slice(-2).join('').toUpperCase();
       const bc = badgeCls[c.status] || 'crm-badge-processing';
-      const flag = flags[c.country] || '🌏';
       let dateStr = '--';
       if (c.createdAt?.toDate) {
         const d = c.createdAt.toDate();
@@ -6515,7 +6513,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const pageData = filtered.slice((crmSourcePage - 1) * PAGE_SIZE, crmSourcePage * PAGE_SIZE);
     const globalOffset = (crmSourcePage - 1) * PAGE_SIZE;
 
-    const flags    = { 'Nhật': '🇯🇵', 'Đài': '🇹🇼', 'Hàn': '🇰🇷' };
     const avColors = ['#2563EB', '#7C3AED', '#059669', '#D97706', '#DC2626', '#0891B2'];
 
     tbody.innerHTML = pageData.map((c, i) => {
@@ -7699,10 +7696,11 @@ document.addEventListener('DOMContentLoaded', () => {
     setText('spProfileBaseSalary', fmtCurrency(s.salary));
     setText('spProfileAllowanceLunch', s.allowanceSalary ? fmtCurrency(s.allowanceSalary) : '0 đ');
     setText('spProfileInsurance', s.insuranceSalary || 'Không');
-    setText('spProfileBankNo', s.bankAccountNo);
-    setText('spProfileBankName', s.bankName);
-    setText('spProfileBankAccountName', s.bankAccountName);
-    setText('spProfileTaxCode', s.taxCode);
+    // Bank inputs (editable by employee)
+    setInput('spInputBankNo',          s.bankAccountNo);
+    setInput('spInputBankName',        s.bankName);
+    setInput('spInputBankAccountName', s.bankAccountName);
+    setInput('spInputTaxCode',         s.taxCode);
 
     requestAnimationFrame(() => {
       drawDonutChart('spWorkEfficiencyChart', totalTasks, [
@@ -7769,6 +7767,33 @@ document.addEventListener('DOMContentLoaded', () => {
           showToast('Lỗi lưu: ' + e.message, 'error');
         } finally {
           saveBtn.disabled = false; saveBtn.innerHTML = orig;
+        }
+      });
+    }
+
+    // Wire bank/tax save button (once)
+    const saveBankBtn = document.getElementById('btnSaveBankInfo');
+    if (saveBankBtn && !saveBankBtn.dataset.bound) {
+      saveBankBtn.dataset.bound = '1';
+      saveBankBtn.addEventListener('click', async () => {
+        if (!currentUser) { showToast('Chưa đăng nhập!', 'error'); return; }
+        const orig = saveBankBtn.innerHTML;
+        saveBankBtn.disabled = true; saveBankBtn.innerHTML = '⏳ Đang lưu...';
+        try {
+          const snap2 = await db.collection('hrm_staff').where('email', '==', currentUser.email).limit(1).get();
+          if (snap2.empty) { showToast('Không tìm thấy hồ sơ nhân sự!', 'error'); return; }
+          const val = id => (document.getElementById(id)?.value || '').trim();
+          await db.collection('hrm_staff').doc(snap2.docs[0].id).update({
+            bankAccountNo:   val('spInputBankNo'),
+            bankName:        val('spInputBankName'),
+            bankAccountName: val('spInputBankAccountName'),
+            taxCode:         val('spInputTaxCode'),
+          });
+          showToast('Đã lưu thông tin ngân hàng & thuế!', 'success');
+        } catch (e) {
+          showToast('Lỗi lưu: ' + e.message, 'error');
+        } finally {
+          saveBankBtn.disabled = false; saveBankBtn.innerHTML = orig;
         }
       });
     }

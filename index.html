@@ -2321,23 +2321,51 @@
           <!-- Tab: Lương & Phúc lợi -->
           <div id="sptab-salary" class="crmsp-panel">
             <div class="hrm-profile-tab-grid">
+
+              <!-- Read-only: admin nhập -->
               <div class="hrm-metric-card" style="margin-bottom: 0;">
-                <div class="metric-card-header"><h4>MỨC LƯƠNG &amp; PHÚC LỢI</h4></div>
+                <div class="metric-card-header">
+                  <h4>MỨC LƯƠNG &amp; PHÚC LỢI</h4>
+                  <span style="font-size:0.7rem;color:var(--text-muted);font-style:italic;">Do admin cập nhật</span>
+                </div>
                 <div class="profile-info-rows">
                   <div class="profile-info-row"><span class="info-label">Lương cơ bản</span><span class="info-val" id="spProfileBaseSalary" style="font-weight:600;color:var(--accent);">--</span></div>
                   <div class="profile-info-row"><span class="info-label">Phụ cấp</span><span class="info-val" id="spProfileAllowanceLunch">--</span></div>
                   <div class="profile-info-row"><span class="info-label">Đóng BHXH</span><span class="info-val" id="spProfileInsurance">--</span></div>
                 </div>
               </div>
+
+              <!-- Editable: nhân sự tự nhập -->
               <div class="hrm-metric-card" style="margin-bottom: 0;">
                 <div class="metric-card-header"><h4>TÀI KHOẢN NGÂN HÀNG &amp; THUẾ</h4></div>
                 <div class="profile-info-rows">
-                  <div class="profile-info-row"><span class="info-label">Số tài khoản</span><span class="info-val" id="spProfileBankNo">--</span></div>
-                  <div class="profile-info-row"><span class="info-label">Ngân hàng</span><span class="info-val" id="spProfileBankName">--</span></div>
-                  <div class="profile-info-row"><span class="info-label">Chủ tài khoản</span><span class="info-val" id="spProfileBankAccountName">--</span></div>
-                  <div class="profile-info-row"><span class="info-label">Mã số thuế cá nhân</span><span class="info-val" id="spProfileTaxCode">--</span></div>
+                  <div class="profile-info-row">
+                    <span class="info-label">Số tài khoản</span>
+                    <input class="sp-resume-input" id="spInputBankNo" type="text" placeholder="Nhập số tài khoản..." />
+                  </div>
+                  <div class="profile-info-row">
+                    <span class="info-label">Ngân hàng</span>
+                    <input class="sp-resume-input" id="spInputBankName" type="text" placeholder="Ví dụ: Vietcombank, BIDV..." />
+                  </div>
+                  <div class="profile-info-row">
+                    <span class="info-label">Chủ tài khoản</span>
+                    <input class="sp-resume-input" id="spInputBankAccountName" type="text" placeholder="Nhập tên chủ tài khoản..." />
+                  </div>
+                  <div class="profile-info-row">
+                    <span class="info-label">Mã số thuế CN</span>
+                    <input class="sp-resume-input" id="spInputTaxCode" type="text" placeholder="Nhập mã số thuế cá nhân..." />
+                  </div>
                 </div>
               </div>
+
+            </div>
+
+            <!-- Nút lưu -->
+            <div style="display:flex;justify-content:flex-end;margin-top:1.5rem;">
+              <button type="button" id="btnSaveBankInfo" class="hrm-btn-primary" style="display:flex;align-items:center;gap:0.5rem;padding:0.65rem 1.5rem;">
+                <svg viewBox="0 0 24 24" style="width:16px;height:16px;fill:currentColor;"><path d="M15,9H5V5H15M12,19A3,3 0 0,1 9,16A3,3 0 0,1 12,13A3,3 0 0,1 15,16A3,3 0 0,1 12,19M17,3H5C3.89,3 3,3.9 3,5V19A2,2 0 0,0 5,21H19A2,2 0 0,0 21,19V7L17,3Z"/></svg>
+                Lưu thông tin
+              </button>
             </div>
           </div>
     
