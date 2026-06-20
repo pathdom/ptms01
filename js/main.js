@@ -6853,7 +6853,8 @@ document.addEventListener('DOMContentLoaded', () => {
   // ══════════════════════════════════════════════════════════════════════════
 
   let crmChatSubscription = null;
-  let _iocMsgs      = [];
+  let _iocMsgs       = [];
+  let _iocSearchTerm = '';
   let _iocReplyTo   = null;
   let _iocEditingId = null;
   let _iocCtxMsgId  = null;
@@ -6914,6 +6915,13 @@ document.addEventListener('DOMContentLoaded', () => {
       color: color || iocAvatarColor(name),
       desc,
     };
+
+    // Reset search when switching thread
+    _iocSearchTerm = '';
+    const _searchBar = document.getElementById('iocMsgSearchBar');
+    const _searchInp = document.getElementById('iocMsgSearchInput');
+    if (_searchBar) _searchBar.style.display = 'none';
+    if (_searchInp) _searchInp.value = '';
 
     // Mark thread as read
     _iocDmPreviews[id] = { ...(_iocDmPreviews[id] || {}), unread: 0 };
@@ -7627,7 +7635,12 @@ document.addEventListener('DOMContentLoaded', () => {
             .map(doc => ({ id: doc.id, ...doc.data() }))
             .sort((a, b) => (a.createdAt?.seconds || 0) - (b.createdAt?.seconds || 0))
             .slice(-150);
-          iocRenderMessages(msgs);
+          _iocMsgs = msgs;
+          const term = _iocSearchTerm;
+          const toShow = term
+            ? msgs.filter(m => (m.content||'').toLowerCase().includes(term) || (m.fileName||'').toLowerCase().includes(term))
+            : msgs;
+          iocRenderMessages(toShow);
         },
         err => {
           console.error('CRM chat error:', err);
@@ -7709,6 +7722,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (show) document.getElementById('iocMsgSearchInput')?.focus();
     });
     document.getElementById('btnCloseIocSearch')?.addEventListener('click', () => {
+      _iocSearchTerm = '';
       const bar = document.getElementById('iocMsgSearchBar');
       if (bar) bar.style.display = 'none';
       const inp = document.getElementById('iocMsgSearchInput');
@@ -7716,12 +7730,13 @@ document.addEventListener('DOMContentLoaded', () => {
       iocRenderMessages(_iocMsgs);
     });
     document.getElementById('iocMsgSearchInput')?.addEventListener('input', e => {
-      const term = e.target.value.toLowerCase();
-      const filtered = _iocMsgs.filter(m =>
-        (m.content || '').toLowerCase().includes(term) ||
-        (m.fileName || '').toLowerCase().includes(term)
-      );
-      iocRenderMessages(term ? filtered : _iocMsgs);
+      _iocSearchTerm = e.target.value.toLowerCase();
+      const filtered = _iocSearchTerm
+        ? _iocMsgs.filter(m =>
+            (m.content || '').toLowerCase().includes(_iocSearchTerm) ||
+            (m.fileName || '').toLowerCase().includes(_iocSearchTerm))
+        : _iocMsgs;
+      iocRenderMessages(filtered);
     });
 
     document.getElementById('crmChatSearch')?.addEventListener('input', iocRenderConvList);
@@ -7743,7 +7758,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
     document.getElementById('btnIocShowMembers')?.addEventListener('click', iocShowMembers);
     document.getElementById('btnIocShowMembersHdr')?.addEventListener('click', () => {
-      document.getElementById('iocInfoPanel')?.classList.remove('hidden');
+      const panel  = document.getElementById('iocInfoPanel');
+      const layout = document.querySelector('#crm-chat-tab .ioc-layout');
+      const btn    = document.getElementById('btnToggleIocInfo');
+      if (panel)  panel.classList.remove('hidden');
+      if (layout) layout.classList.remove('ioc-info-hidden');
+      if (btn)    btn.style.color = '';
       iocShowMembers();
     });
     document.getElementById('btnIocBackFromMembers')?.addEventListener('click', iocShowInfoMain);
