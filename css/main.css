@@ -4637,11 +4637,13 @@ body.dark-theme-crm {
   border: 2px solid var(--bg-card);
 }
 
-.ioc-conv-body { flex: 1; min-width: 0; }
-.ioc-conv-name { font-size: 0.82rem; font-weight: 600; color: var(--text-main); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.ioc-conv-preview { font-size: 0.73rem; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ioc-conv-body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.ioc-conv-row1 { display: flex; align-items: center; justify-content: space-between; gap: 0.4rem; }
+.ioc-conv-row2 { display: flex; align-items: center; justify-content: space-between; gap: 0.4rem; }
+.ioc-conv-name { font-size: 0.82rem; font-weight: 600; color: var(--text-main); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex: 1; min-width: 0; }
+.ioc-conv-preview { font-size: 0.73rem; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex: 1; min-width: 0; }
 .ioc-conv-meta { display: flex; flex-direction: column; align-items: flex-end; gap: 0.25rem; flex-shrink: 0; }
-.ioc-conv-time { font-size: 0.68rem; color: var(--text-muted); }
+.ioc-conv-time { font-size: 0.68rem; color: var(--text-muted); flex-shrink: 0; }
 .ioc-unread-dot {
   width: 18px;
   height: 18px;
@@ -5266,6 +5268,74 @@ body.dark-theme-crm {
   transition: background 0.15s;
 }
 .ioc-lightbox-close:hover { background: rgba(255,255,255,0.28); }
+
+/* ── IOC Modal (Forward / New Chat) ── */
+.ioc-modal-overlay {
+  position: fixed; inset: 0; z-index: 9000;
+  background: rgba(0,0,0,0.45); backdrop-filter: blur(3px);
+  display: flex; align-items: center; justify-content: center; padding: 1rem;
+}
+.ioc-modal-box {
+  background: var(--bg-card); border-radius: 14px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+  width: 100%; max-width: 400px; display: flex; flex-direction: column; overflow: hidden;
+  max-height: 80vh;
+}
+.ioc-modal-head {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 1rem 1.2rem; border-bottom: 1px solid var(--border);
+  font-weight: 600; font-size: 0.95rem; color: var(--text-main);
+}
+.ioc-modal-preview {
+  padding: 0.75rem 1.2rem;
+  background: var(--bg-primary); border-bottom: 1px solid var(--border);
+  font-size: 0.82rem; color: var(--text-muted);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.ioc-modal-search { padding: 0.75rem 1rem; border-bottom: 1px solid var(--border); }
+.ioc-modal-search input {
+  width: 100%; padding: 0.5rem 0.8rem;
+  border: 1px solid var(--border); border-radius: 8px;
+  font-size: 0.85rem; background: var(--bg-primary); color: var(--text-main);
+}
+.ioc-fwd-list {
+  flex: 1; overflow-y: auto; padding: 0.5rem 0;
+  max-height: 280px;
+}
+.ioc-fwd-item {
+  display: flex; align-items: center; gap: 0.75rem;
+  padding: 0.6rem 1.2rem; cursor: pointer; transition: background 0.15s;
+  font-size: 0.88rem; color: var(--text-main);
+}
+.ioc-fwd-item:hover { background: var(--bg-primary); }
+.ioc-fwd-item.selected { background: rgba(37,99,235,0.08); }
+.ioc-fwd-item .ioc-member-av { width: 34px; height: 34px; font-size: 0.75rem; flex-shrink: 0; }
+.ioc-modal-actions {
+  display: flex; gap: 0.75rem; justify-content: flex-end;
+  padding: 0.9rem 1.2rem; border-top: 1px solid var(--border);
+}
+
+/* ── Media grid ── */
+.ioc-media-grid { padding: 0.75rem; display: grid; grid-template-columns: repeat(3,1fr); gap: 4px; overflow-y: auto; }
+.ioc-media-thumb { width: 100%; aspect-ratio: 1; object-fit: cover; border-radius: 6px; cursor: pointer; transition: opacity 0.15s; }
+.ioc-media-thumb:hover { opacity: 0.8; }
+
+/* ── Rename input ── */
+.ioc-rename-input {
+  width: 100%; font-size: inherit; font-weight: inherit; font-family: inherit;
+  border: none; border-bottom: 2px solid var(--accent);
+  background: transparent; color: var(--text-main); outline: none; padding: 2px 0;
+}
+
+/* ── DM preview & unread badge ── */
+.ioc-conv-unread {
+  background: var(--accent); color: #fff;
+  border-radius: 10px; font-size: 0.65rem; font-weight: 700;
+  min-width: 18px; height: 18px; display: flex; align-items: center; justify-content: center;
+  padding: 0 4px;
+}
+.ioc-fav-section { font-size: 0.68rem; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 0.7px; color: var(--text-muted); padding: 0.4rem 1rem 0.2rem; }
 
 /* ── Context Menu ── */
 .ioc-ctx-menu {

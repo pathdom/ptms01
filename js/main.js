@@ -6857,9 +6857,28 @@ document.addEventListener('DOMContentLoaded', () => {
   let _iocReplyTo   = null;
   let _iocEditingId = null;
   let _iocCtxMsgId  = null;
+  let _iocForwardId = null;
+  let _iocDmPreviews = {};   // { threadId: { text, time, unread } }
+  let _iocDmSubs     = {};   // { threadId: unsubFn }
+  let _iocFavThreads = new Set();
+  let _iocMutedThreads = new Set();
   let _iocActiveThread = {
     id: 'group-global', name: 'Nhóm Nội bộ Aladdin',
     av: 'N', color: '#2563EB', type: 'group'
+  };
+
+  // Persist favorites & mutes to localStorage (keyed by email)
+  const iocFavKey  = () => `ioc_favs_${currentUser?.email || 'anon'}`;
+  const iocMuteKey = () => `ioc_mutes_${currentUser?.email || 'anon'}`;
+  const iocLoadPrefs = () => {
+    try {
+      _iocFavThreads   = new Set(JSON.parse(localStorage.getItem(iocFavKey())  || '[]'));
+      _iocMutedThreads = new Set(JSON.parse(localStorage.getItem(iocMuteKey()) || '[]'));
+    } catch(_) {}
+  };
+  const iocSavePrefs = () => {
+    localStorage.setItem(iocFavKey(),  JSON.stringify([..._iocFavThreads]));
+    localStorage.setItem(iocMuteKey(), JSON.stringify([..._iocMutedThreads]));
   };
 
   const iocAvatarColor = str => {
@@ -6887,13 +6906,19 @@ document.addEventListener('DOMContentLoaded', () => {
   };
 
   // ── Switch thread ──────────────────────────────────────────────────────────
-  const iocOpenThread = (id, name, av, color, type = 'dm') => {
+  const iocOpenThread = (id, name, av, color, type = 'dm', desc = '') => {
     if (_iocActiveThread.id === id) return;
     _iocActiveThread = {
       id, name, type,
       av:    av    || (name || 'U')[0].toUpperCase(),
       color: color || iocAvatarColor(name),
+      desc,
     };
+
+    // Mark thread as read
+    _iocDmPreviews[id] = { ...(_iocDmPreviews[id] || {}), unread: 0 };
+    localStorage.setItem(`ioc_lastread_${id}_${currentUser?.email}`, Date.now());
+
     const avEl    = document.getElementById('iocActiveAv');
     const nameEl  = document.getElementById('iocActiveThreadName');
     const subEl   = document.getElementById('iocActiveThreadSub');
@@ -6902,68 +6927,97 @@ document.addEventListener('DOMContentLoaded', () => {
     if (nameEl)  nameEl.textContent = name;
     if (subEl)   subEl.textContent = type === 'group' ? `${iocGetMembers().length} thành viên` : 'Trực tiếp';
     if (backBtn) backBtn.style.display = type === 'dm' ? 'flex' : 'none';
+
+    // Update info panel
+    const infoAvEl   = document.getElementById('iocInfoGroupAv');
+    const infoNameEl = document.getElementById('iocInfoGroupName');
+    const infoDescEl = document.getElementById('iocInfoGroupDesc');
+    const renameBtnEl= document.getElementById('btnIocRenameGroup');
+    if (infoAvEl) { infoAvEl.textContent = _iocActiveThread.av; infoAvEl.style.background = _iocActiveThread.color; }
+    if (infoNameEl) {
+      infoNameEl.textContent = name;
+      if (renameBtnEl) {
+        if (type === 'group') infoNameEl.appendChild(renameBtnEl);
+        else renameBtnEl.remove?.();
+      }
+    }
+    if (infoDescEl) infoDescEl.textContent = desc || (type === 'group' ? `Nhóm · ${iocGetMembers().length} thành viên` : 'Tin nhắn trực tiếp');
+
+    iocUpdateFavBtn();
+    iocUpdateNotifyBtn();
+    iocShowInfoMain();
     setupCrmChat();
   };
 
   // ── Conversation sidebar list ──────────────────────────────────────────────
+  const iocBuildConvItem = (threadId, av, color, name, preview, timeStr, active, unread) => {
+    const unreadHtml = unread > 0 ? `<span class="ioc-conv-unread">${unread > 9 ? '9+' : unread}</span>` : '';
+    return `<div class="ioc-conv-item${active ? ' active' : ''}"
+      data-thread-id="${threadId}" data-thread-name="${esc(name)}"
+      data-thread-av="${av}" data-thread-color="${color}">
+      <div class="ioc-conv-av" style="background:${color}">${av}<span class="ioc-online"></span></div>
+      <div class="ioc-conv-body">
+        <div class="ioc-conv-row1"><span class="ioc-conv-name">${esc(name)}</span><span class="ioc-conv-time">${timeStr}</span></div>
+        <div class="ioc-conv-row2"><span class="ioc-conv-preview">${preview}</span>${unreadHtml}</div>
+      </div>
+    </div>`;
+  };
+
   const iocRenderConvList = () => {
     const favEl = document.getElementById('iocConvList');
     const recEl = document.getElementById('iocRecentList');
     if (!favEl || !recEl) return;
 
-    const members      = iocGetMembers();
-    const search       = (document.getElementById('crmChatSearch')?.value || '').toLowerCase();
-    const isGroupActive = _iocActiveThread.type === 'group';
+    const members = iocGetMembers();
+    const search  = (document.getElementById('crmChatSearch')?.value || '').toLowerCase();
 
-    // Group chat preview (only meaningful when current thread is group)
-    const lastMsg = _iocMsgs.filter(m => !m.recalled).slice(-1)[0];
-    const preview = lastMsg
-      ? (lastMsg.imageUrl ? '📷 Hình ảnh'
-          : lastMsg.fileName ? `📎 ${lastMsg.fileName}`
-          : esc(lastMsg.content || ''))
-      : 'Chưa có tin nhắn';
-    const timeStr = lastMsg?.createdAt?.toDate
-      ? lastMsg.createdAt.toDate().toLocaleTimeString('vi-VN', { hour:'2-digit', minute:'2-digit' })
-      : '';
-
-    favEl.innerHTML = `<div class="ioc-conv-item${isGroupActive ? ' active' : ''}" data-thread-id="group-global">
-      <div class="ioc-conv-av" style="background:#2563EB">N<span class="ioc-online"></span></div>
-      <div class="ioc-conv-body">
-        <div class="ioc-conv-name">Nhóm Nội bộ Aladdin</div>
-        <div class="ioc-conv-preview">${preview}</div>
-      </div>
-      <div class="ioc-conv-meta"><span class="ioc-conv-time">${timeStr}</span></div>
-    </div>`;
-    favEl.querySelector('[data-thread-id]')?.addEventListener('click', () =>
-      iocOpenThread('group-global', 'Nhóm Nội bộ Aladdin', 'N', '#2563EB', 'group')
-    );
+    // Group preview
+    const getLastMsgPreview = (msgs) => {
+      const m = msgs.filter(x => !x.recalled).slice(-1)[0];
+      if (!m) return { text: 'Chưa có tin nhắn', time: '' };
+      return {
+        text: m.imageUrl ? '📷 Hình ảnh' : m.fileName ? `📎 ${m.fileName}` : esc(m.content || ''),
+        time: m.createdAt?.toDate ? m.createdAt.toDate().toLocaleTimeString('vi-VN',{hour:'2-digit',minute:'2-digit'}) : ''
+      };
+    };
+    const groupIsActive = _iocActiveThread.id === 'group-global';
+    const { text: gText, time: gTime } = groupIsActive
+      ? getLastMsgPreview(_iocMsgs)
+      : { text: _iocDmPreviews['group-global']?.text || 'Chưa có tin nhắn', time: _iocDmPreviews['group-global']?.time || '' };
+    const groupUnread = groupIsActive ? 0 : (_iocDmPreviews['group-global']?.unread || 0);
+    const groupItem = iocBuildConvItem('group-global','N','#2563EB','Nhóm Nội bộ Aladdin', gText, gTime, groupIsActive, groupUnread);
 
     const filtered = members.filter(u =>
-      !search || (u.name || '').toLowerCase().includes(search)
-              || (u.department || u.dept || '').toLowerCase().includes(search)
+      !search || (u.name||'').toLowerCase().includes(search) || (u.department||u.dept||'').toLowerCase().includes(search)
     );
 
-    recEl.innerHTML = filtered.slice(0, 15).map(u => {
-      const ini    = (u.name || 'U').split(' ').map(w => w[0]).join('').slice(0,2).toUpperCase();
-      const color  = iocAvatarColor(u.name || 'U');
-      const sub    = u.position || u.dept || u.department || (u.role === 'admin' ? 'Quản trị viên' : 'Nhân viên');
-      const dmId   = 'dm-' + [currentUser?.uid || currentUser?.email || 'me', u.id || u.uid || u.email].sort().join('__');
-      const active = _iocActiveThread.id === dmId;
-      return `<div class="ioc-conv-item${active ? ' active' : ''}"
-        data-dm-id="${dmId}" data-dm-name="${esc(u.name||'Người dùng')}"
-        data-dm-av="${ini}" data-dm-color="${color}">
-        <div class="ioc-conv-av" style="background:${color}">${ini}<span class="ioc-online"></span></div>
-        <div class="ioc-conv-body">
-          <div class="ioc-conv-name">${esc(u.name||'Người dùng')}</div>
-          <div class="ioc-conv-preview">${esc(sub)}</div>
-        </div>
-      </div>`;
-    }).join('') || '<div class="ioc-empty-list">Không tìm thấy nhân viên</div>';
+    const dmItemsHtml = filtered.slice(0, 20).map(u => {
+      const ini   = (u.name||'U').split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
+      const color = iocAvatarColor(u.name||'U');
+      const dmId  = 'dm-'+[currentUser?.uid||currentUser?.email||'me', u.id||u.uid||u.email].sort().join('__');
+      const active= _iocActiveThread.id === dmId;
+      const { text, time } = active ? getLastMsgPreview(_iocMsgs) : { text: _iocDmPreviews[dmId]?.text || u.position||u.department||'Nhân viên', time: _iocDmPreviews[dmId]?.time||'' };
+      const unread= active ? 0 : (_iocDmPreviews[dmId]?.unread||0);
+      return { html: iocBuildConvItem(dmId,ini,color,u.name||'Người dùng',text,time,active,unread), dmId };
+    });
 
-    recEl.querySelectorAll('[data-dm-id]').forEach(el => {
-      el.addEventListener('click', () =>
-        iocOpenThread(el.dataset.dmId, el.dataset.dmName, el.dataset.dmAv, el.dataset.dmColor, 'dm')
-      );
+    const groupIsFav = _iocFavThreads.has('group-global');
+    const favDms = dmItemsHtml.filter(x => _iocFavThreads.has(x.dmId));
+    const recDms = dmItemsHtml.filter(x => !_iocFavThreads.has(x.dmId));
+
+    favEl.innerHTML = (groupIsFav ? groupItem : '') + favDms.map(x=>x.html).join('');
+    recEl.innerHTML = (!groupIsFav ? groupItem : '') + (recDms.map(x=>x.html).join('') || '<div class="ioc-empty-list">Không tìm thấy nhân viên</div>');
+
+    [favEl, recEl].forEach(container => {
+      container.querySelectorAll('[data-thread-id]').forEach(el => {
+        el.addEventListener('click', () => {
+          const id   = el.dataset.threadId;
+          const name = el.dataset.threadName || id;
+          const av   = el.dataset.threadAv || name[0];
+          const col  = el.dataset.threadColor || iocAvatarColor(name);
+          iocOpenThread(id, name, av, col, id === 'group-global' ? 'group' : 'dm');
+        });
+      });
     });
 
     const subEl = document.getElementById('iocActiveThreadSub');
@@ -6978,6 +7032,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!container) return;
     _iocMsgs = msgs;
     iocUpdatePinnedCount();
+    iocUpdateMediaCounts();
 
     if (!msgs.length) {
       container.innerHTML = '<div class="crm-chat-loading">Chưa có tin nhắn. Hãy bắt đầu cuộc trò chuyện!</div>';
@@ -7185,22 +7240,230 @@ document.addEventListener('DOMContentLoaded', () => {
   };
 
   // ── Info panel ─────────────────────────────────────────────────────────────
+  const iocHideAllSubPanels = () => {
+    ['iocInfoMain','iocMembersPanel','iocPinnedPanel','iocMediaPanel'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.style.display = 'none';
+    });
+  };
   const iocShowInfoMain = () => {
-    document.getElementById('iocInfoMain').style.display    = '';
-    document.getElementById('iocMembersPanel').style.display = 'none';
-    document.getElementById('iocPinnedPanel').style.display  = 'none';
+    iocHideAllSubPanels();
+    const el = document.getElementById('iocInfoMain');
+    if (el) el.style.display = '';
   };
   const iocShowMembers = () => {
     iocRenderMembers();
-    document.getElementById('iocInfoMain').style.display    = 'none';
-    document.getElementById('iocMembersPanel').style.display = '';
-    document.getElementById('iocPinnedPanel').style.display  = 'none';
+    iocHideAllSubPanels();
+    const el = document.getElementById('iocMembersPanel');
+    if (el) el.style.display = '';
   };
   const iocShowPinned = () => {
     iocRenderPinnedPanel();
-    document.getElementById('iocInfoMain').style.display    = 'none';
-    document.getElementById('iocPinnedPanel').style.display  = '';
-    document.getElementById('iocMembersPanel').style.display = 'none';
+    iocHideAllSubPanels();
+    const el = document.getElementById('iocPinnedPanel');
+    if (el) el.style.display = '';
+  };
+  const iocShowMedia = type => {
+    iocHideAllSubPanels();
+    const panel = document.getElementById('iocMediaPanel');
+    if (panel) panel.style.display = '';
+    const title = document.getElementById('iocMediaPanelTitle');
+    if (title) title.textContent = type === 'image' ? 'Ảnh & Video' : 'Files';
+    const grid = document.getElementById('iocMediaGrid');
+    if (!grid) return;
+    const filtered = _iocMsgs.filter(m => !m.recalled && (type === 'image' ? !!m.imageUrl : !!m.fileName));
+    if (!filtered.length) {
+      grid.innerHTML = `<div style="padding:1.5rem;text-align:center;color:var(--text-muted);font-size:0.82rem;grid-column:1/-1">Chưa có ${type==='image'?'ảnh':'file'} nào</div>`;
+      return;
+    }
+    if (type === 'image') {
+      grid.innerHTML = filtered.map(m => `<img src="${m.imageUrl}" class="ioc-media-thumb" alt="" title="${esc(m.senderName||'')}">`).join('');
+      grid.querySelectorAll('.ioc-media-thumb').forEach((img, i) => {
+        img.addEventListener('click', () => {
+          const ov = document.createElement('div');
+          ov.className = 'ioc-lightbox';
+          ov.innerHTML = `<img src="${filtered[i].imageUrl}" alt=""><button class="ioc-lightbox-close">&times;</button>`;
+          document.body.appendChild(ov);
+          ov.addEventListener('click', () => ov.remove());
+        });
+      });
+    } else {
+      grid.style.gridTemplateColumns = '1fr';
+      grid.innerHTML = filtered.map(m => `<div class="ioc-pinned-item">
+        <div class="ioc-pinned-item-sender">${esc(m.senderName||'')} · ${m.createdAt?.toDate?m.createdAt.toDate().toLocaleDateString('vi-VN'):''}</div>
+        <div class="ioc-pinned-item-text">📎 ${esc(m.fileName||'')}</div>
+      </div>`).join('');
+    }
+  };
+
+  // Update media counts in info panel
+  const iocUpdateMediaCounts = () => {
+    const imgCount = _iocMsgs.filter(m => !m.recalled && m.imageUrl).length;
+    const fileCount = _iocMsgs.filter(m => !m.recalled && m.fileName).length;
+    const ic = document.getElementById('iocImageCount');
+    const fc = document.getElementById('iocFileCount');
+    if (ic) ic.textContent = imgCount || '';
+    if (fc) fc.textContent = fileCount || '';
+  };
+
+  // ── Favorites ──────────────────────────────────────────────────────────────
+  const iocUpdateFavBtn = () => {
+    const isFav = _iocFavThreads.has(_iocActiveThread.id);
+    const icon  = document.getElementById('iocFavIcon');
+    const label = document.getElementById('iocFavLabel');
+    if (icon)  icon.textContent  = isFav ? '★' : '☆';
+    if (label) label.textContent = isFav ? 'Bỏ yêu thích' : 'Yêu thích';
+  };
+  const iocToggleFavorite = () => {
+    const id = _iocActiveThread.id;
+    if (_iocFavThreads.has(id)) _iocFavThreads.delete(id);
+    else _iocFavThreads.add(id);
+    iocSavePrefs();
+    iocUpdateFavBtn();
+    iocRenderConvList();
+    showToast(_iocFavThreads.has(id) ? 'Đã thêm vào yêu thích!' : 'Đã bỏ yêu thích!', 'success');
+  };
+
+  // ── Notify mute ────────────────────────────────────────────────────────────
+  const iocUpdateNotifyBtn = () => {
+    const muted = _iocMutedThreads.has(_iocActiveThread.id);
+    const icon  = document.getElementById('iocNotifyIcon');
+    const label = document.getElementById('iocNotifyLabel');
+    if (icon)  icon.textContent  = muted ? '🔕' : '🔔';
+    if (label) label.textContent = muted ? 'Bật thông báo' : 'Tắt thông báo';
+  };
+  const iocToggleNotify = () => {
+    const id = _iocActiveThread.id;
+    if (_iocMutedThreads.has(id)) _iocMutedThreads.delete(id);
+    else _iocMutedThreads.add(id);
+    iocSavePrefs();
+    iocUpdateNotifyBtn();
+    showToast(_iocMutedThreads.has(id) ? 'Đã tắt thông báo!' : 'Đã bật thông báo!', 'success');
+  };
+
+  // ── Group rename ───────────────────────────────────────────────────────────
+  const iocRenameGroup = () => {
+    if (_iocActiveThread.type !== 'group') return;
+    const nameEl = document.getElementById('iocInfoGroupName');
+    if (!nameEl) return;
+    const current = _iocActiveThread.name;
+    const input = document.createElement('input');
+    input.value = current;
+    input.className = 'ioc-rename-input';
+    nameEl.innerHTML = '';
+    nameEl.appendChild(input);
+    input.focus(); input.select();
+    const save = async () => {
+      const name = input.value.trim() || current;
+      _iocActiveThread.name = name;
+      const nameHeaderEl = document.getElementById('iocActiveThreadName');
+      if (nameHeaderEl) nameHeaderEl.textContent = name;
+      nameEl.innerHTML = esc(name);
+      const editBtn = document.createElement('button');
+      editBtn.className = 'ioc-info-edit-btn'; editBtn.id = 'btnIocRenameGroup'; editBtn.title = 'Đổi tên';
+      editBtn.innerHTML = `<svg viewBox="0 0 24 24"><path d="M20.71,7.04C21.1,6.65 21.1,6 20.71,5.63L18.37,3.29C18,2.9 17.35,2.9 16.96,3.29L15.12,5.12L18.87,8.87M3,17.25V21H6.75L17.81,9.93L14.06,6.18L3,17.25Z"/></svg>`;
+      nameEl.appendChild(editBtn);
+      editBtn.addEventListener('click', iocRenameGroup);
+      if (name !== current) {
+        try { await db.collection('chat_settings').doc(_iocActiveThread.id).set({ name }, { merge: true }); showToast('Đã đổi tên nhóm!','success'); } catch(_) {}
+      }
+    };
+    input.addEventListener('blur', save);
+    input.addEventListener('keydown', e => {
+      if (e.key === 'Enter') { e.preventDefault(); input.blur(); }
+      if (e.key === 'Escape') { input.value = current; input.blur(); }
+    });
+  };
+
+  // ── Forward ────────────────────────────────────────────────────────────────
+  const iocOpenForward = msgId => {
+    _iocForwardId = msgId;
+    const msg = _iocMsgs.find(m => m.id === msgId);
+    if (!msg) return;
+    const prev = document.getElementById('iocFwdPreview');
+    if (prev) prev.textContent = msg.recalled ? '' : (msg.content || (msg.imageUrl ? '[Hình ảnh]' : msg.fileName ? `[${msg.fileName}]` : ''));
+    iocRenderFwdList('');
+    const modal = document.getElementById('iocForwardModal');
+    if (modal) modal.style.display = 'flex';
+  };
+  const iocRenderFwdList = search => {
+    const list = document.getElementById('iocFwdList');
+    if (!list) return;
+    const members = iocGetMembers();
+    const q = (search || '').toLowerCase();
+    const items = [
+      { id:'group-global', name:'Nhóm Nội bộ Aladdin', av:'N', color:'#2563EB' },
+      ...members.filter(u => !q || (u.name||'').toLowerCase().includes(q)).map(u => ({
+        id: 'dm-'+[currentUser?.uid||currentUser?.email||'me', u.id||u.uid||u.email].sort().join('__'),
+        name: u.name||'Người dùng',
+        av:   (u.name||'U').split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase(),
+        color: iocAvatarColor(u.name||'U'),
+      }))
+    ].filter(x => x.id !== _iocActiveThread.id);
+    list.innerHTML = items.map(x =>
+      `<div class="ioc-fwd-item" data-fwd-id="${x.id}">
+        <div class="ioc-member-av" style="background:${x.color}">${x.av}</div>
+        <span>${esc(x.name)}</span>
+      </div>`
+    ).join('');
+    list.querySelectorAll('.ioc-fwd-item').forEach(el => {
+      el.addEventListener('click', () => {
+        list.querySelectorAll('.ioc-fwd-item').forEach(i => i.classList.remove('selected'));
+        el.classList.add('selected');
+      });
+    });
+  };
+  const iocConfirmForward = async () => {
+    const selected = document.getElementById('iocFwdList')?.querySelector('.ioc-fwd-item.selected');
+    if (!selected || !_iocForwardId) return;
+    const origMsg = _iocMsgs.find(m => m.id === _iocForwardId);
+    if (!origMsg || origMsg.recalled) return;
+    const threadId = selected.dataset.fwdId;
+    const payload = {
+      content: origMsg.content || '', senderName: currentUser.name,
+      senderEmail: currentUser.email, senderRole: currentUser.role === 'admin' ? 'quản trị viên' : 'nhân viên',
+      threadId, createdAt: firebase.firestore.Timestamp.now(),
+      recalled: false, edited: false, pinned: false, forwarded: true,
+    };
+    if (origMsg.imageUrl) payload.imageUrl = origMsg.imageUrl;
+    if (origMsg.fileName) payload.fileName = origMsg.fileName;
+    try {
+      await db.collection('messages').add(payload);
+      const nm = selected.querySelector('span')?.textContent || threadId;
+      showToast(`Đã chuyển tiếp đến ${nm}!`, 'success');
+      document.getElementById('iocForwardModal').style.display = 'none';
+      _iocForwardId = null;
+    } catch(e) { showToast('Lỗi chuyển tiếp!', 'error'); }
+  };
+
+  // ── New chat / New DM ──────────────────────────────────────────────────────
+  const iocOpenNewChat = () => {
+    iocRenderNewChatList('');
+    const modal = document.getElementById('iocNewChatModal');
+    if (modal) modal.style.display = 'flex';
+  };
+  const iocRenderNewChatList = search => {
+    const list = document.getElementById('iocNewChatList');
+    if (!list) return;
+    const members = iocGetMembers();
+    const q = (search || '').toLowerCase();
+    const filtered = members.filter(u => !q || (u.name||'').toLowerCase().includes(q));
+    list.innerHTML = filtered.slice(0,20).map(u => {
+      const ini   = (u.name||'U').split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
+      const color = iocAvatarColor(u.name||'U');
+      const dmId  = 'dm-'+[currentUser?.uid||currentUser?.email||'me', u.id||u.uid||u.email].sort().join('__');
+      const sub   = u.position || u.department || 'Nhân viên';
+      return `<div class="ioc-fwd-item" data-dm-id="${dmId}" data-dm-name="${esc(u.name||'')}" data-dm-av="${ini}" data-dm-color="${color}">
+        <div class="ioc-member-av" style="background:${color}">${ini}</div>
+        <div><div style="font-weight:600">${esc(u.name||'Người dùng')}</div><div style="font-size:0.75rem;color:var(--text-muted)">${esc(sub)}</div></div>
+      </div>`;
+    }).join('') || '<div class="ioc-empty-list">Không tìm thấy nhân viên</div>';
+    list.querySelectorAll('.ioc-fwd-item').forEach(el => {
+      el.addEventListener('click', () => {
+        document.getElementById('iocNewChatModal').style.display = 'none';
+        iocOpenThread(el.dataset.dmId, el.dataset.dmName, el.dataset.dmAv, el.dataset.dmColor, 'dm');
+      });
+    });
   };
 
   // ── Emoji picker ───────────────────────────────────────────────────────────
@@ -7400,7 +7663,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (act === 'recall')  iocRecall(msgId);
         if (act === 'pin')     iocPin(msgId);
         if (act === 'edit')    iocOpenEdit(msgId);
-        if (act === 'forward') showToast('Tính năng chuyển tiếp sắp ra mắt!', 'info');
+        if (act === 'forward') iocOpenForward(msgId);
         if (act === 'relate')  showToast('Tính năng đang phát triển!', 'info');
         if (act === 'delete')  iocDelete(msgId);
       });
@@ -7478,6 +7741,43 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('btnIocBackFromMembers')?.addEventListener('click', iocShowInfoMain);
     document.getElementById('btnIocShowPinned')?.addEventListener('click', iocShowPinned);
     document.getElementById('btnIocBackFromPinned')?.addEventListener('click', iocShowInfoMain);
+    document.getElementById('btnIocBackFromMedia')?.addEventListener('click', iocShowInfoMain);
+    document.getElementById('btnIocShowImages')?.addEventListener('click', () => iocShowMedia('image'));
+    document.getElementById('btnIocShowFiles')?.addEventListener('click',  () => iocShowMedia('file'));
+
+    // Favorites & notify
+    document.getElementById('btnIocFavorite')?.addEventListener('click', iocToggleFavorite);
+    document.getElementById('btnIocNotify')?.addEventListener('click', iocToggleNotify);
+
+    // Group rename
+    document.getElementById('btnIocRenameGroup')?.addEventListener('click', iocRenameGroup);
+
+    // Forward modal
+    document.getElementById('btnCloseIocForward')?.addEventListener('click', () => {
+      document.getElementById('iocForwardModal').style.display = 'none'; _iocForwardId = null;
+    });
+    document.getElementById('btnCancelIocForward')?.addEventListener('click', () => {
+      document.getElementById('iocForwardModal').style.display = 'none'; _iocForwardId = null;
+    });
+    document.getElementById('btnConfirmIocForward')?.addEventListener('click', iocConfirmForward);
+    document.getElementById('iocFwdSearch')?.addEventListener('input', e => iocRenderFwdList(e.target.value));
+
+    // New chat modal
+    document.getElementById('btnIocNewChat')?.addEventListener('click', iocOpenNewChat);
+    document.getElementById('btnCloseIocNewChat')?.addEventListener('click', () => {
+      document.getElementById('iocNewChatModal').style.display = 'none';
+    });
+    document.getElementById('iocNewChatSearch')?.addEventListener('input', e => iocRenderNewChatList(e.target.value));
+
+    // Close modals on backdrop click
+    ['iocForwardModal','iocNewChatModal'].forEach(id => {
+      document.getElementById(id)?.addEventListener('click', e => {
+        if (e.target.id === id) {
+          document.getElementById(id).style.display = 'none';
+          _iocForwardId = null;
+        }
+      });
+    });
 
     document.getElementById('btnConfirmIocEdit')?.addEventListener('click', iocConfirmEdit);
     document.getElementById('btnCancelIocEdit')?.addEventListener('click', () => {
@@ -7610,6 +7910,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
       });
 
+      iocLoadPrefs();
       iocBindEvents();
 
       if (currentUser) {
