@@ -6864,7 +6864,7 @@ document.addEventListener('DOMContentLoaded', () => {
   let _iocMutedThreads = new Set();
   let _iocActiveThread = {
     id: 'group-global', name: 'Nhóm Nội bộ Aladdin',
-    av: 'N', color: '#2563EB', type: 'group'
+    av: 'N', color: '#6366F1', type: 'group'
   };
 
   // Persist favorites & mutes to localStorage (keyed by email)
@@ -6882,7 +6882,7 @@ document.addEventListener('DOMContentLoaded', () => {
   };
 
   const iocAvatarColor = str => {
-    const C = ['#2563EB','#7C3AED','#DB2777','#D97706','#059669','#0891B2','#DC2626','#7E22CE'];
+    const C = ['#6366F1','#7C3AED','#DB2777','#D97706','#059669','#0891B2','#DC2626','#7E22CE'];
     let h = 0;
     for (let i = 0; i < (str || '').length; i++) h = (str.charCodeAt(i) + ((h << 5) - h)) | 0;
     return C[Math.abs(h) % C.length];
@@ -6985,7 +6985,7 @@ document.addEventListener('DOMContentLoaded', () => {
       ? getLastMsgPreview(_iocMsgs)
       : { text: _iocDmPreviews['group-global']?.text || 'Chưa có tin nhắn', time: _iocDmPreviews['group-global']?.time || '' };
     const groupUnread = groupIsActive ? 0 : (_iocDmPreviews['group-global']?.unread || 0);
-    const groupItem = iocBuildConvItem('group-global','N','#2563EB','Nhóm Nội bộ Aladdin', gText, gTime, groupIsActive, groupUnread);
+    const groupItem = iocBuildConvItem('group-global','N','#6366F1','Nhóm Nội bộ Aladdin', gText, gTime, groupIsActive, groupUnread);
 
     const filtered = members.filter(u =>
       !search || (u.name||'').toLowerCase().includes(search) || (u.department||u.dept||'').toLowerCase().includes(search)
@@ -7392,7 +7392,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const members = iocGetMembers();
     const q = (search || '').toLowerCase();
     const items = [
-      { id:'group-global', name:'Nhóm Nội bộ Aladdin', av:'N', color:'#2563EB' },
+      { id:'group-global', name:'Nhóm Nội bộ Aladdin', av:'N', color:'#6366F1' },
       ...members.filter(u => !q || (u.name||'').toLowerCase().includes(q)).map(u => ({
         id: 'dm-'+[currentUser?.uid||currentUser?.email||'me', u.id||u.uid||u.email].sort().join('__'),
         name: u.name||'Người dùng',
@@ -7726,7 +7726,7 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('crmChatSearch')?.addEventListener('input', iocRenderConvList);
 
     document.getElementById('btnIocThreadBack')?.addEventListener('click', () =>
-      iocOpenThread('group-global', 'Nhóm Nội bộ Aladdin', 'N', '#2563EB', 'group')
+      iocOpenThread('group-global', 'Nhóm Nội bộ Aladdin', 'N', '#6366F1', 'group')
     );
 
     document.getElementById('btnToggleIocInfo')?.addEventListener('click', () => {
@@ -7761,6 +7761,9 @@ document.addEventListener('DOMContentLoaded', () => {
     });
     document.getElementById('btnConfirmIocForward')?.addEventListener('click', iocConfirmForward);
     document.getElementById('iocFwdSearch')?.addEventListener('input', e => iocRenderFwdList(e.target.value));
+
+    // Filter row (visual-only for now — re-renders the list)
+    document.getElementById('btnIocFilter')?.addEventListener('click', () => iocRenderConvList());
 
     // New chat modal
     document.getElementById('btnIocNewChat')?.addEventListener('click', iocOpenNewChat);
