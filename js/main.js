@@ -985,6 +985,13 @@ document.addEventListener('DOMContentLoaded', () => {
     if (miniSpName) miniSpName.textContent = user.name;
     if (miniSpRole) miniSpRole.textContent = displayRole;
 
+    // Mini CRM header
+    syncAvatarElement('miniCrmAvatar');
+    const miniCrmName = document.getElementById('miniCrmName');
+    const miniCrmRole = document.getElementById('miniCrmRole');
+    if (miniCrmName) miniCrmName.textContent = user.name;
+    if (miniCrmRole) miniCrmRole.textContent = displayRole;
+
     // Role-based Access Controls (Admin Only "Tạo tài khoản NV" & "Tạo tài khoản HV")
     const menuItemCreateUsers = document.getElementById('menuItemCreateUsers');
     const menuItemCreateStudentUsers = document.getElementById('menuItemCreateStudentUsers');
@@ -3796,6 +3803,22 @@ document.addEventListener('DOMContentLoaded', () => {
         };
 
         await db.collection("users").doc(uid).update(updates);
+
+        // Also sync photoUrl to hrm_staff document if this is an employee
+        if (selectedProfileAvatarBase64 && currentUser.email) {
+          try {
+            const staffSnap = await db.collection('hrm_staff').where('email', '==', currentUser.email).limit(1).get();
+            if (!staffSnap.empty) {
+              await staffSnap.docs[0].ref.update({ photoUrl: selectedProfileAvatarBase64 });
+              // Update large profile avatar immediately if visible
+              const lgEl = document.getElementById('spProfileAvatarLg');
+              if (lgEl) {
+                lgEl.innerHTML = `<img src="${selectedProfileAvatarBase64}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">`;
+                lgEl.style.background = 'transparent';
+              }
+            }
+          } catch (_) { /* non-critical */ }
+        }
 
         currentUser.name = newName;
         currentUser.phone = newPhone;
@@ -7593,7 +7616,14 @@ document.addEventListener('DOMContentLoaded', () => {
         const av = document.getElementById('miniCrmAvatar');
         const nm = document.getElementById('miniCrmName');
         const rl = document.getElementById('miniCrmRole');
-        if (av) av.textContent = (currentUser.name || 'U').slice(0, 2).toUpperCase();
+        if (av) {
+          if (currentUser.avatar) {
+            av.innerHTML = `<img src="${currentUser.avatar}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">`;
+            av.style.backgroundColor = 'transparent';
+          } else {
+            av.textContent = (currentUser.name || 'U').split(' ').map(n=>n[0]).join('').substring(0,2).toUpperCase();
+          }
+        }
         if (nm) nm.textContent = currentUser.name || 'Người dùng';
         if (rl) rl.textContent = currentUser.role === 'admin' ? 'Quản trị viên' : 'Nhân viên';
       }
@@ -7839,9 +7869,14 @@ document.addEventListener('DOMContentLoaded', () => {
       } else {
         const avatarEl = document.getElementById('spProfileAvatarLg');
         if (avatarEl) {
-          const initials = (currentUser.name || 'NV').split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
-          avatarEl.textContent = initials;
-          avatarEl.style.background = getAvatarBgColor(currentUser.name || '');
+          if (currentUser.avatar) {
+            avatarEl.innerHTML = `<img src="${currentUser.avatar}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">`;
+            avatarEl.style.background = 'transparent';
+          } else {
+            const initials = (currentUser.name || 'NV').split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
+            avatarEl.textContent = initials;
+            avatarEl.style.background = getAvatarBgColor(currentUser.name || '');
+          }
         }
         const nameEl = document.getElementById('spProfileFullName');
         if (nameEl) nameEl.textContent = currentUser.name || '--';
