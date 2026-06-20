@@ -3694,14 +3694,20 @@ document.addEventListener('DOMContentLoaded', () => {
     profileFullNameInput.value = currentUser.name || "";
     selectedProfileAvatarBase64 = currentUser.avatar || null;
 
-    // Update avatar preview modal
+    const phoneEl = document.getElementById('profilePhone');
+    const dobEl = document.getElementById('profileDob');
+    const emailDisplayEl = document.getElementById('profileEmailDisplay');
+    if (phoneEl) phoneEl.value = currentUser.phone || '';
+    if (dobEl) dobEl.value = currentUser.dob || '';
+    if (emailDisplayEl) emailDisplayEl.textContent = currentUser.email || auth.currentUser?.email || '--';
+
     if (selectedProfileAvatarBase64) {
       profileAvatarPreview.innerHTML = `<img src="${selectedProfileAvatarBase64}" style="width:100%; height:100%; object-fit:cover; border-radius:50%;">`;
       profileAvatarPreview.style.backgroundColor = "transparent";
     } else {
-      const initials = currentUser.name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+      const initials = (currentUser.name || 'U').split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
       profileAvatarPreview.textContent = initials;
-      profileAvatarPreview.style.backgroundColor = getAvatarBgColor(currentUser.name);
+      profileAvatarPreview.style.backgroundColor = getAvatarBgColor(currentUser.name || 'U');
     }
 
     profileModal.style.display = 'flex';
@@ -3770,34 +3776,38 @@ document.addEventListener('DOMContentLoaded', () => {
       
       const newName = profileFullNameInput.value.trim();
       if (!newName) {
-        showToast("Vui lòng điền đầy đủ họ và tên của bạn!", "error");
+        showToast("Vui lòng điền đầy đủ họ và tên!", "error");
         return;
       }
 
-      showToast("Đang cập nhật hồ sơ cá nhân...", "info");
+      const newPhone = (document.getElementById('profilePhone')?.value || '').trim();
+      const newDob = document.getElementById('profileDob')?.value || '';
+
+      showToast("Đang cập nhật hồ sơ...", "info");
 
       try {
         const uid = auth.currentUser.uid;
         const updates = {
           name: newName,
+          phone: newPhone,
+          dob: newDob,
           avatar: selectedProfileAvatarBase64 || null,
           updatedAt: firebase.firestore.FieldValue.serverTimestamp()
         };
 
-        // Write changes to Firestore user document
         await db.collection("users").doc(uid).update(updates);
 
-        // Update local currentUser state instantly
         currentUser.name = newName;
+        currentUser.phone = newPhone;
+        currentUser.dob = newDob;
         currentUser.avatar = selectedProfileAvatarBase64 || null;
 
-        // Force reload / re-sync UI details
         syncUserInfoUI(currentUser);
         closeProfileModal();
-        showToast("Hồ sơ cá nhân của bạn đã được cập nhật thành công!", "success");
+        showToast("Hồ sơ đã được cập nhật!", "success");
       } catch (err) {
         console.error("Failed to update user profile:", err);
-        showToast("Lỗi cập nhật hồ sơ cá nhân!", "error");
+        showToast("Lỗi cập nhật hồ sơ!", "error");
       }
     });
   }
