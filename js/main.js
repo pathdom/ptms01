@@ -7082,7 +7082,8 @@ document.addEventListener('DOMContentLoaded', () => {
             ${esc(msg.fileName)}</div>`;
         }
         const text = msg.content ? `<span class="ioc-msg-text">${esc(msg.content)}</span>` : '';
-        bubbleContent = `<div class="ioc-msg-bubble" data-msgid="${msg.id}">
+        const mediaOnly = msg.imageUrl && !msg.content ? ' media-only' : '';
+        bubbleContent = `<div class="ioc-msg-bubble${mediaOnly}" data-msgid="${msg.id}">
           ${quoteHtml}${media}${text}${editBadge}${pinBadge}
         </div>`;
       }
@@ -7730,7 +7731,14 @@ document.addEventListener('DOMContentLoaded', () => {
     );
 
     document.getElementById('btnToggleIocInfo')?.addEventListener('click', () => {
-      document.getElementById('iocInfoPanel')?.classList.toggle('hidden');
+      const panel  = document.getElementById('iocInfoPanel');
+      const layout = document.querySelector('#crm-chat-tab .ioc-layout');
+      if (!panel) return;
+      panel.classList.toggle('hidden');
+      const isHidden = panel.classList.contains('hidden');
+      if (layout) layout.classList.toggle('ioc-info-hidden', isHidden);
+      const btn = document.getElementById('btnToggleIocInfo');
+      if (btn) btn.style.color = isHidden ? 'var(--ioc-purple)' : '';
     });
 
     document.getElementById('btnIocShowMembers')?.addEventListener('click', iocShowMembers);

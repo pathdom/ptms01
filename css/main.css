@@ -4812,14 +4812,24 @@ body.dark-theme-crm {
 /* Images and files in messages */
 .ioc-msg-img-wrap { margin-bottom: 0.3rem; }
 .ioc-msg-img {
-  max-width: 220px;
-  max-height: 200px;
-  border-radius: 10px;
+  max-width: 240px;
+  max-height: 220px;
+  border-radius: 12px;
   display: block;
   cursor: zoom-in;
   transition: transform 0.2s;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.12);
 }
 .ioc-msg-img:hover { transform: scale(1.02); }
+
+/* Media-only bubble: no colored wrapper */
+.ioc-msg-bubble.media-only {
+  background: none !important;
+  padding: 0 !important;
+  box-shadow: none !important;
+  border-radius: 0 !important;
+}
+.ioc-msg-bubble.media-only .ioc-msg-img-wrap { margin-bottom: 0; }
 .ioc-msg-file-pill {
   display: inline-flex;
   align-items: center;
@@ -5012,6 +5022,12 @@ body.dark-theme-crm {
   transition: width 0.2s ease;
 }
 .ioc-info-panel.hidden { display: none; }
+
+/* When info panel is hidden, chat column expands */
+.ioc-layout.ioc-info-hidden {
+  grid-template-columns: 300px 1fr;
+  transition: grid-template-columns 0.2s ease;
+}
 
 .ioc-info-group-hd {
   display: flex; flex-direction: column; align-items: center;
