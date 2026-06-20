@@ -4992,6 +4992,9 @@ document.addEventListener('DOMContentLoaded', () => {
     setText('profileBankAccountName', s.bankAccountName);
     setText('profileTaxCode', s.taxCode);
 
+    // Load leave data for admin view
+    if (s.email) loadLeaveData(s.email, s.joinDate, 'adm', false);
+
     requestAnimationFrame(() => {
       drawDonutChart('workEfficiencyChart', totalTasks, [
         { value: early, color: '#4CAF50' },
@@ -6518,7 +6521,6 @@ document.addEventListener('DOMContentLoaded', () => {
     tbody.innerHTML = pageData.map((c, i) => {
       const gi   = globalOffset + i;
       const ini  = (c.name || 'KH').split(' ').map(w => w[0]).filter(Boolean).slice(-2).join('').toUpperCase();
-      const flag = flags[c.country] || '🌏';
       let dateStr = '--';
       if (c.createdAt?.toDate) {
         const d = c.createdAt.toDate();
@@ -6680,6 +6682,9 @@ document.addEventListener('DOMContentLoaded', () => {
     setText('crmProfileBankName', s.bankName);
     setText('crmProfileBankAccountName', s.bankAccountName);
     setText('crmProfileTaxCode', s.taxCode);
+
+    // Load leave data for CRM staff view
+    if (s.email) loadLeaveData(s.email, s.joinDate, 'cpt', false);
 
     requestAnimationFrame(() => {
       drawDonutChart('crmWorkEfficiencyChart', totalTasks, [
@@ -7809,6 +7814,18 @@ document.addEventListener('DOMContentLoaded', () => {
       if (!snap.empty) {
         const s = { id: snap.docs[0].id, ...snap.docs[0].data() };
         populateStaffProfileDashboard(s);
+        // Setup leave tab
+        _leaveStaffEmail = s.email || currentUser.email;
+        setupLeaveModal();
+        subscribeLeave(_leaveStaffEmail, s.joinDate);
+        document.getElementById('btnRequestLeave')?.addEventListener('click', () => {
+          // Set default date to today
+          const d = new Date();
+          const todayVal = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+          const dateInput = document.getElementById('leaveDate');
+          if (dateInput && !dateInput.value) dateInput.value = todayVal;
+          document.getElementById('leaveRequestModal').style.display = 'flex';
+        });
       } else {
         const avatarEl = document.getElementById('spProfileAvatarLg');
         if (avatarEl) {
@@ -7824,6 +7841,146 @@ document.addEventListener('DOMContentLoaded', () => {
     } catch (err) {
       console.error('Staff profile load error:', err);
     }
+  };
+
+  // ==========================================================================
+  // LEAVE MANAGEMENT — Thông tin phép
+  // ==========================================================================
+
+  const calcLeaveBalance = (joinDateRaw) => {
+    if (!joinDateRaw) return { total: 0, months: 0, joinStr: '--' };
+    const jd = joinDateRaw.toDate ? joinDateRaw.toDate()
+              : (typeof joinDateRaw === 'string' ? new Date(joinDateRaw + 'T00:00:00') : new Date(joinDateRaw));
+    if (isNaN(jd)) return { total: 0, months: 0, joinStr: '--' };
+    const months = Math.floor((Date.now() - jd.getTime()) / (1000 * 60 * 60 * 24 * 30.44));
+    const total  = Math.max(0, months);
+    const joinStr = `${String(jd.getDate()).padStart(2,'0')}/${String(jd.getMonth()+1).padStart(2,'0')}/${jd.getFullYear()}`;
+    return { total, months, joinStr };
+  };
+
+  const fmtLeaveDate = (dateStr) => {
+    if (!dateStr) return '--';
+    const [y,m,d] = dateStr.split('-');
+    return `${d}/${m}/${y}`;
+  };
+
+  const sessionLabel = s => s === 'morning' ? 'Buổi sáng' : 'Buổi chiều';
+
+  const renderLeavePanel = ({ prefix, total, used, months, joinStr, records, canCancel }) => {
+    const remain  = Math.max(0, total - used);
+    const pct     = total > 0 ? Math.min(100, Math.round((used / total) * 100)) : 0;
+    const barColor = remain <= 2 ? 'linear-gradient(90deg,#EF4444,#DC2626)' : 'linear-gradient(90deg,#10B981,#059669)';
+
+    const setEl = (id, val) => { const el = document.getElementById(prefix + id); if (el) el[typeof val === 'string' && val.includes('<') ? 'innerHTML' : 'textContent'] = val; };
+    setEl('LeaveTotal',  total);
+    setEl('LeaveUsed',   used);
+    setEl('LeaveRemain', remain);
+    setEl('LeaveMeta',  `Tính từ ngày vào làm: ${joinStr} · ${months} tháng công tác`);
+
+    const bar = document.getElementById(prefix + 'LeaveBar');
+    if (bar) { bar.style.width = pct + '%'; bar.style.background = barColor; }
+
+    const tbody = document.getElementById(prefix + 'LeaveHistory');
+    if (!tbody) return;
+    if (!records.length) {
+      tbody.innerHTML = `<tr><td colspan="${canCancel ? 5 : 4}" class="leave-empty">Chưa có lịch sử nghỉ phép.</td></tr>`;
+      return;
+    }
+    tbody.innerHTML = records.map(r => {
+      const created = r.createdAt?.toDate ? r.createdAt.toDate().toLocaleDateString('vi-VN') : '--';
+      const cancelBtn = canCancel
+        ? `<td style="text-align:center;"><button class="leave-cancel-btn" data-lid="${r.id}">Hủy</button></td>`
+        : '';
+      return `<tr>
+        <td style="font-weight:600;">${fmtLeaveDate(r.date)}</td>
+        <td><span style="font-size:0.78rem;background:${r.session==='morning'?'#DBEAFE':'#FEF3C7'};color:${r.session==='morning'?'#1D4ED8':'#92400E'};padding:2px 10px;border-radius:99px;">${sessionLabel(r.session)}</span></td>
+        <td style="font-size:0.8rem;color:var(--text-muted);">${r.reason || '--'}</td>
+        <td style="font-size:0.78rem;color:var(--text-muted);">${created}</td>
+        ${cancelBtn}
+      </tr>`;
+    }).join('');
+
+    if (canCancel) {
+      tbody.querySelectorAll('.leave-cancel-btn').forEach(btn => {
+        btn.addEventListener('click', async () => {
+          if (!confirm('Hủy đơn nghỉ phép này?')) return;
+          try {
+            await db.collection('leave_requests').doc(btn.dataset.lid).delete();
+            showToast('Đã hủy đơn nghỉ phép.', 'success');
+          } catch (e) { showToast('Lỗi: ' + e.message, 'error'); }
+        });
+      });
+    }
+  };
+
+  const loadLeaveData = async (email, joinDateRaw, prefix, canCancel) => {
+    const { total, months, joinStr } = calcLeaveBalance(joinDateRaw);
+    try {
+      const snap = await db.collection('leave_requests')
+        .where('staffEmail', '==', email)
+        .orderBy('date', 'desc')
+        .get();
+      const records = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      renderLeavePanel({ prefix, total, used: records.length, months, joinStr, records, canCancel });
+    } catch (e) {
+      console.error('Leave load error:', e);
+      renderLeavePanel({ prefix, total, used: 0, months, joinStr, records: [], canCancel });
+    }
+  };
+
+  // Wire leave request modal (once globally)
+  let _leaveStaffEmail = null;
+  const setupLeaveModal = () => {
+    const modal = document.getElementById('leaveRequestModal');
+    if (!modal || modal.dataset.bound) return;
+    modal.dataset.bound = '1';
+
+    const close = () => { modal.style.display = 'none'; };
+    document.getElementById('btnCloseLeaveModal')?.addEventListener('click', close);
+    document.getElementById('btnCancelLeave')?.addEventListener('click', close);
+    modal.addEventListener('click', e => { if (e.target === modal) close(); });
+
+    document.getElementById('btnConfirmLeave')?.addEventListener('click', async () => {
+      const email  = _leaveStaffEmail;
+      const date   = document.getElementById('leaveDate')?.value;
+      const session= document.getElementById('leaveSession')?.value;
+      const reason = (document.getElementById('leaveReason')?.value || '').trim();
+      if (!email || !date) { showToast('Vui lòng chọn ngày nghỉ!', 'warning'); return; }
+      const btn = document.getElementById('btnConfirmLeave');
+      const orig = btn.innerHTML; btn.disabled = true; btn.innerHTML = '⏳ Đang gửi...';
+      try {
+        await db.collection('leave_requests').add({
+          staffEmail: email, date, session, reason,
+          createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+        showToast('Đã gửi đơn nghỉ phép!', 'success');
+        close();
+        // Reload employee leave tab
+        const snap = await db.collection('hrm_staff').where('email','==',email).limit(1).get();
+        if (!snap.empty) {
+          const s = snap.docs[0].data();
+          await loadLeaveData(email, s.joinDate, 'sp', true);
+        }
+      } catch (e) {
+        showToast('Lỗi: ' + e.message, 'error');
+      } finally {
+        btn.disabled = false; btn.innerHTML = orig;
+      }
+    });
+  };
+
+  // Realtime leave subscription for employee tab
+  let _leaveUnsub = null;
+  const subscribeLeave = (email, joinDateRaw) => {
+    if (_leaveUnsub) { _leaveUnsub(); _leaveUnsub = null; }
+    const { total, months, joinStr } = calcLeaveBalance(joinDateRaw);
+    _leaveUnsub = db.collection('leave_requests')
+      .where('staffEmail', '==', email)
+      .orderBy('date', 'desc')
+      .onSnapshot(snap => {
+        const records = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+        renderLeavePanel({ prefix: 'sp', total, used: records.length, months, joinStr, records, canCancel: true });
+      }, err => console.error('Leave sub error:', err));
   };
 
   // ---- Employee Personal Attendance ----

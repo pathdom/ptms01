@@ -3922,6 +3922,84 @@ body.dark-theme-crm {
 .crm-badge-processing { background: #DBEAFE; color: #1D4ED8; }
 .crm-badge-selected { background: #F3E8FF; color: #7C3AED; }
 
+/* ==========================================================================
+   LEAVE / NGHỈ PHÉP
+   ========================================================================== */
+.leave-kpi-row {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  background: var(--bg-primary);
+  border: 1px solid var(--border);
+  border-radius: var(--border-radius-lg, 16px);
+  overflow: hidden;
+  margin-bottom: 1.1rem;
+}
+.leave-kpi-card {
+  flex: 1;
+  text-align: center;
+  padding: 1.25rem 1rem;
+}
+.leave-kpi-sep {
+  width: 1px;
+  align-self: stretch;
+  background: var(--border);
+}
+.leave-kpi-num {
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--accent);
+  line-height: 1.1;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+}
+.leave-kpi-lbl {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  margin-top: 4px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.leave-progress-wrap {
+  margin-bottom: 0.5rem;
+}
+.leave-progress-track {
+  height: 8px;
+  background: var(--border);
+  border-radius: 99px;
+  overflow: hidden;
+  margin-bottom: 0.5rem;
+}
+.leave-progress-fill {
+  height: 100%;
+  border-radius: 99px;
+  background: linear-gradient(90deg, #10B981, #059669);
+  transition: width 0.6s ease;
+}
+.leave-meta {
+  font-size: 0.76rem;
+  color: var(--text-muted);
+  margin: 0;
+}
+.leave-empty {
+  text-align: center;
+  color: var(--text-muted);
+  padding: 2rem;
+  font-size: 0.82rem;
+}
+.leave-cancel-btn {
+  background: #FEE2E2;
+  color: #DC2626;
+  border: none;
+  border-radius: 6px;
+  padding: 0.25rem 0.65rem;
+  font-size: 0.75rem;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.15s;
+}
+.leave-cancel-btn:hover { background: #DC2626; color: #fff; }
+
 .crm-country-flag { display: inline-flex; align-items: center; gap: 0.35rem; font-size: 0.82rem; font-weight: 600; }
 
 /* ---- Action Buttons ---- */

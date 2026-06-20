@@ -1577,10 +1577,25 @@
 
               <!-- Tab: Thông tin phép -->
               <div id="ptab-leave" class="hrm-ptab-panel">
-                <div class="hrm-tab-placeholder">
-                  <svg viewBox="0 0 24 24"><path d="M19,4H18V2H16V4H8V2H6V4H5C3.89,4 3,4.9 3,6V20A2,2 0 0,0 5,22H19A2,2 0 0,0 21,20V6A2,2 0 0,0 19,4M19,20H5V10H19V20M19,8H5V6H19V8Z"/></svg>
-                  <h3>Thông tin phép</h3>
-                  <p>Chức năng đang được phát triển</p>
+                <div class="leave-kpi-row">
+                  <div class="leave-kpi-card"><div class="leave-kpi-num" id="admLeaveTotal">—</div><div class="leave-kpi-lbl">Tổng phép</div></div>
+                  <div class="leave-kpi-sep"></div>
+                  <div class="leave-kpi-card"><div class="leave-kpi-num" style="color:#EF4444;" id="admLeaveUsed">—</div><div class="leave-kpi-lbl">Đã nghỉ</div></div>
+                  <div class="leave-kpi-sep"></div>
+                  <div class="leave-kpi-card"><div class="leave-kpi-num" style="color:#10B981;" id="admLeaveRemain">—</div><div class="leave-kpi-lbl">Còn lại</div></div>
+                </div>
+                <div class="leave-progress-wrap">
+                  <div class="leave-progress-track"><div class="leave-progress-fill" id="admLeaveBar" style="width:0%"></div></div>
+                  <p class="leave-meta" id="admLeaveMeta">Đang tải…</p>
+                </div>
+                <div class="hrm-metric-card" style="margin-top:1.25rem;margin-bottom:0;">
+                  <div class="metric-card-header"><h4>LỊCH SỬ NGHỈ PHÉP</h4></div>
+                  <div class="mini-table-container">
+                    <table class="financial-table" style="min-width:500px;">
+                      <thead><tr><th>NGÀY NGHỈ</th><th>BUỔI</th><th style="min-width:160px;">LÝ DO</th><th>NGÀY TẠO</th></tr></thead>
+                      <tbody id="admLeaveHistory"><tr><td colspan="4" class="leave-empty">Đang tải…</td></tr></tbody>
+                    </table>
+                  </div>
                 </div>
               </div>
 
@@ -2371,9 +2386,52 @@
     
           <!-- Tab: Thông tin phép -->
           <div id="sptab-leave" class="crmsp-panel">
-            <div class="hrm-tab-placeholder">
-              <svg viewBox="0 0 24 24"><path d="M19,4H18V2H16V4H8V2H6V4H5C3.89,4 3,4.9 3,6V20A2,2 0 0,0 5,22H19A2,2 0 0,0 21,20V6A2,2 0 0,0 19,4M19,20H5V10H19V20M19,8H5V6H19V8Z"/></svg>
-              <h3>Thông tin phép</h3><p>Chức năng đang được phát triển</p>
+            <!-- KPI row -->
+            <div class="leave-kpi-row">
+              <div class="leave-kpi-card">
+                <div class="leave-kpi-num" id="spLeaveTotal">—</div>
+                <div class="leave-kpi-lbl">Tổng phép</div>
+              </div>
+              <div class="leave-kpi-sep"></div>
+              <div class="leave-kpi-card">
+                <div class="leave-kpi-num" style="color:#EF4444;" id="spLeaveUsed">—</div>
+                <div class="leave-kpi-lbl">Đã nghỉ</div>
+              </div>
+              <div class="leave-kpi-sep"></div>
+              <div class="leave-kpi-card">
+                <div class="leave-kpi-num" style="color:#10B981;" id="spLeaveRemain">—</div>
+                <div class="leave-kpi-lbl">Còn lại</div>
+              </div>
+            </div>
+            <!-- Progress bar -->
+            <div class="leave-progress-wrap">
+              <div class="leave-progress-track">
+                <div class="leave-progress-fill" id="spLeaveBar" style="width:0%"></div>
+              </div>
+              <p class="leave-meta" id="spLeaveMeta">Đang tải…</p>
+            </div>
+            <!-- History + request button -->
+            <div class="hrm-metric-card" style="margin-top:1.25rem;margin-bottom:0;">
+              <div class="metric-card-header">
+                <h4>LỊCH SỬ NGHỈ PHÉP</h4>
+                <button type="button" id="btnRequestLeave" class="hrm-btn-primary"
+                  style="display:flex;align-items:center;gap:0.4rem;padding:0.5rem 1rem;font-size:0.8rem;">
+                  <svg viewBox="0 0 24 24" style="width:14px;height:14px;fill:currentColor;"><path d="M19,13H13V19H11V13H5V11H11V5H13V11H19V13Z"/></svg>
+                  Xin nghỉ phép
+                </button>
+              </div>
+              <div class="mini-table-container">
+                <table class="financial-table" style="min-width:500px;">
+                  <thead><tr>
+                    <th>NGÀY NGHỈ</th><th>BUỔI</th>
+                    <th style="min-width:160px;">LÝ DO</th>
+                    <th>NGÀY TẠO</th><th style="text-align:center;">HỦY</th>
+                  </tr></thead>
+                  <tbody id="spLeaveHistory">
+                    <tr><td colspan="5" class="leave-empty">Chưa có lịch sử nghỉ phép.</td></tr>
+                  </tbody>
+                </table>
+              </div>
             </div>
           </div>
     
@@ -6459,9 +6517,25 @@
 
       <!-- Tab: Thông tin phép -->
       <div id="cptab-leave" class="crmsp-panel">
-        <div class="hrm-tab-placeholder">
-          <svg viewBox="0 0 24 24"><path d="M19,4H18V2H16V4H8V2H6V4H5C3.89,4 3,4.9 3,6V20A2,2 0 0,0 5,22H19A2,2 0 0,0 21,20V6A2,2 0 0,0 19,4M19,20H5V10H19V20M19,8H5V6H19V8Z"/></svg>
-          <h3>Thông tin phép</h3><p>Chức năng đang được phát triển</p>
+        <div class="leave-kpi-row">
+          <div class="leave-kpi-card"><div class="leave-kpi-num" id="cptLeaveTotal">—</div><div class="leave-kpi-lbl">Tổng phép</div></div>
+          <div class="leave-kpi-sep"></div>
+          <div class="leave-kpi-card"><div class="leave-kpi-num" style="color:#EF4444;" id="cptLeaveUsed">—</div><div class="leave-kpi-lbl">Đã nghỉ</div></div>
+          <div class="leave-kpi-sep"></div>
+          <div class="leave-kpi-card"><div class="leave-kpi-num" style="color:#10B981;" id="cptLeaveRemain">—</div><div class="leave-kpi-lbl">Còn lại</div></div>
+        </div>
+        <div class="leave-progress-wrap">
+          <div class="leave-progress-track"><div class="leave-progress-fill" id="cptLeaveBar" style="width:0%"></div></div>
+          <p class="leave-meta" id="cptLeaveMeta">Đang tải…</p>
+        </div>
+        <div class="hrm-metric-card" style="margin-top:1.25rem;margin-bottom:0;">
+          <div class="metric-card-header"><h4>LỊCH SỬ NGHỈ PHÉP</h4></div>
+          <div class="mini-table-container">
+            <table class="financial-table" style="min-width:500px;">
+              <thead><tr><th>NGÀY NGHỈ</th><th>BUỔI</th><th style="min-width:160px;">LÝ DO</th><th>NGÀY TẠO</th></tr></thead>
+              <tbody id="cptLeaveHistory"><tr><td colspan="4" class="leave-empty">Đang tải…</td></tr></tbody>
+            </table>
+          </div>
         </div>
       </div>
 
@@ -6507,6 +6581,39 @@
 
     <!-- Toast Notification Wrapper -->
     <div class="toast-container" id="toastContainer"></div>
+
+    <!-- Leave Request Modal -->
+    <div id="leaveRequestModal" class="modal-overlay" style="display:none;">
+      <div class="modal-box" style="max-width:420px;width:92%;">
+        <div class="modal-header" style="display:flex;align-items:center;justify-content:space-between;padding:1.25rem 1.5rem;border-bottom:1px solid var(--border);">
+          <h3 style="font-size:0.9rem;font-weight:700;letter-spacing:0.05em;color:var(--text-main);">XIN NGHỈ PHÉP</h3>
+          <button id="btnCloseLeaveModal" style="background:none;border:none;cursor:pointer;color:var(--text-muted);font-size:1.4rem;line-height:1;">&times;</button>
+        </div>
+        <div style="padding:1.25rem 1.5rem;display:flex;flex-direction:column;gap:1rem;">
+          <div>
+            <label style="display:block;font-size:0.75rem;color:var(--text-muted);margin-bottom:0.35rem;font-weight:500;">Ngày nghỉ</label>
+            <input type="date" id="leaveDate" class="sp-resume-input" style="width:100%;" />
+          </div>
+          <div>
+            <label style="display:block;font-size:0.75rem;color:var(--text-muted);margin-bottom:0.35rem;font-weight:500;">Buổi nghỉ (1 buổi = 1 ngày phép)</label>
+            <select id="leaveSession" class="sp-resume-input" style="width:100%;">
+              <option value="morning">Buổi sáng</option>
+              <option value="afternoon">Buổi chiều</option>
+            </select>
+          </div>
+          <div>
+            <label style="display:block;font-size:0.75rem;color:var(--text-muted);margin-bottom:0.35rem;font-weight:500;">Lý do</label>
+            <textarea id="leaveReason" class="sp-resume-input" rows="3"
+              placeholder="Nhập lý do nghỉ phép..."
+              style="width:100%;resize:vertical;min-height:72px;"></textarea>
+          </div>
+        </div>
+        <div style="display:flex;justify-content:flex-end;gap:0.75rem;padding:1rem 1.5rem;border-top:1px solid var(--border);">
+          <button type="button" id="btnCancelLeave" class="hrm-btn-secondary">Hủy</button>
+          <button type="button" id="btnConfirmLeave" class="hrm-btn-primary">Gửi yêu cầu</button>
+        </div>
+      </div>
+    </div>
 
     <!-- Main JavaScript File -->
     <script src="js/main.js" defer></script>
