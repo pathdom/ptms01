@@ -2229,29 +2229,68 @@
           <!-- Tab: Sơ yếu lý lịch -->
           <div id="sptab-resume" class="crmsp-panel">
             <div class="hrm-profile-tab-grid">
-              <div class="hrm-metric-card" style="margin-bottom: 0;">
+
+              <!-- Card 1: Giấy tờ tùy thân -->
+              <div class="hrm-metric-card" style="margin-bottom:0;">
                 <div class="metric-card-header"><h4>GIẤY TỜ TÙY THÂN</h4></div>
                 <div class="profile-info-rows">
-                  <div class="profile-info-row"><span class="info-label">Số CCCD/Hộ chiếu</span><span class="info-val" id="spProfileIdNumber">--</span></div>
-                  <div class="profile-info-row"><span class="info-label">Ngày cấp</span><span class="info-val" id="spProfileIdDate">--</span></div>
-                  <div class="profile-info-row"><span class="info-label">Nơi cấp</span><span class="info-val" id="spProfileIdPlace">--</span></div>
+                  <div class="profile-info-row">
+                    <span class="info-label">Số CCCD/Hộ chiếu</span>
+                    <input class="sp-resume-input" id="spInputIdNumber" type="text" placeholder="Nhập số CCCD/Hộ chiếu..." />
+                  </div>
+                  <div class="profile-info-row">
+                    <span class="info-label">Ngày cấp</span>
+                    <input class="sp-resume-input" id="spInputIdDate" type="date" />
+                  </div>
+                  <div class="profile-info-row">
+                    <span class="info-label">Nơi cấp</span>
+                    <input class="sp-resume-input" id="spInputIdPlace" type="text" placeholder="Nhập nơi cấp..." />
+                  </div>
                 </div>
               </div>
-              <div class="hrm-metric-card" style="margin-bottom: 0;">
+
+              <!-- Card 2: Địa chỉ cư trú -->
+              <div class="hrm-metric-card" style="margin-bottom:0;">
                 <div class="metric-card-header"><h4>ĐỊA CHỈ CƯ TRÚ</h4></div>
                 <div class="profile-info-rows">
-                  <div class="profile-info-row"><span class="info-label">Địa chỉ thường trú</span><span class="info-val" id="spProfileAddressPermanent">--</span></div>
-                  <div class="profile-info-row"><span class="info-label">Chỗ ở hiện tại</span><span class="info-val" id="spProfileAddressCurrent">--</span></div>
+                  <div class="profile-info-row">
+                    <span class="info-label">Địa chỉ thường trú</span>
+                    <input class="sp-resume-input" id="spInputAddressPermanent" type="text" placeholder="Nhập địa chỉ thường trú..." />
+                  </div>
+                  <div class="profile-info-row">
+                    <span class="info-label">Chỗ ở hiện tại</span>
+                    <input class="sp-resume-input" id="spInputAddressCurrent" type="text" placeholder="Nhập chỗ ở hiện tại..." />
+                  </div>
                 </div>
               </div>
-              <div class="hrm-metric-card" style="margin-bottom: 0;">
+
+              <!-- Card 3: Liên hệ khẩn cấp -->
+              <div class="hrm-metric-card" style="margin-bottom:0;">
                 <div class="metric-card-header"><h4>LIÊN HỆ KHẨN CẤP</h4></div>
                 <div class="profile-info-rows">
-                  <div class="profile-info-row"><span class="info-label">Họ tên người liên hệ</span><span class="info-val" id="spProfileEmergencyName">--</span></div>
-                  <div class="profile-info-row"><span class="info-label">Số điện thoại</span><span class="info-val" id="spProfileEmergencyPhone">--</span></div>
-                  <div class="profile-info-row"><span class="info-label">Mối quan hệ</span><span class="info-val" id="spProfileEmergencyRelation">--</span></div>
+                  <div class="profile-info-row">
+                    <span class="info-label">Họ tên người liên hệ</span>
+                    <input class="sp-resume-input" id="spInputEmergencyName" type="text" placeholder="Nhập họ tên..." />
+                  </div>
+                  <div class="profile-info-row">
+                    <span class="info-label">Số điện thoại</span>
+                    <input class="sp-resume-input" id="spInputEmergencyPhone" type="tel" placeholder="Nhập số điện thoại..." />
+                  </div>
+                  <div class="profile-info-row">
+                    <span class="info-label">Mối quan hệ</span>
+                    <input class="sp-resume-input" id="spInputEmergencyRelation" type="text" placeholder="Ví dụ: Bố, Mẹ, Vợ/Chồng..." />
+                  </div>
                 </div>
               </div>
+
+            </div>
+
+            <!-- Nút lưu -->
+            <div style="display:flex;justify-content:flex-end;margin-top:1.5rem;">
+              <button type="button" id="btnSaveResume" class="hrm-btn-primary" style="display:flex;align-items:center;gap:0.5rem;padding:0.65rem 1.5rem;">
+                <svg viewBox="0 0 24 24" style="width:16px;height:16px;fill:currentColor;"><path d="M15,9H5V5H15M12,19A3,3 0 0,1 9,16A3,3 0 0,1 12,13A3,3 0 0,1 15,16A3,3 0 0,1 12,19M17,3H5C3.89,3 3,3.9 3,5V19A2,2 0 0,0 5,21H19A2,2 0 0,0 21,19V7L17,3Z"/></svg>
+                Lưu thông tin
+              </button>
             </div>
           </div>
     

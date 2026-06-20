@@ -7676,14 +7676,16 @@ document.addEventListener('DOMContentLoaded', () => {
     setText('spLegLate', late + '%');
     setText('spLegPending', pending + '%');
 
-    setText('spProfileIdNumber', s.idNumber);
-    setText('spProfileIdDate', fmtDate(s.idDate));
-    setText('spProfileIdPlace', s.idPlace);
-    setText('spProfileAddressPermanent', s.addressPermanent);
-    setText('spProfileAddressCurrent', s.addressCurrent);
-    setText('spProfileEmergencyName', s.emergencyContactName);
-    setText('spProfileEmergencyPhone', s.emergencyContactPhone);
-    setText('spProfileEmergencyRelation', s.emergencyContactRelation);
+    // Populate resume form inputs (employee edits these)
+    const setInput = (id, val) => { const el = document.getElementById(id); if (el) el.value = val || ''; };
+    setInput('spInputIdNumber',            s.idNumber);
+    setInput('spInputIdDate',              s.idDate || '');
+    setInput('spInputIdPlace',             s.idPlace);
+    setInput('spInputAddressPermanent',    s.addressPermanent);
+    setInput('spInputAddressCurrent',      s.addressCurrent);
+    setInput('spInputEmergencyName',       s.emergencyContactName);
+    setInput('spInputEmergencyPhone',      s.emergencyContactPhone);
+    setInput('spInputEmergencyRelation',   s.emergencyContactRelation);
 
     setText('spProfileContractType', s.contractType);
     setText('spProfileContractStartDate', fmtDate(s.contractStartDate || s.joinDate));
@@ -7736,6 +7738,38 @@ document.addEventListener('DOMContentLoaded', () => {
         btn.classList.add('active');
         const panel = document.getElementById(btn.getAttribute('data-sptab'));
         if (panel) panel.classList.add('active');
+      });
+    }
+
+    // Wire save button (once)
+    const saveBtn = document.getElementById('btnSaveResume');
+    if (saveBtn && !saveBtn.dataset.bound) {
+      saveBtn.dataset.bound = '1';
+      saveBtn.addEventListener('click', async () => {
+        if (!currentUser) { showToast('Chưa đăng nhập!', 'error'); return; }
+        const orig = saveBtn.innerHTML;
+        saveBtn.disabled = true; saveBtn.innerHTML = '⏳ Đang lưu...';
+        try {
+          const snap2 = await db.collection('hrm_staff').where('email', '==', currentUser.email).limit(1).get();
+          if (snap2.empty) { showToast('Không tìm thấy hồ sơ nhân sự!', 'error'); return; }
+          const docId = snap2.docs[0].id;
+          const val = id => (document.getElementById(id)?.value || '').trim();
+          await db.collection('hrm_staff').doc(docId).update({
+            idNumber:               val('spInputIdNumber'),
+            idDate:                 val('spInputIdDate'),
+            idPlace:                val('spInputIdPlace'),
+            addressPermanent:       val('spInputAddressPermanent'),
+            addressCurrent:         val('spInputAddressCurrent'),
+            emergencyContactName:   val('spInputEmergencyName'),
+            emergencyContactPhone:  val('spInputEmergencyPhone'),
+            emergencyContactRelation: val('spInputEmergencyRelation'),
+          });
+          showToast('Đã lưu thông tin sơ yếu lý lịch!', 'success');
+        } catch (e) {
+          showToast('Lỗi lưu: ' + e.message, 'error');
+        } finally {
+          saveBtn.disabled = false; saveBtn.innerHTML = orig;
+        }
       });
     }
 

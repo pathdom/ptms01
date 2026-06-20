@@ -3308,6 +3308,25 @@ body.dark-theme-crm .profile-status-badge.inactive-badge { background: rgba(220,
   word-break: break-word;
 }
 
+.sp-resume-input {
+  flex: 1;
+  padding: 0.35rem 0.65rem;
+  font-size: 0.82rem;
+  font-family: inherit;
+  color: var(--text-main);
+  background: var(--bg-secondary, #F7F4EF);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  outline: none;
+  transition: border-color 0.18s, box-shadow 0.18s;
+  min-width: 0;
+}
+.sp-resume-input:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(168,139,88,0.12);
+  background: var(--bg-primary);
+}
+
 .info-val.link {
   color: var(--accent);
   text-decoration: none;
