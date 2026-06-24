@@ -4969,34 +4969,89 @@ document.addEventListener('DOMContentLoaded', () => {
       else badge.classList.add('inactive-badge');
     }
 
-    const salary = s.salary || 0;
-    const incomeEl = document.getElementById('profileIncome');
-    if (incomeEl) incomeEl.textContent = salary > 0 ? salary.toLocaleString('vi-VN') + ' đ' : '-- đ';
-
+    // ── Work overview cards ──────────────────────────────────────────────────
     const seedStr = s.id || s.name || 'x';
     const seed = seedStr.split('').reduce((a, c) => a + c.charCodeAt(0), 0);
-    const companyDebt = Math.round(((seed * 1234567) % 25000000) / 1000000) * 1000000;
-    const personalDebt = Math.round(((seed * 89012) % 4000000) / 500000) * 500000;
-    const totalDebt = companyDebt + personalDebt;
 
-    document.getElementById('profileTotalDebt').textContent = totalDebt.toLocaleString('vi-VN') + ' đ';
-    document.getElementById('profileCompanyDebt').textContent = companyDebt.toLocaleString('vi-VN') + ' đ';
-    document.getElementById('profilePersonalDebt').textContent = personalDebt.toLocaleString('vi-VN') + ' đ';
+    const salary = s.salary || 0;
+    const kpiVal = s.kpi != null ? Number(s.kpi) : Math.min(100, 62 + (seed % 33));
+    const attVal = s.attendance != null ? Number(s.attendance) : Math.min(100, 68 + ((seed * 7) % 28));
+    const workDays = s.workDays != null ? Number(s.workDays) : (20 + (seed % 7));
 
-    const early = 25 + (seed % 20);
-    const onTime = 8 + (seed % 12);
-    const late = 8 + ((seed * 3) % 18);
-    const pending = Math.max(5, 100 - early - onTime - late);
-    const totalTasks = 18 + (seed % 28);
+    const wsdEl = document.getElementById('profileWorkStartDate');
+    if (wsdEl) wsdEl.textContent = s.joinDate ? new Date(s.joinDate).toLocaleDateString('vi-VN') : '--';
 
-    const legEarly = document.getElementById('legEarly');
-    const legOnTime = document.getElementById('legOnTime');
-    const legLate = document.getElementById('legLate');
-    const legPending = document.getElementById('legPending');
-    if (legEarly) legEarly.textContent = early + '%';
-    if (legOnTime) legOnTime.textContent = onTime + '%';
-    if (legLate) legLate.textContent = late + '%';
-    if (legPending) legPending.textContent = pending + '%';
+    const kpiEl = document.getElementById('profileKpi');
+    if (kpiEl) {
+      kpiEl.textContent = kpiVal + '%';
+      kpiEl.style.color = kpiVal >= 90 ? '#10B981' : kpiVal >= 70 ? '#6366F1' : kpiVal >= 50 ? '#F59E0B' : '#EF4444';
+    }
+
+    const wdEl = document.getElementById('profileWorkDays');
+    if (wdEl) wdEl.textContent = workDays + ' ngày';
+
+    const attEl = document.getElementById('profileAttendance');
+    if (attEl) {
+      attEl.textContent = attVal + '%';
+      attEl.style.color = attVal >= 95 ? '#10B981' : attVal >= 80 ? '#6366F1' : attVal >= 65 ? '#F59E0B' : '#EF4444';
+    }
+
+    const salEl = document.getElementById('profileSalaryNew');
+    if (salEl) {
+      salEl.textContent = salary > 0 ? salary.toLocaleString('vi-VN') + ' đ' : '-- đ';
+      salEl.style.color = salary > 0 ? '#059669' : 'var(--text-muted)';
+    }
+
+    // ── Achievements ─────────────────────────────────────────────────────────
+    const achEl = document.getElementById('profileAchievements');
+    const achBadge = document.getElementById('achCountBadge');
+    if (achEl) {
+      const achs = Array.isArray(s.achievements) ? s.achievements : [];
+      if (achs.length) {
+        achEl.innerHTML = achs.map(a => `<div class="achievement-item"><span class="ach-star">⭐</span><span>${esc(a)}</span></div>`).join('');
+        if (achBadge) { achBadge.textContent = achs.length; achBadge.style.display = 'inline-flex'; }
+      } else {
+        achEl.innerHTML = '<div class="achievement-empty">Chưa có thành tích được ghi nhận</div>';
+        if (achBadge) achBadge.style.display = 'none';
+      }
+    }
+
+    // ── HR Score (KPI 60% + Chuyên cần 40%) ─────────────────────────────────
+    const totalScore = Math.round(kpiVal * 0.6 + attVal * 0.4);
+    const grade = totalScore >= 90 ? 'A' : totalScore >= 80 ? 'B+' : totalScore >= 70 ? 'B' : totalScore >= 60 ? 'C' : 'D';
+    const gradeColor = totalScore >= 90 ? '#10B981' : totalScore >= 80 ? '#6366F1' : totalScore >= 70 ? '#3B82F6' : totalScore >= 60 ? '#F59E0B' : '#EF4444';
+    const gradeNote = totalScore >= 90 ? '🏆 Xuất sắc — Nhân viên tiêu biểu'
+      : totalScore >= 80 ? '🌟 Tốt — Vượt kỳ vọng'
+      : totalScore >= 70 ? '👍 Khá — Đạt yêu cầu'
+      : totalScore >= 60 ? '⚠️ Trung bình — Cần cải thiện'
+      : '🔴 Yếu — Cần hỗ trợ đặc biệt';
+
+    const scoreValEl  = document.getElementById('hrScoreVal');
+    const scoreGradeEl= document.getElementById('hrScoreGrade');
+    const scoreArcEl  = document.getElementById('hrScoreArc');
+    if (scoreValEl)   scoreValEl.textContent  = totalScore;
+    if (scoreGradeEl) { scoreGradeEl.textContent = grade; scoreGradeEl.style.color = gradeColor; }
+    if (scoreArcEl)   {
+      scoreArcEl.style.stroke = gradeColor;
+      // set immediately without transition, then animate on next frame
+      scoreArcEl.style.transition = 'none';
+      scoreArcEl.style.strokeDashoffset = '326.7';
+      requestAnimationFrame(() => {
+        scoreArcEl.style.transition = 'stroke-dashoffset 1.1s cubic-bezier(.4,0,.2,1), stroke 0.3s';
+        scoreArcEl.style.strokeDashoffset = 326.7 - (totalScore / 100) * 326.7;
+      });
+    }
+
+    const hrKpiBar = document.getElementById('hrKpiBar');
+    const hrAttBar = document.getElementById('hrAttBar');
+    const hrKpiValEl = document.getElementById('hrKpiVal');
+    const hrAttValEl = document.getElementById('hrAttVal');
+    const hrNoteEl   = document.getElementById('hrScoreNote');
+    if (hrKpiBar) { hrKpiBar.style.width = '0%'; requestAnimationFrame(() => { hrKpiBar.style.transition = 'width 1s ease'; hrKpiBar.style.width = kpiVal + '%'; }); }
+    if (hrAttBar) { hrAttBar.style.width = '0%'; requestAnimationFrame(() => { hrAttBar.style.transition = 'width 1s ease'; hrAttBar.style.width = attVal + '%'; }); }
+    if (hrKpiValEl)  hrKpiValEl.textContent  = kpiVal + '%';
+    if (hrAttValEl)  hrAttValEl.textContent  = attVal + '%';
+    if (hrNoteEl)    { hrNoteEl.textContent = gradeNote; hrNoteEl.style.color = gradeColor; }
 
     // Populate detail tabs
     setText('profileIdNumber', s.idNumber);
@@ -5028,22 +5083,6 @@ document.addEventListener('DOMContentLoaded', () => {
     // Load leave data for admin view
     if (s.email) loadLeaveData(s.email, s.joinDate, 'adm', false);
 
-    requestAnimationFrame(() => {
-      drawDonutChart('workEfficiencyChart', totalTasks, [
-        { value: early, color: '#4CAF50' },
-        { value: onTime, color: '#3FA2F6' },
-        { value: late, color: '#FFC107' },
-        { value: pending, color: '#F44336' }
-      ]);
-      drawRadarChart('skillsRadarChart', [
-        { label: 'Tổ chức', value: 2 + (seed % 3), max: 5 },
-        { label: 'Văn hóa', value: 2 + ((seed * 2) % 3), max: 5 },
-        { label: 'Giao tiếp', value: 2 + ((seed * 3) % 3), max: 5 },
-        { label: 'Chuyên môn', value: 2 + ((seed * 4) % 3), max: 5 },
-        { label: 'Sáng tạo', value: 1 + ((seed * 5) % 4), max: 5 },
-        { label: 'Nhóm', value: 2 + ((seed * 6) % 3), max: 5 }
-      ]);
-    });
   };
 
   let hrmInitialized = false;
@@ -7038,7 +7077,8 @@ document.addEventListener('DOMContentLoaded', () => {
   const iocRenderMessages = msgs => {
     const container = document.getElementById('crmChatMessages');
     if (!container) return;
-    _iocMsgs = msgs;
+    // NOTE: _iocMsgs is the source-of-truth (all msgs), updated only by onSnapshot.
+    // iocRenderMessages may receive a filtered subset — never overwrite _iocMsgs here.
     iocUpdatePinnedCount();
     iocUpdateMediaCounts();
 
