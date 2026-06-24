@@ -4970,37 +4970,37 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // ── Work overview cards ──────────────────────────────────────────────────
-    const seedStr = s.id || s.name || 'x';
-    const seed = seedStr.split('').reduce((a, c) => a + c.charCodeAt(0), 0);
-
     const salary = s.salary || 0;
-    const kpiVal = s.kpi != null ? Number(s.kpi) : Math.min(100, 62 + (seed % 33));
-    const attVal = s.attendance != null ? Number(s.attendance) : Math.min(100, 68 + ((seed * 7) % 28));
-    const workDays = s.workDays != null ? Number(s.workDays) : (20 + (seed % 7));
 
+    // Start date (static)
     const wsdEl = document.getElementById('profileWorkStartDate');
     if (wsdEl) wsdEl.textContent = s.joinDate ? new Date(s.joinDate).toLocaleDateString('vi-VN') : '--';
 
-    const kpiEl = document.getElementById('profileKpi');
-    if (kpiEl) {
-      kpiEl.textContent = kpiVal + '%';
-      kpiEl.style.color = kpiVal >= 90 ? '#10B981' : kpiVal >= 70 ? '#6366F1' : kpiVal >= 50 ? '#F59E0B' : '#EF4444';
-    }
-
-    const wdEl = document.getElementById('profileWorkDays');
-    if (wdEl) wdEl.textContent = workDays + ' ngày';
-
-    const attEl = document.getElementById('profileAttendance');
-    if (attEl) {
-      attEl.textContent = attVal + '%';
-      attEl.style.color = attVal >= 95 ? '#10B981' : attVal >= 80 ? '#6366F1' : attVal >= 65 ? '#F59E0B' : '#EF4444';
-    }
-
+    // Salary (static)
     const salEl = document.getElementById('profileSalaryNew');
     if (salEl) {
       salEl.textContent = salary > 0 ? salary.toLocaleString('vi-VN') + ' đ' : '-- đ';
-      salEl.style.color = salary > 0 ? '#059669' : 'var(--text-muted)';
+      salEl.style.color = salary > 0 ? '#059669' : 'var(--color-text-muted, #6B6A67)';
     }
+
+    // KPI from hrm_staff field (admin sets directly on staff record)
+    const storedKpi = (s.kpi != null && s.kpi !== '') ? Number(s.kpi) : null;
+    const kpiEl = document.getElementById('profileKpi');
+    if (kpiEl) {
+      if (storedKpi != null) {
+        kpiEl.textContent = storedKpi + '%';
+        kpiEl.style.color = storedKpi >= 90 ? '#10B981' : storedKpi >= 70 ? '#6366F1' : storedKpi >= 50 ? '#F59E0B' : '#EF4444';
+      } else {
+        kpiEl.textContent = 'Chưa cập nhật';
+        kpiEl.style.color = 'var(--color-text-muted, #6B6A67)';
+      }
+    }
+
+    // Show loading state for attendance-derived fields
+    const wdEl = document.getElementById('profileWorkDays');
+    const attEl = document.getElementById('profileAttendance');
+    if (wdEl) { wdEl.textContent = '...'; wdEl.style.color = 'var(--color-text-muted, #6B6A67)'; }
+    if (attEl) { attEl.textContent = '...'; attEl.style.color = 'var(--color-text-muted, #6B6A67)'; }
 
     // ── Achievements ─────────────────────────────────────────────────────────
     const achEl = document.getElementById('profileAchievements');
@@ -5016,42 +5016,109 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     }
 
-    // ── HR Score (KPI 60% + Chuyên cần 40%) ─────────────────────────────────
-    const totalScore = Math.round(kpiVal * 0.6 + attVal * 0.4);
-    const grade = totalScore >= 90 ? 'A' : totalScore >= 80 ? 'B+' : totalScore >= 70 ? 'B' : totalScore >= 60 ? 'C' : 'D';
-    const gradeColor = totalScore >= 90 ? '#10B981' : totalScore >= 80 ? '#6366F1' : totalScore >= 70 ? '#3B82F6' : totalScore >= 60 ? '#F59E0B' : '#EF4444';
-    const gradeNote = totalScore >= 90 ? '🏆 Xuất sắc — Nhân viên tiêu biểu'
-      : totalScore >= 80 ? '🌟 Tốt — Vượt kỳ vọng'
-      : totalScore >= 70 ? '👍 Khá — Đạt yêu cầu'
-      : totalScore >= 60 ? '⚠️ Trung bình — Cần cải thiện'
-      : '🔴 Yếu — Cần hỗ trợ đặc biệt';
+    // ── HR Score — populated after async attendance fetch ────────────────────
+    const _applyHrScore = (kpiDisplay, attPct) => {
+      const totalScore = Math.round(kpiDisplay * 0.6 + attPct * 0.4);
+      const grade = totalScore >= 90 ? 'A' : totalScore >= 80 ? 'B+' : totalScore >= 70 ? 'B' : totalScore >= 60 ? 'C' : 'D';
+      const gradeColor = totalScore >= 90 ? '#10B981' : totalScore >= 80 ? '#6366F1' : totalScore >= 70 ? '#3B82F6' : totalScore >= 60 ? '#F59E0B' : '#EF4444';
+      const gradeNote = totalScore >= 90 ? '🏆 Xuất sắc — Nhân viên tiêu biểu'
+        : totalScore >= 80 ? '🌟 Tốt — Vượt kỳ vọng'
+        : totalScore >= 70 ? '👍 Khá — Đạt yêu cầu'
+        : totalScore >= 60 ? '⚠️ Trung bình — Cần cải thiện'
+        : '🔴 Yếu — Cần hỗ trợ đặc biệt';
 
-    const scoreValEl  = document.getElementById('hrScoreVal');
-    const scoreGradeEl= document.getElementById('hrScoreGrade');
-    const scoreArcEl  = document.getElementById('hrScoreArc');
-    if (scoreValEl)   scoreValEl.textContent  = totalScore;
-    if (scoreGradeEl) { scoreGradeEl.textContent = grade; scoreGradeEl.style.color = gradeColor; }
-    if (scoreArcEl)   {
-      scoreArcEl.style.stroke = gradeColor;
-      // set immediately without transition, then animate on next frame
-      scoreArcEl.style.transition = 'none';
-      scoreArcEl.style.strokeDashoffset = '326.7';
-      requestAnimationFrame(() => {
-        scoreArcEl.style.transition = 'stroke-dashoffset 1.1s cubic-bezier(.4,0,.2,1), stroke 0.3s';
-        scoreArcEl.style.strokeDashoffset = 326.7 - (totalScore / 100) * 326.7;
+      const scoreValEl   = document.getElementById('hrScoreVal');
+      const scoreGradeEl = document.getElementById('hrScoreGrade');
+      const scoreArcEl   = document.getElementById('hrScoreArc');
+      if (scoreValEl)   scoreValEl.textContent = totalScore;
+      if (scoreGradeEl) { scoreGradeEl.textContent = grade; scoreGradeEl.style.color = gradeColor; }
+      if (scoreArcEl) {
+        scoreArcEl.style.stroke = gradeColor;
+        scoreArcEl.style.transition = 'none';
+        scoreArcEl.style.strokeDashoffset = '326.7';
+        requestAnimationFrame(() => {
+          scoreArcEl.style.transition = 'stroke-dashoffset 1.1s cubic-bezier(.4,0,.2,1), stroke 0.3s';
+          scoreArcEl.style.strokeDashoffset = 326.7 - (totalScore / 100) * 326.7;
+        });
+      }
+
+      const hrKpiBar   = document.getElementById('hrKpiBar');
+      const hrAttBar   = document.getElementById('hrAttBar');
+      const hrKpiValEl = document.getElementById('hrKpiVal');
+      const hrAttValEl = document.getElementById('hrAttVal');
+      const hrNoteEl   = document.getElementById('hrScoreNote');
+      if (hrKpiBar) { hrKpiBar.style.width = '0%'; requestAnimationFrame(() => { hrKpiBar.style.transition = 'width 1s ease'; hrKpiBar.style.width = kpiDisplay + '%'; }); }
+      if (hrAttBar) { hrAttBar.style.width = '0%'; requestAnimationFrame(() => { hrAttBar.style.transition = 'width 1s ease'; hrAttBar.style.width = attPct + '%'; }); }
+      if (hrKpiValEl) hrKpiValEl.textContent = kpiDisplay + '%';
+      if (hrAttValEl) hrAttValEl.textContent = attPct + '%';
+      if (hrNoteEl)   { hrNoteEl.textContent = gradeNote; hrNoteEl.style.color = gradeColor; }
+    };
+
+    // ── Async: fetch attendance from Firestore ───────────────────────────────
+    (async () => {
+      const now = new Date();
+      const monthStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+      const { S: standardDays } = calcStandardDays(monthStr);
+      const todayDay = now.getDate();
+      const days = {};
+
+      // 1. Admin-managed attendance collection (priority)
+      try {
+        const attDoc = await db.collection('attendance').doc(`${s.id}_${monthStr}`).get();
+        if (attDoc.exists && attDoc.data().days) {
+          Object.assign(days, attDoc.data().days);
+        }
+      } catch (e) { /* non-critical */ }
+
+      // 2. Merge employee self check-in logs for days not yet set by admin
+      if (s.email) {
+        try {
+          const logsSnap = await db.collection('checkin_logs')
+            .where('month', '==', monthStr)
+            .where('email', '==', s.email)
+            .get();
+          logsSnap.forEach(doc => {
+            const d = doc.data();
+            if (d.date && d.checkin_time) {
+              const dayKey = String(parseInt(d.date.split('-')[2], 10));
+              if (!days[dayKey]) days[dayKey] = '1';
+            }
+          });
+        } catch (e) { /* non-critical */ }
+      }
+
+      // 3. Count actual days worked (ignore future days)
+      let actualDays = 0;
+      Object.entries(days).forEach(([dayStr, v]) => {
+        if (parseInt(dayStr, 10) > todayDay) return;
+        if (v === '1') actualDays += 1;
+        else if (v === '0.5') actualDays += 0.5;
       });
-    }
 
-    const hrKpiBar = document.getElementById('hrKpiBar');
-    const hrAttBar = document.getElementById('hrAttBar');
-    const hrKpiValEl = document.getElementById('hrKpiVal');
-    const hrAttValEl = document.getElementById('hrAttVal');
-    const hrNoteEl   = document.getElementById('hrScoreNote');
-    if (hrKpiBar) { hrKpiBar.style.width = '0%'; requestAnimationFrame(() => { hrKpiBar.style.transition = 'width 1s ease'; hrKpiBar.style.width = kpiVal + '%'; }); }
-    if (hrAttBar) { hrAttBar.style.width = '0%'; requestAnimationFrame(() => { hrAttBar.style.transition = 'width 1s ease'; hrAttBar.style.width = attVal + '%'; }); }
-    if (hrKpiValEl)  hrKpiValEl.textContent  = kpiVal + '%';
-    if (hrAttValEl)  hrAttValEl.textContent  = attVal + '%';
-    if (hrNoteEl)    { hrNoteEl.textContent = gradeNote; hrNoteEl.style.color = gradeColor; }
+      // Standard days elapsed so far this month (Mon–Sat like calcStandardDays but up to today)
+      let elapsedStd = 0;
+      for (let d = 1; d <= todayDay; d++) {
+        const dow = new Date(now.getFullYear(), now.getMonth(), d).getDay();
+        if (dow >= 1 && dow <= 5) elapsedStd++;
+        else if (dow === 6) elapsedStd += 0.5;
+      }
+      const attPct = elapsedStd > 0 ? Math.min(100, Math.round((actualDays / elapsedStd) * 100)) : 0;
+      const kpiDisplay = storedKpi != null ? storedKpi : 0;
+
+      // Update work days display
+      if (wdEl) {
+        wdEl.textContent = (actualDays % 1 === 0 ? actualDays : actualDays.toFixed(1)) + ' / ' + standardDays + ' ngày';
+        wdEl.style.color = '';
+      }
+
+      // Update attendance %
+      if (attEl) {
+        attEl.textContent = attPct + '%';
+        attEl.style.color = attPct >= 95 ? '#10B981' : attPct >= 80 ? '#6366F1' : attPct >= 65 ? '#F59E0B' : '#EF4444';
+      }
+
+      _applyHrScore(kpiDisplay, attPct);
+    })();
 
     // Populate detail tabs
     setText('profileIdNumber', s.idNumber);
@@ -5191,6 +5258,8 @@ document.addEventListener('DOMContentLoaded', () => {
       const email = document.getElementById('hrmStaffEmail').value.trim();
       const name = document.getElementById('hrmStaffName').value.trim();
 
+      const _kpiRaw = document.getElementById('hrmStaffKpi')?.value.trim();
+      const _salRaw = document.getElementById('hrmStaffSalary')?.value.trim();
       const data = {
         name,
         email,
@@ -5200,6 +5269,8 @@ document.addEventListener('DOMContentLoaded', () => {
         status: document.getElementById('hrmStaffStatus').value,
         employeeCode: document.getElementById('hrmStaffCode').value.trim(),
         username: document.getElementById('hrmStaffUsername').value.trim(),
+        kpi: _kpiRaw !== '' && _kpiRaw != null ? Math.min(100, Math.max(0, Number(_kpiRaw))) : null,
+        salary: _salRaw !== '' && _salRaw != null ? Number(_salRaw) : null,
         updatedAt: firebase.firestore.FieldValue.serverTimestamp()
       };
 
@@ -5930,6 +6001,10 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('hrmStaffStatus').value = s.status || 'Đang làm việc';
     document.getElementById('hrmStaffCode').value = s.employeeCode || '';
     document.getElementById('hrmStaffUsername').value = s.username || '';
+    const kpiInput = document.getElementById('hrmStaffKpi');
+    const salInput = document.getElementById('hrmStaffSalary');
+    if (kpiInput) kpiInput.value = s.kpi != null ? s.kpi : '';
+    if (salInput) salInput.value = s.salary != null ? s.salary : '';
 
     document.getElementById('hrmStaffModalTitle').textContent = '✏️ SỬA THÔNG TIN NHÂN SỰ';
     const pwSection = document.getElementById('hrmStaffPasswordSection');
