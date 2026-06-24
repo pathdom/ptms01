@@ -3439,6 +3439,219 @@ body.dark-theme-crm .profile-status-badge.inactive-badge { background: rgba(220,
   margin-top: 0.25rem;
 }
 
+/* ── Metric Card Action Buttons ── */
+.metric-card-actions { display: flex; align-items: center; gap: 0.4rem; }
+.metric-action-btn {
+  display: inline-flex; align-items: center; gap: 0.3rem;
+  padding: 0.28rem 0.7rem; border-radius: 6px;
+  font-size: 0.72rem; font-weight: 600; cursor: pointer; border: none;
+  background: #EEF2FF; color: #6366F1;
+  transition: background 0.15s, color 0.15s;
+  white-space: nowrap;
+}
+.metric-action-btn:hover { background: #6366F1; color: #fff; }
+.metric-action-btn.metric-action-btn-outline {
+  background: transparent; border: 1px solid var(--border);
+  color: var(--text-muted);
+}
+.metric-action-btn.metric-action-btn-outline:hover { background: var(--border); color: var(--text-main); }
+
+/* ── Left Card: Skills + Docs ── */
+.profile-card-sep {
+  height: 1px; background: var(--border-light);
+  margin: 0.9rem 0;
+}
+.profile-skills-section, .profile-docs-section { margin-bottom: 0.75rem; }
+.profile-skills-label {
+  font-size: 0.7rem; font-weight: 600; color: var(--text-muted);
+  text-transform: uppercase; letter-spacing: 0.06em;
+  margin-bottom: 0.45rem;
+}
+.profile-skill-tags { display: flex; flex-wrap: wrap; gap: 0.35rem; }
+.skill-tag {
+  display: inline-flex; align-items: center;
+  padding: 0.22rem 0.6rem; border-radius: 20px;
+  font-size: 0.71rem; font-weight: 500;
+  background: #EEF2FF; color: #4F46E5;
+  border: 1px solid rgba(99,102,241,0.2);
+}
+.skill-tag-empty { font-size: 0.75rem; color: var(--text-muted); font-style: italic; }
+.profile-files-btn {
+  display: inline-flex; align-items: center; gap: 0.35rem;
+  padding: 0.35rem 0.85rem; border-radius: 8px;
+  font-size: 0.75rem; font-weight: 600; cursor: pointer;
+  border: 1px solid var(--border); background: var(--bg-secondary, #F7F4EF);
+  color: var(--text-main);
+  transition: background 0.15s;
+}
+.profile-files-btn:hover { background: #EEF2FF; color: #6366F1; border-color: rgba(99,102,241,0.3); }
+
+/* ── Achievement Pill Tags ── */
+.achievements-tags { display: flex; flex-wrap: wrap; gap: 0.45rem; padding: 0.2rem 0; }
+.achievement-tag {
+  display: inline-flex; align-items: center; gap: 0.35rem;
+  padding: 0.3rem 0.85rem; border-radius: 20px;
+  font-size: 0.77rem; font-weight: 500;
+  background: #FFF7ED; color: #C2410C;
+  border: 1px solid #FED7AA;
+  transition: transform 0.15s;
+}
+.achievement-tag:nth-child(2n) { background: #EEF2FF; color: #4F46E5; border-color: rgba(99,102,241,0.25); }
+.achievement-tag:nth-child(3n) { background: #ECFDF5; color: #059669; border-color: #A7F3D0; }
+.achievement-tag:hover { transform: translateY(-1px); }
+
+/* ── Reminders / Tasks ── */
+.profile-reminders-section {
+  margin-top: 0.85rem; padding-top: 0.75rem;
+  border-top: 1px solid var(--border-light);
+}
+.profile-reminders-header {
+  display: flex; gap: 1rem; margin-bottom: 0.5rem;
+}
+.reminders-label, .tasks-label {
+  display: flex; align-items: center; gap: 0.3rem;
+  font-size: 0.75rem; font-weight: 600; color: var(--text-muted);
+}
+.profile-task-list {
+  list-style: none; padding: 0; margin: 0;
+  display: flex; flex-direction: column; gap: 0.3rem;
+}
+.profile-task-list li {
+  font-size: 0.78rem; color: var(--text-main);
+  padding: 0.3rem 0.5rem 0.3rem 1rem;
+  border-left: 2px solid #6366F1;
+  background: #F8F9FF; border-radius: 0 6px 6px 0;
+}
+.task-item-empty { color: var(--text-muted) !important; font-style: italic; border-left-color: var(--border) !important; background: transparent !important; }
+
+/* ── Attendance & Leave Mini Card ── */
+.att-detail-grid {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;
+  align-items: start;
+}
+.att-timein-section, .att-leave-section { display: flex; flex-direction: column; gap: 0.4rem; }
+.att-legend-row { display: flex; align-items: center; gap: 0.4rem; }
+.att-legend-dot {
+  width: 10px; height: 10px; border-radius: 2px;
+  background: #6366F1; flex-shrink: 0;
+}
+.att-legend-text { font-size: 0.72rem; color: var(--text-muted); font-weight: 500; }
+.att-mini-chart {
+  display: flex; align-items: flex-end; gap: 3px;
+  height: 52px; padding: 0 1px;
+}
+.att-mini-bar {
+  flex: 1; border-radius: 3px 3px 0 0;
+  min-height: 4px; transition: height 0.4s ease;
+}
+.att-mini-days {
+  display: flex; gap: 3px;
+}
+.att-mini-day-label {
+  flex: 1; text-align: center;
+  font-size: 0.62rem; color: var(--text-muted);
+}
+.att-leave-title { font-size: 0.75rem; font-weight: 600; color: var(--text-main); }
+.att-leave-days { font-size: 0.72rem; color: var(--text-muted); }
+.att-leave-days span { font-weight: 700; color: var(--text-main); }
+.att-leave-bar-track {
+  height: 8px; background: #F3F4F6;
+  border-radius: 4px; overflow: hidden; margin-top: 0.2rem;
+}
+.att-leave-bar-fill {
+  height: 100%; background: #10B981;
+  border-radius: 4px; transition: width 0.8s ease;
+}
+
+/* ── KPI Trend Chart ── */
+.kpi-trend-section {
+  margin-top: 1rem; padding-top: 0.85rem;
+  border-top: 1px solid var(--border-light);
+}
+.kpi-trend-label {
+  font-size: 0.75rem; font-weight: 600; color: var(--text-main);
+  margin-bottom: 0.5rem;
+}
+.kpi-trend-svg {
+  width: 100%; height: 70px;
+  display: block; overflow: visible;
+}
+.kpi-trend-months {
+  display: flex; justify-content: space-between;
+  margin-top: 0.2rem;
+}
+.kpi-trend-month {
+  font-size: 0.61rem; color: var(--text-muted);
+  text-align: center;
+}
+.kpi-trend-legend {
+  display: flex; gap: 0.85rem; margin-top: 0.55rem; flex-wrap: wrap;
+}
+.kpi-legend-item { display: flex; align-items: center; gap: 0.3rem; font-size: 0.68rem; color: var(--text-muted); }
+.kpi-legend-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+
+/* ── Manager Notes ── */
+.manager-notes-section {
+  margin-top: 0.85rem; padding-top: 0.85rem;
+  border-top: 1px solid var(--border-light);
+  display: flex; flex-direction: column; gap: 0.5rem;
+}
+.manager-notes-label {
+  display: flex; align-items: center; gap: 0.3rem;
+  font-size: 0.75rem; font-weight: 600; color: var(--text-main);
+}
+.manager-notes-input {
+  width: 100%; padding: 0.55rem 0.75rem;
+  font-size: 0.8rem; font-family: inherit; color: var(--text-main);
+  background: var(--bg-secondary, #F7F4EF);
+  border: 1px solid var(--border); border-radius: 8px;
+  outline: none; resize: vertical;
+  transition: border-color 0.18s, box-shadow 0.18s;
+  box-sizing: border-box;
+}
+.manager-notes-input:focus { border-color: #6366F1; box-shadow: 0 0 0 3px rgba(99,102,241,0.1); }
+.manager-notes-save {
+  align-self: flex-end;
+  padding: 0.35rem 0.9rem; border-radius: 7px;
+  font-size: 0.75rem; font-weight: 600; cursor: pointer;
+  background: #6366F1; color: #fff; border: none;
+  transition: background 0.15s, transform 0.1s;
+}
+.manager-notes-save:hover { background: #4F46E5; transform: translateY(-1px); }
+
+/* ── Activity Log ── */
+.activity-log-section {
+  margin-top: 1.25rem; padding: 1rem 1.25rem;
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: var(--border-radius-md);
+}
+.activity-log-header {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 0.85rem;
+}
+.activity-log-title {
+  display: flex; align-items: center; gap: 0.4rem;
+  font-size: 0.88rem; font-weight: 600; color: var(--text-main);
+}
+.activity-log-scroll {
+  display: flex; gap: 1rem; overflow-x: auto;
+  padding-bottom: 0.35rem;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border) transparent;
+}
+.activity-log-scroll::-webkit-scrollbar { height: 4px; }
+.activity-log-scroll::-webkit-scrollbar-track { background: transparent; }
+.activity-log-scroll::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+.activity-item {
+  flex-shrink: 0; min-width: 160px; max-width: 180px;
+  background: var(--bg-secondary, #F7F4EF);
+  border: 1px solid var(--border); border-radius: 8px;
+  padding: 0.6rem 0.8rem;
+  font-size: 0.73rem; color: var(--text-muted); line-height: 1.55;
+}
+.activity-item strong { display: block; color: var(--text-main); font-weight: 600; margin-bottom: 0.2rem; }
+.activity-item-empty { font-size: 0.8rem; color: var(--text-muted); font-style: italic; padding: 0.5rem 0; }
+
 /* Placeholder Tab Panels */
 .hrm-tab-placeholder {
   display: flex;

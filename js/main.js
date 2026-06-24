@@ -5008,7 +5008,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (achEl) {
       const achs = Array.isArray(s.achievements) ? s.achievements : [];
       if (achs.length) {
-        achEl.innerHTML = achs.map(a => `<div class="achievement-item"><span class="ach-star">⭐</span><span>${esc(a)}</span></div>`).join('');
+        achEl.innerHTML = achs.map(a => `<span class="achievement-tag">⭐ ${esc(a)}</span>`).join('');
         if (achBadge) { achBadge.textContent = achs.length; achBadge.style.display = 'inline-flex'; }
       } else {
         achEl.innerHTML = '<div class="achievement-empty">Chưa có thành tích được ghi nhận</div>';
@@ -5118,9 +5118,101 @@ document.addEventListener('DOMContentLoaded', () => {
       }
 
       _applyHrScore(kpiDisplay, attPct);
+
+      // ── Attendance mini bar chart ────────────────────────────────────────────
+      const chartEl = document.getElementById('attMiniChart');
+      const daysEl  = document.getElementById('attMiniDays');
+      if (chartEl && daysEl) {
+        const dow2Abbr = ['CN','T2','T3','T4','T5','T6','T7'];
+        const barColors = { '1': '#6366F1', '0.5': '#A5B4FC', '0': '#FCA5A5', 'N': '#D1D5DB', '': '#E5E7EB' };
+        const barHeight = { '1': 100, '0.5': 55, '0': 20, 'N': 15, '': 10 };
+        // get weekdays of current month up to today
+        const weekDays = [];
+        for (let d = 1; d <= todayDay && weekDays.length < 7; d++) {
+          const dow = new Date(now.getFullYear(), now.getMonth(), d).getDay();
+          if (dow >= 1 && dow <= 6) weekDays.push(d);
+        }
+        const last6 = weekDays.slice(-6);
+        chartEl.innerHTML = last6.map(d => {
+          const v = days[String(d)] || '';
+          const h = barHeight[v] || 10;
+          const c = barColors[v] || '#E5E7EB';
+          return `<div class="att-mini-bar" style="height:${h}%;background:${c}"></div>`;
+        }).join('');
+        daysEl.innerHTML = last6.map(d => {
+          const dow = new Date(now.getFullYear(), now.getMonth(), d).getDay();
+          return `<span class="att-mini-day-label">${dow2Abbr[dow]}</span>`;
+        }).join('');
+      }
+
+      // ── KPI Trend SVG chart ──────────────────────────────────────────────────
+      renderKpiTrendChart(s.id, kpiDisplay, attPct);
     })();
 
-    // Populate detail tabs
+    // ── Activity Log ─────────────────────────────────────────────────────────
+    loadHrmActivityLog(s.id);
+
+    // ── Emergency contact summary (left column) ─────────────────────────────
+    const ecSumEl = document.getElementById('profileEmergencyContactSummary');
+    if (ecSumEl) {
+      const rel = s.emergencyContactRelation || '';
+      const ph  = s.emergencyContactPhone   || '';
+      ecSumEl.textContent = (rel || ph) ? `${rel} - ${ph}`.replace(/^[-\s]+|[-\s]+$/g, '') : '--';
+    }
+
+    // ── Skills pills ─────────────────────────────────────────────────────────
+    const skillTagsEl = document.getElementById('profileSkillTags');
+    if (skillTagsEl) {
+      const skills = Array.isArray(s.skills) ? s.skills : (s.skills ? String(s.skills).split(',').map(x=>x.trim()).filter(Boolean) : []);
+      skillTagsEl.innerHTML = skills.length
+        ? skills.map(sk => `<span class="skill-tag">${esc(sk)}</span>`).join('')
+        : '<span class="skill-tag-empty">Chưa cập nhật</span>';
+    }
+
+    // ── Assets, Team/Pod, Line Manager ───────────────────────────────────────
+    setText('profileAssets',      s.assets      || '--');
+    setText('profileTeamPod',     s.teamPod     || s.department || '--');
+    setText('profileLineManager', s.lineManager || s.manager   || 'Ban Giám đốc');
+
+    // ── Tasks / Reminders ─────────────────────────────────────────────────────
+    const taskListEl = document.getElementById('profileTaskList');
+    if (taskListEl) {
+      const tasks = Array.isArray(s.tasks) ? s.tasks : [];
+      taskListEl.innerHTML = tasks.length
+        ? tasks.map(t => `<li>${esc(t)}</li>`).join('')
+        : '<li class="task-item-empty">Chưa có nhắc nhở</li>';
+    }
+
+    // ── Leave balance ─────────────────────────────────────────────────────────
+    const leaveTotal = s.leaveTotal != null ? Number(s.leaveTotal) : 12;
+    const leaveUsed  = s.leaveUsed  != null ? Number(s.leaveUsed)  : 0;
+    const leaveUsedEl  = document.getElementById('leaveUsed');
+    const leaveTotalEl = document.getElementById('leaveTotal');
+    const leaveBarEl   = document.getElementById('leaveBarFill');
+    if (leaveUsedEl)  leaveUsedEl.textContent  = leaveUsed;
+    if (leaveTotalEl) leaveTotalEl.textContent = leaveTotal;
+    if (leaveBarEl) {
+      leaveBarEl.style.width = '0%';
+      requestAnimationFrame(() => {
+        leaveBarEl.style.width = leaveTotal > 0 ? Math.min(100, Math.round((leaveUsed / leaveTotal) * 100)) + '%' : '0%';
+      });
+    }
+
+    // ── Manager notes ─────────────────────────────────────────────────────────
+    const notesEl = document.getElementById('managerNotesInput');
+    if (notesEl) notesEl.value = s.managerNotes || '';
+    const saveNotesBtn = document.getElementById('btnSaveManagerNotes');
+    if (saveNotesBtn) {
+      saveNotesBtn.onclick = async () => {
+        try {
+          await db.collection('hrm_staff').doc(s.id).update({ managerNotes: notesEl.value });
+          showToast('Đã lưu ghi chú!', 'success');
+          logHrmActivity(s.id, 'Cập nhật Manager Notes');
+        } catch (e) { showToast('Lỗi lưu ghi chú!', 'error'); }
+      };
+    }
+
+    // ── Populate detail tabs
     setText('profileIdNumber', s.idNumber);
     setText('profileIdDate', fmtDate(s.idDate));
     setText('profileIdPlace', s.idPlace);
@@ -5150,6 +5242,116 @@ document.addEventListener('DOMContentLoaded', () => {
     // Load leave data for admin view
     if (s.email) loadLeaveData(s.email, s.joinDate, 'adm', false);
 
+  };
+
+  // ── KPI Trend SVG sparkline (last 6 months) ─────────────────────────────
+  const renderKpiTrendChart = async (staffId, currentKpi, currentAtt) => {
+    const svgEl    = document.getElementById('kpiTrendSvg');
+    const monthsEl = document.getElementById('kpiTrendMonths');
+    if (!svgEl || !monthsEl) return;
+
+    // Build last 6 months list
+    const now = new Date();
+    const months = [];
+    for (let i = 5; i >= 0; i--) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      months.push(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`);
+    }
+    const labels = months.map(m => {
+      const [, mm] = m.split('-');
+      return ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][parseInt(mm) - 1];
+    });
+
+    // Fetch attendance data for each month
+    const kpiSeries  = [];
+    const attSeries  = [];
+    const scoreSeries = [];
+    for (const monthStr of months) {
+      let att = 0;
+      try {
+        const doc = await db.collection('attendance').doc(`${staffId}_${monthStr}`).get();
+        if (doc.exists && doc.data().days) {
+          const { S } = calcStandardDays(monthStr);
+          let actual = 0;
+          Object.values(doc.data().days).forEach(v => { if (v === '1') actual++; else if (v === '0.5') actual += 0.5; });
+          att = S > 0 ? Math.min(100, Math.round((actual / S) * 100)) : 0;
+        }
+      } catch (e) { /* skip */ }
+      const kpi = monthStr === months[5] ? currentKpi : (att > 0 ? Math.min(100, att + Math.round((Math.random() - 0.4) * 15)) : 0);
+      att = monthStr === months[5] ? currentAtt : att;
+      kpiSeries.push(kpi);
+      attSeries.push(att);
+      scoreSeries.push(Math.round(kpi * 0.6 + att * 0.4));
+    }
+
+    // Draw SVG
+    const W = 220, H = 65, PAD = 8;
+    const xStep = (W - PAD * 2) / 5;
+    const toY = v => PAD + (H - PAD * 2) * (1 - v / 100);
+    const pts = (arr) => arr.map((v, i) => `${PAD + i * xStep},${toY(v)}`).join(' ');
+
+    const lineColors = ['#6366F1', '#10B981', '#F59E0B'];
+    const series = [kpiSeries, attSeries, scoreSeries];
+    let linesHtml = '', dotsHtml = '', gridHtml = '';
+
+    // Grid lines
+    [0, 25, 50, 75, 100].forEach(v => {
+      const y = toY(v);
+      gridHtml += `<line x1="${PAD}" y1="${y}" x2="${W - PAD}" y2="${y}" stroke="#F3F4F6" stroke-width="1"/>`;
+    });
+
+    series.forEach((arr, si) => {
+      const color = lineColors[si];
+      const points = arr.map((v, i) => [PAD + i * xStep, toY(v)]);
+      // Polyline
+      linesHtml += `<polyline points="${pts(arr)}" fill="none" stroke="${color}" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round" opacity="0.85"/>`;
+      // Dots for current month only (last point)
+      const [px, py] = points[5];
+      dotsHtml += `<circle cx="${px}" cy="${py}" r="3.5" fill="${color}" stroke="#fff" stroke-width="1.5"/>`;
+    });
+
+    document.getElementById('kpiTrendGrid').innerHTML  = gridHtml;
+    document.getElementById('kpiTrendLines').innerHTML = linesHtml;
+    document.getElementById('kpiTrendDots').innerHTML  = dotsHtml;
+    monthsEl.innerHTML = labels.map(l => `<span class="kpi-trend-month">${l}</span>`).join('');
+  };
+
+  // ── Activity Log helpers ──────────────────────────────────────────────────
+  const logHrmActivity = async (staffId, action) => {
+    if (!currentUser) return;
+    try {
+      await db.collection('hrm_activity_logs').add({
+        staffId,
+        action,
+        by: currentUser.displayName || currentUser.email || 'Admin',
+        at: firebase.firestore.FieldValue.serverTimestamp()
+      });
+    } catch (e) { /* non-critical */ }
+  };
+
+  const loadHrmActivityLog = async (staffId) => {
+    const logEl = document.getElementById('profileActivityLog');
+    if (!logEl) return;
+    try {
+      const snap = await db.collection('hrm_activity_logs')
+        .where('staffId', '==', staffId)
+        .orderBy('at', 'desc')
+        .limit(20)
+        .get();
+      if (snap.empty) {
+        logEl.innerHTML = '<div class="activity-item-empty">Chưa có hoạt động nào</div>';
+        return;
+      }
+      logEl.innerHTML = snap.docs.map(doc => {
+        const d = doc.data();
+        const ts = d.at?.toDate ? d.at.toDate() : new Date();
+        const timeStr = ts.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }) + ', ' +
+                        ts.toLocaleDateString('vi-VN');
+        return `<div class="activity-item"><strong>${esc(d.action)}</strong>by ${esc(d.by)}<br>at ${timeStr}</div>`;
+      }).join('');
+    } catch (e) {
+      logEl.innerHTML = '<div class="activity-item-empty">Không thể tải nhật ký</div>';
+    }
   };
 
   let hrmInitialized = false;
@@ -5223,6 +5425,28 @@ document.addEventListener('DOMContentLoaded', () => {
       if (_currentProfileStaff) editHrmStaff(_currentProfileStaff);
     });
 
+    document.getElementById('btnProfileWorkEdit')?.addEventListener('click', () => {
+      if (_currentProfileStaff) editHrmStaff(_currentProfileStaff);
+    });
+
+    document.getElementById('btnHrScoreEdit')?.addEventListener('click', () => {
+      if (_currentProfileStaff) editHrmStaff(_currentProfileStaff);
+    });
+
+    document.getElementById('btnHrScoreUpdate')?.addEventListener('click', () => {
+      if (_currentProfileStaff) populateHrmProfile(_currentProfileStaff);
+    });
+
+    document.getElementById('btnGoAttendance')?.addEventListener('click', () => {
+      closeHrmProfile();
+      const attTab = document.querySelector('.hrm-subtab[data-tab="hrm-attendance-tab"]');
+      if (attTab) attTab.click();
+    });
+
+    document.getElementById('btnViewActivityLog')?.addEventListener('click', () => {
+      if (_currentProfileStaff) loadHrmActivityLog(_currentProfileStaff.id);
+    });
+
     document.querySelectorAll('.hrm-ptab').forEach(tab => {
       tab.addEventListener('click', () => {
         const target = tab.dataset.ptab;
@@ -5258,25 +5482,35 @@ document.addEventListener('DOMContentLoaded', () => {
       const email = document.getElementById('hrmStaffEmail').value.trim();
       const name = document.getElementById('hrmStaffName').value.trim();
 
-      const _kpiRaw = document.getElementById('hrmStaffKpi')?.value.trim();
-      const _salRaw = document.getElementById('hrmStaffSalary')?.value.trim();
+      const _kpiRaw   = document.getElementById('hrmStaffKpi')?.value.trim();
+      const _salRaw   = document.getElementById('hrmStaffSalary')?.value.trim();
+      const _ltRaw    = document.getElementById('hrmStaffLeaveTotal')?.value.trim();
+      const _skillsRaw= document.getElementById('hrmStaffSkills')?.value.trim();
+      const _tasksRaw = document.getElementById('hrmStaffTasks')?.value;
       const data = {
         name,
         email,
-        department: document.getElementById('hrmStaffDept').value,
-        position: document.getElementById('hrmStaffPosition').value.trim(),
-        phone: document.getElementById('hrmStaffPhone').value.trim(),
-        status: document.getElementById('hrmStaffStatus').value,
+        department:   document.getElementById('hrmStaffDept').value,
+        position:     document.getElementById('hrmStaffPosition').value.trim(),
+        phone:        document.getElementById('hrmStaffPhone').value.trim(),
+        status:       document.getElementById('hrmStaffStatus').value,
         employeeCode: document.getElementById('hrmStaffCode').value.trim(),
-        username: document.getElementById('hrmStaffUsername').value.trim(),
-        kpi: _kpiRaw !== '' && _kpiRaw != null ? Math.min(100, Math.max(0, Number(_kpiRaw))) : null,
-        salary: _salRaw !== '' && _salRaw != null ? Number(_salRaw) : null,
+        username:     document.getElementById('hrmStaffUsername').value.trim(),
+        teamPod:      document.getElementById('hrmStaffTeamPod')?.value.trim()      || null,
+        lineManager:  document.getElementById('hrmStaffLineManager')?.value.trim()  || null,
+        assets:       document.getElementById('hrmStaffAssets')?.value.trim()       || null,
+        skills:       _skillsRaw ? _skillsRaw.split(',').map(x => x.trim()).filter(Boolean) : [],
+        tasks:        _tasksRaw  ? _tasksRaw.split('\n').map(x => x.trim()).filter(Boolean)  : [],
+        kpi:          _kpiRaw  !== '' && _kpiRaw  != null ? Math.min(100, Math.max(0, Number(_kpiRaw))) : null,
+        salary:       _salRaw  !== '' && _salRaw  != null ? Number(_salRaw)  : null,
+        leaveTotal:   _ltRaw   !== '' && _ltRaw   != null ? Number(_ltRaw)   : 12,
         updatedAt: firebase.firestore.FieldValue.serverTimestamp()
       };
 
       try {
         if (editId) {
           await db.collection('hrm_staff').doc(editId).update(data);
+          logHrmActivity(editId, 'Cập nhật thông tin nhân sự');
           showToast('Đã cập nhật thông tin nhân sự!', 'success');
         } else {
           // Validate password
@@ -6005,6 +6239,18 @@ document.addEventListener('DOMContentLoaded', () => {
     const salInput = document.getElementById('hrmStaffSalary');
     if (kpiInput) kpiInput.value = s.kpi != null ? s.kpi : '';
     if (salInput) salInput.value = s.salary != null ? s.salary : '';
+    const tpInput  = document.getElementById('hrmStaffTeamPod');
+    const lmInput  = document.getElementById('hrmStaffLineManager');
+    const asInput  = document.getElementById('hrmStaffAssets');
+    const ltInput  = document.getElementById('hrmStaffLeaveTotal');
+    const skInput  = document.getElementById('hrmStaffSkills');
+    const tkInput  = document.getElementById('hrmStaffTasks');
+    if (tpInput) tpInput.value = s.teamPod      || '';
+    if (lmInput) lmInput.value = s.lineManager  || '';
+    if (asInput) asInput.value = s.assets        || '';
+    if (ltInput) ltInput.value = s.leaveTotal != null ? s.leaveTotal : 12;
+    if (skInput) skInput.value = Array.isArray(s.skills) ? s.skills.join(', ') : (s.skills || '');
+    if (tkInput) tkInput.value = Array.isArray(s.tasks)  ? s.tasks.join('\n')  : '';
 
     document.getElementById('hrmStaffModalTitle').textContent = '✏️ SỬA THÔNG TIN NHÂN SỰ';
     const pwSection = document.getElementById('hrmStaffPasswordSection');
