@@ -19,6 +19,7 @@
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-storage-compat.js"></script>
 
     <!-- SheetJS Library for Excel import/export -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -1908,7 +1909,8 @@
                         <th>LIÊN HỆ</th>
                         <th>QUỐC GIA</th>
                         <th>NGÀY ĐĂNG KÝ</th>
-                        <th style="min-width:160px;">DOANH THU (đ)</th>
+                        <th style="min-width:150px;">DOANH THU (đ)</th>
+                        <th style="text-align:center;">HÀNH ĐỘNG</th>
                       </tr>
                     </thead>
                     <tbody id="crmSourceTableBody">
@@ -2014,10 +2016,55 @@
 
               <!-- Tab: Hồ sơ & Tài liệu -->
               <div id="ctab-docs" class="crm-ptab-panel">
-                <div class="crm-tab-placeholder">
-                  <svg viewBox="0 0 24 24"><path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z"/></svg>
-                  <h3>Hồ sơ &amp; Tài liệu</h3>
-                  <p>Chức năng đang được phát triển</p>
+                <div style="padding:1.25rem;">
+                  <!-- Header -->
+                  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;">
+                    <div>
+                      <h4 style="font-size:0.85rem;font-weight:700;text-transform:uppercase;color:var(--text-muted);letter-spacing:.8px;margin-bottom:2px;">Hồ sơ &amp; Tài liệu</h4>
+                      <p style="font-size:0.75rem;color:var(--text-muted);">Quản lý tài liệu hồ sơ của khách hàng</p>
+                    </div>
+                    <label id="btnUploadDoc" style="display:inline-flex;align-items:center;gap:0.4rem;
+                      padding:0.5rem 1.1rem;background:#2563EB;color:#fff;border-radius:9px;
+                      font-size:0.78rem;font-weight:500;cursor:pointer;transition:opacity .2s;">
+                      <svg viewBox="0 0 24 24" style="width:15px;height:15px;fill:currentColor;flex-shrink:0;"><path d="M9,16V10H5L12,3L19,10H15V16H9M5,20V18H19V20H5Z"/></svg>
+                      Upload tài liệu
+                      <input type="file" id="docFileInput" multiple accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.xlsx,.xls" style="display:none;" />
+                    </label>
+                  </div>
+
+                  <!-- Upload progress -->
+                  <div id="docUploadProgress" style="display:none;margin-bottom:0.75rem;padding:0.65rem 1rem;
+                    background:#EFF6FF;border:1px solid #BFDBFE;border-radius:9px;
+                    font-size:0.8rem;color:#1D4ED8;display:none;align-items:center;gap:0.6rem;">
+                    <svg viewBox="0 0 24 24" style="width:16px;height:16px;fill:currentColor;flex-shrink:0;animation:spin 1s linear infinite;">
+                      <path d="M12,4V2A10,10 0 0,0 2,12H4A8,8 0 0,1 12,4Z"/>
+                    </svg>
+                    <span id="docUploadMsg">Đang tải lên...</span>
+                  </div>
+
+                  <!-- Documents table -->
+                  <div class="mini-table-container" style="border-radius:10px;overflow:hidden;border:1px solid var(--border-light);">
+                    <table class="crm-table" style="margin:0;">
+                      <thead>
+                        <tr>
+                          <th style="width:36px;">#</th>
+                          <th>Tên tài liệu</th>
+                          <th>Loại</th>
+                          <th>Kích thước</th>
+                          <th>Ngày tải lên</th>
+                          <th style="text-align:center;">Thao tác</th>
+                        </tr>
+                      </thead>
+                      <tbody id="crmDocsTableBody">
+                        <tr id="crmDocsEmptyRow">
+                          <td colspan="6" style="text-align:center;padding:2.5rem;color:var(--text-muted);font-size:0.82rem;">
+                            <svg viewBox="0 0 24 24" style="width:32px;height:32px;fill:var(--border);display:block;margin:0 auto 0.5rem;"><path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z"/></svg>
+                            Chưa có tài liệu nào
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
                 </div>
               </div>
 
@@ -3086,6 +3133,135 @@
             style="padding:0.55rem 1.2rem;font-size:0.82rem;background:transparent;
                    border:1px solid var(--border);border-radius:9px;cursor:pointer;color:var(--text-main);">
             Hủy
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal Chi Tiết Học Viên Nguồn -->
+    <div class="modal-overlay" id="sourceDetailModal"
+      style="display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;
+             background:rgba(0,0,0,0.45);z-index:1100;justify-content:center;
+             align-items:center;padding:1.5rem;backdrop-filter:blur(4px);">
+      <div style="background:var(--bg-card);width:100%;max-width:780px;border-radius:16px;
+                  box-shadow:0 24px 60px rgba(0,0,0,0.18);display:flex;flex-direction:column;
+                  max-height:92vh;overflow:hidden;">
+
+        <!-- Header -->
+        <div style="display:flex;justify-content:space-between;align-items:center;
+                    padding:1.1rem 1.5rem;border-bottom:1px solid var(--border-light);flex-shrink:0;">
+          <div style="display:flex;align-items:center;gap:0.75rem;">
+            <div id="srcDetailAvatar" style="width:40px;height:40px;border-radius:50%;background:var(--accent);
+                 color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:0.95rem;flex-shrink:0;">N</div>
+            <div>
+              <div id="srcDetailName" style="font-weight:700;font-size:1rem;color:var(--text-main);">--</div>
+              <div id="srcDetailCode" style="font-size:0.7rem;font-family:monospace;color:#6366F1;font-weight:600;">HNV0001</div>
+            </div>
+          </div>
+          <button type="button" id="btnCloseSourceDetail"
+            style="font-size:1.4rem;color:var(--text-muted);cursor:pointer;background:none;border:none;line-height:1;padding:4px 8px;">&times;</button>
+        </div>
+
+        <!-- Body: 2 cột -->
+        <div style="display:grid;grid-template-columns:1fr 1.4fr;gap:0;flex:1;overflow:hidden;">
+
+          <!-- Cột trái: Thông tin -->
+          <div style="padding:1.2rem 1.3rem;border-right:1px solid var(--border-light);overflow-y:auto;display:flex;flex-direction:column;gap:0.85rem;">
+            <div style="font-size:0.65rem;font-weight:700;text-transform:uppercase;color:var(--text-muted);letter-spacing:.9px;">Thông tin cá nhân</div>
+
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.6rem;">
+              <div style="background:var(--bg-primary);border:1px solid var(--border-light);border-radius:9px;padding:0.55rem 0.8rem;">
+                <div style="font-size:0.6rem;font-weight:600;text-transform:uppercase;color:var(--text-muted);letter-spacing:.7px;margin-bottom:3px;">Email</div>
+                <div id="srcDetailEmail" style="font-size:0.78rem;font-weight:500;color:var(--text-main);word-break:break-all;">--</div>
+              </div>
+              <div style="background:var(--bg-primary);border:1px solid var(--border-light);border-radius:9px;padding:0.55rem 0.8rem;">
+                <div style="font-size:0.6rem;font-weight:600;text-transform:uppercase;color:var(--text-muted);letter-spacing:.7px;margin-bottom:3px;">SĐT</div>
+                <div id="srcDetailPhone" style="font-size:0.78rem;font-weight:500;color:var(--text-main);">--</div>
+              </div>
+              <div style="background:var(--bg-primary);border:1px solid var(--border-light);border-radius:9px;padding:0.55rem 0.8rem;">
+                <div style="font-size:0.6rem;font-weight:600;text-transform:uppercase;color:var(--text-muted);letter-spacing:.7px;margin-bottom:3px;">Quốc gia</div>
+                <div id="srcDetailCountry" style="font-size:0.78rem;font-weight:500;color:var(--text-main);">--</div>
+              </div>
+              <div style="background:var(--bg-primary);border:1px solid var(--border-light);border-radius:9px;padding:0.55rem 0.8rem;">
+                <div style="font-size:0.6rem;font-weight:600;text-transform:uppercase;color:var(--text-muted);letter-spacing:.7px;margin-bottom:3px;">Ngày đăng ký</div>
+                <div id="srcDetailDate" style="font-size:0.78rem;font-weight:500;color:var(--text-main);">--</div>
+              </div>
+            </div>
+
+            <div style="background:var(--bg-primary);border:1px solid var(--border-light);border-radius:9px;padding:0.7rem 0.9rem;">
+              <div style="font-size:0.6rem;font-weight:600;text-transform:uppercase;color:var(--text-muted);letter-spacing:.7px;margin-bottom:5px;">Ghi chú</div>
+              <div id="srcDetailNotes" style="font-size:0.8rem;color:var(--text-main);line-height:1.55;white-space:pre-wrap;">--</div>
+            </div>
+
+            <!-- Tổng doanh thu -->
+            <div style="background:linear-gradient(135deg,#1D4ED8,#6366F1);border-radius:12px;padding:1rem 1.1rem;color:#fff;margin-top:auto;">
+              <div style="font-size:0.65rem;font-weight:600;text-transform:uppercase;letter-spacing:.8px;opacity:.85;margin-bottom:6px;">Tổng doanh thu</div>
+              <div id="srcDetailTotalRevenue" style="font-size:1.6rem;font-weight:700;letter-spacing:-0.5px;">0 đ</div>
+              <div id="srcDetailEntryCount" style="font-size:0.72rem;opacity:.8;margin-top:2px;">0 đợt thanh toán</div>
+            </div>
+          </div>
+
+          <!-- Cột phải: Doanh thu theo đợt -->
+          <div style="display:flex;flex-direction:column;overflow:hidden;">
+            <div style="display:flex;justify-content:space-between;align-items:center;
+                        padding:0.9rem 1.3rem;border-bottom:1px solid var(--border-light);flex-shrink:0;">
+              <div style="font-size:0.65rem;font-weight:700;text-transform:uppercase;color:var(--text-muted);letter-spacing:.9px;">Chi tiết các đợt doanh thu</div>
+              <button type="button" id="btnAddRevEntry"
+                style="display:flex;align-items:center;gap:0.3rem;padding:0.35rem 0.85rem;
+                       background:#2563EB;color:#fff;border:none;border-radius:8px;
+                       font-size:0.72rem;font-weight:600;cursor:pointer;">
+                <svg viewBox="0 0 24 24" style="width:13px;height:13px;fill:currentColor;"><path d="M19,13H13V19H11V13H5V11H11V5H13V11H19V13Z"/></svg>
+                Thêm đợt
+              </button>
+            </div>
+
+            <!-- Form thêm đợt (ẩn mặc định) -->
+            <div id="revEntryForm" style="display:none;padding:0.85rem 1.3rem;background:#F8FAFF;border-bottom:1px solid var(--border-light);gap:0.6rem;flex-wrap:wrap;align-items:flex-end;">
+              <div style="display:grid;grid-template-columns:1fr 1fr 1.5fr auto;gap:0.6rem;width:100%;align-items:end;">
+                <div>
+                  <div style="font-size:0.62rem;font-weight:600;text-transform:uppercase;color:var(--text-muted);margin-bottom:4px;">Số tiền (đ) *</div>
+                  <input type="number" id="revEntryAmount" min="0" step="1000" placeholder="5,000,000"
+                    style="width:100%;padding:0.45rem 0.65rem;border:1px solid var(--border);border-radius:8px;
+                           background:#fff;font-size:0.82rem;font-family:inherit;outline:none;" />
+                </div>
+                <div>
+                  <div style="font-size:0.62rem;font-weight:600;text-transform:uppercase;color:var(--text-muted);margin-bottom:4px;">Ngày *</div>
+                  <input type="date" id="revEntryDate"
+                    style="width:100%;padding:0.45rem 0.65rem;border:1px solid var(--border);border-radius:8px;
+                           background:#fff;font-size:0.82rem;font-family:inherit;outline:none;" />
+                </div>
+                <div>
+                  <div style="font-size:0.62rem;font-weight:600;text-transform:uppercase;color:var(--text-muted);margin-bottom:4px;">Ghi chú đợt</div>
+                  <input type="text" id="revEntryNote" placeholder="VD: Đợt 1 - Phí hồ sơ"
+                    style="width:100%;padding:0.45rem 0.65rem;border:1px solid var(--border);border-radius:8px;
+                           background:#fff;font-size:0.82rem;font-family:inherit;outline:none;" />
+                </div>
+                <div style="display:flex;gap:0.4rem;">
+                  <button type="button" id="btnSaveRevEntry"
+                    style="padding:0.45rem 0.8rem;background:#16A34A;color:#fff;border:none;border-radius:8px;font-size:0.78rem;font-weight:600;cursor:pointer;white-space:nowrap;">Lưu</button>
+                  <button type="button" id="btnCancelRevEntry"
+                    style="padding:0.45rem 0.7rem;background:transparent;border:1px solid var(--border);border-radius:8px;font-size:0.78rem;cursor:pointer;">Hủy</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Danh sách đợt -->
+            <div id="revEntryList" style="flex:1;overflow-y:auto;padding:0.5rem 1.3rem 1rem;">
+              <!-- JS populated -->
+            </div>
+          </div>
+        </div>
+
+        <!-- Footer -->
+        <div style="display:flex;justify-content:flex-end;gap:0.6rem;
+                    padding:0.85rem 1.5rem;border-top:1px solid var(--border-light);flex-shrink:0;">
+          <button type="button" id="btnEditSourceStudent"
+            style="padding:0.5rem 1.1rem;font-size:0.78rem;font-weight:600;background:var(--accent);color:#fff;border:none;border-radius:9px;cursor:pointer;">
+            Chỉnh sửa
+          </button>
+          <button type="button" id="btnCloseSourceDetailFooter"
+            style="padding:0.5rem 1.1rem;font-size:0.78rem;background:transparent;border:1px solid var(--border);border-radius:9px;cursor:pointer;color:var(--text-main);">
+            Đóng
           </button>
         </div>
       </div>

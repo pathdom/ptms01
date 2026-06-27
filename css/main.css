@@ -1874,6 +1874,11 @@ body.dark-theme-crm .student-header-navbar {
   flex-shrink: 0;
 }
 
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
 @keyframes slideUpModal {
   from {
     transform: translateY(30px);

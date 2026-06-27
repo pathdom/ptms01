@@ -6706,6 +6706,142 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   };
 
+  // ── Hồ sơ & Tài liệu ────────────────────────────────────────────────────────
+  let _crmDocsCustomerId = null;
+  let _storage = null;
+  try { _storage = firebase.storage(); } catch (e) {}
+
+  const FILE_ICONS = {
+    pdf:  { icon: '📄', color: '#EF4444' },
+    doc:  { icon: '📝', color: '#2563EB' },
+    docx: { icon: '📝', color: '#2563EB' },
+    xls:  { icon: '📊', color: '#16A34A' },
+    xlsx: { icon: '📊', color: '#16A34A' },
+    jpg:  { icon: '🖼️', color: '#D97706' },
+    jpeg: { icon: '🖼️', color: '#D97706' },
+    png:  { icon: '🖼️', color: '#D97706' },
+  };
+
+  const fmtFileSize = (bytes) => {
+    if (bytes < 1024) return bytes + ' B';
+    if (bytes < 1048576) return (bytes / 1024).toFixed(1) + ' KB';
+    return (bytes / 1048576).toFixed(1) + ' MB';
+  };
+
+  const loadCrmDocs = async (customerId) => {
+    _crmDocsCustomerId = customerId;
+    const tbody = document.getElementById('crmDocsTableBody');
+    if (!tbody) return;
+    tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:2rem;color:var(--text-muted);font-size:0.8rem;">Đang tải...</td></tr>`;
+    try {
+      const snap = await db.collection('students').doc(customerId).collection('documents')
+        .orderBy('uploadedAt', 'desc').get();
+      if (snap.empty) {
+        tbody.innerHTML = `<tr id="crmDocsEmptyRow"><td colspan="6" style="text-align:center;padding:2.5rem;color:var(--text-muted);font-size:0.82rem;">
+          <svg viewBox="0 0 24 24" style="width:32px;height:32px;fill:var(--border);display:block;margin:0 auto 0.5rem;"><path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z"/></svg>
+          Chưa có tài liệu nào</td></tr>`;
+        return;
+      }
+      renderDocRows(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+    } catch (e) {
+      tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:2rem;color:#EF4444;font-size:0.8rem;">Lỗi tải tài liệu</td></tr>`;
+    }
+  };
+
+  const renderDocRows = (docs) => {
+    const tbody = document.getElementById('crmDocsTableBody');
+    if (!tbody) return;
+    tbody.innerHTML = docs.map((doc, i) => {
+      const ext = (doc.name || '').split('.').pop().toLowerCase();
+      const fi = FILE_ICONS[ext] || { icon: '📁', color: '#6B7280' };
+      let dateStr = '--';
+      if (doc.uploadedAt?.toDate) {
+        const d = doc.uploadedAt.toDate();
+        dateStr = `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}/${d.getFullYear()}`;
+      }
+      return `
+        <tr>
+          <td style="font-size:0.75rem;color:var(--text-muted);text-align:center;">${i + 1}</td>
+          <td>
+            <div style="display:flex;align-items:center;gap:0.55rem;">
+              <span style="font-size:1.1rem;flex-shrink:0;">${fi.icon}</span>
+              <span style="font-size:0.82rem;font-weight:500;color:var(--text-main);">${doc.name || '--'}</span>
+            </div>
+          </td>
+          <td><span style="font-size:0.72rem;background:rgba(99,102,241,0.1);color:#6366F1;
+                          padding:2px 8px;border-radius:6px;font-weight:600;text-transform:uppercase;">${ext}</span></td>
+          <td style="font-size:0.79rem;color:var(--text-muted);">${fmtFileSize(doc.size || 0)}</td>
+          <td style="font-size:0.79rem;">${dateStr}</td>
+          <td style="text-align:center;">
+            <div style="display:flex;gap:0.3rem;justify-content:center;">
+              <a href="${doc.url}" target="_blank"
+                style="padding:5px 7px;background:#EEF2FF;color:#6366F1;border-radius:7px;
+                       text-decoration:none;display:flex;align-items:center;" title="Xem / Tải">
+                <svg viewBox="0 0 24 24" style="width:14px;height:14px;fill:currentColor;"><path d="M5,20H19V18H5M19,9H15V3H9V9H5L12,16L19,9Z"/></svg>
+              </a>
+              <button class="doc-delete-btn" data-docid="${doc.id}" data-path="${doc.storagePath || ''}"
+                style="padding:5px 7px;background:#FEF2F2;color:#EF4444;border:none;border-radius:7px;cursor:pointer;" title="Xóa">
+                <svg viewBox="0 0 24 24" style="width:14px;height:14px;fill:currentColor;"><path d="M19,4H15.5L14.5,3H9.5L8.5,4H5V6H19M6,19A2,2 0 0,0 8,21H16A2,2 0 0,0 18,19V7H6V19Z"/></svg>
+              </button>
+            </div>
+          </td>
+        </tr>`;
+    }).join('');
+
+    tbody.querySelectorAll('.doc-delete-btn').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        if (!confirm('Xóa tài liệu này?')) return;
+        const docId = btn.dataset.docid;
+        const storagePath = btn.dataset.path;
+        try {
+          if (_storage && storagePath) await _storage.ref(storagePath).delete().catch(() => {});
+          await db.collection('students').doc(_crmDocsCustomerId).collection('documents').doc(docId).delete();
+          loadCrmDocs(_crmDocsCustomerId);
+          showToast('Đã xóa tài liệu', 'success');
+        } catch (e) { showToast('Lỗi xóa: ' + e.message, 'error'); }
+      });
+    });
+  };
+
+  const setupDocUpload = () => {
+    const input = document.getElementById('docFileInput');
+    if (!input) return;
+    input.addEventListener('change', async () => {
+      if (!input.files.length || !_crmDocsCustomerId) return;
+      const progress = document.getElementById('docUploadProgress');
+      const msg = document.getElementById('docUploadMsg');
+      if (progress) progress.style.display = 'flex';
+      const files = Array.from(input.files);
+      let done = 0;
+      for (const file of files) {
+        if (msg) msg.textContent = `Đang tải: ${file.name} (${done + 1}/${files.length})`;
+        try {
+          let url = '';
+          let storagePath = '';
+          if (_storage) {
+            storagePath = `customers/${_crmDocsCustomerId}/documents/${Date.now()}_${file.name}`;
+            const ref = _storage.ref(storagePath);
+            await ref.put(file);
+            url = await ref.getDownloadURL();
+          }
+          await db.collection('students').doc(_crmDocsCustomerId).collection('documents').add({
+            name: file.name,
+            size: file.size,
+            type: file.type,
+            url,
+            storagePath,
+            uploadedAt: firebase.firestore.FieldValue.serverTimestamp(),
+          });
+          done++;
+        } catch (e) { showToast('Lỗi upload ' + file.name + ': ' + e.message, 'error'); }
+      }
+      input.value = '';
+      if (progress) progress.style.display = 'none';
+      loadCrmDocs(_crmDocsCustomerId);
+      if (done > 0) showToast(`Đã tải lên ${done} tài liệu`, 'success');
+    });
+  };
+
   const renderCrmOverview = () => {
     const data = _allCrmCustomers;
     const total = data.length;
@@ -8352,6 +8488,22 @@ document.addEventListener('DOMContentLoaded', () => {
       });
 
       document.getElementById('btnBackToCrmList')?.addEventListener('click', closeCrmProfile);
+
+      // Profile tab switching + load docs on tab click
+      document.querySelectorAll('.crm-ptab').forEach(tab => {
+        tab.addEventListener('click', () => {
+          document.querySelectorAll('.crm-ptab').forEach(t => t.classList.remove('active'));
+          document.querySelectorAll('.crm-ptab-panel').forEach(p => p.classList.remove('active'));
+          tab.classList.add('active');
+          const panel = document.getElementById(tab.dataset.ctab);
+          if (panel) panel.classList.add('active');
+          if (tab.dataset.ctab === 'ctab-docs' && _currentCrmCustomer?.id) {
+            loadCrmDocs(_currentCrmCustomer.id);
+          }
+        });
+      });
+
+      setupDocUpload();
 
       document.getElementById('btnEditCrmCustomer')?.addEventListener('click', () => {
         if (!_currentCrmCustomer) return;
