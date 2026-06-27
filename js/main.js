@@ -5446,6 +5446,187 @@ document.addEventListener('DOMContentLoaded', () => {
       if (_currentProfileStaff) populateHrmProfile(_currentProfileStaff);
     });
 
+    // ── KPI Evaluation Modal ──────────────────────────────────────────────────
+    let _kpiTaskItems = []; // { id, label, done }
+
+    const recalcKpiPreview = () => {
+      const attPct = parseFloat(document.getElementById('kpiAttScore')?.textContent) || 0;
+      const taskTotal = _kpiTaskItems.length;
+      const taskDone  = _kpiTaskItems.filter(t => t.done).length;
+      const taskPct   = taskTotal > 0 ? Math.round((taskDone / taskTotal) * 100) : 0;
+
+      const el = id => document.getElementById(id);
+      if (el('kpiTaskScore')) el('kpiTaskScore').textContent = taskPct + '%';
+      if (el('kpiTaskBar'))   el('kpiTaskBar').style.width = taskPct + '%';
+
+      const total = Math.round(attPct * 0.4 + taskPct * 0.6);
+      const grade = total >= 90 ? 'A' : total >= 80 ? 'B+' : total >= 70 ? 'B' : total >= 60 ? 'C' : 'D';
+      if (el('kpiTotalPreview'))  el('kpiTotalPreview').textContent = total;
+      if (el('kpiGradePreview'))  el('kpiGradePreview').textContent = `(${grade})`;
+      if (el('kpiTotalBar'))      el('kpiTotalBar').style.width = total + '%';
+    };
+
+    const renderKpiTaskList = () => {
+      const list = document.getElementById('kpiTaskList');
+      if (!list) return;
+      if (_kpiTaskItems.length === 0) {
+        list.innerHTML = `<div style="font-size:0.75rem;color:var(--text-muted);font-style:italic;padding:0.25rem 0;">Chưa có đầu việc nào. Thêm để tính điểm.</div>`;
+        recalcKpiPreview(); return;
+      }
+      list.innerHTML = _kpiTaskItems.map((t, i) => `
+        <label style="display:flex;align-items:center;gap:0.6rem;padding:0.45rem 0.6rem;
+                      border-radius:8px;cursor:pointer;${t.done ? 'background:rgba(99,102,241,0.07);' : ''}"
+               data-task-idx="${i}">
+          <input type="checkbox" class="kpi-task-check" data-idx="${i}" ${t.done ? 'checked' : ''}
+            style="width:15px;height:15px;accent-color:#6366F1;cursor:pointer;flex-shrink:0;" />
+          <span style="font-size:0.8rem;color:var(--text-main);flex:1;${t.done ? 'text-decoration:line-through;opacity:0.6;' : ''}">${t.label}</span>
+          <button class="kpi-task-del" data-idx="${i}"
+            style="padding:2px 4px;background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:0.9rem;opacity:0.5;">✕</button>
+        </label>`).join('');
+
+      list.querySelectorAll('.kpi-task-check').forEach(cb => {
+        cb.addEventListener('change', () => {
+          _kpiTaskItems[parseInt(cb.dataset.idx)].done = cb.checked;
+          renderKpiTaskList();
+        });
+      });
+      list.querySelectorAll('.kpi-task-del').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          e.preventDefault();
+          _kpiTaskItems.splice(parseInt(btn.dataset.idx), 1);
+          renderKpiTaskList();
+        });
+      });
+      recalcKpiPreview();
+    };
+
+    document.getElementById('btnOpenKpiEval')?.addEventListener('click', async () => {
+      if (!_currentProfileStaff) return;
+      const s = _currentProfileStaff;
+      const modal = document.getElementById('kpiEvalModal');
+      if (!modal) return;
+
+      // Month label
+      const now = new Date();
+      const monthStr = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
+      const monthLabel = `Tháng ${now.getMonth()+1}/${now.getFullYear()}`;
+      const el = id => document.getElementById(id);
+      if (el('kpiEvalMonthLabel')) el('kpiEvalMonthLabel').textContent = `Nhân viên: ${s.name} · ${monthLabel}`;
+
+      // Attendance score
+      const { S: stdDays } = calcStandardDays(monthStr);
+      const todayDay = now.getDate();
+      const days = {};
+      try {
+        const attDoc = await db.collection('attendance').doc(`${s.id}_${monthStr}`).get();
+        if (attDoc.exists && attDoc.data().days) Object.assign(days, attDoc.data().days);
+      } catch(e) {}
+      if (s.email) {
+        try {
+          const logs = await db.collection('checkin_logs')
+            .where('month','==',monthStr).where('email','==',s.email).get();
+          logs.forEach(d => {
+            const dd = d.data();
+            if (dd.date && dd.checkin_time) {
+              const k = String(parseInt(dd.date.split('-')[2], 10));
+              if (!days[k]) days[k] = '1';
+            }
+          });
+        } catch(e) {}
+      }
+      let actualDays = 0, elapsedStd = 0;
+      for (let d = 1; d <= todayDay; d++) {
+        const dow = new Date(now.getFullYear(), now.getMonth(), d).getDay();
+        if (dow >= 1 && dow <= 5) elapsedStd++;
+        else if (dow === 6) elapsedStd += 0.5;
+        const v = days[String(d)];
+        if (v === '1') actualDays += 1;
+        else if (v === '0.5') actualDays += 0.5;
+      }
+      const absentDays = Math.max(0, elapsedStd - actualDays);
+      // Score: vắng <= 0.5 buổi = 100%, mỗi ngày vắng thêm trừ ~10%
+      const attScore = absentDays <= 0.5 ? 100 : Math.max(0, Math.round(100 - (absentDays - 0.5) * 20));
+
+      if (el('kpiAttScore')) el('kpiAttScore').textContent = attScore + '%';
+      if (el('kpiAttBar'))   el('kpiAttBar').style.width = attScore + '%';
+      if (el('kpiAttDetail')) el('kpiAttDetail').textContent =
+        `Đã làm: ${actualDays} / ${elapsedStd} ngày chuẩn · Vắng: ${absentDays} ngày`;
+
+      // Load saved tasks from Firestore
+      _kpiTaskItems = [];
+      try {
+        const tSnap = await db.collection('hrm_staff').doc(s.id)
+          .collection('kpiTasks').where('month','==',monthStr).get();
+        tSnap.forEach(d => { _kpiTaskItems.push({ id: d.id, label: d.data().label, done: d.data().done || false }); });
+      } catch(e) {}
+      renderKpiTaskList();
+
+      modal.style.display = 'flex';
+    });
+
+    document.getElementById('btnCloseKpiEval')?.addEventListener('click', () => {
+      document.getElementById('kpiEvalModal').style.display = 'none';
+    });
+    document.getElementById('btnCancelKpiEval')?.addEventListener('click', () => {
+      document.getElementById('kpiEvalModal').style.display = 'none';
+    });
+
+    document.getElementById('btnAddKpiTask')?.addEventListener('click', () => {
+      const form = document.getElementById('kpiNewTaskForm');
+      if (form) form.style.display = form.style.display === 'none' ? 'flex' : 'none';
+    });
+
+    document.getElementById('btnSaveKpiTask')?.addEventListener('click', () => {
+      const inp = document.getElementById('kpiNewTaskInput');
+      const val = inp?.value.trim();
+      if (!val) return;
+      _kpiTaskItems.push({ id: null, label: val, done: false });
+      inp.value = '';
+      document.getElementById('kpiNewTaskForm').style.display = 'none';
+      renderKpiTaskList();
+    });
+
+    document.getElementById('btnApproveKpi')?.addEventListener('click', async () => {
+      if (!_currentProfileStaff) return;
+      const s = _currentProfileStaff;
+      const now = new Date();
+      const monthStr = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
+
+      const attPct  = parseFloat(document.getElementById('kpiAttScore')?.textContent) || 0;
+      const taskTotal = _kpiTaskItems.length;
+      const taskDone  = _kpiTaskItems.filter(t => t.done).length;
+      const taskPct   = taskTotal > 0 ? Math.round((taskDone / taskTotal) * 100) : 0;
+      const finalKpi  = Math.round(attPct * 0.4 + taskPct * 0.6);
+
+      try {
+        // Lưu KPI vào profile
+        await db.collection('hrm_staff').doc(s.id).update({
+          kpi: finalKpi,
+          kpiApprovedAt: firebase.firestore.FieldValue.serverTimestamp(),
+          kpiMonth: monthStr,
+        });
+
+        // Lưu tasks vào sub-collection
+        const batch = db.batch();
+        const col = db.collection('hrm_staff').doc(s.id).collection('kpiTasks');
+        // Xóa tasks cũ của tháng, thêm mới
+        const old = await col.where('month','==',monthStr).get();
+        old.forEach(d => batch.delete(d.ref));
+        _kpiTaskItems.forEach(t => {
+          const ref = col.doc();
+          batch.set(ref, { label: t.label, done: t.done, month: monthStr });
+        });
+        await batch.commit();
+
+        document.getElementById('kpiEvalModal').style.display = 'none';
+        s.kpi = finalKpi;
+        _currentProfileStaff.kpi = finalKpi;
+        populateHrmProfile(s);
+        logHrmActivity(s.id, `Duyệt KPI tháng ${monthStr}: ${finalKpi}/100 (Chuyên cần ${attPct}%, Công việc ${taskPct}%)`);
+        showToast(`KPI tháng ${monthStr} đã được duyệt: ${finalKpi}/100`, 'success');
+      } catch(e) { showToast('Lỗi lưu KPI: ' + e.message, 'error'); }
+    });
+
     document.getElementById('btnGoAttendance')?.addEventListener('click', () => {
       closeHrmProfile();
       const attTab = document.querySelector('.hrm-subtab[data-tab="hrm-attendance-tab"]');
