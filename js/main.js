@@ -2706,42 +2706,47 @@ document.addEventListener('DOMContentLoaded', () => {
       return;
     }
 
+    // Index toàn bộ students cache để mã bắt đầu từ 10001
+    const globalStudentIndexMap = new Map(students.map((s, i) => [s.id, 10001 + i]));
+
+    const padZero = (n) => n < 10 ? '0' + n : n;
+
     filteredList.forEach((student) => {
       const tr = document.createElement("tr");
-      
-      // Determine badge color class based on status
+
+      const globalIdx = globalStudentIndexMap.get(student.id) ?? (10001 + filteredList.indexOf(student));
+      const displayCode = String(globalIdx);
+
       let badgeClass = "badge-danghoc";
       if (student.status === "Chờ phỏng vấn") badgeClass = "badge-waiting";
       else if (student.status === "Đã trúng tuyển") badgeClass = "badge-selected";
       else if (student.status === "Đang làm hồ sơ") badgeClass = "badge-processing";
 
-      // Parse enrollment date
       const enrollDate = getFixedEnrollDate(student.email, student.createdAt);
-      const padZero = (n) => n < 10 ? '0' + n : n;
       const enrollDateStr = `${padZero(enrollDate.getDate())}/${padZero(enrollDate.getMonth() + 1)}/${enrollDate.getFullYear()}`;
 
       tr.innerHTML = `
-        <td style="text-align: center;"><span class="font-mono" style="font-weight:600; color:var(--accent);">${student.code}</span></td>
-        <td style="text-align: center;"><strong>${student.name}</strong></td>
-        <td style="text-align: center;">
-          <span style="font-size:0.8rem; display:block; text-align: center;">${student.email}</span>
-          <span style="font-size:0.75rem; color:var(--text-muted); display:block; text-align: center;">${student.phone}</span>
+        <td style="text-align:center;">
+          <span class="font-mono" style="font-weight:700;color:#6366F1;">${displayCode}</span>
         </td>
-        <td style="text-align: center;"><strong>${student.country}</strong></td>
-        <td style="text-align: center;"><span class="crm-badge ${badgeClass}">${student.status}</span></td>
-        <td style="text-align: center;">
-          <span style="font-size:0.8rem; display:block; text-align: center; font-weight: 500;">${enrollDateStr}</span>
+        <td>
+          <div style="font-weight:600;font-size:0.85rem;color:var(--text-main)">${student.name}</div>
+          <div style="font-size:0.72rem;color:var(--text-muted)">${student.email}</div>
         </td>
-        <td style="text-align: center;">
-          <div style="display: flex; gap: 0.5rem; justify-content: center; align-items: center;">
-            <button class="action-icon-btn btn-view-student" data-id="${student.id}" title="Chi tiết" style="padding: 6px; color: var(--accent); background:none; border:none; cursor:pointer;">
-              <svg viewBox="0 0 24 24" style="width:18px; height:18px; fill:currentColor;"><path d="M12,9A3,3 0 0,0 9,12A3,3 0 0,0 12,15A3,3 0 0,0 15,12A3,3 0 0,0 12,9M12,4.5C7,4.5 2.73,7.61 1,12C2.73,16.39 7,19.5 12,19.5C17,19.5 21.27,16.39 23,12C21.27,7.61 17,4.5 12,4.5Z"/></svg>
+        <td style="font-size:0.82rem">${student.phone || '--'}</td>
+        <td style="text-align:center;font-weight:500;font-size:0.83rem">${student.country}</td>
+        <td style="text-align:center;font-size:0.82rem;font-weight:500">${enrollDateStr}</td>
+        <td style="text-align:center;"><span class="crm-badge ${badgeClass}">${student.status}</span></td>
+        <td style="text-align:center;">
+          <div style="display:flex;gap:0.3rem;justify-content:center;align-items:center;">
+            <button class="action-icon-btn btn-view-student" data-id="${student.id}" title="Chi tiết" style="padding:6px;color:#6366F1;background:#EEF2FF;border:none;cursor:pointer;border-radius:7px">
+              <svg viewBox="0 0 24 24" style="width:16px;height:16px;fill:currentColor;"><path d="M12,9A3,3 0 0,0 9,12A3,3 0 0,0 12,15A3,3 0 0,0 15,12A3,3 0 0,0 12,9M12,4.5C7,4.5 2.73,7.61 1,12C2.73,16.39 7,19.5 12,19.5C17,19.5 21.27,16.39 23,12C21.27,7.61 17,4.5 12,4.5Z"/></svg>
             </button>
-            <button class="action-icon-btn btn-edit-student" data-id="${student.id}" title="Sửa" style="padding: 6px; color: var(--text-main); background:none; border:none; cursor:pointer;">
-              <svg viewBox="0 0 24 24" style="width:18px; height:18px; fill:currentColor;"><path d="M20.71,7.04C21.1,6.65 21.1,6 20.71,5.63L18.37,3.29C18,2.9 17.35,2.9 16.96,3.29L15.12,5.12L18.87,8.87M3,17.25V21H6.75L17.81,9.93L14.07,6.18L3,17.25Z"/></svg>
+            <button class="action-icon-btn btn-edit-student" data-id="${student.id}" title="Sửa" style="padding:6px;color:var(--text-main);background:var(--bg-secondary,#F7F4EF);border:none;cursor:pointer;border-radius:7px">
+              <svg viewBox="0 0 24 24" style="width:16px;height:16px;fill:currentColor;"><path d="M20.71,7.04C21.1,6.65 21.1,6 20.71,5.63L18.37,3.29C18,2.9 17.35,2.9 16.96,3.29L15.12,5.12L18.87,8.87M3,17.25V21H6.75L17.81,9.93L14.07,6.18L3,17.25Z"/></svg>
             </button>
-            <button class="action-icon-btn btn-delete-student" data-id="${student.id}" title="Xóa" style="padding: 6px; color: #EF4444; background:none; border:none; cursor:pointer;">
-              <svg viewBox="0 0 24 24" style="width:18px; height:18px; fill:currentColor;"><path d="M19,4H15.5L14.5,3H9.5L8.5,4H5V6H19M6,19A2,2 0 0,0 8,21H16A2,2 0 0,0 18,19V7H6V19Z"/></svg>
+            <button class="action-icon-btn btn-delete-student" data-id="${student.id}" title="Xóa" style="padding:6px;color:#EF4444;background:#FEF2F2;border:none;cursor:pointer;border-radius:7px">
+              <svg viewBox="0 0 24 24" style="width:16px;height:16px;fill:currentColor;"><path d="M19,4H15.5L14.5,3H9.5L8.5,4H5V6H19M6,19A2,2 0 0,0 8,21H16A2,2 0 0,0 18,19V7H6V19Z"/></svg>
             </button>
           </div>
         </td>
