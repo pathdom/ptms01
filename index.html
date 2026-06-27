@@ -1128,10 +1128,16 @@
               <div class="hrm-metric-card hrm-staff-section">
                 <div class="metric-card-header">
                   <h4>DANH SÁCH NHÂN SỰ NỘI BỘ</h4>
-                  <button type="button" id="btnOpenHrmStaffModal" class="hrm-btn-icon-action">
-                    <svg viewBox="0 0 24 24"><path d="M19,13H13V19H11V13H5V11H11V5H13V11H19V13Z"/></svg>
-                    Thêm nhân sự
-                  </button>
+                  <div style="display:flex;gap:0.5rem;align-items:center">
+                    <button type="button" id="btnExportStaffExcel" class="hrm-btn-icon-action hrm-btn-excel">
+                      <svg viewBox="0 0 24 24"><path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20M12,19L8,15H10.5V11H13.5V15H16L12,19Z"/></svg>
+                      Xuất Excel
+                    </button>
+                    <button type="button" id="btnOpenHrmStaffModal" class="hrm-btn-icon-action">
+                      <svg viewBox="0 0 24 24"><path d="M19,13H13V19H11V13H5V11H11V5H13V11H19V13Z"/></svg>
+                      Thêm nhân sự
+                    </button>
+                  </div>
                 </div>
                 <div class="hrm-filter-bar">
                   <input type="text" id="hrmStaffSearch" placeholder="Tìm theo tên, email, chức vụ..." />
@@ -6836,6 +6842,8 @@
       </div>
     </div>
 
+    <!-- SheetJS for Excel export -->
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
     <!-- Main JavaScript File -->
     <script src="js/main.js" defer></script>
     <script src="js/attendance-service.js" defer></script>
