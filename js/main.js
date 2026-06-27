@@ -6844,7 +6844,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const filtered = _allCrmCustomers.filter(c => {
       if (countryF !== 'All' && c.country !== countryF) return false;
-      if (statusF !== 'All' && c.status !== statusF) return false;
+      const cs = c.crmStatus || 'Khách Hàng Mới';
+      if (statusF !== 'All' && cs !== statusF) return false;
       if (search && !`${c.name} ${c.email} ${c.code}`.toLowerCase().includes(search)) return false;
       return true;
     });
@@ -6860,18 +6861,21 @@ document.addEventListener('DOMContentLoaded', () => {
     const pageData = filtered.slice((crmCustomerPage - 1) * PAGE_SIZE, crmCustomerPage * PAGE_SIZE);
     const globalOffset = (crmCustomerPage - 1) * PAGE_SIZE;
 
-    const badgeCls = { 'Đang học': 'crm-badge-active', 'Chờ phỏng vấn': 'crm-badge-waiting', 'Đang làm hồ sơ': 'crm-badge-processing', 'Đã trúng tuyển': 'crm-badge-selected' };
     const avColors = ['#2563EB', '#7C3AED', '#059669', '#D97706', '#DC2626', '#0891B2'];
 
     tbody.innerHTML = pageData.map((c, i) => {
       const gi = globalOffset + i;
       const ini = (c.name || 'KH').split(' ').map(w => w[0]).filter(Boolean).slice(-2).join('').toUpperCase();
-      const bc = badgeCls[c.status] || 'crm-badge-processing';
       let dateStr = '--';
       if (c.createdAt?.toDate) {
         const d = c.createdAt.toDate();
         dateStr = `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}/${d.getFullYear()}`;
       }
+      const currentCrmStatus = c.crmStatus || 'Khách Hàng Mới';
+      const sc = SOURCE_STATUS_COLORS[currentCrmStatus] || SOURCE_STATUS_COLORS['Khách Hàng Mới'];
+      const optionsHtml = SOURCE_STATUSES.map(s =>
+        `<option value="${s}"${s === currentCrmStatus ? ' selected' : ''}>${s}</option>`
+      ).join('');
       return `
         <tr>
           <td><span style="font-family:monospace;font-size:0.78rem;font-weight:600;color:var(--crm-blue)">${c.code || '--'}</span></td>
@@ -6886,7 +6890,18 @@ document.addEventListener('DOMContentLoaded', () => {
             <div style="font-size:0.73rem;color:var(--text-muted)">${c.phone || ''}</div>
           </td>
           <td><span class="crm-country-flag">${c.country || '--'}</span></td>
-          <td><span class="crm-pill ${bc}">${c.status || '--'}</span></td>
+          <td>
+            <select class="crm-status-select" data-id="${c.id}"
+              style="padding:0.22rem 0.55rem;border-radius:10px;border:1.5px solid ${sc.color};
+                     background:${sc.bg};color:${sc.color};
+                     font-size:0.68rem;font-weight:600;cursor:pointer;
+                     font-family:inherit;outline:none;appearance:none;-webkit-appearance:none;
+                     padding-right:1.4rem;
+                     background-image:url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23888'/%3E%3C/svg%3E\");
+                     background-repeat:no-repeat;background-position:right 0.4rem center;">
+              ${optionsHtml}
+            </select>
+          </td>
           <td style="font-size:0.79rem">${dateStr}</td>
           <td style="text-align:center">
             <button class="crm-action-btn view btn-view-crm" data-fidx="${i}" title="Xem hồ sơ">
@@ -6901,6 +6916,20 @@ document.addEventListener('DOMContentLoaded', () => {
           </td>
         </tr>`;
     }).join('');
+
+    tbody.querySelectorAll('.crm-status-select').forEach(sel => {
+      sel.addEventListener('change', async () => {
+        const sc = SOURCE_STATUS_COLORS[sel.value] || SOURCE_STATUS_COLORS['Khách Hàng Mới'];
+        sel.style.borderColor = sc.color;
+        sel.style.color = sc.color;
+        sel.style.background = `${sc.bg} url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23888'/%3E%3C/svg%3E") no-repeat right 0.4rem center`;
+        const cust = _allCrmCustomers.find(x => x.id === sel.dataset.id);
+        if (cust) cust.crmStatus = sel.value;
+        try {
+          await db.collection('students').doc(sel.dataset.id).update({ crmStatus: sel.value });
+        } catch (e) { console.error('Lỗi lưu CRM status:', e); }
+      });
+    });
 
     tbody.querySelectorAll('.btn-view-crm').forEach(btn => {
       btn.addEventListener('click', () => openCrmProfile(pageData[parseInt(btn.dataset.fidx)]));
