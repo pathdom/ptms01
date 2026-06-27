@@ -6488,7 +6488,6 @@
         <form id="hrmStaffForm" class="hrm-modal-form" style="overflow-y: auto; flex: 1; padding-right: 4px;">
           <input type="hidden" id="hrmStaffEditId" />
 
-          <h4 style="margin: 0.5rem 0 0.75rem; border-bottom: 1px solid var(--border); padding-bottom: 0.25rem; color: var(--accent); font-size: 0.85rem; text-transform: uppercase; font-weight: 600;">Thông tin cơ bản</h4>
           <div class="hrm-form-row">
             <div class="form-group-login"><label for="hrmStaffName">Họ và tên *</label><input type="text" id="hrmStaffName" placeholder="Nguyễn Văn A" required /></div>
             <div class="form-group-login"><label for="hrmStaffEmail">Email *</label><input type="email" id="hrmStaffEmail" placeholder="nhanvien@aladdin.vn" required /></div>
@@ -6509,7 +6508,15 @@
                 <option value="Ban Giám đốc">Ban Giám đốc</option>
               </select>
             </div>
-            <div class="form-group-login"><label for="hrmStaffPosition">Chức vụ *</label><input type="text" id="hrmStaffPosition" placeholder="Nhân viên / Trưởng phòng" required /></div>
+            <div class="form-group-login"><label for="hrmStaffWorkType">Hình thức làm việc *</label>
+              <select id="hrmStaffWorkType" required>
+                <option value="Full-time">Full-time</option>
+                <option value="Part-time">Part-time</option>
+                <option value="Intern">Intern</option>
+                <option value="Thời vụ">Thời vụ</option>
+                <option value="Freelance">Freelance</option>
+              </select>
+            </div>
           </div>
           <div class="hrm-form-row">
             <div class="form-group-login"><label for="hrmStaffPhone">Số điện thoại</label><input type="text" id="hrmStaffPhone" placeholder="0912345678" /></div>
@@ -6524,44 +6531,10 @@
                 <option value="Đã nghỉ việc">Đã nghỉ việc</option>
               </select>
             </div>
-            <div class="form-group-login"><label for="hrmStaffWorkType">Hình thức làm việc *</label>
-              <select id="hrmStaffWorkType" required>
-                <option value="Full-time">Full-time</option>
-                <option value="Part-time">Part-time</option>
-                <option value="Intern">Intern</option>
-                <option value="Thời vụ">Thời vụ</option>
-                <option value="Freelance">Freelance</option>
-              </select>
-            </div>
-          </div>
-          <div class="hrm-form-row">
-            <div class="form-group-login"><label for="hrmStaffCode">Mã nhân viên</label><input type="text" id="hrmStaffCode" placeholder="VD: 00001" /></div>
-            <div class="form-group-login"><label for="hrmStaffUsername">Tên tài khoản</label><input type="text" id="hrmStaffUsername" placeholder="VD: nguyenvana" /></div>
-          </div>
-          <div class="hrm-form-row">
-            <div class="form-group-login"><label for="hrmStaffKpi">KPI tháng này (%)</label><input type="number" id="hrmStaffKpi" placeholder="VD: 85" min="0" max="100" step="1" /></div>
-            <div class="form-group-login"><label for="hrmStaffSalary">Lương cơ bản (đ)</label><input type="number" id="hrmStaffSalary" placeholder="VD: 8000000" min="0" step="100000" /></div>
+            <div class="form-group-login"><label for="hrmStaffJoinDate">Ngày vào làm</label><input type="date" id="hrmStaffJoinDate" /></div>
           </div>
 
-          <h4 style="margin: 1rem 0 0.75rem; border-bottom: 1px solid var(--border); padding-bottom: 0.25rem; color: var(--accent); font-size: 0.85rem; text-transform: uppercase; font-weight: 600;">Thông tin bổ sung</h4>
-          <div class="hrm-form-row">
-            <div class="form-group-login"><label for="hrmStaffTeamPod">Team / Pod</label><input type="text" id="hrmStaffTeamPod" placeholder="VD: Admin Support" /></div>
-            <div class="form-group-login"><label for="hrmStaffLineManager">Line Manager</label><input type="text" id="hrmStaffLineManager" placeholder="VD: Trần Thị Mai" /></div>
-          </div>
-          <div class="hrm-form-row">
-            <div class="form-group-login"><label for="hrmStaffAssets">Assets Assigned</label><input type="text" id="hrmStaffAssets" placeholder="VD: Laptop Dell XPS, Thẻ từ" /></div>
-            <div class="form-group-login"><label for="hrmStaffLeaveTotal">Tổng ngày phép / năm</label><input type="number" id="hrmStaffLeaveTotal" placeholder="12" min="0" step="1" /></div>
-          </div>
-          <div class="form-group-login" style="margin-bottom:0.65rem">
-            <label for="hrmStaffSkills">Skills (phân cách bằng dấu phẩy)</label>
-            <input type="text" id="hrmStaffSkills" placeholder="VD: Tiếng Anh B2, Photoshop, Giao tiếp" />
-          </div>
-          <div class="form-group-login" style="margin-bottom:0.65rem">
-            <label for="hrmStaffTasks">Tasks / Reminders (mỗi dòng một task)</label>
-            <textarea id="hrmStaffTasks" rows="3" placeholder="Update KPI for Q2&#10;Hoàn thiện báo cáo tháng" style="width:100%;padding:0.45rem 0.65rem;font-size:0.82rem;font-family:inherit;border:1px solid var(--border);border-radius:8px;resize:vertical;background:var(--bg-secondary,#F7F4EF);color:var(--text-main)"></textarea>
-          </div>
-
-          <button type="submit" class="btn-submit-login" style="width: 100%; margin-top: 1rem; flex-shrink: 0;">LƯU THÔNG TIN NHÂN SỰ</button>
+          <button type="submit" class="btn-submit-login" style="width: 100%; margin-top: 1.25rem; flex-shrink: 0;">LƯU THÔNG TIN NHÂN SỰ</button>
         </form>
       </div>
     </div>

@@ -5482,31 +5482,16 @@ document.addEventListener('DOMContentLoaded', () => {
       const email = document.getElementById('hrmStaffEmail').value.trim();
       const name = document.getElementById('hrmStaffName').value.trim();
 
-      const _kpiRaw   = document.getElementById('hrmStaffKpi')?.value.trim();
-      const _salRaw   = document.getElementById('hrmStaffSalary')?.value.trim();
-      const _ltRaw    = document.getElementById('hrmStaffLeaveTotal')?.value.trim();
-      const _skillsRaw= document.getElementById('hrmStaffSkills')?.value.trim();
-      const _tasksRaw = document.getElementById('hrmStaffTasks')?.value;
       const data = {
         name,
         email,
-        department:   document.getElementById('hrmStaffDept').value,
-        position:     document.getElementById('hrmStaffPosition').value.trim(),
-        phone:        document.getElementById('hrmStaffPhone').value.trim(),
-        status:       document.getElementById('hrmStaffStatus').value,
-        employeeCode: document.getElementById('hrmStaffCode').value.trim(),
-        username:     document.getElementById('hrmStaffUsername').value.trim(),
-        birthday:     document.getElementById('hrmStaffBirthday')?.value             || null,
-        workType:     document.getElementById('hrmStaffWorkType')?.value            || 'Full-time',
-        teamPod:      document.getElementById('hrmStaffTeamPod')?.value.trim()      || null,
-        lineManager:  document.getElementById('hrmStaffLineManager')?.value.trim()  || null,
-        assets:       document.getElementById('hrmStaffAssets')?.value.trim()       || null,
-        skills:       _skillsRaw ? _skillsRaw.split(',').map(x => x.trim()).filter(Boolean) : [],
-        tasks:        _tasksRaw  ? _tasksRaw.split('\n').map(x => x.trim()).filter(Boolean)  : [],
-        kpi:          _kpiRaw  !== '' && _kpiRaw  != null ? Math.min(100, Math.max(0, Number(_kpiRaw))) : null,
-        salary:       _salRaw  !== '' && _salRaw  != null ? Number(_salRaw)  : null,
-        leaveTotal:   _ltRaw   !== '' && _ltRaw   != null ? Number(_ltRaw)   : 12,
-        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        department: document.getElementById('hrmStaffDept').value,
+        workType:   document.getElementById('hrmStaffWorkType')?.value || 'Full-time',
+        phone:      document.getElementById('hrmStaffPhone').value.trim(),
+        birthday:   document.getElementById('hrmStaffBirthday')?.value || null,
+        status:     document.getElementById('hrmStaffStatus').value,
+        joinDate:   document.getElementById('hrmStaffJoinDate')?.value || null,
+        updatedAt:  firebase.firestore.FieldValue.serverTimestamp()
       };
 
       try {
@@ -5581,7 +5566,7 @@ document.addEventListener('DOMContentLoaded', () => {
               createdAt: firebase.firestore.FieldValue.serverTimestamp()
             });
             data.createdAt = firebase.firestore.FieldValue.serverTimestamp();
-            data.joinDate = new Date().toISOString().split('T')[0];
+            if (!data.joinDate) data.joinDate = new Date().toISOString().split('T')[0];
             await db.collection('hrm_staff').add(data);
           } catch (firestoreErr) {
             console.error('Lỗi lưu Firestore (kiểm tra Security Rules cho "users"/"hrm_staff"):', firestoreErr);
@@ -6267,41 +6252,24 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const editHrmStaff = (s) => {
     document.getElementById('hrmStaffEditId').value = s.id;
-    document.getElementById('hrmStaffName').value = s.name || '';
-    document.getElementById('hrmStaffEmail').value = s.email || '';
-    document.getElementById('hrmStaffDept').value = s.department || 'Tuyển dụng';
-    document.getElementById('hrmStaffPosition').value = s.position || '';
-    document.getElementById('hrmStaffPhone').value = s.phone || '';
-    document.getElementById('hrmStaffStatus').value = s.status || 'Đang làm việc';
-    document.getElementById('hrmStaffCode').value = s.employeeCode || '';
-    document.getElementById('hrmStaffUsername').value = s.username || '';
-    const kpiInput = document.getElementById('hrmStaffKpi');
-    const salInput = document.getElementById('hrmStaffSalary');
-    if (kpiInput) kpiInput.value = s.kpi != null ? s.kpi : '';
-    if (salInput) salInput.value = s.salary != null ? s.salary : '';
-    const bdInput  = document.getElementById('hrmStaffBirthday');
-    const wtInput  = document.getElementById('hrmStaffWorkType');
-    if (bdInput) bdInput.value = s.birthday || '';
-    if (wtInput) wtInput.value = s.workType  || 'Full-time';
-    const tpInput  = document.getElementById('hrmStaffTeamPod');
-    const lmInput  = document.getElementById('hrmStaffLineManager');
-    const asInput  = document.getElementById('hrmStaffAssets');
-    const ltInput  = document.getElementById('hrmStaffLeaveTotal');
-    const skInput  = document.getElementById('hrmStaffSkills');
-    const tkInput  = document.getElementById('hrmStaffTasks');
-    if (tpInput) tpInput.value = s.teamPod      || '';
-    if (lmInput) lmInput.value = s.lineManager  || '';
-    if (asInput) asInput.value = s.assets        || '';
-    if (ltInput) ltInput.value = s.leaveTotal != null ? s.leaveTotal : 12;
-    if (skInput) skInput.value = Array.isArray(s.skills) ? s.skills.join(', ') : (s.skills || '');
-    if (tkInput) tkInput.value = Array.isArray(s.tasks)  ? s.tasks.join('\n')  : '';
+    document.getElementById('hrmStaffName').value     = s.name       || '';
+    document.getElementById('hrmStaffEmail').value    = s.email      || '';
+    document.getElementById('hrmStaffDept').value     = s.department || 'Tuyển dụng';
+    document.getElementById('hrmStaffPhone').value    = s.phone      || '';
+    document.getElementById('hrmStaffStatus').value   = s.status     || 'Đang làm việc';
+    const bdEl = document.getElementById('hrmStaffBirthday');
+    const wtEl = document.getElementById('hrmStaffWorkType');
+    const jdEl = document.getElementById('hrmStaffJoinDate');
+    if (bdEl) bdEl.value = s.birthday || '';
+    if (wtEl) wtEl.value = s.workType  || 'Full-time';
+    if (jdEl) jdEl.value = s.joinDate  || '';
 
     document.getElementById('hrmStaffModalTitle').textContent = '✏️ SỬA THÔNG TIN NHÂN SỰ';
     const pwSection = document.getElementById('hrmStaffPasswordSection');
     if (pwSection) pwSection.style.display = 'none';
     const pwInput = document.getElementById('hrmStaffPassword');
     const pwConfirm = document.getElementById('hrmStaffPasswordConfirm');
-    if (pwInput) { pwInput.required = false; pwInput.value = ''; }
+    if (pwInput)   { pwInput.required = false;   pwInput.value = ''; }
     if (pwConfirm) { pwConfirm.required = false; pwConfirm.value = ''; }
     document.getElementById('hrmStaffModal').style.display = 'flex';
   };
