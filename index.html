@@ -2885,358 +2885,144 @@
       <div
         class="login-card"
         style="
-          max-width: 600px;
-          padding: 2.5rem;
+          max-width: 580px;
           width: 100%;
           border-radius: var(--border-radius-lg);
           box-shadow: var(--shadow-lg);
+          padding: 0;
+          display: flex;
+          flex-direction: column;
+          max-height: 88vh;
+          overflow: hidden;
         "
       >
+        <!-- Header (fixed) -->
         <div
           style="
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 2rem;
+            padding: 1.2rem 1.5rem;
             border-bottom: 1px solid var(--border-light);
-            padding-bottom: 1rem;
+            flex-shrink: 0;
           "
         >
-          <div style="display: flex; align-items: center; gap: 1rem">
+          <div style="display: flex; align-items: center; gap: 0.75rem">
             <div
               class="avatar"
               id="detailStudentAvatar"
               style="
                 background: var(--accent);
-                width: 42px;
-                height: 42px;
+                width: 38px;
+                height: 38px;
                 border-radius: 50%;
                 color: #fff;
                 display: flex;
                 align-items: center;
                 justify-content: center;
                 font-weight: 700;
+                font-size: 0.95rem;
+                flex-shrink: 0;
               "
-            >
-              N
-            </div>
+            >N</div>
             <div>
               <h3
                 id="detailStudentName"
                 style="
                   font-family: var(--font-serif);
-                  font-size: 1.4rem;
+                  font-size: 1.15rem;
                   font-weight: 500;
                   color: var(--text-main);
                   margin-bottom: 0;
                 "
-              >
-                Nguyễn Văn A
-              </h3>
+              >Nguyễn Văn A</h3>
               <span
                 id="detailStudentCode"
                 style="
-                  font-size: 0.75rem;
+                  font-size: 0.7rem;
                   font-family: monospace;
                   color: var(--accent);
                   font-weight: 600;
                 "
-                >TE-2026-001</span
-              >
+              >10001</span>
             </div>
           </div>
           <button
             type="button"
             id="btnCloseStudentDetailModal"
-            style="font-size: 1.5rem; color: var(--text-muted); cursor: pointer"
-          >
-            &times;
-          </button>
+            style="font-size: 1.4rem; color: var(--text-muted); cursor: pointer; line-height:1; background:none; border:none; padding:4px 8px;"
+          >&times;</button>
         </div>
 
-        <div
-          style="
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 1.5rem;
-            margin-bottom: 1.5rem;
-          "
-        >
-          <div>
-            <span
-              style="
-                display: block;
-                font-size: 0.7rem;
-                font-weight: 600;
-                text-transform: uppercase;
-                color: var(--text-muted);
-                letter-spacing: 1px;
-                margin-bottom: 0.25rem;
-              "
-              >Địa chỉ Email</span
-            >
-            <span
-              id="detailStudentEmail"
-              style="
-                font-size: 0.9rem;
-                color: var(--text-main);
-                font-weight: 500;
-              "
-              >email@gmail.com</span
-            >
-          </div>
-          <div>
-            <span
-              style="
-                display: block;
-                font-size: 0.7rem;
-                font-weight: 600;
-                text-transform: uppercase;
-                color: var(--text-muted);
-                letter-spacing: 1px;
-                margin-bottom: 0.25rem;
-              "
-              >Số điện thoại</span
-            >
-            <span
-              id="detailStudentPhone"
-              style="
-                font-size: 0.9rem;
-                color: var(--text-main);
-                font-weight: 500;
-              "
-              >0912345678</span
-            >
-          </div>
-        </div>
+        <!-- Scrollable body -->
+        <div style="overflow-y: auto; flex: 1; padding: 1.2rem 1.5rem; display: flex; flex-direction: column; gap: 1rem;">
 
-        <div
-          style="
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 1.5rem;
-            margin-bottom: 2rem;
-          "
-        >
-          <div>
-            <span
-              style="
-                display: block;
-                font-size: 0.7rem;
-                font-weight: 600;
-                text-transform: uppercase;
-                color: var(--text-muted);
-                letter-spacing: 1px;
-                margin-bottom: 0.25rem;
-              "
-              >Quốc gia đến</span
-            >
-            <span
-              id="detailStudentCountry"
-              style="
-                font-size: 0.9rem;
-                color: var(--text-main);
-                font-weight: 500;
-              "
-              >Úc</span
-            >
-          </div>
-          <div>
-            <span
-              style="
-                display: block;
-                font-size: 0.7rem;
-                font-weight: 600;
-                text-transform: uppercase;
-                color: var(--text-muted);
-                letter-spacing: 1px;
-                margin-bottom: 0.25rem;
-              "
-              >Trạng thái hồ sơ</span
-            >
-            <div>
-              <span
-                id="detailStudentStatus"
-                class="crm-badge badge-danghoc"
-                style="font-size: 0.75rem; margin-top: 0.25rem"
-                >Đang học</span
-              >
+          <!-- Info grid 2x2 -->
+          <div style="display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 0.5rem;">
+            <div style="background:var(--bg-primary);border:1px solid var(--border-light);border-radius:10px;padding:0.6rem 0.9rem;">
+              <span style="display:block;font-size:0.62rem;font-weight:600;text-transform:uppercase;color:var(--text-muted);letter-spacing:.8px;margin-bottom:3px;">Email</span>
+              <span id="detailStudentEmail" style="font-size:0.8rem;color:var(--text-main);font-weight:500;word-break:break-all;">email@gmail.com</span>
+            </div>
+            <div style="background:var(--bg-primary);border:1px solid var(--border-light);border-radius:10px;padding:0.6rem 0.9rem;">
+              <span style="display:block;font-size:0.62rem;font-weight:600;text-transform:uppercase;color:var(--text-muted);letter-spacing:.8px;margin-bottom:3px;">SĐT</span>
+              <span id="detailStudentPhone" style="font-size:0.8rem;color:var(--text-main);font-weight:500;">0912345678</span>
+            </div>
+            <div style="background:var(--bg-primary);border:1px solid var(--border-light);border-radius:10px;padding:0.6rem 0.9rem;">
+              <span style="display:block;font-size:0.62rem;font-weight:600;text-transform:uppercase;color:var(--text-muted);letter-spacing:.8px;margin-bottom:3px;">Quốc gia</span>
+              <span id="detailStudentCountry" style="font-size:0.8rem;color:var(--text-main);font-weight:500;">Úc</span>
+            </div>
+            <div style="background:var(--bg-primary);border:1px solid var(--border-light);border-radius:10px;padding:0.6rem 0.9rem;">
+              <span style="display:block;font-size:0.62rem;font-weight:600;text-transform:uppercase;color:var(--text-muted);letter-spacing:.8px;margin-bottom:3px;">Tháng học</span>
+              <span id="detailStudentLearningMonth" style="font-size:0.8rem;color:var(--accent);font-weight:600;">Tháng 1</span>
             </div>
           </div>
-        </div>
-        <div
-          style="
-            margin-bottom: 1.5rem;
-            background: var(--bg-primary);
-            border: 1px solid var(--border);
-            padding: 1rem;
-            border-radius: var(--border-radius-md);
-          "
-        >
-          <span
-            style="
-              display: block;
-              font-size: 0.7rem;
-              font-weight: 600;
-              text-transform: uppercase;
-              color: var(--text-muted);
-              letter-spacing: 1px;
-              margin-bottom: 0.25rem;
-            "
-            >Tháng học tập hiện tại</span
-          >
-          <span
-            id="detailStudentLearningMonth"
-            style="font-size: 0.9rem; color: var(--accent); font-weight: 600"
-            >Tháng 1</span
-          >
-        </div>
 
-        <div
-          style="
-            background: var(--bg-primary);
-            border: 1px solid var(--border);
-            padding: 1.5rem;
-            border-radius: var(--border-radius-md);
-            margin-bottom: 2rem;
-          "
-        >
-          <span
-            style="
-              display: block;
-              font-size: 0.7rem;
-              font-weight: 600;
-              text-transform: uppercase;
-              color: var(--text-muted);
-              letter-spacing: 1px;
-              margin-bottom: 0.5rem;
-            "
-            >Ghi chú tư vấn</span
-          >
-          <p
-            id="detailStudentNotes"
-            style="
-              font-size: 0.85rem;
-              color: var(--text-main);
-              white-space: pre-wrap;
-              line-height: 1.6;
-            "
-          >
-            Chưa có ghi chú nào.
-          </p>
-        </div>
+          <!-- Status row -->
+          <div style="display:flex;align-items:center;gap:0.6rem;">
+            <span style="font-size:0.62rem;font-weight:600;text-transform:uppercase;color:var(--text-muted);letter-spacing:.8px;">Trạng thái:</span>
+            <span id="detailStudentStatus" class="crm-badge badge-danghoc">Đang học</span>
+          </div>
 
-        <!-- Scorecard View inside Admin Detail Modal -->
-        <div
-          style="
-            background: var(--bg-card);
-            border: 1px solid var(--border);
-            padding: 1.5rem;
-            border-radius: var(--border-radius-md);
-            margin-bottom: 2rem;
-          "
-        >
-          <div
-            style="
-              display: flex;
-              justify-content: space-between;
-              align-items: center;
-              border-bottom: 1px solid var(--border-light);
-              padding-bottom: 0.5rem;
-              margin-bottom: 1rem;
-            "
-          >
-            <span
-              style="
-                display: block;
-                font-size: 0.75rem;
-                font-weight: 700;
-                text-transform: uppercase;
-                color: var(--accent);
-                letter-spacing: 1px;
-              "
-              >📊 BẢNG ĐIỂM HỌC TẬP (TUẦN/THÁNG)</span
-            >
+          <!-- Notes -->
+          <div style="background:var(--bg-primary);border:1px solid var(--border-light);border-radius:10px;padding:0.8rem 1rem;">
+            <span style="display:block;font-size:0.62rem;font-weight:600;text-transform:uppercase;color:var(--text-muted);letter-spacing:.8px;margin-bottom:0.4rem;">Ghi chú tư vấn</span>
+            <p
+              id="detailStudentNotes"
+              style="font-size:0.82rem;color:var(--text-main);white-space:pre-wrap;line-height:1.55;margin:0;"
+            >Chưa có ghi chú nào.</p>
+          </div>
+
+          <!-- Scorecard -->
+          <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:10px;padding:0.9rem 1rem;">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.7rem;">
+              <span style="font-size:0.68rem;font-weight:700;text-transform:uppercase;color:var(--accent);letter-spacing:.8px;">📊 Bảng điểm học tập</span>
+              <div class="scorecard-toggle-group" style="margin-bottom:0;padding:2px;transform:scale(0.85);transform-origin:right center;">
+                <button type="button" class="scorecard-toggle-btn active" id="btnAdminScorecardWeekToggle" style="padding:0.25rem 0.7rem;font-size:0.65rem;border-radius:12px;">TUẦN</button>
+                <button type="button" class="scorecard-toggle-btn" id="btnAdminScorecardMonthToggle" style="padding:0.25rem 0.7rem;font-size:0.65rem;border-radius:12px;">THÁNG</button>
+              </div>
+            </div>
             <div
-              class="scorecard-toggle-group"
-              style="
-                margin-bottom: 0;
-                scale: 0.85;
-                transform-origin: right center;
-                padding: 2px;
-              "
-            >
-              <button
-                type="button"
-                class="scorecard-toggle-btn active"
-                id="btnAdminScorecardWeekToggle"
-                style="
-                  padding: 0.3rem 0.8rem;
-                  font-size: 0.7rem;
-                  border-radius: 15px;
-                "
-              >
-                TUẦN
-              </button>
-              <button
-                type="button"
-                class="scorecard-toggle-btn"
-                id="btnAdminScorecardMonthToggle"
-                style="
-                  padding: 0.3rem 0.8rem;
-                  font-size: 0.7rem;
-                  border-radius: 15px;
-                "
-              >
-                THÁNG
-              </button>
-            </div>
+              id="adminStudentScorecardList"
+              style="max-height:220px;overflow-y:auto;display:flex;flex-direction:column;gap:0.7rem;padding-right:0.3rem;"
+            ><!-- JS populated --></div>
           </div>
-          <div
-            id="adminStudentScorecardList"
-            style="
-              max-height: 250px;
-              overflow-y: auto;
-              display: flex;
-              flex-direction: column;
-              gap: 1rem;
-              padding-right: 0.5rem;
-            "
-          >
-            <!-- Dynamically populated via JS -->
-          </div>
+
         </div>
 
-        <div style="display: flex; gap: 1rem; justify-content: flex-end">
+        <!-- Footer (fixed) -->
+        <div style="display:flex;gap:0.75rem;justify-content:flex-end;padding:1rem 1.5rem;border-top:1px solid var(--border-light);flex-shrink:0;">
           <button
             type="button"
             class="btn-submit-login"
             id="btnEditDetailStudent"
-            style="
-              margin-top: 0;
-              width: auto;
-              padding: 0.75rem 1.5rem;
-              background: var(--accent);
-              border-color: var(--accent);
-            "
-          >
-            CHỈNH SỬA HỒ SƠ
-          </button>
+            style="margin-top:0;width:auto;padding:0.55rem 1.2rem;font-size:0.8rem;background:var(--accent);border-color:var(--accent);"
+          >CHỈNH SỬA HỒ SƠ</button>
           <button
             type="button"
             class="btn-submit-login"
             id="btnCloseDetailModalAction"
-            style="
-              margin-top: 0;
-              width: auto;
-              padding: 0.75rem 1.5rem;
-              background: transparent;
-              border-color: var(--border);
-              color: var(--text-main);
-            "
-          >
-            ĐÓNG
-          </button>
+            style="margin-top:0;width:auto;padding:0.55rem 1.2rem;font-size:0.8rem;background:transparent;border-color:var(--border);color:var(--text-main);"
+          >ĐÓNG</button>
         </div>
       </div>
     </div>
