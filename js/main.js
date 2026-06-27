@@ -6952,11 +6952,21 @@ document.addEventListener('DOMContentLoaded', () => {
   // ── Học viên nguồn (Source tab) ───────────────────────────────────────────
   let crmSourcePage = 1;
 
-  const saveSourceRevenue = async (docId, value) => {
+  const SOURCE_STATUSES = ['Khách Hàng Mới', 'Tư Vấn L1', 'Tư Vấn L2', 'Tư Vấn L3', 'Có Nhu Cầu', 'Chốt Cọc'];
+  const SOURCE_STATUS_COLORS = {
+    'Khách Hàng Mới': { bg: 'rgba(99,102,241,0.1)', color: '#6366F1' },
+    'Tư Vấn L1':      { bg: 'rgba(14,165,233,0.1)', color: '#0EA5E9' },
+    'Tư Vấn L2':      { bg: 'rgba(245,158,11,0.1)', color: '#D97706' },
+    'Tư Vấn L3':      { bg: 'rgba(234,88,12,0.1)',  color: '#EA580C' },
+    'Có Nhu Cầu':     { bg: 'rgba(16,185,129,0.1)', color: '#10B981' },
+    'Chốt Cọc':       { bg: 'rgba(220,38,38,0.1)',  color: '#DC2626' },
+  };
+
+  const saveSourceStatus = async (docId, value) => {
     if (!docId) return;
     try {
-      await db.collection('students').doc(docId).update({ revenue: Number(value) || 0 });
-    } catch (e) { console.error('Lỗi lưu doanh thu:', e); }
+      await db.collection('students').doc(docId).update({ sourceStatus: value });
+    } catch (e) { console.error('Lỗi lưu trạng thái:', e); }
   };
 
   const renderCrmSource = (resetPage = false) => {
@@ -6974,7 +6984,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     if (filtered.length === 0) {
-      tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:2.5rem;color:var(--text-muted);font-size:0.82rem">Không tìm thấy học viên.</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:2.5rem;color:var(--text-muted);font-size:0.82rem">Không tìm thấy học viên.</td></tr>`;
       renderPagination('crmSourcePagination', 1, 0, () => {});
       return;
     }
@@ -6982,52 +6992,70 @@ document.addEventListener('DOMContentLoaded', () => {
     const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
     crmSourcePage = Math.min(crmSourcePage, totalPages);
     const pageData = filtered.slice((crmSourcePage - 1) * PAGE_SIZE, crmSourcePage * PAGE_SIZE);
-    const globalOffset = (crmSourcePage - 1) * PAGE_SIZE;
 
-    const avColors = ['#2563EB', '#7C3AED', '#059669', '#D97706', '#DC2626', '#0891B2'];
+    // Global sequential code from full list (10001+)
+    const globalIndexMap = new Map(_allCrmCustomers.map((c, i) => [c.id, 10001 + i]));
 
     tbody.innerHTML = pageData.map((c, i) => {
-      const gi   = globalOffset + i;
-      const ini  = (c.name || 'KH').split(' ').map(w => w[0]).filter(Boolean).slice(-2).join('').toUpperCase();
+      const globalIdx = globalIndexMap.get(c.id) ?? (10001 + i);
+      const displayCode = String(globalIdx);
+
       let dateStr = '--';
       if (c.createdAt?.toDate) {
         const d = c.createdAt.toDate();
         dateStr = `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}/${d.getFullYear()}`;
       }
-      const rev = c.revenue != null ? c.revenue : '';
+
+      const currentStatus = c.sourceStatus || 'Khách Hàng Mới';
+      const statusColor = SOURCE_STATUS_COLORS[currentStatus] || SOURCE_STATUS_COLORS['Khách Hàng Mới'];
+      const optionsHtml = SOURCE_STATUSES.map(s =>
+        `<option value="${s}"${s === currentStatus ? ' selected' : ''}>${s}</option>`
+      ).join('');
+
       return `
         <tr>
-          <td><span style="font-family:monospace;font-size:0.78rem;font-weight:600;color:var(--crm-blue)">${c.code || '--'}</span></td>
           <td>
-            <div style="display:flex;align-items:center;gap:0.65rem">
-              <div style="width:32px;height:32px;border-radius:50%;background:${avColors[gi % avColors.length]};color:#fff;display:flex;align-items:center;justify-content:center;font-size:0.7rem;font-weight:700;flex-shrink:0">${ini}</div>
-              <span style="font-weight:600;font-size:0.83rem">${c.name || '--'}</span>
-            </div>
+            <span style="font-family:monospace;font-size:0.78rem;font-weight:700;color:#6366F1;">${displayCode}</span>
           </td>
           <td>
-            <div style="font-size:0.79rem">${c.email || '--'}</div>
-            <div style="font-size:0.73rem;color:var(--text-muted)">${c.phone || ''}</div>
+            <div style="font-weight:600;font-size:0.85rem;color:var(--text-main)">${c.name || '--'}</div>
+            <div style="font-size:0.72rem;color:var(--text-muted)">${c.email || ''}</div>
           </td>
-          <td><span class="crm-country-flag">${c.country || '--'}</span></td>
-          <td style="font-size:0.79rem">${dateStr}</td>
+          <td style="font-size:0.82rem">${c.phone || '--'}</td>
+          <td style="font-size:0.83rem;font-weight:500">${c.country || '--'}</td>
+          <td style="font-size:0.82rem;font-weight:500">${dateStr}</td>
           <td>
-            <div style="display:flex;align-items:center;gap:0.4rem;">
-              <input type="number" class="src-revenue-input" data-id="${c.id}"
-                value="${rev}" min="0" step="1000" placeholder="Nhập doanh thu..."
-                style="width:140px;padding:0.35rem 0.6rem;border:1px solid var(--border);border-radius:8px;
-                       background:var(--bg-primary);color:var(--text-main);font-size:0.82rem;
-                       font-family:inherit;text-align:right;" />
-              <span style="font-size:0.72rem;color:var(--text-muted);white-space:nowrap;">đ</span>
+            <select class="src-status-select" data-id="${c.id}"
+              style="padding:0.22rem 0.55rem;border-radius:10px;border:1.5px solid ${statusColor.color};
+                     background:${statusColor.bg};color:${statusColor.color};
+                     font-size:0.68rem;font-weight:600;cursor:pointer;
+                     font-family:inherit;outline:none;appearance:none;-webkit-appearance:none;
+                     padding-right:1.4rem;
+                     background-image:url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23888'/%3E%3C/svg%3E\");
+                     background-repeat:no-repeat;background-position:right 0.4rem center;">
+              ${optionsHtml}
+            </select>
+          </td>
+          <td style="text-align:center;">
+            <div style="display:flex;gap:0.3rem;justify-content:center;align-items:center;">
+              <button class="action-icon-btn src-view-btn" data-id="${c.id}" title="Chi tiết"
+                style="padding:6px;color:#6366F1;background:#EEF2FF;border:none;cursor:pointer;border-radius:7px">
+                <svg viewBox="0 0 24 24" style="width:15px;height:15px;fill:currentColor;"><path d="M12,9A3,3 0 0,0 9,12A3,3 0 0,0 12,15A3,3 0 0,0 15,12A3,3 0 0,0 12,9M12,4.5C7,4.5 2.73,7.61 1,12C2.73,16.39 7,19.5 12,19.5C17,19.5 21.27,16.39 23,12C21.27,7.61 17,4.5 12,4.5Z"/></svg>
+              </button>
             </div>
           </td>
         </tr>`;
     }).join('');
 
-    // Auto-save on blur or Enter
-    tbody.querySelectorAll('.src-revenue-input').forEach(inp => {
-      const save = () => saveSourceRevenue(inp.dataset.id, inp.value);
-      inp.addEventListener('blur', save);
-      inp.addEventListener('keydown', e => { if (e.key === 'Enter') { save(); inp.blur(); } });
+    // Save on status change + update select colors live
+    tbody.querySelectorAll('.src-status-select').forEach(sel => {
+      sel.addEventListener('change', () => {
+        const sc = SOURCE_STATUS_COLORS[sel.value] || SOURCE_STATUS_COLORS['Khách Hàng Mới'];
+        sel.style.borderColor = sc.color;
+        sel.style.background = `${sc.bg} url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23888'/%3E%3C/svg%3E") no-repeat right 0.4rem center`;
+        sel.style.color = sc.color;
+        saveSourceStatus(sel.dataset.id, sel.value);
+      });
     });
 
     renderPagination('crmSourcePagination', crmSourcePage, filtered.length, (p) => {
