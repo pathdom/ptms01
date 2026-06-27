@@ -1889,7 +1889,14 @@
                 <div class="crm-card-header">
                   <h4>DANH SÁCH HỌC VIÊN NGUỒN</h4>
                   <div class="crm-header-actions">
-                    <span style="font-size:0.75rem;color:var(--text-muted);">Doanh thu nhập tay — tự động lưu</span>
+                    <button type="button" id="btnAddSourceStudent" class="crm-btn-accent" style="display:flex;align-items:center;gap:0.4rem;">
+                      <svg viewBox="0 0 24 24" style="width:16px;height:16px;fill:currentColor;"><path d="M19,13H13V19H11V13H5V11H11V5H13V11H19V13Z"/></svg>
+                      Thêm học viên nguồn
+                    </button>
+                    <button type="button" id="btnExportSourceExcel" class="crm-btn-secondary">
+                      <svg viewBox="0 0 24 24"><path d="M5,20H19V18H5M19,9H15V3H9V9H5L12,16L19,9Z"/></svg>
+                      Xuất Excel
+                    </button>
                   </div>
                 </div>
 
@@ -3025,6 +3032,77 @@
             id="btnCloseDetailModalAction"
             style="margin-top:0;width:auto;padding:0.55rem 1.2rem;font-size:0.8rem;background:transparent;border-color:var(--border);color:var(--text-main);"
           >ĐÓNG</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal Thêm Học Viên Nguồn -->
+    <div class="modal-overlay" id="sourceStudentModal"
+      style="display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;
+             background:rgba(0,0,0,0.5);z-index:1100;justify-content:center;
+             align-items:center;padding:2rem;backdrop-filter:blur(4px);">
+      <div class="login-card" style="max-width:480px;width:100%;border-radius:var(--border-radius-lg);
+           box-shadow:var(--shadow-lg);padding:0;display:flex;flex-direction:column;max-height:90vh;overflow:hidden;">
+        <div style="display:flex;justify-content:space-between;align-items:center;
+                    padding:1.2rem 1.5rem;border-bottom:1px solid var(--border-light);flex-shrink:0;">
+          <h3 style="font-family:var(--font-serif);font-size:1.1rem;font-weight:500;color:var(--text-main);">Thêm Học Viên Nguồn</h3>
+          <button type="button" id="btnCloseSourceModal"
+            style="font-size:1.4rem;color:var(--text-muted);cursor:pointer;background:none;border:none;line-height:1;padding:4px 8px;">&times;</button>
+        </div>
+        <div style="overflow-y:auto;flex:1;padding:1.2rem 1.5rem;display:flex;flex-direction:column;gap:1rem;">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.9rem;">
+            <div style="display:flex;flex-direction:column;gap:0.35rem;">
+              <label style="font-size:0.68rem;font-weight:600;text-transform:uppercase;color:var(--text-muted);letter-spacing:.7px;">Họ và tên *</label>
+              <input type="text" id="srcName" placeholder="Nguyễn Văn A"
+                style="padding:0.55rem 0.8rem;border:1px solid var(--border);border-radius:9px;
+                       background:var(--bg-primary);font-size:0.84rem;font-family:inherit;color:var(--text-main);outline:none;" />
+            </div>
+            <div style="display:flex;flex-direction:column;gap:0.35rem;">
+              <label style="font-size:0.68rem;font-weight:600;text-transform:uppercase;color:var(--text-muted);letter-spacing:.7px;">Email</label>
+              <input type="email" id="srcEmail" placeholder="email@gmail.com"
+                style="padding:0.55rem 0.8rem;border:1px solid var(--border);border-radius:9px;
+                       background:var(--bg-primary);font-size:0.84rem;font-family:inherit;color:var(--text-main);outline:none;" />
+            </div>
+            <div style="display:flex;flex-direction:column;gap:0.35rem;">
+              <label style="font-size:0.68rem;font-weight:600;text-transform:uppercase;color:var(--text-muted);letter-spacing:.7px;">Số điện thoại</label>
+              <input type="tel" id="srcPhone" placeholder="0912345678"
+                style="padding:0.55rem 0.8rem;border:1px solid var(--border);border-radius:9px;
+                       background:var(--bg-primary);font-size:0.84rem;font-family:inherit;color:var(--text-main);outline:none;" />
+            </div>
+            <div style="display:flex;flex-direction:column;gap:0.35rem;">
+              <label style="font-size:0.68rem;font-weight:600;text-transform:uppercase;color:var(--text-muted);letter-spacing:.7px;">Quốc gia</label>
+              <select id="srcCountry"
+                style="padding:0.55rem 0.8rem;border:1px solid var(--border);border-radius:9px;
+                       background:var(--bg-primary);font-size:0.84rem;font-family:inherit;color:var(--text-main);outline:none;">
+                <option value="Nhật">🇯🇵 Nhật Bản</option>
+                <option value="Đài">🇹🇼 Đài Loan</option>
+                <option value="Hàn">🇰🇷 Hàn Quốc</option>
+                <option value="Úc">🇦🇺 Úc</option>
+                <option value="Mỹ">🇺🇸 Mỹ</option>
+                <option value="Anh">🇬🇧 Anh</option>
+              </select>
+            </div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:0.35rem;">
+            <label style="font-size:0.68rem;font-weight:600;text-transform:uppercase;color:var(--text-muted);letter-spacing:.7px;">Ghi chú</label>
+            <textarea id="srcNotes" rows="3" placeholder="Ghi chú tư vấn..."
+              style="padding:0.55rem 0.8rem;border:1px solid var(--border);border-radius:9px;
+                     background:var(--bg-primary);font-size:0.84rem;font-family:inherit;color:var(--text-main);
+                     outline:none;resize:vertical;"></textarea>
+          </div>
+        </div>
+        <div style="display:flex;gap:0.75rem;justify-content:flex-end;padding:1rem 1.5rem;
+                    border-top:1px solid var(--border-light);flex-shrink:0;">
+          <button type="button" id="btnSubmitSourceStudent"
+            style="padding:0.55rem 1.4rem;font-size:0.82rem;font-weight:600;
+                   background:#2563EB;color:#fff;border:none;border-radius:9px;cursor:pointer;">
+            Thêm học viên
+          </button>
+          <button type="button" id="btnCancelSourceModal"
+            style="padding:0.55rem 1.2rem;font-size:0.82rem;background:transparent;
+                   border:1px solid var(--border);border-radius:9px;cursor:pointer;color:var(--text-main);">
+            Hủy
+          </button>
         </div>
       </div>
     </div>

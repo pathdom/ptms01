@@ -7025,10 +7025,13 @@ document.addEventListener('DOMContentLoaded', () => {
     const pageData = filtered.slice((crmSourcePage - 1) * PAGE_SIZE, crmSourcePage * PAGE_SIZE);
     const globalOffset = (crmSourcePage - 1) * PAGE_SIZE;
 
+    const srcGlobalIndexMap = new Map(_allCrmCustomers.map((c, i) => [c.id, i + 1]));
     const avColors = ['#2563EB', '#7C3AED', '#059669', '#D97706', '#DC2626', '#0891B2'];
 
     tbody.innerHTML = pageData.map((c, i) => {
       const gi   = globalOffset + i;
+      const globalIdx = srcGlobalIndexMap.get(c.id) ?? (gi + 1);
+      const hnvCode = 'HNV' + String(globalIdx).padStart(4, '0');
       const ini  = (c.name || 'KH').split(' ').map(w => w[0]).filter(Boolean).slice(-2).join('').toUpperCase();
       let dateStr = '--';
       if (c.createdAt?.toDate) {
@@ -7038,7 +7041,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const rev = c.revenue != null ? c.revenue : '';
       return `
         <tr>
-          <td><span style="font-family:monospace;font-size:0.78rem;font-weight:600;color:var(--crm-blue)">${c.code || '--'}</span></td>
+          <td><span style="font-family:monospace;font-size:0.78rem;font-weight:700;color:#6366F1;">${hnvCode}</span></td>
           <td>
             <div style="display:flex;align-items:center;gap:0.65rem">
               <div style="width:32px;height:32px;border-radius:50%;background:${avColors[gi % avColors.length]};color:#fff;display:flex;align-items:center;justify-content:center;font-size:0.7rem;font-weight:700;flex-shrink:0">${ini}</div>
@@ -8387,6 +8390,62 @@ document.addEventListener('DOMContentLoaded', () => {
 
       document.getElementById('srcSearchInput')?.addEventListener('input', () => renderCrmSource(true));
       document.getElementById('srcCountryFilter')?.addEventListener('change', () => renderCrmSource(true));
+
+      // Mở modal thêm học viên nguồn
+      const openSourceModal = () => {
+        ['srcName','srcEmail','srcPhone','srcNotes'].forEach(id => {
+          const el = document.getElementById(id);
+          if (el) el.value = '';
+        });
+        const sel = document.getElementById('srcCountry');
+        if (sel) sel.value = 'Nhật';
+        document.getElementById('sourceStudentModal').style.display = 'flex';
+      };
+      const closeSourceModal = () => { document.getElementById('sourceStudentModal').style.display = 'none'; };
+
+      document.getElementById('btnAddSourceStudent')?.addEventListener('click', openSourceModal);
+      document.getElementById('btnCloseSourceModal')?.addEventListener('click', closeSourceModal);
+      document.getElementById('btnCancelSourceModal')?.addEventListener('click', closeSourceModal);
+
+      document.getElementById('btnSubmitSourceStudent')?.addEventListener('click', async () => {
+        const name = document.getElementById('srcName')?.value.trim();
+        if (!name) { showToast('Vui lòng nhập họ tên', 'error'); return; }
+        const nextCode = 'HNV' + String(_allCrmCustomers.length + 1).padStart(4, '0');
+        const data = {
+          name,
+          email: document.getElementById('srcEmail')?.value.trim() || '',
+          phone: document.getElementById('srcPhone')?.value.trim() || '',
+          country: document.getElementById('srcCountry')?.value || 'Nhật',
+          notes: document.getElementById('srcNotes')?.value.trim() || '',
+          code: nextCode,
+          isSourceStudent: true,
+          status: 'Đang học',
+          createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+        };
+        try {
+          await db.collection('students').add(data);
+          closeSourceModal();
+          showToast('Đã thêm học viên nguồn', 'success');
+        } catch (e) { showToast('Lỗi: ' + e.message, 'error'); }
+      });
+
+      // Xuất Excel học viên nguồn
+      document.getElementById('btnExportSourceExcel')?.addEventListener('click', () => {
+        if (!window.XLSX) { showToast('Thư viện Excel chưa tải', 'error'); return; }
+        const rows = _allCrmCustomers.map((c, i) => ({
+          'Mã': 'HNV' + String(i + 1).padStart(4, '0'),
+          'Họ và tên': c.name || '',
+          'Email': c.email || '',
+          'SĐT': c.phone || '',
+          'Quốc gia': c.country || '',
+          'Doanh thu (đ)': c.revenue ?? 0,
+          'Ghi chú': c.notes || '',
+        }));
+        const ws = window.XLSX.utils.json_to_sheet(rows);
+        const wb = window.XLSX.utils.book_new();
+        window.XLSX.utils.book_append_sheet(wb, ws, 'Học viên nguồn');
+        window.XLSX.writeFile(wb, 'hoc_vien_nguon.xlsx');
+      });
 
       document.getElementById('crmStaffSearch')?.addEventListener('input', () => renderCrmStaff(true));
       document.getElementById('crmStaffDeptFilter')?.addEventListener('change', () => renderCrmStaff(true));
