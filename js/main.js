@@ -5808,7 +5808,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const initials = s.name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
         const bg = getAvatarBgColor(s.name);
         const globalIdx = globalIndexMap.get(s.id) || 1;
-        const empCode = s.employeeCode || String(globalIdx).padStart(5, '0');
+        const empCode = String(globalIdx).padStart(5, '0');
 
         // Seed birthday around 2000 if not set
         const seed = s.name.split('').reduce((a, c) => a + c.charCodeAt(0), 0);
