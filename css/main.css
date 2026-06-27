@@ -1186,12 +1186,12 @@ button {
 /* Status Badges */
 .crm-badge {
   display: inline-flex;
-  padding: 0.25rem 0.75rem;
-  border-radius: 12px;
-  font-size: 0.7rem;
+  padding: 0.18rem 0.55rem;
+  border-radius: 10px;
+  font-size: 0.6rem;
   font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.4px;
 }
 
 .badge-danghoc {
