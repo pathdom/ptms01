@@ -7432,6 +7432,91 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   };
 
+  // ── CRM Notes ──────────────────────────────────────────────────────────────
+  const NOTE_TAG_META = {
+    general: { label: '📌 Chung',    bg: 'rgba(107,114,128,0.1)', color: '#6B7280' },
+    call:    { label: '📞 Cuộc gọi', bg: 'rgba(37,99,235,0.1)',   color: '#2563EB' },
+    meeting: { label: '🤝 Gặp mặt', bg: 'rgba(16,185,129,0.1)',   color: '#059669' },
+    email:   { label: '📧 Email',    bg: 'rgba(217,119,6,0.1)',    color: '#D97706' },
+    task:    { label: '✅ Công việc', bg: 'rgba(99,102,241,0.1)',  color: '#6366F1' },
+    warning: { label: '⚠️ Lưu ý',   bg: 'rgba(239,68,68,0.1)',    color: '#EF4444' },
+  };
+
+  const loadCrmNotes = async (customerId) => {
+    const list = document.getElementById('crmNotesList');
+    const badge = document.getElementById('noteCountBadge');
+    if (!list) return;
+    list.innerHTML = `<div style="text-align:center;padding:2rem;color:var(--text-muted);font-size:0.8rem;">Đang tải...</div>`;
+    try {
+      const snap = await db.collection('students').doc(customerId)
+        .collection('notes').orderBy('createdAt', 'desc').get();
+      if (badge) badge.textContent = `${snap.size} ghi chú`;
+      if (snap.empty) {
+        list.innerHTML = `<div style="text-align:center;padding:3rem 1rem;color:var(--text-muted);font-size:0.82rem;font-style:italic;">Chưa có ghi chú nào. Hãy thêm ghi chú đầu tiên!</div>`;
+        return;
+      }
+      list.innerHTML = snap.docs.map(d => {
+        const n = d.data();
+        const tag = NOTE_TAG_META[n.tag] || NOTE_TAG_META['general'];
+        let dateStr = '';
+        if (n.createdAt?.toDate) {
+          const dt = n.createdAt.toDate();
+          dateStr = `${padZ(dt.getDate())}/${padZ(dt.getMonth()+1)}/${dt.getFullYear()} ${padZ(dt.getHours())}:${padZ(dt.getMinutes())}`;
+        }
+        return `
+          <div style="background:var(--bg-primary);border:1px solid var(--border-light);border-radius:11px;padding:0.85rem 1rem;position:relative;">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:0.5rem;margin-bottom:0.5rem;">
+              <div style="display:flex;align-items:center;gap:0.5rem;flex-wrap:wrap;">
+                <span style="font-size:0.62rem;font-weight:700;padding:2px 8px;border-radius:6px;background:${tag.bg};color:${tag.color};">${tag.label}</span>
+                ${n.title ? `<span style="font-size:0.82rem;font-weight:700;color:var(--text-main);">${n.title}</span>` : ''}
+              </div>
+              <div style="display:flex;align-items:center;gap:0.4rem;flex-shrink:0;">
+                <span style="font-size:0.65rem;color:var(--text-muted);white-space:nowrap;">${dateStr}</span>
+                <button class="note-delete-btn" data-noteid="${d.id}"
+                  style="padding:3px 5px;background:#FEF2F2;color:#EF4444;border:none;border-radius:6px;cursor:pointer;line-height:1;">
+                  <svg viewBox="0 0 24 24" style="width:12px;height:12px;fill:currentColor;"><path d="M19,4H15.5L14.5,3H9.5L8.5,4H5V6H19M6,19A2,2 0 0,0 8,21H16A2,2 0 0,0 18,19V7H6V19Z"/></svg>
+                </button>
+              </div>
+            </div>
+            <p style="font-size:0.8rem;color:var(--text-main);line-height:1.6;white-space:pre-wrap;margin:0;">${n.content || ''}</p>
+          </div>`;
+      }).join('');
+
+      list.querySelectorAll('.note-delete-btn').forEach(btn => {
+        btn.addEventListener('click', async () => {
+          if (!confirm('Xóa ghi chú này?')) return;
+          await db.collection('students').doc(_currentCrmCustomer.id)
+            .collection('notes').doc(btn.dataset.noteid).delete();
+          loadCrmNotes(_currentCrmCustomer.id);
+        });
+      });
+    } catch(e) {
+      list.innerHTML = `<div style="color:#EF4444;font-size:0.8rem;padding:1rem;">Lỗi tải ghi chú</div>`;
+    }
+  };
+
+  const setupCrmNotes = () => {
+    document.getElementById('btnSaveNote')?.addEventListener('click', async () => {
+      if (!_currentCrmCustomer?.id) return;
+      const content = document.getElementById('noteContent')?.value.trim();
+      if (!content) { showToast('Vui lòng nhập nội dung ghi chú', 'error'); return; }
+      const data = {
+        title: document.getElementById('noteTitle')?.value.trim() || '',
+        tag: document.getElementById('noteTag')?.value || 'general',
+        content,
+        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+      };
+      try {
+        await db.collection('students').doc(_currentCrmCustomer.id).collection('notes').add(data);
+        document.getElementById('noteContent').value = '';
+        document.getElementById('noteTitle').value = '';
+        document.getElementById('noteTag').value = 'general';
+        loadCrmNotes(_currentCrmCustomer.id);
+        showToast('Đã lưu ghi chú', 'success');
+      } catch(e) { showToast('Lỗi: ' + e.message, 'error'); }
+    });
+  };
+
   // ── CRM Staff ──────────────────────────────────────────────────────────────
   let _allCrmStaff = [];
   let _crmStaffProfileStaff = null;
@@ -8699,10 +8784,14 @@ document.addEventListener('DOMContentLoaded', () => {
           if (tab.dataset.ctab === 'ctab-docs' && _currentCrmCustomer?.id) {
             loadCrmDocs(_currentCrmCustomer.id);
           }
+          if (tab.dataset.ctab === 'ctab-notes' && _currentCrmCustomer?.id) {
+            loadCrmNotes(_currentCrmCustomer.id);
+          }
         });
       });
 
       setupDocUpload();
+      setupCrmNotes();
 
       document.getElementById('btnEditCrmCustomer')?.addEventListener('click', () => {
         if (!_currentCrmCustomer) return;
