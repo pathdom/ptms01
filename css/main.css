@@ -3218,6 +3218,17 @@ body.dark-theme-crm .student-header-navbar {
   color: #fff;
 }
 
+.hrm-btn-primary {
+  background: #2563EB;
+  border-color: #2563EB;
+  color: #fff;
+}
+.hrm-btn-primary:hover {
+  background: #1D4ED8;
+  border-color: #1D4ED8;
+  color: #fff;
+}
+
 /* Tab Panels */
 .hrm-ptab-panel {
   display: none;
