@@ -1148,13 +1148,15 @@
                   <table class="financial-table">
                     <thead>
                       <tr>
-                        <th>NHÂN VIÊN</th>
-                        <th>PHÒNG BAN</th>
-                        <th>CHỨC VỤ</th>
+                        <th style="width:90px">MÃ NV</th>
+                        <th>HỌ VÀ TÊN</th>
+                        <th>NGÀY SINH</th>
+                        <th>BỘ PHẬN / CHỨC VỤ</th>
+                        <th>HÌNH THỨC</th>
                         <th>LIÊN HỆ</th>
                         <th>NGÀY VÀO LÀM</th>
                         <th>TRẠNG THÁI</th>
-                        <th style="text-align: center">HÀNH ĐỘNG</th>
+                        <th style="text-align:center">HÀNH ĐỘNG</th>
                       </tr>
                     </thead>
                     <tbody id="hrmStaffTableBody">
@@ -6511,16 +6513,29 @@
           </div>
           <div class="hrm-form-row">
             <div class="form-group-login"><label for="hrmStaffPhone">Số điện thoại</label><input type="text" id="hrmStaffPhone" placeholder="0912345678" /></div>
+            <div class="form-group-login"><label for="hrmStaffBirthday">Ngày sinh</label><input type="date" id="hrmStaffBirthday" /></div>
+          </div>
+          <div class="hrm-form-row">
             <div class="form-group-login"><label for="hrmStaffStatus">Trạng thái *</label>
               <select id="hrmStaffStatus" required>
                 <option value="Đang làm việc">Đang làm việc</option>
+                <option value="Thử việc">Thử việc</option>
                 <option value="Nghỉ phép">Nghỉ phép</option>
                 <option value="Đã nghỉ việc">Đã nghỉ việc</option>
               </select>
             </div>
+            <div class="form-group-login"><label for="hrmStaffWorkType">Hình thức làm việc *</label>
+              <select id="hrmStaffWorkType" required>
+                <option value="Full-time">Full-time</option>
+                <option value="Part-time">Part-time</option>
+                <option value="Intern">Intern</option>
+                <option value="Thời vụ">Thời vụ</option>
+                <option value="Freelance">Freelance</option>
+              </select>
+            </div>
           </div>
           <div class="hrm-form-row">
-            <div class="form-group-login"><label for="hrmStaffCode">Mã nhân viên</label><input type="text" id="hrmStaffCode" placeholder="VD: 0267/HN.0267" /></div>
+            <div class="form-group-login"><label for="hrmStaffCode">Mã nhân viên</label><input type="text" id="hrmStaffCode" placeholder="VD: 00001" /></div>
             <div class="form-group-login"><label for="hrmStaffUsername">Tên tài khoản</label><input type="text" id="hrmStaffUsername" placeholder="VD: nguyenvana" /></div>
           </div>
           <div class="hrm-form-row">

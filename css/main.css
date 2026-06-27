@@ -2715,9 +2715,24 @@ body.dark-theme-crm .student-header-navbar {
   white-space: nowrap;
 }
 
-.hrm-badge-active { background: rgba(16,185,129,0.12); color: #10B981; }
-.hrm-badge-inactive { background: rgba(239,68,68,0.1); color: #EF4444; }
-.hrm-badge-onleave { background: rgba(245,158,11,0.12); color: #F59E0B; }
+.hrm-badge-active   { background: rgba(16,185,129,0.12); color: #059669; }
+.hrm-badge-probation{ background: rgba(99,102,241,0.12); color: #6366F1; }
+.hrm-badge-onleave  { background: rgba(245,158,11,0.12); color: #D97706; }
+.hrm-badge-inactive { background: rgba(239,68,68,0.1);   color: #DC2626; }
+
+.hrm-emp-code {
+  display: inline-block;
+  font-size: 0.78rem; font-weight: 700; font-family: 'Courier New', monospace;
+  color: #6366F1; background: #EEF2FF;
+  padding: 0.2rem 0.55rem; border-radius: 6px;
+  letter-spacing: 0.04em;
+}
+
+.hrm-work-type-tag {
+  display: inline-block;
+  padding: 0.22rem 0.65rem; border-radius: 20px;
+  font-size: 0.72rem; font-weight: 600;
+}
 .hrm-badge-planning { background: rgba(139,92,246,0.12); color: #8B5CF6; }
 .hrm-badge-inprogress { background: rgba(63,162,246,0.12); color: #3FA2F6; }
 .hrm-badge-review { background: rgba(245,158,11,0.12); color: #F59E0B; }

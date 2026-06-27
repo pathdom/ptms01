@@ -5496,6 +5496,8 @@ document.addEventListener('DOMContentLoaded', () => {
         status:       document.getElementById('hrmStaffStatus').value,
         employeeCode: document.getElementById('hrmStaffCode').value.trim(),
         username:     document.getElementById('hrmStaffUsername').value.trim(),
+        birthday:     document.getElementById('hrmStaffBirthday')?.value             || null,
+        workType:     document.getElementById('hrmStaffWorkType')?.value            || 'Full-time',
         teamPod:      document.getElementById('hrmStaffTeamPod')?.value.trim()      || null,
         lineManager:  document.getElementById('hrmStaffLineManager')?.value.trim()  || null,
         assets:       document.getElementById('hrmStaffAssets')?.value.trim()       || null,
@@ -5764,50 +5766,82 @@ document.addEventListener('DOMContentLoaded', () => {
       const deptFilter = document.getElementById('hrmStaffDeptFilter')?.value || 'All';
 
       const staffList = hrmStaffCache.filter(s => {
-        const matchQuery = !query || s.name.toLowerCase().includes(query) || (s.email && s.email.toLowerCase().includes(query)) || (s.position && s.position.toLowerCase().includes(query));
+        const matchQuery = !query ||
+          s.name.toLowerCase().includes(query) ||
+          (s.email        && s.email.toLowerCase().includes(query)) ||
+          (s.position     && s.position.toLowerCase().includes(query)) ||
+          (s.employeeCode && s.employeeCode.toLowerCase().includes(query));
         const matchDept = deptFilter === 'All' || s.department === deptFilter;
         return matchQuery && matchDept;
       });
 
       if (staffList.length === 0) {
-        tableBody.innerHTML = '<tr><td colspan="7" style="text-align:center; padding:3rem; color:var(--text-muted); font-size:0.9rem;">Không tìm thấy nhân sự phù hợp.</td></tr>';
+        tableBody.innerHTML = `<tr><td colspan="9" style="text-align:center;padding:3rem;color:var(--text-muted);font-size:0.9rem;">Không tìm thấy nhân sự phù hợp.</td></tr>`;
         return;
       }
 
       const fmtDate = (dateStr) => {
         if (!dateStr) return '--';
-        const parts = dateStr.split('-');
-        return parts.length === 3 ? `${parts[2]}/${parts[1]}/${parts[0]}` : dateStr;
+        const p = dateStr.split('-');
+        return p.length === 3 ? `${p[2]}/${p[1]}/${p[0]}` : dateStr;
       };
 
-      staffList.forEach(s => {
+      const workTypeMeta = {
+        'Full-time':  { bg: '#EEF2FF', color: '#6366F1' },
+        'Part-time':  { bg: '#FFF7ED', color: '#F97316' },
+        'Intern':     { bg: '#F0FDF4', color: '#16A34A' },
+        'Thời vụ':   { bg: '#FDF4FF', color: '#9333EA' },
+        'Freelance':  { bg: '#FFFBEB', color: '#D97706' },
+      };
+
+      const statusMeta = {
+        'Đang làm việc': { cls: 'hrm-badge-active',   label: 'Đang làm việc' },
+        'Thử việc':      { cls: 'hrm-badge-probation', label: 'Thử việc' },
+        'Nghỉ phép':     { cls: 'hrm-badge-onleave',   label: 'Nghỉ phép' },
+        'Đã nghỉ việc':  { cls: 'hrm-badge-inactive',  label: 'Đã nghỉ việc' },
+      };
+
+      staffList.forEach((s, idx) => {
         const initials = s.name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
         const bg = getAvatarBgColor(s.name);
-        let badgeCls = 'hrm-badge-active';
-        if (s.status === 'Nghỉ phép') badgeCls = 'hrm-badge-onleave';
-        else if (s.status === 'Đã nghỉ việc') badgeCls = 'hrm-badge-inactive';
+        const empCode = s.employeeCode || String(idx + 1).padStart(5, '0');
+        const sm = statusMeta[s.status] || { cls: 'hrm-badge-active', label: s.status || '--' };
+        const wt = s.workType || 'Full-time';
+        const wtMeta = workTypeMeta[wt] || { bg: '#F3F4F6', color: '#6B7280' };
 
         const tr = document.createElement('tr');
         tr.innerHTML = `
           <td>
-            <div style="display:flex; align-items:center; gap:0.6rem;">
-              <div class="hrm-staff-card-avatar" style="width:34px; height:34px; font-size:0.75rem; flex-shrink:0; background:${bg}">${initials}</div>
+            <span class="hrm-emp-code">${empCode}</span>
+          </td>
+          <td>
+            <div style="display:flex;align-items:center;gap:0.6rem;">
+              <div class="hrm-staff-card-avatar" style="width:34px;height:34px;font-size:0.75rem;flex-shrink:0;background:${bg}">${initials}</div>
               <div>
-                <div style="font-weight:600; font-size:0.85rem;">${s.name}</div>
-                <div style="font-size:0.75rem; color:var(--text-muted);">${s.email || '--'}</div>
+                <div style="font-weight:600;font-size:0.85rem;color:var(--text-main)">${s.name}</div>
+                <div style="font-size:0.72rem;color:var(--text-muted)">${s.email || '--'}</div>
               </div>
             </div>
           </td>
-          <td>${s.department || '--'}</td>
-          <td>${s.position || '--'}</td>
-          <td>${s.phone || '--'}</td>
-          <td>${fmtDate(s.joinDate)}</td>
-          <td><span class="hrm-badge ${badgeCls}">${s.status}</span></td>
-          <td style="text-align:center;">
-            <div style="display:flex; gap:0.4rem; justify-content:center; align-items:center;">
-              <button class="action-icon-btn btn-view-hrm-staff" data-id="${s.id}" title="Hồ sơ" style="padding:6px; color:var(--accent); background:none; border:none; cursor:pointer;"><svg viewBox="0 0 24 24" style="width:18px;height:18px;fill:currentColor;"><path d="M12,9A3,3 0 0,0 9,12A3,3 0 0,0 12,15A3,3 0 0,0 15,12A3,3 0 0,0 12,9M12,17A5,5 0 0,1 7,12A5,5 0 0,1 12,7A5,5 0 0,1 17,12A5,5 0 0,1 12,17M12,4.5C7,4.5 2.73,7.61 1,12C2.73,16.39 7,19.5 12,19.5C17,19.5 21.27,16.39 23,12C21.27,7.61 17,4.5 12,4.5Z"/></svg></button>
-              <button class="action-icon-btn btn-edit-hrm-staff" data-id="${s.id}" title="Sửa" style="padding:6px; color:var(--text-main); background:none; border:none; cursor:pointer;"><svg viewBox="0 0 24 24" style="width:18px;height:18px;fill:currentColor;"><path d="M20.71,7.04C21.1,6.65 21.1,6 20.71,5.63L18.37,3.29C18,2.9 17.35,2.9 16.96,3.29L15.12,5.12L18.87,8.87M3,17.25V21H6.75L17.81,9.93L14.06,6.18L3,17.25Z"/></svg></button>
-              <button class="action-icon-btn btn-del-hrm-staff" data-id="${s.id}" data-name="${s.name}" title="Xóa" style="padding:6px; color:#EF4444; background:none; border:none; cursor:pointer;"><svg viewBox="0 0 24 24" style="width:18px;height:18px;fill:currentColor;"><path d="M19,4H15.5L14.5,3H9.5L8.5,4H5V6H19M6,19A2,2 0 0,0 8,21H16A2,2 0 0,0 18,19V7H6V19Z"/></svg></button>
+          <td style="font-size:0.82rem">${fmtDate(s.birthday)}</td>
+          <td>
+            <div style="font-size:0.83rem;font-weight:500;color:var(--text-main)">${s.department || '--'}</div>
+            <div style="font-size:0.72rem;color:var(--text-muted)">${s.position || '--'}</div>
+          </td>
+          <td>
+            <span class="hrm-work-type-tag" style="background:${wtMeta.bg};color:${wtMeta.color}">${wt}</span>
+          </td>
+          <td>
+            <div style="font-size:0.82rem">${s.phone || '--'}</div>
+            <div style="font-size:0.72rem;color:var(--text-muted)">${s.email || '--'}</div>
+          </td>
+          <td style="font-size:0.82rem">${fmtDate(s.joinDate)}</td>
+          <td><span class="hrm-badge ${sm.cls}">${sm.label}</span></td>
+          <td style="text-align:center">
+            <div style="display:flex;gap:0.3rem;justify-content:center;align-items:center">
+              <button class="action-icon-btn btn-view-hrm-staff" title="Hồ sơ" style="padding:6px;color:#6366F1;background:#EEF2FF;border:none;cursor:pointer;border-radius:7px"><svg viewBox="0 0 24 24" style="width:16px;height:16px;fill:currentColor"><path d="M12,9A3,3 0 0,0 9,12A3,3 0 0,0 12,15A3,3 0 0,0 15,12A3,3 0 0,0 12,9M12,17A5,5 0 0,1 7,12A5,5 0 0,1 12,7A5,5 0 0,1 17,12A5,5 0 0,1 12,17M12,4.5C7,4.5 2.73,7.61 1,12C2.73,16.39 7,19.5 12,19.5C17,19.5 21.27,16.39 23,12C21.27,7.61 17,4.5 12,4.5Z"/></svg></button>
+              <button class="action-icon-btn btn-edit-hrm-staff" title="Sửa" style="padding:6px;color:var(--text-main);background:var(--bg-secondary,#F7F4EF);border:none;cursor:pointer;border-radius:7px"><svg viewBox="0 0 24 24" style="width:16px;height:16px;fill:currentColor"><path d="M20.71,7.04C21.1,6.65 21.1,6 20.71,5.63L18.37,3.29C18,2.9 17.35,2.9 16.96,3.29L15.12,5.12L18.87,8.87M3,17.25V21H6.75L17.81,9.93L14.06,6.18L3,17.25Z"/></svg></button>
+              <button class="action-icon-btn btn-del-hrm-staff" title="Xóa" style="padding:6px;color:#EF4444;background:#FEF2F2;border:none;cursor:pointer;border-radius:7px"><svg viewBox="0 0 24 24" style="width:16px;height:16px;fill:currentColor"><path d="M19,4H15.5L14.5,3H9.5L8.5,4H5V6H19M6,19A2,2 0 0,0 8,21H16A2,2 0 0,0 18,19V7H6V19Z"/></svg></button>
             </div>
           </td>`;
 
@@ -6239,6 +6273,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const salInput = document.getElementById('hrmStaffSalary');
     if (kpiInput) kpiInput.value = s.kpi != null ? s.kpi : '';
     if (salInput) salInput.value = s.salary != null ? s.salary : '';
+    const bdInput  = document.getElementById('hrmStaffBirthday');
+    const wtInput  = document.getElementById('hrmStaffWorkType');
+    if (bdInput) bdInput.value = s.birthday || '';
+    if (wtInput) wtInput.value = s.workType  || 'Full-time';
     const tpInput  = document.getElementById('hrmStaffTeamPod');
     const lmInput  = document.getElementById('hrmStaffLineManager');
     const asInput  = document.getElementById('hrmStaffAssets');
