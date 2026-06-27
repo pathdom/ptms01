@@ -6861,10 +6861,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const pageData = filtered.slice((crmCustomerPage - 1) * PAGE_SIZE, crmCustomerPage * PAGE_SIZE);
     const globalOffset = (crmCustomerPage - 1) * PAGE_SIZE;
 
+    const globalCrmIndexMap = new Map(_allCrmCustomers.map((c, i) => [c.id, 30001 + i]));
     const avColors = ['#2563EB', '#7C3AED', '#059669', '#D97706', '#DC2626', '#0891B2'];
 
     tbody.innerHTML = pageData.map((c, i) => {
       const gi = globalOffset + i;
+      const displayCode = String(globalCrmIndexMap.get(c.id) ?? (30001 + gi));
       const ini = (c.name || 'KH').split(' ').map(w => w[0]).filter(Boolean).slice(-2).join('').toUpperCase();
       let dateStr = '--';
       if (c.createdAt?.toDate) {
@@ -6878,7 +6880,7 @@ document.addEventListener('DOMContentLoaded', () => {
       ).join('');
       return `
         <tr>
-          <td><span style="font-family:monospace;font-size:0.78rem;font-weight:600;color:var(--crm-blue)">${c.code || '--'}</span></td>
+          <td><span style="font-family:monospace;font-size:0.78rem;font-weight:700;color:#6366F1;">${displayCode}</span></td>
           <td>
             <div style="display:flex;align-items:center;gap:0.65rem">
               <div style="width:32px;height:32px;border-radius:50%;background:${avColors[gi % avColors.length]};color:#fff;display:flex;align-items:center;justify-content:center;font-size:0.7rem;font-weight:700;flex-shrink:0">${ini}</div>
