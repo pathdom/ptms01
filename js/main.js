@@ -6666,25 +6666,43 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const journeyEl = getEl('crmJourneyTimeline');
     if (journeyEl) {
+      const crmSt = c.crmStatus || 'Khách Hàng Mới';
       const dStart = c.createdAt?.toDate ? c.createdAt.toDate() : new Date(Date.now() - (30 + seed % 90) * 86400000);
       const fmt = (d) => `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}/${d.getFullYear()}`;
-      const events = [
-        { title: 'Tiếp nhận hồ sơ', date: fmt(dStart), color: '#2563EB', bg: '#DBEAFE' },
-        { title: 'Tư vấn ban đầu', date: fmt(new Date(dStart.getTime() + 7 * 86400000)), color: '#7C3AED', bg: '#F3E8FF' },
-      ];
-      if (currentStageIdx >= 2) events.push({ title: 'Bắt đầu làm hồ sơ', date: fmt(new Date(dStart.getTime() + 14 * 86400000)), color: '#059669', bg: '#DCFCE7' });
-      if (currentStageIdx >= 3) events.push({ title: 'Phỏng vấn Visa', date: fmt(new Date(dStart.getTime() + 30 * 86400000)), color: '#D97706', bg: '#FEF3C7' });
-      if (currentStageIdx >= 4) events.push({ title: 'Trúng tuyển', date: fmt(new Date(dStart.getTime() + 45 * 86400000)), color: '#16A34A', bg: '#DCFCE7' });
-      if (currentStageIdx >= 5) events.push({ title: 'Xuất cảnh đi học', date: fmt(new Date(dStart.getTime() + 60 * 86400000)), color: '#2563EB', bg: '#DBEAFE' });
 
-      journeyEl.innerHTML = events.map(ev => `
-        <div class="crm-timeline-item">
-          <div class="crm-timeline-dot" style="background:${ev.bg};border:2px solid ${ev.color}"></div>
-          <div class="crm-timeline-content">
-            <div class="crm-timeline-title">${ev.title}</div>
-            <div class="crm-timeline-date">${ev.date}</div>
-          </div>
-        </div>`).join('');
+      // Milestones always shown; done set based on crmStatus
+      const doneMilestones = new Set([0, 1]); // Tiếp nhận + Tư vấn ban đầu = luôn done khi vào CRM
+      if (crmSt === 'Chốt Cọc') { doneMilestones.add(2); doneMilestones.add(3); doneMilestones.add(4); }
+
+      const milestones = [
+        { title: 'Tiếp nhận hồ sơ',    color: '#2563EB', bg: '#DBEAFE', days: 0 },
+        { title: 'Tư vấn ban đầu',      color: '#7C3AED', bg: '#F3E8FF', days: 7 },
+        { title: 'Bắt đầu làm hồ sơ',  color: '#059669', bg: '#DCFCE7', days: 14 },
+        { title: 'Phỏng vấn Visa',      color: '#D97706', bg: '#FEF3C7', days: 30 },
+        { title: 'Trúng tuyển',         color: '#16A34A', bg: '#DCFCE7', days: 45 },
+        { title: 'Xuất cảnh đi học',    color: '#2563EB', bg: '#DBEAFE', days: 60 },
+      ];
+
+      journeyEl.innerHTML = milestones.map((m, idx) => {
+        const done = doneMilestones.has(idx);
+        const dateStr = done ? fmt(new Date(dStart.getTime() + m.days * 86400000)) : 'Chưa hoàn thành';
+        const dotStyle = done
+          ? `background:${m.bg};border:2.5px solid ${m.color};`
+          : `background:#F3F4F6;border:2px dashed #D1D5DB;`;
+        const checkIcon = done
+          ? `<span style="position:absolute;top:-6px;right:-6px;width:14px;height:14px;border-radius:50%;background:${m.color};color:#fff;display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:700;">✓</span>`
+          : '';
+        return `
+          <div class="crm-timeline-item" style="${done ? '' : 'opacity:0.45'}">
+            <div class="crm-timeline-dot" style="${dotStyle}position:relative;">
+              ${checkIcon}
+            </div>
+            <div class="crm-timeline-content">
+              <div class="crm-timeline-title" style="${done ? '' : 'color:var(--text-muted)'}">${m.title}</div>
+              <div class="crm-timeline-date" style="${done ? '' : 'font-style:italic'}">${dateStr}</div>
+            </div>
+          </div>`;
+      }).join('');
     }
   };
 
