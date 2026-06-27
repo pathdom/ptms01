@@ -3222,51 +3222,35 @@
 
           <!-- Tiêu chí 1: Chuyên cần -->
           <div style="background:var(--bg-primary);border:1px solid var(--border-light);border-radius:12px;padding:1rem 1.2rem;">
-            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.75rem;">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;">
               <div>
                 <div style="font-weight:700;font-size:0.85rem;color:var(--text-main);">🕐 Chuyên cần</div>
-                <div style="font-size:0.7rem;color:var(--text-muted);margin-top:2px;">Vắng ≤ 0.5 ngày = đạt 100% · Trọng số 40%</div>
+                <div style="font-size:0.7rem;color:var(--text-muted);margin-top:2px;">Trọng số 40%</div>
               </div>
-              <div id="kpiAttScore" style="font-size:1.4rem;font-weight:800;color:#10B981;">--%</div>
+              <div id="kpiAttScore" style="font-size:1.5rem;font-weight:800;color:#10B981;">--</div>
             </div>
-            <div style="height:8px;background:#E5E7EB;border-radius:99px;overflow:hidden;">
-              <div id="kpiAttBar" style="height:100%;background:linear-gradient(90deg,#10B981,#34D399);border-radius:99px;width:0%;transition:width 0.8s ease;"></div>
+            <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:0.4rem;" id="kpiAttPicker">
+              <!-- JS rendered -->
             </div>
-            <div id="kpiAttDetail" style="font-size:0.72rem;color:var(--text-muted);margin-top:0.5rem;"></div>
+            <div style="margin-top:0.7rem;height:7px;background:#E5E7EB;border-radius:99px;overflow:hidden;">
+              <div id="kpiAttBar" style="height:100%;background:linear-gradient(90deg,#10B981,#34D399);border-radius:99px;width:0%;transition:width 0.6s ease;"></div>
+            </div>
           </div>
 
           <!-- Tiêu chí 2: Hoàn thành công việc -->
           <div style="background:var(--bg-primary);border:1px solid var(--border-light);border-radius:12px;padding:1rem 1.2rem;">
-            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.75rem;">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;">
               <div>
                 <div style="font-weight:700;font-size:0.85rem;color:var(--text-main);">✅ Hoàn thành công việc</div>
-                <div style="font-size:0.7rem;color:var(--text-muted);margin-top:2px;">Từ danh sách task của leader · Trọng số 60%</div>
+                <div style="font-size:0.7rem;color:var(--text-muted);margin-top:2px;">Trọng số 60%</div>
               </div>
-              <div id="kpiTaskScore" style="font-size:1.4rem;font-weight:800;color:#6366F1;">--%</div>
+              <div id="kpiTaskScore" style="font-size:1.5rem;font-weight:800;color:#6366F1;">--</div>
             </div>
-            <div style="height:8px;background:#E5E7EB;border-radius:99px;overflow:hidden;">
-              <div id="kpiTaskBar" style="height:100%;background:linear-gradient(90deg,#6366F1,#818CF8);border-radius:99px;width:0%;transition:width 0.8s ease;"></div>
+            <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:0.4rem;" id="kpiTaskPicker">
+              <!-- JS rendered -->
             </div>
-
-            <!-- Task list -->
-            <div id="kpiTaskList" style="margin-top:0.85rem;display:flex;flex-direction:column;gap:0.4rem;max-height:180px;overflow-y:auto;">
-              <!-- JS populated -->
-            </div>
-            <button type="button" id="btnAddKpiTask"
-              style="margin-top:0.7rem;display:flex;align-items:center;gap:0.3rem;font-size:0.72rem;
-                     color:#6366F1;background:rgba(99,102,241,0.08);border:1px dashed #A5B4FC;
-                     border-radius:8px;padding:0.35rem 0.75rem;cursor:pointer;width:100%;justify-content:center;">
-              <svg viewBox="0 0 24 24" style="width:12px;height:12px;fill:currentColor;"><path d="M19,13H13V19H11V13H5V11H11V5H13V11H19V13Z"/></svg>
-              Thêm đầu việc
-            </button>
-            <div id="kpiNewTaskForm" style="display:none;margin-top:0.5rem;display:none;">
-              <div style="display:flex;gap:0.4rem;">
-                <input type="text" id="kpiNewTaskInput" placeholder="Tên đầu việc..."
-                  style="flex:1;padding:0.4rem 0.65rem;border:1px solid var(--border);border-radius:8px;
-                         font-size:0.8rem;font-family:inherit;outline:none;background:var(--bg-card);" />
-                <button type="button" id="btnSaveKpiTask"
-                  style="padding:0.4rem 0.8rem;background:#6366F1;color:#fff;border:none;border-radius:8px;font-size:0.78rem;cursor:pointer;">Thêm</button>
-              </div>
+            <div style="margin-top:0.7rem;height:7px;background:#E5E7EB;border-radius:99px;overflow:hidden;">
+              <div id="kpiTaskBar" style="height:100%;background:linear-gradient(90deg,#6366F1,#818CF8);border-radius:99px;width:0%;transition:width 0.6s ease;"></div>
             </div>
           </div>
 
