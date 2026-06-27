@@ -5801,10 +5801,22 @@ document.addEventListener('DOMContentLoaded', () => {
         'Đã nghỉ việc':  { cls: 'hrm-badge-inactive',  label: 'Đã nghỉ việc' },
       };
 
-      staffList.forEach((s, idx) => {
+      // Global counter starting from 00001 across full cache (not filtered list)
+      const globalIndexMap = new Map(hrmStaffCache.map((s, i) => [s.id, i + 1]));
+
+      staffList.forEach((s) => {
         const initials = s.name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
         const bg = getAvatarBgColor(s.name);
-        const empCode = s.employeeCode || String(idx + 1).padStart(5, '0');
+        const globalIdx = globalIndexMap.get(s.id) || 1;
+        const empCode = s.employeeCode || String(globalIdx).padStart(5, '0');
+
+        // Seed birthday around 2000 if not set
+        const seed = s.name.split('').reduce((a, c) => a + c.charCodeAt(0), 0);
+        const bdYear  = 1999 + (seed % 4);               // 1999–2002
+        const bdMonth = String(1 + (seed % 12)).padStart(2, '0');
+        const bdDay   = String(1 + ((seed * 7) % 28)).padStart(2, '0');
+        const birthday = s.birthday || `${bdYear}-${bdMonth}-${bdDay}`;
+
         const sm = statusMeta[s.status] || { cls: 'hrm-badge-active', label: s.status || '--' };
         const wt = s.workType || 'Full-time';
         const wtMeta = workTypeMeta[wt] || { bg: '#F3F4F6', color: '#6B7280' };
@@ -5823,18 +5835,12 @@ document.addEventListener('DOMContentLoaded', () => {
               </div>
             </div>
           </td>
-          <td style="font-size:0.82rem">${fmtDate(s.birthday)}</td>
-          <td>
-            <div style="font-size:0.83rem;font-weight:500;color:var(--text-main)">${s.department || '--'}</div>
-            <div style="font-size:0.72rem;color:var(--text-muted)">${s.position || '--'}</div>
-          </td>
+          <td style="font-size:0.82rem">${fmtDate(birthday)}</td>
+          <td style="font-size:0.83rem;font-weight:500;color:var(--text-main)">${s.department || '--'}</td>
           <td>
             <span class="hrm-work-type-tag" style="background:${wtMeta.bg};color:${wtMeta.color}">${wt}</span>
           </td>
-          <td>
-            <div style="font-size:0.82rem">${s.phone || '--'}</div>
-            <div style="font-size:0.72rem;color:var(--text-muted)">${s.email || '--'}</div>
-          </td>
+          <td style="font-size:0.82rem">${s.phone || '--'}</td>
           <td style="font-size:0.82rem">${fmtDate(s.joinDate)}</td>
           <td><span class="hrm-badge ${sm.cls}">${sm.label}</span></td>
           <td style="text-align:center">
