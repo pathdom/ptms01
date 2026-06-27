@@ -7212,10 +7212,26 @@ document.addEventListener('DOMContentLoaded', () => {
             <div style="display:flex;align-items:center;gap:0.4rem;">
               <input type="number" class="src-revenue-input" data-id="${c.id}"
                 value="${rev}" min="0" step="1000" placeholder="Nhập doanh thu..."
-                style="width:140px;padding:0.35rem 0.6rem;border:1px solid var(--border);border-radius:8px;
+                style="width:120px;padding:0.35rem 0.6rem;border:1px solid var(--border);border-radius:8px;
                        background:var(--bg-primary);color:var(--text-main);font-size:0.82rem;
                        font-family:inherit;text-align:right;" />
               <span style="font-size:0.72rem;color:var(--text-muted);white-space:nowrap;">đ</span>
+            </div>
+          </td>
+          <td style="text-align:center;">
+            <div style="display:flex;gap:0.3rem;justify-content:center;">
+              <button class="src-view-detail-btn" data-idx="${i}"
+                style="padding:5px 7px;background:#EEF2FF;color:#6366F1;border:none;border-radius:7px;cursor:pointer;" title="Chi tiết">
+                <svg viewBox="0 0 24 24" style="width:14px;height:14px;fill:currentColor;"><path d="M12,9A3,3 0 0,0 9,12A3,3 0 0,0 12,15A3,3 0 0,0 15,12A3,3 0 0,0 12,9M12,4.5C7,4.5 2.73,7.61 1,12C2.73,16.39 7,19.5 12,19.5C17,19.5 21.27,16.39 23,12C21.27,7.61 17,4.5 12,4.5Z"/></svg>
+              </button>
+              <button class="src-edit-btn" data-idx="${i}"
+                style="padding:5px 7px;background:#F3F4F6;color:var(--text-main);border:none;border-radius:7px;cursor:pointer;" title="Sửa">
+                <svg viewBox="0 0 24 24" style="width:14px;height:14px;fill:currentColor;"><path d="M20.71,7.04C21.1,6.65 21.1,6 20.71,5.63L18.37,3.29C18,2.9 17.35,2.9 16.96,3.29L15.12,5.12L18.87,8.87M3,17.25V21H6.75L17.81,9.93L14.07,6.18L3,17.25Z"/></svg>
+              </button>
+              <button class="src-delete-btn" data-id="${c.id}"
+                style="padding:5px 7px;background:#FEF2F2;color:#EF4444;border:none;border-radius:7px;cursor:pointer;" title="Xóa">
+                <svg viewBox="0 0 24 24" style="width:14px;height:14px;fill:currentColor;"><path d="M19,4H15.5L14.5,3H9.5L8.5,4H5V6H19M6,19A2,2 0 0,0 8,21H16A2,2 0 0,0 18,19V7H6V19Z"/></svg>
+              </button>
             </div>
           </td>
         </tr>`;
@@ -7227,9 +7243,192 @@ document.addEventListener('DOMContentLoaded', () => {
       inp.addEventListener('keydown', e => { if (e.key === 'Enter') { save(); inp.blur(); } });
     });
 
+    tbody.querySelectorAll('.src-view-detail-btn').forEach(btn => {
+      btn.addEventListener('click', () => openSourceDetail(pageData[parseInt(btn.dataset.idx)]));
+    });
+
+    tbody.querySelectorAll('.src-edit-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const c = pageData[parseInt(btn.dataset.idx)];
+        if (!c) return;
+        ['srcName','srcEmail','srcPhone','srcNotes'].forEach(id => {
+          const el = document.getElementById(id);
+          if (el) el.value = c[id.replace('src','').toLowerCase()] || '';
+        });
+        document.getElementById('srcName').value = c.name || '';
+        document.getElementById('srcEmail').value = c.email || '';
+        document.getElementById('srcPhone').value = c.phone || '';
+        document.getElementById('srcNotes').value = c.notes || '';
+        const sel = document.getElementById('srcCountry');
+        if (sel) sel.value = c.country || 'Nhật';
+        document.getElementById('sourceStudentModal').style.display = 'flex';
+        document.getElementById('btnSubmitSourceStudent').dataset.editId = c.id;
+      });
+    });
+
+    tbody.querySelectorAll('.src-delete-btn').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        if (!confirm('Xóa học viên nguồn này?')) return;
+        try {
+          await db.collection('students').doc(btn.dataset.id).delete();
+          _allCrmCustomers = _allCrmCustomers.filter(x => x.id !== btn.dataset.id);
+          renderCrmSource(true);
+          showToast('Đã xóa', 'success');
+        } catch(e) { showToast('Lỗi: ' + e.message, 'error'); }
+      });
+    });
+
     renderPagination('crmSourcePagination', crmSourcePage, filtered.length, (p) => {
       crmSourcePage = p;
       renderCrmSource();
+    });
+  };
+
+  // ── Source Student Detail Modal ────────────────────────────────────────────
+  let _currentSrcStudent = null;
+
+  const fmtVND = (n) => Number(n || 0).toLocaleString('vi-VN') + ' đ';
+  const padZ = (n) => String(n).padStart(2, '0');
+
+  const loadRevEntries = async (studentId) => {
+    const list = document.getElementById('revEntryList');
+    if (!list) return;
+    list.innerHTML = `<div style="text-align:center;padding:1.5rem;color:var(--text-muted);font-size:0.8rem;">Đang tải...</div>`;
+    try {
+      const snap = await db.collection('students').doc(studentId)
+        .collection('revenueEntries').orderBy('date', 'desc').get();
+      if (snap.empty) {
+        list.innerHTML = `<div style="text-align:center;padding:2rem;color:var(--text-muted);font-size:0.8rem;font-style:italic;">Chưa có đợt doanh thu nào</div>`;
+        document.getElementById('srcDetailTotalRevenue').textContent = '0 đ';
+        document.getElementById('srcDetailEntryCount').textContent = '0 đợt thanh toán';
+        return;
+      }
+      let total = 0;
+      const rows = snap.docs.map((d, i) => {
+        const e = d.data();
+        total += Number(e.amount || 0);
+        return { id: d.id, ...e };
+      });
+      document.getElementById('srcDetailTotalRevenue').textContent = fmtVND(total);
+      document.getElementById('srcDetailEntryCount').textContent = `${rows.length} đợt thanh toán`;
+
+      list.innerHTML = rows.map((e, i) => `
+        <div style="display:flex;align-items:center;gap:0.75rem;padding:0.75rem 0;
+                    border-bottom:1px solid var(--border-light);${i === rows.length-1 ? 'border-bottom:none;' : ''}">
+          <div style="width:36px;height:36px;border-radius:50%;background:#EEF2FF;color:#6366F1;
+                      display:flex;align-items:center;justify-content:center;font-size:0.7rem;font-weight:700;flex-shrink:0;">
+            ${padZ(i + 1)}
+          </div>
+          <div style="flex:1;min-width:0;">
+            <div style="font-size:0.82rem;font-weight:600;color:var(--text-main);">${fmtVND(e.amount)}</div>
+            <div style="font-size:0.72rem;color:var(--text-muted);margin-top:1px;">${e.note || 'Không có ghi chú'} · ${e.date || '--'}</div>
+          </div>
+          <button class="rev-delete-btn" data-entryid="${e.id}"
+            style="padding:4px 6px;background:#FEF2F2;color:#EF4444;border:none;border-radius:6px;cursor:pointer;flex-shrink:0;">
+            <svg viewBox="0 0 24 24" style="width:13px;height:13px;fill:currentColor;"><path d="M19,4H15.5L14.5,3H9.5L8.5,4H5V6H19M6,19A2,2 0 0,0 8,21H16A2,2 0 0,0 18,19V7H6V19Z"/></svg>
+          </button>
+        </div>`).join('');
+
+      list.querySelectorAll('.rev-delete-btn').forEach(btn => {
+        btn.addEventListener('click', async () => {
+          if (!confirm('Xóa đợt doanh thu này?')) return;
+          await db.collection('students').doc(_currentSrcStudent.id)
+            .collection('revenueEntries').doc(btn.dataset.entryid).delete();
+          loadRevEntries(_currentSrcStudent.id);
+        });
+      });
+    } catch(e) {
+      list.innerHTML = `<div style="color:#EF4444;font-size:0.8rem;padding:1rem;">Lỗi tải dữ liệu</div>`;
+    }
+  };
+
+  const openSourceDetail = (student) => {
+    if (!student) return;
+    _currentSrcStudent = student;
+    const modal = document.getElementById('sourceDetailModal');
+    if (!modal) return;
+
+    const avColors = ['#2563EB','#7C3AED','#059669','#D97706','#DC2626','#0891B2'];
+    const avSeed = (student.name || '').split('').reduce((a,c) => a + c.charCodeAt(0), 0);
+    const ini = (student.name || 'HV').split(' ').map(w => w[0]).filter(Boolean).slice(-2).join('').toUpperCase();
+    const av = document.getElementById('srcDetailAvatar');
+    if (av) { av.textContent = ini; av.style.background = avColors[avSeed % avColors.length]; }
+
+    const setText = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val || '--'; };
+    setText('srcDetailName', student.name);
+    setText('srcDetailCode', student.hnvCode || 'HNV----');
+    setText('srcDetailEmail', student.email);
+    setText('srcDetailPhone', student.phone);
+    setText('srcDetailCountry', student.country);
+    setText('srcDetailNotes', student.notes || 'Chưa có ghi chú');
+
+    let dateStr = '--';
+    if (student.createdAt?.toDate) {
+      const d = student.createdAt.toDate();
+      dateStr = `${padZ(d.getDate())}/${padZ(d.getMonth()+1)}/${d.getFullYear()}`;
+    }
+    setText('srcDetailDate', dateStr);
+
+    document.getElementById('revEntryForm').style.display = 'none';
+    modal.style.display = 'flex';
+    loadRevEntries(student.id);
+  };
+
+  const setupSourceDetailModal = () => {
+    const closeModal = () => {
+      const m = document.getElementById('sourceDetailModal');
+      if (m) m.style.display = 'none';
+      _currentSrcStudent = null;
+    };
+    document.getElementById('btnCloseSourceDetail')?.addEventListener('click', closeModal);
+    document.getElementById('btnCloseSourceDetailFooter')?.addEventListener('click', closeModal);
+
+    document.getElementById('btnAddRevEntry')?.addEventListener('click', () => {
+      const form = document.getElementById('revEntryForm');
+      if (!form) return;
+      form.style.display = form.style.display === 'none' ? 'block' : 'none';
+      if (form.style.display === 'block') {
+        const today = new Date();
+        const d = document.getElementById('revEntryDate');
+        if (d) d.value = `${today.getFullYear()}-${padZ(today.getMonth()+1)}-${padZ(today.getDate())}`;
+        document.getElementById('revEntryAmount').value = '';
+        document.getElementById('revEntryNote').value = '';
+      }
+    });
+
+    document.getElementById('btnCancelRevEntry')?.addEventListener('click', () => {
+      document.getElementById('revEntryForm').style.display = 'none';
+    });
+
+    document.getElementById('btnSaveRevEntry')?.addEventListener('click', async () => {
+      const amount = parseFloat(document.getElementById('revEntryAmount')?.value || 0);
+      const date = document.getElementById('revEntryDate')?.value;
+      const note = document.getElementById('revEntryNote')?.value.trim();
+      if (!amount || !date) { showToast('Vui lòng nhập số tiền và ngày', 'error'); return; }
+      if (!_currentSrcStudent?.id) return;
+      try {
+        await db.collection('students').doc(_currentSrcStudent.id)
+          .collection('revenueEntries').add({
+            amount, date, note,
+            createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+          });
+        document.getElementById('revEntryForm').style.display = 'none';
+        loadRevEntries(_currentSrcStudent.id);
+        showToast('Đã thêm đợt doanh thu', 'success');
+      } catch(e) { showToast('Lỗi: ' + e.message, 'error'); }
+    });
+
+    document.getElementById('btnEditSourceStudent')?.addEventListener('click', () => {
+      if (!_currentSrcStudent) return;
+      document.getElementById('srcName').value = _currentSrcStudent.name || '';
+      document.getElementById('srcEmail').value = _currentSrcStudent.email || '';
+      document.getElementById('srcPhone').value = _currentSrcStudent.phone || '';
+      document.getElementById('srcNotes').value = _currentSrcStudent.notes || '';
+      const sel = document.getElementById('srcCountry');
+      if (sel) sel.value = _currentSrcStudent.country || 'Nhật';
+      document.getElementById('btnSubmitSourceStudent').dataset.editId = _currentSrcStudent.id;
+      document.getElementById('sourceDetailModal').style.display = 'none';
+      document.getElementById('sourceStudentModal').style.display = 'flex';
     });
   };
 
@@ -8578,26 +8777,36 @@ document.addEventListener('DOMContentLoaded', () => {
       document.getElementById('btnCancelSourceModal')?.addEventListener('click', closeSourceModal);
 
       document.getElementById('btnSubmitSourceStudent')?.addEventListener('click', async () => {
+        const btn = document.getElementById('btnSubmitSourceStudent');
+        const editId = btn?.dataset.editId || '';
         const name = document.getElementById('srcName')?.value.trim();
         if (!name) { showToast('Vui lòng nhập họ tên', 'error'); return; }
-        const nextCode = 'HNV' + String(_allCrmCustomers.length + 1).padStart(4, '0');
-        const data = {
+        const payload = {
           name,
           email: document.getElementById('srcEmail')?.value.trim() || '',
           phone: document.getElementById('srcPhone')?.value.trim() || '',
           country: document.getElementById('srcCountry')?.value || 'Nhật',
           notes: document.getElementById('srcNotes')?.value.trim() || '',
-          code: nextCode,
-          isSourceStudent: true,
-          status: 'Đang học',
-          createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+          updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
         };
         try {
-          await db.collection('students').add(data);
+          if (editId) {
+            await db.collection('students').doc(editId).update(payload);
+            if (btn) btn.dataset.editId = '';
+            showToast('Đã cập nhật học viên nguồn', 'success');
+          } else {
+            payload.code = 'HNV' + String(_allCrmCustomers.length + 1).padStart(4, '0');
+            payload.isSourceStudent = true;
+            payload.status = 'Đang học';
+            payload.createdAt = firebase.firestore.FieldValue.serverTimestamp();
+            await db.collection('students').add(payload);
+            showToast('Đã thêm học viên nguồn', 'success');
+          }
           closeSourceModal();
-          showToast('Đã thêm học viên nguồn', 'success');
         } catch (e) { showToast('Lỗi: ' + e.message, 'error'); }
       });
+
+      setupSourceDetailModal();
 
       // Xuất Excel học viên nguồn
       document.getElementById('btnExportSourceExcel')?.addEventListener('click', () => {
