@@ -7025,11 +7025,9 @@ document.addEventListener('DOMContentLoaded', () => {
         const checkIcon = done
           ? `<span style="position:absolute;top:-6px;right:-6px;width:14px;height:14px;border-radius:50%;background:${m.color};color:#fff;display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:700;">✓</span>`
           : '';
-        const dateStr = current
-          ? `<span style="font-size:0.68rem;font-weight:700;color:${m.color};background:${m.bg};padding:1px 7px;border-radius:99px;">Đang ở đây</span>`
-          : done
-            ? fmt(new Date(dStart.getTime() + idx * 7 * 86400000))
-            : '<span style="font-style:italic;">Chưa đạt</span>';
+        const dateStr = done
+          ? fmt(new Date(dStart.getTime() + idx * 7 * 86400000))
+          : '<span style="font-style:italic;">Chưa đạt</span>';
         return `<div class="crm-timeline-item" style="${done ? '' : 'opacity:0.38'}">
           <div class="crm-timeline-dot" style="${dotStyle}position:relative;${current ? `box-shadow:0 0 0 4px ${m.color}28;` : ''}">${checkIcon}</div>
           <div class="crm-timeline-content">
