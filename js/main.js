@@ -2914,7 +2914,19 @@ document.addEventListener('DOMContentLoaded', () => {
     btnOpenAddStudentModal.addEventListener("click", async () => {
       document.getElementById("studentModalTitle").textContent = "+ THÊM HỌC VIÊN MỚI";
       document.getElementById("studentEditId").value = "";
+      document.getElementById("studentFormMode").value = "student";
       studentForm.reset();
+      // Restore student status options
+      const statusSel = document.getElementById('studentStatus');
+      statusSel.innerHTML = `
+        <option value="Đang học">Đang học</option>
+        <option value="Chờ phỏng vấn">Chờ phỏng vấn</option>
+        <option value="Đã trúng tuyển">Đã trúng tuyển</option>
+        <option value="Đang làm hồ sơ">Đang làm hồ sơ</option>`;
+      // Show tháng học
+      const monthRow = document.getElementById('studentLearningMonthRow');
+      if (monthRow) monthRow.style.display = '';
+      document.getElementById('studentLearningMonth').setAttribute('required', '');
       await populateAdvisorSelect();
       studentModal.style.display = "flex";
     });
@@ -3035,6 +3047,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const learningMonth = document.getElementById("studentLearningMonth").value;
       const notes = document.getElementById("studentNotes").value.trim();
       const advisor = document.getElementById("studentAdvisor")?.value || '';
+      const formMode = document.getElementById("studentFormMode")?.value || 'student';
 
       if (!name || !code || !email || !phone) {
         showToast("Vui lòng nhập đầy đủ các trường thông tin có dấu *!", "error");
@@ -3047,12 +3060,17 @@ document.addEventListener('DOMContentLoaded', () => {
         email,
         phone,
         country,
-        status,
-        learningMonth,
         notes,
         advisor,
         updatedAt: firebase.firestore.FieldValue.serverTimestamp()
       };
+      if (formMode === 'customer') {
+        payload.crmStatus = status;
+        payload.status = 'Đang học';
+      } else {
+        payload.status = status;
+        payload.learningMonth = learningMonth;
+      }
 
       try {
         if (editId) {
@@ -7429,11 +7447,12 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     tbody.querySelectorAll('.btn-edit-crm').forEach(btn => {
-      btn.addEventListener('click', () => {
+      btn.addEventListener('click', async () => {
         const c = pageData[parseInt(btn.dataset.fidx)];
         if (!c) return;
         const modal = document.getElementById('studentModal');
         if (!modal) return;
+        document.getElementById('studentFormMode').value = 'customer';
         document.getElementById('studentEditId').value = c.id || '';
         document.getElementById('studentModalTitle').textContent = 'CHỈNH SỬA KHÁCH HÀNG';
         document.getElementById('studentName').value = c.name || '';
@@ -7441,9 +7460,14 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('studentEmail').value = c.email || '';
         document.getElementById('studentPhone').value = c.phone || '';
         document.getElementById('studentCountry').value = c.country || 'Nhật';
-        document.getElementById('studentStatus').value = c.status || 'Đang học';
-        document.getElementById('studentLearningMonth').value = c.learningMonth || '';
         document.getElementById('studentNotes').value = c.notes || '';
+        const statusSel = document.getElementById('studentStatus');
+        statusSel.innerHTML = SOURCE_STATUSES.map(s => `<option value="${s}">${s}</option>`).join('');
+        statusSel.value = c.crmStatus || 'Khách Hàng Mới';
+        const monthRow = document.getElementById('studentLearningMonthRow');
+        if (monthRow) monthRow.style.display = 'none';
+        document.getElementById('studentLearningMonth').removeAttribute('required');
+        await populateAdvisorSelect(c.advisor || '');
         modal.style.display = 'flex';
       });
     });
@@ -9130,12 +9154,13 @@ document.addEventListener('DOMContentLoaded', () => {
       setupDocUpload();
       setupCrmNotes();
 
-      document.getElementById('btnEditCrmCustomer')?.addEventListener('click', () => {
+      document.getElementById('btnEditCrmCustomer')?.addEventListener('click', async () => {
         if (!_currentCrmCustomer) return;
         closeCrmProfile();
         const c = _currentCrmCustomer;
         const modal = document.getElementById('studentModal');
         if (!modal) return;
+        document.getElementById('studentFormMode').value = 'customer';
         document.getElementById('studentEditId').value = c.id || '';
         document.getElementById('studentModalTitle').textContent = 'CHỈNH SỬA KHÁCH HÀNG';
         document.getElementById('studentName').value = c.name || '';
@@ -9149,19 +9174,28 @@ document.addEventListener('DOMContentLoaded', () => {
         modal.style.display = 'flex';
       });
 
-      document.getElementById('btnAddCrmCustomer')?.addEventListener('click', () => {
+      document.getElementById('btnAddCrmCustomer')?.addEventListener('click', async () => {
         const modal = document.getElementById('studentModal');
         if (!modal) return;
         document.getElementById('studentEditId').value = '';
-        document.getElementById('studentModalTitle').textContent = 'THÊM HỌC VIÊN MỚI';
+        document.getElementById('studentFormMode').value = 'customer';
+        document.getElementById('studentModalTitle').textContent = 'THÊM KHÁCH HÀNG MỚI';
         document.getElementById('studentName').value = '';
         document.getElementById('studentCode').value = '';
         document.getElementById('studentEmail').value = '';
         document.getElementById('studentPhone').value = '';
         document.getElementById('studentCountry').value = 'Nhật';
-        document.getElementById('studentStatus').value = 'Đang học';
-        document.getElementById('studentLearningMonth').value = '';
         document.getElementById('studentNotes').value = '';
+        // CRM statuses
+        const statusSel = document.getElementById('studentStatus');
+        statusSel.innerHTML = SOURCE_STATUSES.map(s => `<option value="${s}">${s}</option>`).join('');
+        statusSel.value = 'Khách Hàng Mới';
+        // Hide tháng học
+        const monthRow = document.getElementById('studentLearningMonthRow');
+        if (monthRow) monthRow.style.display = 'none';
+        document.getElementById('studentLearningMonth').removeAttribute('required');
+        // Load advisors
+        await populateAdvisorSelect();
         modal.style.display = 'flex';
       });
 
