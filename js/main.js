@@ -6699,21 +6699,60 @@ document.addEventListener('DOMContentLoaded', () => {
 
   document.getElementById('btnAddPdMember')?.addEventListener('click', () => {
     const f = document.getElementById('pdAddMemberForm');
-    f.style.display = f.style.display === 'none' ? 'block' : 'none';
+    if (f.style.display !== 'none') { f.style.display = 'none'; return; }
+    // Render staff picker
+    const pickerEl = document.getElementById('pdStaffPickerList');
+    if (pickerEl) {
+      const staffList = hrmStaffCache.length ? hrmStaffCache : [];
+      if (!staffList.length) {
+        pickerEl.innerHTML = '<div style="font-size:0.78rem;color:var(--text-muted);font-style:italic;padding:0.5rem;">Chưa có nhân viên nào trong hệ thống.</div>';
+      } else {
+        pickerEl.innerHTML = staffList.map(s => {
+          const ini = (s.name || '?').split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase();
+          const bg = getAvatarBgColor(s.name || 'x');
+          return `<label class="pd-staff-pick-row" style="display:flex;align-items:center;gap:0.65rem;padding:0.45rem 0.6rem;border-radius:8px;cursor:pointer;border:2px solid transparent;transition:all .12s;" data-staff-id="${s.id}" data-name="${s.name}">
+            <input type="radio" name="pdStaffPick" value="${s.id}" style="display:none;" />
+            <div style="width:30px;height:30px;border-radius:50%;background:${bg};color:#fff;display:flex;align-items:center;justify-content:center;font-size:0.7rem;font-weight:700;flex-shrink:0;">${ini}</div>
+            <div style="flex:1;min-width:0;">
+              <div style="font-size:0.82rem;font-weight:600;color:var(--text-main);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${s.name || '--'}</div>
+              <div style="font-size:0.68rem;color:var(--text-muted);">${s.position || s.department || ''}</div>
+            </div>
+          </label>`;
+        }).join('');
+
+        pickerEl.querySelectorAll('.pd-staff-pick-row').forEach(row => {
+          row.addEventListener('click', () => {
+            pickerEl.querySelectorAll('.pd-staff-pick-row').forEach(r => {
+              r.style.borderColor = 'transparent';
+              r.style.background = 'transparent';
+            });
+            row.style.borderColor = '#2563EB';
+            row.style.background = '#DBEAFE';
+            document.getElementById('pdMemberName').value = row.dataset.name;
+            document.getElementById('pdMemberStaffId').value = row.dataset.staffId;
+          });
+        });
+      }
+    }
+    document.getElementById('pdMemberRole').value = '';
+    document.getElementById('pdMemberName').value = '';
+    document.getElementById('pdMemberStaffId').value = '';
+    f.style.display = 'block';
   });
   document.getElementById('btnCancelPdMember')?.addEventListener('click', () => {
     document.getElementById('pdAddMemberForm').style.display = 'none';
   });
   document.getElementById('btnSavePdMember')?.addEventListener('click', async () => {
     const name = document.getElementById('pdMemberName')?.value.trim();
-    if (!name || !_pdCurrentProjectId) return;
+    const staffId = document.getElementById('pdMemberStaffId')?.value.trim();
+    if (!name) { showToast('Vui lòng chọn một thành viên từ danh sách', 'error'); return; }
+    if (!_pdCurrentProjectId) return;
     const role = document.getElementById('pdMemberRole')?.value.trim();
     try {
       await db.collection('hrm_projects').doc(_pdCurrentProjectId).collection('members').add({
-        name, role, rating: 0, evaluation: '', createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        name, staffId: staffId || null, role, rating: 0, evaluation: '',
+        createdAt: firebase.firestore.FieldValue.serverTimestamp()
       });
-      document.getElementById('pdMemberName').value = '';
-      document.getElementById('pdMemberRole').value = '';
       document.getElementById('pdAddMemberForm').style.display = 'none';
       loadPdMembers(_pdCurrentProjectId);
       showToast('Đã thêm thành viên!', 'success');

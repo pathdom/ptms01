@@ -6982,21 +6982,19 @@
               <h4 style="font-size:0.72rem;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--text-muted);margin:0;">Thành viên &amp; Đánh giá</h4>
               <button id="btnAddPdMember" style="padding:0.38rem 0.9rem;background:#2563EB;color:#fff;border:none;border-radius:8px;font-size:0.73rem;font-weight:600;cursor:pointer;transition:opacity .2s;">+ Thêm thành viên</button>
             </div>
-            <!-- Add member inline form -->
+            <!-- Add member — staff picker dropdown -->
             <div id="pdAddMemberForm" style="display:none;background:#EFF6FF;border-radius:10px;padding:1rem;margin-bottom:1rem;border:1px solid #BFDBFE;">
-              <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.7rem;margin-bottom:0.7rem;">
-                <div>
-                  <label style="font-size:0.7rem;color:var(--text-muted);display:block;margin-bottom:3px;font-weight:500;">Tên thành viên *</label>
-                  <input id="pdMemberName" type="text" placeholder="Họ và tên" style="width:100%;padding:0.4rem 0.65rem;border:1px solid #CBD5E1;border-radius:7px;font-size:0.8rem;box-sizing:border-box;" />
-                </div>
-                <div>
-                  <label style="font-size:0.7rem;color:var(--text-muted);display:block;margin-bottom:3px;font-weight:500;">Vai trò</label>
-                  <input id="pdMemberRole" type="text" placeholder="Leader, Designer..." style="width:100%;padding:0.4rem 0.65rem;border:1px solid #CBD5E1;border-radius:7px;font-size:0.8rem;box-sizing:border-box;" />
-                </div>
+              <div style="font-size:0.7rem;color:var(--text-muted);font-weight:600;margin-bottom:0.5rem;letter-spacing:.5px;">CHỌN THÀNH VIÊN</div>
+              <div id="pdStaffPickerList" style="display:flex;flex-direction:column;gap:0.35rem;max-height:220px;overflow-y:auto;margin-bottom:0.75rem;"></div>
+              <div style="margin-bottom:0.75rem;">
+                <label style="font-size:0.7rem;color:var(--text-muted);display:block;margin-bottom:3px;font-weight:500;">Vai trò trong dự án</label>
+                <input id="pdMemberRole" type="text" placeholder="Leader, Designer, Developer..." style="width:100%;padding:0.4rem 0.65rem;border:1px solid #CBD5E1;border-radius:7px;font-size:0.8rem;box-sizing:border-box;" />
               </div>
+              <input type="hidden" id="pdMemberName" />
+              <input type="hidden" id="pdMemberStaffId" />
               <div style="display:flex;justify-content:flex-end;gap:0.5rem;">
                 <button id="btnCancelPdMember" type="button" style="padding:0.38rem 0.85rem;border:1px solid #CBD5E1;background:#fff;border-radius:7px;font-size:0.75rem;cursor:pointer;">Hủy</button>
-                <button id="btnSavePdMember" type="button" style="padding:0.38rem 0.85rem;background:#2563EB;color:#fff;border:none;border-radius:7px;font-size:0.75rem;font-weight:600;cursor:pointer;">Lưu thành viên</button>
+                <button id="btnSavePdMember" type="button" style="padding:0.38rem 0.85rem;background:#2563EB;color:#fff;border:none;border-radius:7px;font-size:0.75rem;font-weight:600;cursor:pointer;">Thêm vào dự án</button>
               </div>
             </div>
             <div id="pdMembersList"></div>
