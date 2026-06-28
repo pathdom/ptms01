@@ -7000,31 +7000,41 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     const allStages = ['Tiếp nhận', 'Tư vấn sơ bộ', 'Đang làm hồ sơ', 'Chờ phỏng vấn', 'Đã trúng tuyển', 'Đang học'];
+    const CRM_JOURNEY = [
+      { status: 'Khách Hàng Mới', title: 'Khách Hàng Mới', color: '#6366F1', bg: '#EEF2FF' },
+      { status: 'Tư Vấn L1',      title: 'Tư Vấn Lần 1',   color: '#0EA5E9', bg: '#E0F2FE' },
+      { status: 'Tư Vấn L2',      title: 'Tư Vấn Lần 2',   color: '#D97706', bg: '#FEF3C7' },
+      { status: 'Tư Vấn L3',      title: 'Tư Vấn Lần 3',   color: '#EA580C', bg: '#FFF7ED' },
+      { status: 'Có Nhu Cầu',     title: 'Có Nhu Cầu',     color: '#10B981', bg: '#ECFDF5' },
+      { status: 'Chốt Cọc',       title: 'Chốt Cọc',       color: '#DC2626', bg: '#FEF2F2' },
+    ];
+
     const renderJourneyInto = (el, c, seed) => {
       if (!el) return;
       const crmSt = c.crmStatus || 'Khách Hàng Mới';
+      const currentIdx = CRM_JOURNEY.findIndex(m => m.status === crmSt);
       const dStart = c.createdAt?.toDate ? c.createdAt.toDate() : new Date(Date.now() - (30 + seed % 90) * 86400000);
       const fmt = d => `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}/${d.getFullYear()}`;
-      const doneMilestones = new Set([0, 1]);
-      if (crmSt === 'Chốt Cọc') { doneMilestones.add(2); doneMilestones.add(3); doneMilestones.add(4); }
-      const milestones = [
-        { title: 'Tiếp nhận hồ sơ',   color: '#2563EB', bg: '#DBEAFE', days: 0 },
-        { title: 'Tư vấn ban đầu',     color: '#7C3AED', bg: '#F3E8FF', days: 7 },
-        { title: 'Bắt đầu làm hồ sơ', color: '#059669', bg: '#DCFCE7', days: 14 },
-        { title: 'Phỏng vấn Visa',     color: '#D97706', bg: '#FEF3C7', days: 30 },
-        { title: 'Trúng tuyển',        color: '#16A34A', bg: '#DCFCE7', days: 45 },
-        { title: 'Xuất cảnh đi học',   color: '#2563EB', bg: '#DBEAFE', days: 60 },
-      ];
-      el.innerHTML = milestones.map((m, idx) => {
-        const done = doneMilestones.has(idx);
-        const dateStr = done ? fmt(new Date(dStart.getTime() + m.days * 86400000)) : 'Chưa hoàn thành';
-        const dotStyle = done ? `background:${m.bg};border:2.5px solid ${m.color};` : `background:#F3F4F6;border:2px dashed #D1D5DB;`;
-        const checkIcon = done ? `<span style="position:absolute;top:-6px;right:-6px;width:14px;height:14px;border-radius:50%;background:${m.color};color:#fff;display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:700;">✓</span>` : '';
-        return `<div class="crm-timeline-item" style="${done ? '' : 'opacity:0.45'}">
-          <div class="crm-timeline-dot" style="${dotStyle}position:relative;">${checkIcon}</div>
+
+      el.innerHTML = CRM_JOURNEY.map((m, idx) => {
+        const done    = idx <= currentIdx;
+        const current = idx === currentIdx;
+        const dotStyle = done
+          ? `background:${m.bg};border:2.5px solid ${m.color};`
+          : `background:#F3F4F6;border:2px dashed #D1D5DB;`;
+        const checkIcon = done
+          ? `<span style="position:absolute;top:-6px;right:-6px;width:14px;height:14px;border-radius:50%;background:${m.color};color:#fff;display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:700;">✓</span>`
+          : '';
+        const dateStr = current
+          ? `<span style="font-size:0.68rem;font-weight:700;color:${m.color};background:${m.bg};padding:1px 7px;border-radius:99px;">Đang ở đây</span>`
+          : done
+            ? fmt(new Date(dStart.getTime() + idx * 7 * 86400000))
+            : '<span style="font-style:italic;">Chưa đạt</span>';
+        return `<div class="crm-timeline-item" style="${done ? '' : 'opacity:0.38'}">
+          <div class="crm-timeline-dot" style="${dotStyle}position:relative;${current ? `box-shadow:0 0 0 4px ${m.color}28;` : ''}">${checkIcon}</div>
           <div class="crm-timeline-content">
-            <div class="crm-timeline-title" style="${done ? '' : 'color:var(--text-muted)'}">${m.title}</div>
-            <div class="crm-timeline-date" style="${done ? '' : 'font-style:italic'}">${dateStr}</div>
+            <div class="crm-timeline-title" style="${current ? `color:${m.color};font-weight:700;` : done ? '' : 'color:var(--text-muted)'}">${m.title}</div>
+            <div class="crm-timeline-date">${dateStr}</div>
           </div>
         </div>`;
       }).join('');
@@ -7163,7 +7173,13 @@ document.addEventListener('DOMContentLoaded', () => {
       </div>`;
     }
     const dlBtn = document.getElementById('docPreviewDownload');
-    if (dlBtn) { dlBtn.href = doc.url || '#'; dlBtn.style.opacity = doc.url ? '1' : '0.4'; dlBtn.style.pointerEvents = doc.url ? 'auto' : 'none'; }
+    if (dlBtn) {
+      dlBtn.href = doc.url || '#';
+      if (doc.url?.startsWith('data:')) { dlBtn.setAttribute('download', doc.name || 'file'); dlBtn.removeAttribute('target'); }
+      else if (doc.url) { dlBtn.setAttribute('target', '_blank'); dlBtn.removeAttribute('download'); }
+      dlBtn.style.opacity = doc.url ? '1' : '0.4';
+      dlBtn.style.pointerEvents = doc.url ? 'auto' : 'none';
+    }
     document.getElementById('docPreviewOverlay').style.display = 'block';
     document.getElementById('docPreviewPanel').style.transform = 'translateX(0)';
   };
@@ -7194,9 +7210,9 @@ document.addEventListener('DOMContentLoaded', () => {
           <td style="font-size:0.79rem;">${dateStr}</td>
           <td style="text-align:center;">
             <div style="display:flex;gap:0.3rem;justify-content:center;">
-              <a href="${doc.url}" target="_blank"
-                style="padding:5px 7px;background:#EEF2FF;color:#6366F1;border-radius:7px;
-                       text-decoration:none;display:flex;align-items:center;" title="Xem / Tải">
+              <a href="${doc.url || '#'}" ${doc.url ? (doc.url.startsWith('data:') ? `download="${doc.name}"` : 'target="_blank"') : 'onclick="return false"'}
+                style="padding:5px 7px;background:${doc.url ? '#EEF2FF' : '#F3F4F6'};color:${doc.url ? '#6366F1' : '#D1D5DB'};border-radius:7px;
+                       text-decoration:none;display:flex;align-items:center;${doc.url ? '' : 'cursor:not-allowed;'}" title="${doc.url ? 'Tải xuống' : 'Không có file'}">
                 <svg viewBox="0 0 24 24" style="width:14px;height:14px;fill:currentColor;"><path d="M5,20H19V18H5M19,9H15V3H9V9H5L12,16L19,9Z"/></svg>
               </a>
               <button class="doc-delete-btn" data-docid="${doc.id}" data-path="${doc.storagePath || ''}"
@@ -7257,9 +7273,9 @@ document.addEventListener('DOMContentLoaded', () => {
               storagePath = '';
             }
           }
+          const extUp = file.name.split('.').pop().toLowerCase();
           // Parse preview content for spreadsheets
           let previewData = null;
-          const extUp = file.name.split('.').pop().toLowerCase();
           if (['xlsx','xls','csv'].includes(extUp) && window.XLSX) {
             try {
               const buf = await file.arrayBuffer();
@@ -7269,8 +7285,21 @@ document.addEventListener('DOMContentLoaded', () => {
             } catch(_) {}
           }
 
+          // Store file as base64 dataUrl for files ≤ 800KB so download works without Firebase Storage
+          let dataUrl = url; // prefer Storage URL if available
+          if (!dataUrl && file.size <= 800 * 1024) {
+            try {
+              dataUrl = await new Promise((res, rej) => {
+                const reader = new FileReader();
+                reader.onload = e => res(e.target.result);
+                reader.onerror = rej;
+                reader.readAsDataURL(file);
+              });
+            } catch(_) {}
+          }
+
           const nowTs = firebase.firestore.Timestamp.fromDate(new Date());
-          const docPayload = { name: file.name, size: file.size, type: file.type, url, storagePath, uploadedAt: nowTs };
+          const docPayload = { name: file.name, size: file.size, type: file.type, url: dataUrl || '', storagePath, uploadedAt: nowTs };
           if (previewData) docPayload.previewData = previewData;
           await db.collection('students').doc(_crmDocsCustomerId).collection('documents').add(docPayload);
           done++;
