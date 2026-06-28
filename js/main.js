@@ -5727,6 +5727,8 @@ document.addEventListener('DOMContentLoaded', () => {
         progress: parseInt(document.getElementById('hrmProjectProgress').value) || 0,
         leader: document.getElementById('hrmProjectLeader').value.trim(),
         tasksCount: parseInt(document.getElementById('hrmProjectTasks').value) || 0,
+        scale: document.getElementById('hrmProjectScale')?.value || 'Nhỏ',
+        deadline: document.getElementById('hrmProjectDeadline')?.value || '',
         updatedAt: firebase.firestore.FieldValue.serverTimestamp()
       };
       try {
@@ -6516,6 +6518,7 @@ document.addEventListener('DOMContentLoaded', () => {
               <span>${p.tasksCount || 0} nhiệm vụ</span>
             </div>
             <div style="display:flex;gap:2px">
+              <button class="hrm-action-btn btn-detail-hrm-proj" title="Chi tiết" style="background:#EFF6FF;color:#2563EB;"><svg viewBox="0 0 24 24"><path d="M12,9A3,3 0 0,0 9,12A3,3 0 0,0 12,15A3,3 0 0,0 15,12A3,3 0 0,0 12,9M12,17A5,5 0 0,1 7,12A5,5 0 0,1 12,7A5,5 0 0,1 17,12A5,5 0 0,1 12,17M12,4.5C7,4.5 2.73,7.61 1,12C2.73,16.39 7,19.5 12,19.5C17,19.5 21.27,16.39 23,12C21.27,7.61 17,4.5 12,4.5Z" fill="currentColor"/></svg></button>
               <button class="hrm-action-btn btn-edit-hrm-proj" title="Sửa"><svg viewBox="0 0 24 24"><path d="M20.71,7.04C21.1,6.65 21.1,6 20.71,5.63L18.37,3.29C18,2.9 17.35,2.9 16.96,3.29L15.12,5.12L18.87,8.87M3,17.25V21H6.75L17.81,9.93L14.06,6.18L3,17.25Z"/></svg></button>
               <button class="hrm-action-btn danger btn-del-hrm-proj" title="Xóa"><svg viewBox="0 0 24 24"><path d="M19,4H15.5L14.5,3H9.5L8.5,4H5V6H19M6,19A2,2 0 0,0 8,21H16A2,2 0 0,0 18,19V7H6V19Z"/></svg></button>
             </div>
@@ -6529,6 +6532,8 @@ document.addEventListener('DOMContentLoaded', () => {
           document.getElementById('hrmProjectProgress').value = p.progress || 0;
           document.getElementById('hrmProjectLeader').value = p.leader || '';
           document.getElementById('hrmProjectTasks').value = p.tasksCount || 0;
+          if (document.getElementById('hrmProjectScale')) document.getElementById('hrmProjectScale').value = p.scale || 'Nhỏ';
+          if (document.getElementById('hrmProjectDeadline')) document.getElementById('hrmProjectDeadline').value = p.deadline || '';
           document.getElementById('hrmProjectModalTitle').textContent = '✏️ SỬA DỰ ÁN';
           document.getElementById('hrmProjectModal').style.display = 'flex';
         });
@@ -6540,12 +6545,180 @@ document.addEventListener('DOMContentLoaded', () => {
             renderHrmProjects();
           } catch (err) { showToast('Lỗi khi xóa dự án!', 'error'); }
         });
+        card.querySelector('.btn-detail-hrm-proj')?.addEventListener('click', () => openProjectDetail(p));
         grid.appendChild(card);
       });
     } catch (err) {
       console.error('HRM projects render error:', err);
     }
   };
+
+  // ---- Project Detail Modal ----
+  let _pdCurrentProjectId = null;
+
+  const PD_RATINGS = ['Yếu', 'TB', 'Khá', 'Tốt', 'Xuất sắc'];
+  const PD_RATING_COLORS = ['#EF4444', '#F97316', '#EAB308', '#10B981', '#6366F1'];
+
+  const renderPdMemberCard = (m, docId, projectId) => {
+    const ini = (m.name || '??').split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase();
+    const bg = getAvatarBgColor(m.name || 'x');
+    const stars = Array.from({ length: 5 }, (_, i) => {
+      const active = (m.rating || 0) > i;
+      return `<span class="pd-star" data-val="${i+1}" style="cursor:pointer;font-size:1.1rem;color:${active ? '#F59E0B' : '#D1D5DB'};transition:color .1s;">★</span>`;
+    }).join('');
+    return `<div class="pd-member-card" data-member-id="${docId}" style="background:#fff;border:1px solid #F0F0F0;border-radius:12px;padding:1rem 1.1rem;margin-bottom:0.75rem;box-shadow:0 1px 4px rgba(0,0,0,0.05);">
+      <div style="display:flex;align-items:center;gap:0.75rem;margin-bottom:0.75rem;">
+        <div style="width:38px;height:38px;border-radius:50%;background:${bg};color:#fff;display:flex;align-items:center;justify-content:center;font-size:0.78rem;font-weight:700;flex-shrink:0;">${ini}</div>
+        <div style="flex:1;min-width:0;">
+          <div style="font-size:0.88rem;font-weight:700;color:var(--text-main);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${m.name || 'Chưa có tên'}</div>
+          <div style="font-size:0.72rem;color:var(--text-muted);">${m.role || 'Thành viên'}</div>
+        </div>
+        <button class="pd-del-member" data-id="${docId}" style="background:none;border:none;color:#EF4444;cursor:pointer;opacity:0.5;font-size:1rem;padding:2px 4px;" title="Xóa">✕</button>
+      </div>
+      <div style="margin-bottom:0.6rem;">
+        <div style="font-size:0.68rem;color:var(--text-muted);margin-bottom:4px;font-weight:500;">ĐÁNH GIÁ</div>
+        <div class="pd-stars" style="display:flex;gap:3px;margin-bottom:6px;">${stars}</div>
+        ${m.rating ? `<span style="font-size:0.7rem;font-weight:600;color:${PD_RATING_COLORS[(m.rating||1)-1]};background:${PD_RATING_COLORS[(m.rating||1)-1]}18;padding:2px 8px;border-radius:6px;">${PD_RATINGS[(m.rating||1)-1]}</span>` : ''}
+      </div>
+      <textarea class="pd-eval-text" placeholder="Nhận xét về thành viên này..." rows="2"
+        style="width:100%;padding:0.45rem 0.6rem;border:1px solid #E5E7EB;border-radius:8px;font-size:0.78rem;resize:vertical;box-sizing:border-box;min-height:56px;">${m.evaluation || ''}</textarea>
+      <div style="display:flex;justify-content:flex-end;margin-top:0.5rem;">
+        <button class="pd-save-eval" data-id="${docId}" style="padding:0.33rem 0.85rem;background:#059669;color:#fff;border:none;border-radius:7px;font-size:0.72rem;font-weight:600;cursor:pointer;">Lưu đánh giá</button>
+      </div>
+    </div>`;
+  };
+
+  const loadPdMembers = async (projectId) => {
+    const list = document.getElementById('pdMembersList');
+    if (!list) return;
+    list.innerHTML = '<div style="font-size:0.78rem;color:var(--text-muted);text-align:center;padding:1.5rem 0;">Đang tải...</div>';
+    try {
+      const snap = await db.collection('hrm_projects').doc(projectId).collection('members').orderBy('createdAt', 'asc').get();
+      if (snap.empty) {
+        list.innerHTML = '<div style="font-size:0.8rem;color:var(--text-muted);text-align:center;padding:2rem 0;font-style:italic;">Chưa có thành viên. Nhấn "+ Thêm thành viên" để bắt đầu.</div>';
+        return;
+      }
+      list.innerHTML = '';
+      snap.forEach(doc => {
+        const wrapper = document.createElement('div');
+        wrapper.innerHTML = renderPdMemberCard(doc.data(), doc.id, projectId);
+        const card = wrapper.firstElementChild;
+
+        // Star click
+        let currentRating = doc.data().rating || 0;
+        card.querySelectorAll('.pd-star').forEach(star => {
+          star.addEventListener('click', () => {
+            currentRating = parseInt(star.dataset.val);
+            card.querySelectorAll('.pd-star').forEach((s, i) => {
+              s.style.color = i < currentRating ? '#F59E0B' : '#D1D5DB';
+            });
+          });
+          star.addEventListener('mouseenter', () => {
+            const hv = parseInt(star.dataset.val);
+            card.querySelectorAll('.pd-star').forEach((s, i) => { s.style.color = i < hv ? '#F59E0B' : '#D1D5DB'; });
+          });
+          star.addEventListener('mouseleave', () => {
+            card.querySelectorAll('.pd-star').forEach((s, i) => { s.style.color = i < currentRating ? '#F59E0B' : '#D1D5DB'; });
+          });
+        });
+
+        // Save eval
+        card.querySelector('.pd-save-eval')?.addEventListener('click', async () => {
+          const evaluation = card.querySelector('.pd-eval-text')?.value.trim() || '';
+          try {
+            await db.collection('hrm_projects').doc(projectId).collection('members').doc(doc.id).update({ rating: currentRating, evaluation });
+            showToast('Đã lưu đánh giá!', 'success');
+          } catch(e) { showToast('Lỗi: ' + e.message, 'error'); }
+        });
+
+        // Delete member
+        card.querySelector('.pd-del-member')?.addEventListener('click', async () => {
+          if (!confirm('Xóa thành viên này?')) return;
+          try {
+            await db.collection('hrm_projects').doc(projectId).collection('members').doc(doc.id).delete();
+            loadPdMembers(projectId);
+          } catch(e) { showToast('Lỗi: ' + e.message, 'error'); }
+        });
+
+        list.appendChild(card);
+      });
+    } catch(e) { list.innerHTML = '<div style="color:#EF4444;font-size:0.8rem;padding:1rem;">Lỗi tải thành viên.</div>'; }
+  };
+
+  const openProjectDetail = (p) => {
+    _pdCurrentProjectId = p.id;
+    const modal = document.getElementById('projectDetailModal');
+    if (!modal) return;
+
+    document.getElementById('pdModalTitle').textContent = p.name;
+
+    const badgeColor = { 'Lập kế hoạch': '#7C3AED', 'Đang thực hiện': '#2563EB', 'Đánh giá': '#D97706', 'Hoàn thành': '#16A34A' };
+    const color = badgeColor[p.status] || '#6B7280';
+    const fmtDate = d => d ? new Date(d).toLocaleDateString('vi-VN') : '--';
+    const infoEl = document.getElementById('pdProjectInfo');
+    if (infoEl) {
+      infoEl.innerHTML = `
+        <div style="margin-bottom:1rem;">
+          <span style="display:inline-block;padding:0.28rem 0.75rem;border-radius:20px;font-size:0.68rem;font-weight:700;letter-spacing:.5px;color:${color};background:${color}1A;">${p.status}</span>
+        </div>
+        <p style="font-size:0.8rem;color:var(--text-muted);line-height:1.6;margin-bottom:1.25rem;">${p.description || 'Không có mô tả.'}</p>
+        <div style="display:flex;flex-direction:column;gap:0.85rem;">
+          <div>
+            <div style="font-size:0.65rem;font-weight:700;letter-spacing:1px;color:var(--text-muted);margin-bottom:3px;">TIẾN ĐỘ</div>
+            <div style="display:flex;align-items:center;gap:0.6rem;">
+              <div style="flex:1;height:6px;background:#F0F0F0;border-radius:99px;overflow:hidden;">
+                <div style="height:100%;width:${p.progress||0}%;background:linear-gradient(90deg,#2563EB,#60A5FA);border-radius:99px;transition:width .6s;"></div>
+              </div>
+              <span style="font-size:0.78rem;font-weight:700;color:#2563EB;">${p.progress||0}%</span>
+            </div>
+          </div>
+          <div><div style="font-size:0.65rem;font-weight:700;letter-spacing:1px;color:var(--text-muted);margin-bottom:2px;">NGƯỜI PHỤ TRÁCH</div>
+            <div style="font-size:0.82rem;font-weight:600;color:var(--text-main);">${p.leader || '--'}</div></div>
+          <div><div style="font-size:0.65rem;font-weight:700;letter-spacing:1px;color:var(--text-muted);margin-bottom:2px;">QUY MÔ</div>
+            <div style="font-size:0.82rem;color:var(--text-main);">${p.scale || 'Nhỏ'}</div></div>
+          <div><div style="font-size:0.65rem;font-weight:700;letter-spacing:1px;color:var(--text-muted);margin-bottom:2px;">DEADLINE</div>
+            <div style="font-size:0.82rem;color:var(--text-main);">${fmtDate(p.deadline)}</div></div>
+          <div><div style="font-size:0.65rem;font-weight:700;letter-spacing:1px;color:var(--text-muted);margin-bottom:2px;">SỐ NHIỆM VỤ</div>
+            <div style="font-size:0.82rem;color:var(--text-main);">${p.tasksCount || 0} nhiệm vụ</div></div>
+        </div>`;
+    }
+
+    document.getElementById('pdAddMemberForm').style.display = 'none';
+    document.getElementById('pdMemberName').value = '';
+    document.getElementById('pdMemberRole').value = '';
+    loadPdMembers(p.id);
+    modal.style.display = 'flex';
+  };
+
+  document.getElementById('btnClosePdModal')?.addEventListener('click', () => {
+    document.getElementById('projectDetailModal').style.display = 'none';
+  });
+  document.getElementById('projectDetailModal')?.addEventListener('click', (e) => {
+    if (e.target === document.getElementById('projectDetailModal')) document.getElementById('projectDetailModal').style.display = 'none';
+  });
+
+  document.getElementById('btnAddPdMember')?.addEventListener('click', () => {
+    const f = document.getElementById('pdAddMemberForm');
+    f.style.display = f.style.display === 'none' ? 'block' : 'none';
+  });
+  document.getElementById('btnCancelPdMember')?.addEventListener('click', () => {
+    document.getElementById('pdAddMemberForm').style.display = 'none';
+  });
+  document.getElementById('btnSavePdMember')?.addEventListener('click', async () => {
+    const name = document.getElementById('pdMemberName')?.value.trim();
+    if (!name || !_pdCurrentProjectId) return;
+    const role = document.getElementById('pdMemberRole')?.value.trim();
+    try {
+      await db.collection('hrm_projects').doc(_pdCurrentProjectId).collection('members').add({
+        name, role, rating: 0, evaluation: '', createdAt: firebase.firestore.FieldValue.serverTimestamp()
+      });
+      document.getElementById('pdMemberName').value = '';
+      document.getElementById('pdMemberRole').value = '';
+      document.getElementById('pdAddMemberForm').style.display = 'none';
+      loadPdMembers(_pdCurrentProjectId);
+      showToast('Đã thêm thành viên!', 'success');
+    } catch(e) { showToast('Lỗi: ' + e.message, 'error'); }
+  });
 
   // ---- Render Payments ----
   const formatVND = (num) => {

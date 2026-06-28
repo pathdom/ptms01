@@ -6944,8 +6944,64 @@
             <div class="form-group-login"><label for="hrmProjectLeader">Người phụ trách *</label><input type="text" id="hrmProjectLeader" placeholder="Họ tên leader" required /></div>
             <div class="form-group-login"><label for="hrmProjectTasks">Số nhiệm vụ con</label><input type="number" id="hrmProjectTasks" placeholder="0" min="0" value="0" /></div>
           </div>
+          <div class="hrm-form-row">
+            <div class="form-group-login"><label for="hrmProjectScale">Quy mô</label>
+              <select id="hrmProjectScale">
+                <option value="Nhỏ">Nhỏ (1–3 người)</option>
+                <option value="Vừa">Vừa (4–8 người)</option>
+                <option value="Lớn">Lớn (9+ người)</option>
+              </select>
+            </div>
+            <div class="form-group-login"><label for="hrmProjectDeadline">Deadline</label><input type="date" id="hrmProjectDeadline" /></div>
+          </div>
           <button type="submit" class="btn-submit-login" style="width: 100%;">LƯU DỰ ÁN</button>
         </form>
+      </div>
+    </div>
+
+    <!-- Project Detail Modal -->
+    <div id="projectDetailModal" style="display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.55);z-index:1100;justify-content:center;align-items:center;padding:1.5rem;backdrop-filter:blur(4px);">
+      <div style="background:#fff;border-radius:16px;max-width:900px;width:100%;max-height:92vh;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 24px 64px rgba(0,0,0,0.22);">
+        <!-- Header -->
+        <div style="padding:1.4rem 2rem;border-bottom:1px solid rgba(255,255,255,0.12);display:flex;align-items:center;justify-content:space-between;background:linear-gradient(135deg,#1e3a5f 0%,#2563EB 100%);color:#fff;flex-shrink:0;">
+          <div>
+            <div style="font-size:0.65rem;letter-spacing:2px;opacity:0.65;margin-bottom:5px;font-weight:600;">CHI TIẾT DỰ ÁN</div>
+            <h3 id="pdModalTitle" style="font-size:1.15rem;font-weight:700;margin:0;letter-spacing:-0.3px;"></h3>
+          </div>
+          <button id="btnClosePdModal" style="background:rgba(255,255,255,0.18);border:none;color:#fff;width:34px;height:34px;border-radius:50%;cursor:pointer;font-size:1.2rem;display:flex;align-items:center;justify-content:center;transition:background .2s;">&times;</button>
+        </div>
+        <!-- Body -->
+        <div style="display:flex;flex:1;overflow:hidden;min-height:0;">
+          <!-- Left: Project Info -->
+          <div style="width:260px;flex-shrink:0;padding:1.5rem;border-right:1px solid #F0F0F0;overflow-y:auto;background:#FAFAFA;">
+            <div id="pdProjectInfo"></div>
+          </div>
+          <!-- Right: Members -->
+          <div style="flex:1;padding:1.5rem;overflow-y:auto;min-width:0;">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.1rem;">
+              <h4 style="font-size:0.72rem;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--text-muted);margin:0;">Thành viên &amp; Đánh giá</h4>
+              <button id="btnAddPdMember" style="padding:0.38rem 0.9rem;background:#2563EB;color:#fff;border:none;border-radius:8px;font-size:0.73rem;font-weight:600;cursor:pointer;transition:opacity .2s;">+ Thêm thành viên</button>
+            </div>
+            <!-- Add member inline form -->
+            <div id="pdAddMemberForm" style="display:none;background:#EFF6FF;border-radius:10px;padding:1rem;margin-bottom:1rem;border:1px solid #BFDBFE;">
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.7rem;margin-bottom:0.7rem;">
+                <div>
+                  <label style="font-size:0.7rem;color:var(--text-muted);display:block;margin-bottom:3px;font-weight:500;">Tên thành viên *</label>
+                  <input id="pdMemberName" type="text" placeholder="Họ và tên" style="width:100%;padding:0.4rem 0.65rem;border:1px solid #CBD5E1;border-radius:7px;font-size:0.8rem;box-sizing:border-box;" />
+                </div>
+                <div>
+                  <label style="font-size:0.7rem;color:var(--text-muted);display:block;margin-bottom:3px;font-weight:500;">Vai trò</label>
+                  <input id="pdMemberRole" type="text" placeholder="Leader, Designer..." style="width:100%;padding:0.4rem 0.65rem;border:1px solid #CBD5E1;border-radius:7px;font-size:0.8rem;box-sizing:border-box;" />
+                </div>
+              </div>
+              <div style="display:flex;justify-content:flex-end;gap:0.5rem;">
+                <button id="btnCancelPdMember" type="button" style="padding:0.38rem 0.85rem;border:1px solid #CBD5E1;background:#fff;border-radius:7px;font-size:0.75rem;cursor:pointer;">Hủy</button>
+                <button id="btnSavePdMember" type="button" style="padding:0.38rem 0.85rem;background:#2563EB;color:#fff;border:none;border-radius:7px;font-size:0.75rem;font-weight:600;cursor:pointer;">Lưu thành viên</button>
+              </div>
+            </div>
+            <div id="pdMembersList"></div>
+          </div>
+        </div>
       </div>
     </div>
 
