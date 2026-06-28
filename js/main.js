@@ -2890,12 +2890,20 @@ document.addEventListener('DOMContentLoaded', () => {
   const studentForm = document.getElementById("studentForm");
   const btnOpenAddStudentModal = document.getElementById("btnOpenAddStudentModal");
 
+  const populateAdvisorSelect = (selectedName = '') => {
+    const sel = document.getElementById('studentAdvisor');
+    if (!sel) return;
+    sel.innerHTML = '<option value="">-- Chọn nhân viên --</option>' +
+      hrmStaffCache.map(s => `<option value="${s.name}"${s.name === selectedName ? ' selected' : ''}>${s.name}${s.position ? ' · ' + s.position : ''}</option>`).join('');
+  };
+
   // Open modal for Adding new student
   if (btnOpenAddStudentModal && studentModal) {
     btnOpenAddStudentModal.addEventListener("click", () => {
       document.getElementById("studentModalTitle").textContent = "+ THÊM HỌC VIÊN MỚI";
       document.getElementById("studentEditId").value = "";
       studentForm.reset();
+      populateAdvisorSelect();
       studentModal.style.display = "flex";
     });
   }
@@ -2982,6 +2990,7 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById("studentStatus").value = student.status;
     document.getElementById("studentLearningMonth").value = student.learningMonth || "Tháng 1";
     document.getElementById("studentNotes").value = student.notes || "";
+    populateAdvisorSelect(student.advisor || '');
 
     studentModal.style.display = "flex";
   };
@@ -3013,6 +3022,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const status = document.getElementById("studentStatus").value;
       const learningMonth = document.getElementById("studentLearningMonth").value;
       const notes = document.getElementById("studentNotes").value.trim();
+      const advisor = document.getElementById("studentAdvisor")?.value || '';
 
       if (!name || !code || !email || !phone) {
         showToast("Vui lòng nhập đầy đủ các trường thông tin có dấu *!", "error");
@@ -3028,6 +3038,7 @@ document.addEventListener('DOMContentLoaded', () => {
         status,
         learningMonth,
         notes,
+        advisor,
         updatedAt: firebase.firestore.FieldValue.serverTimestamp()
       };
 
@@ -7318,7 +7329,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     if (filtered.length === 0) {
-      tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:2.5rem;color:var(--text-muted);font-size:0.82rem">Không tìm thấy khách hàng phù hợp.</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;padding:2.5rem;color:var(--text-muted);font-size:0.82rem">Không tìm thấy khách hàng phù hợp.</td></tr>`;
       renderPagination('crmCustomerPagination', 1, 0, () => {});
       return;
     }
@@ -7359,6 +7370,7 @@ document.addEventListener('DOMContentLoaded', () => {
             <div style="font-size:0.73rem;color:var(--text-muted)">${c.phone || ''}</div>
           </td>
           <td><span class="crm-country-flag">${c.country || '--'}</span></td>
+          <td>${c.advisor ? `<span style="font-size:0.78rem;font-weight:500;color:var(--text-main);white-space:nowrap;">${c.advisor}</span>` : '<span style="color:var(--text-muted);font-size:0.75rem;">--</span>'}</td>
           <td>
             <select class="crm-status-select" data-id="${c.id}"
               style="padding:0.22rem 0.55rem;border-radius:10px;border:1.5px solid ${sc.color};
