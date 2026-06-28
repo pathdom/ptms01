@@ -7400,7 +7400,15 @@ document.addEventListener('DOMContentLoaded', () => {
             <div style="font-size:0.73rem;color:var(--text-muted)">${c.phone || ''}</div>
           </td>
           <td><span class="crm-country-flag">${c.country || '--'}</span></td>
-          <td>${c.advisor ? `<span style="font-size:0.78rem;font-weight:500;color:var(--text-main);white-space:nowrap;">${c.advisor}</span>` : '<span style="color:var(--text-muted);font-size:0.75rem;">--</span>'}</td>
+          <td>
+            <select class="crm-advisor-select" data-id="${c.id}"
+              style="padding:0.22rem 0.5rem;border-radius:8px;border:1.5px solid #E5E7EB;
+                     background:#fff;color:var(--text-main);font-size:0.73rem;font-weight:500;
+                     cursor:pointer;font-family:inherit;outline:none;max-width:110px;">
+              <option value="">-- Chọn NV --</option>
+              ${_allCrmStaff.map(s => `<option value="${s.name}"${s.name === (c.advisor||'') ? ' selected' : ''}>${s.name}</option>`).join('')}
+            </select>
+          </td>
           <td>
             <select class="crm-status-select" data-id="${c.id}"
               style="padding:0.22rem 0.55rem;border-radius:10px;border:1.5px solid ${sc.color};
@@ -7439,6 +7447,16 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
           await db.collection('students').doc(sel.dataset.id).update({ crmStatus: sel.value });
         } catch (e) { console.error('Lỗi lưu CRM status:', e); }
+      });
+    });
+
+    tbody.querySelectorAll('.crm-advisor-select').forEach(sel => {
+      sel.addEventListener('change', async () => {
+        const cust = _allCrmCustomers.find(x => x.id === sel.dataset.id);
+        if (cust) cust.advisor = sel.value;
+        try {
+          await db.collection('students').doc(sel.dataset.id).update({ advisor: sel.value });
+        } catch(e) { console.error('Lỗi lưu advisor:', e); }
       });
     });
 
@@ -9174,11 +9192,12 @@ document.addEventListener('DOMContentLoaded', () => {
         modal.style.display = 'flex';
       });
 
-      document.getElementById('btnAddCrmCustomer')?.addEventListener('click', async () => {
+      document.getElementById('btnAddCrmCustomer')?.addEventListener('click', () => {
         const modal = document.getElementById('studentModal');
         if (!modal) return;
+        const fmEl = document.getElementById('studentFormMode');
+        if (fmEl) fmEl.value = 'customer';
         document.getElementById('studentEditId').value = '';
-        document.getElementById('studentFormMode').value = 'customer';
         document.getElementById('studentModalTitle').textContent = 'THÊM KHÁCH HÀNG MỚI';
         document.getElementById('studentName').value = '';
         document.getElementById('studentCode').value = '';
@@ -9186,16 +9205,17 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('studentPhone').value = '';
         document.getElementById('studentCountry').value = 'Nhật';
         document.getElementById('studentNotes').value = '';
-        // CRM statuses
         const statusSel = document.getElementById('studentStatus');
-        statusSel.innerHTML = SOURCE_STATUSES.map(s => `<option value="${s}">${s}</option>`).join('');
-        statusSel.value = 'Khách Hàng Mới';
-        // Hide tháng học
+        if (statusSel) {
+          statusSel.innerHTML = ['Khách Hàng Mới','Tư Vấn L1','Tư Vấn L2','Tư Vấn L3','Có Nhu Cầu','Chốt Cọc']
+            .map(s => `<option value="${s}">${s}</option>`).join('');
+          statusSel.value = 'Khách Hàng Mới';
+        }
         const monthRow = document.getElementById('studentLearningMonthRow');
         if (monthRow) monthRow.style.display = 'none';
-        document.getElementById('studentLearningMonth').removeAttribute('required');
-        // Load advisors
-        await populateAdvisorSelect();
+        const lmEl = document.getElementById('studentLearningMonth');
+        if (lmEl) lmEl.removeAttribute('required');
+        populateAdvisorSelect();
         modal.style.display = 'flex';
       });
 
@@ -9351,6 +9371,7 @@ document.addEventListener('DOMContentLoaded', () => {
         _allCrmStaff = [];
         snap.forEach(doc => { const d = doc.data(); d.id = doc.id; _allCrmStaff.push(d); });
         renderCrmStaff();
+        renderCrmCustomers(); // populate advisor selects after staff loaded
       })
       .catch(err => console.error('CRM staff load error:', err));
   };
