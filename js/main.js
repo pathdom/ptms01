@@ -2890,20 +2890,32 @@ document.addEventListener('DOMContentLoaded', () => {
   const studentForm = document.getElementById("studentForm");
   const btnOpenAddStudentModal = document.getElementById("btnOpenAddStudentModal");
 
-  const populateAdvisorSelect = (selectedName = '') => {
+  const populateAdvisorSelect = async (selectedName = '') => {
     const sel = document.getElementById('studentAdvisor');
     if (!sel) return;
+    sel.innerHTML = '<option value="">-- Đang tải... --</option>';
+    let staffList = hrmStaffCache.length ? hrmStaffCache : [];
+    if (!staffList.length) {
+      try {
+        const snap = await db.collection('hrm_staff').orderBy('name').get();
+        staffList = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      } catch(e) { staffList = []; }
+    }
+    if (!staffList.length) {
+      sel.innerHTML = '<option value="">-- Chưa có nhân viên --</option>';
+      return;
+    }
     sel.innerHTML = '<option value="">-- Chọn nhân viên --</option>' +
-      hrmStaffCache.map(s => `<option value="${s.name}"${s.name === selectedName ? ' selected' : ''}>${s.name}${s.position ? ' · ' + s.position : ''}</option>`).join('');
+      staffList.map(s => `<option value="${s.name}"${s.name === selectedName ? ' selected' : ''}>${s.name}${s.position ? ' · ' + s.position : ''}</option>`).join('');
   };
 
   // Open modal for Adding new student
   if (btnOpenAddStudentModal && studentModal) {
-    btnOpenAddStudentModal.addEventListener("click", () => {
+    btnOpenAddStudentModal.addEventListener("click", async () => {
       document.getElementById("studentModalTitle").textContent = "+ THÊM HỌC VIÊN MỚI";
       document.getElementById("studentEditId").value = "";
       studentForm.reset();
-      populateAdvisorSelect();
+      await populateAdvisorSelect();
       studentModal.style.display = "flex";
     });
   }
@@ -2978,7 +2990,7 @@ document.addEventListener('DOMContentLoaded', () => {
   };
 
   // Open Edit Form Modal
-  const openEditStudentModal = (student) => {
+  const openEditStudentModal = async (student) => {
     if (!studentModal) return;
     document.getElementById("studentModalTitle").textContent = "CHỈNH SỬA HỒ SƠ HỌC VIÊN";
     document.getElementById("studentEditId").value = student.id;
@@ -2990,7 +3002,7 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById("studentStatus").value = student.status;
     document.getElementById("studentLearningMonth").value = student.learningMonth || "Tháng 1";
     document.getElementById("studentNotes").value = student.notes || "";
-    populateAdvisorSelect(student.advisor || '');
+    await populateAdvisorSelect(student.advisor || '');
 
     studentModal.style.display = "flex";
   };
