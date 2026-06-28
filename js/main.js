@@ -7168,15 +7168,24 @@ document.addEventListener('DOMContentLoaded', () => {
       const files = Array.from(input.files);
       let done = 0;
       for (const file of files) {
-        if (msg) msg.textContent = `Đang tải: ${file.name} (${done + 1}/${files.length})`;
+        if (msg) msg.textContent = `Đang lưu: ${file.name} (${done + 1}/${files.length})`;
         try {
           let url = '';
           let storagePath = '';
+          // Thử upload Storage với timeout 12s; nếu fail thì bỏ qua, vẫn lưu metadata
           if (_storage) {
-            storagePath = `customers/${_crmDocsCustomerId}/documents/${Date.now()}_${file.name}`;
-            const ref = _storage.ref(storagePath);
-            await ref.put(file);
-            url = await ref.getDownloadURL();
+            try {
+              storagePath = `customers/${_crmDocsCustomerId}/documents/${Date.now()}_${file.name}`;
+              const ref = _storage.ref(storagePath);
+              await Promise.race([
+                ref.put(file).then(() => ref.getDownloadURL()).then(u => { url = u; }),
+                new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), 12000))
+              ]);
+            } catch (storageErr) {
+              // Storage không khả dụng — chỉ lưu metadata
+              url = '';
+              storagePath = '';
+            }
           }
           await db.collection('students').doc(_crmDocsCustomerId).collection('documents').add({
             name: file.name,
@@ -7187,12 +7196,12 @@ document.addEventListener('DOMContentLoaded', () => {
             uploadedAt: firebase.firestore.FieldValue.serverTimestamp(),
           });
           done++;
-        } catch (e) { showToast('Lỗi upload ' + file.name + ': ' + e.message, 'error'); }
+        } catch (e) { showToast('Lỗi lưu ' + file.name + ': ' + e.message, 'error'); }
       }
       input.value = '';
       if (progress) progress.style.display = 'none';
       loadCrmDocs(_crmDocsCustomerId);
-      if (done > 0) showToast(`Đã tải lên ${done} tài liệu`, 'success');
+      if (done > 0) showToast(`Đã lưu ${done} tài liệu`, 'success');
     });
   };
 
