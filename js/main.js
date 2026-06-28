@@ -7125,16 +7125,41 @@ document.addEventListener('DOMContentLoaded', () => {
         <span style="font-size:0.8rem;font-weight:500;">${dateStr}</span>
       </div>`;
     const contentEl = document.getElementById('docPreviewContent');
+    contentEl.style.padding = '0';
+    contentEl.style.overflow = 'auto';
+    contentEl.style.display = 'block';
     const isImage = ['jpg','jpeg','png','gif','webp','svg'].includes(ext);
     const isPdf   = ext === 'pdf';
-    if (doc.url && isImage) {
+
+    if (doc.previewData && Array.isArray(doc.previewData) && doc.previewData.length) {
+      // Spreadsheet table preview
+      const headers = doc.previewData[0] || [];
+      const rows    = doc.previewData.slice(1);
+      const thHtml  = headers.map(h => `<th style="padding:7px 12px;white-space:nowrap;font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#6366F1;background:#EEF2FF;border-bottom:2px solid #C7D2FE;position:sticky;top:0;z-index:1;">${h ?? ''}</th>`).join('');
+      const trHtml  = rows.map((row, ri) => `<tr style="background:${ri%2===0?'#fff':'#F9FAFB'};">${headers.map((_,ci) => `<td style="padding:6px 12px;font-size:0.78rem;white-space:nowrap;border-bottom:1px solid #F0F0F0;color:var(--text-main);">${row[ci] ?? ''}</td>`).join('')}</tr>`).join('');
+      contentEl.innerHTML = `<div style="padding:0.75rem 1rem 0.5rem;font-size:0.7rem;color:var(--text-muted);">Hiển thị ${rows.length} hàng · ${headers.length} cột (cuộn để xem thêm)</div>
+        <div style="overflow:auto;flex:1;">
+          <table style="border-collapse:collapse;width:100%;font-family:inherit;">
+            <thead><tr>${thHtml}</tr></thead>
+            <tbody>${trHtml}</tbody>
+          </table>
+        </div>`;
+    } else if (doc.url && isImage) {
+      contentEl.style.display = 'flex';
+      contentEl.style.alignItems = 'center';
+      contentEl.style.justifyContent = 'center';
+      contentEl.style.padding = '1rem';
       contentEl.innerHTML = `<img src="${doc.url}" style="max-width:100%;max-height:100%;object-fit:contain;border-radius:8px;box-shadow:0 4px 20px rgba(0,0,0,0.12);" />`;
     } else if (doc.url && isPdf) {
-      contentEl.innerHTML = `<iframe src="${doc.url}" style="width:100%;height:100%;border:none;border-radius:8px;"></iframe>`;
+      contentEl.innerHTML = `<iframe src="${doc.url}" style="width:100%;height:100%;border:none;"></iframe>`;
     } else {
+      contentEl.style.display = 'flex';
+      contentEl.style.alignItems = 'center';
+      contentEl.style.justifyContent = 'center';
+      contentEl.style.padding = '2rem';
       contentEl.innerHTML = `<div style="text-align:center;">
-        <span style="font-size:4rem;display:block;margin-bottom:1rem;">${fi.icon}</span>
-        <div style="font-size:0.85rem;color:var(--text-muted);line-height:1.6;">${doc.url ? 'Nhấn "Tải xuống" để xem file này.' : 'File chỉ lưu metadata, chưa có link tải.'}</div>
+        <span style="font-size:3.5rem;display:block;margin-bottom:1rem;">${fi.icon}</span>
+        <div style="font-size:0.82rem;color:var(--text-muted);line-height:1.7;">Chưa có bản xem trước.<br>Tải file xuống để xem nội dung.</div>
       </div>`;
     }
     const dlBtn = document.getElementById('docPreviewDownload');
@@ -7232,15 +7257,22 @@ document.addEventListener('DOMContentLoaded', () => {
               storagePath = '';
             }
           }
+          // Parse preview content for spreadsheets
+          let previewData = null;
+          const extUp = file.name.split('.').pop().toLowerCase();
+          if (['xlsx','xls','csv'].includes(extUp) && window.XLSX) {
+            try {
+              const buf = await file.arrayBuffer();
+              const wb = XLSX.read(buf, { type: 'array' });
+              const ws = wb.Sheets[wb.SheetNames[0]];
+              previewData = XLSX.utils.sheet_to_json(ws, { header: 1, defval: '' }).slice(0, 120);
+            } catch(_) {}
+          }
+
           const nowTs = firebase.firestore.Timestamp.fromDate(new Date());
-          await db.collection('students').doc(_crmDocsCustomerId).collection('documents').add({
-            name: file.name,
-            size: file.size,
-            type: file.type,
-            url,
-            storagePath,
-            uploadedAt: nowTs,
-          });
+          const docPayload = { name: file.name, size: file.size, type: file.type, url, storagePath, uploadedAt: nowTs };
+          if (previewData) docPayload.previewData = previewData;
+          await db.collection('students').doc(_crmDocsCustomerId).collection('documents').add(docPayload);
           done++;
         } catch (e) { showToast('Lỗi lưu ' + file.name + ': ' + e.message, 'error'); }
       }
