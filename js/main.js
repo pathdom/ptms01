@@ -7102,6 +7102,47 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   };
 
+  const openDocPreview = (doc) => {
+    const ext = (doc.name || '').split('.').pop().toLowerCase();
+    const fi = FILE_ICONS[ext] || { icon: '📁', color: '#6B7280' };
+    let dateStr = '--';
+    if (doc.uploadedAt?.toDate) {
+      const d = doc.uploadedAt.toDate();
+      dateStr = `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}/${d.getFullYear()}`;
+    }
+    document.getElementById('docPreviewName').textContent = doc.name || '--';
+    document.getElementById('docPreviewMeta').innerHTML = `
+      <div style="display:flex;flex-direction:column;gap:2px;">
+        <span style="font-size:0.65rem;color:var(--text-muted);font-weight:600;">LOẠI</span>
+        <span style="font-size:0.8rem;font-weight:700;color:${fi.color};text-transform:uppercase;">${ext}</span>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:2px;">
+        <span style="font-size:0.65rem;color:var(--text-muted);font-weight:600;">KÍCH THƯỚC</span>
+        <span style="font-size:0.8rem;font-weight:500;">${fmtFileSize(doc.size || 0)}</span>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:2px;">
+        <span style="font-size:0.65rem;color:var(--text-muted);font-weight:600;">NGÀY TẢI LÊN</span>
+        <span style="font-size:0.8rem;font-weight:500;">${dateStr}</span>
+      </div>`;
+    const contentEl = document.getElementById('docPreviewContent');
+    const isImage = ['jpg','jpeg','png','gif','webp','svg'].includes(ext);
+    const isPdf   = ext === 'pdf';
+    if (doc.url && isImage) {
+      contentEl.innerHTML = `<img src="${doc.url}" style="max-width:100%;max-height:100%;object-fit:contain;border-radius:8px;box-shadow:0 4px 20px rgba(0,0,0,0.12);" />`;
+    } else if (doc.url && isPdf) {
+      contentEl.innerHTML = `<iframe src="${doc.url}" style="width:100%;height:100%;border:none;border-radius:8px;"></iframe>`;
+    } else {
+      contentEl.innerHTML = `<div style="text-align:center;">
+        <span style="font-size:4rem;display:block;margin-bottom:1rem;">${fi.icon}</span>
+        <div style="font-size:0.85rem;color:var(--text-muted);line-height:1.6;">${doc.url ? 'Nhấn "Tải xuống" để xem file này.' : 'File chỉ lưu metadata, chưa có link tải.'}</div>
+      </div>`;
+    }
+    const dlBtn = document.getElementById('docPreviewDownload');
+    if (dlBtn) { dlBtn.href = doc.url || '#'; dlBtn.style.opacity = doc.url ? '1' : '0.4'; dlBtn.style.pointerEvents = doc.url ? 'auto' : 'none'; }
+    document.getElementById('docPreviewOverlay').style.display = 'block';
+    document.getElementById('docPreviewPanel').style.transform = 'translateX(0)';
+  };
+
   const renderDocRows = (docs) => {
     const tbody = document.getElementById('crmDocsTableBody');
     if (!tbody) return;
@@ -7117,9 +7158,9 @@ document.addEventListener('DOMContentLoaded', () => {
         <tr>
           <td style="font-size:0.75rem;color:var(--text-muted);text-align:center;">${i + 1}</td>
           <td>
-            <div style="display:flex;align-items:center;gap:0.55rem;">
+            <div style="display:flex;align-items:center;gap:0.55rem;cursor:pointer;" class="doc-preview-btn" data-idx="${i}">
               <span style="font-size:1.1rem;flex-shrink:0;">${fi.icon}</span>
-              <span style="font-size:0.82rem;font-weight:500;color:var(--text-main);">${doc.name || '--'}</span>
+              <span style="font-size:0.82rem;font-weight:500;color:#2563EB;text-decoration:underline;text-underline-offset:2px;">${doc.name || '--'}</span>
             </div>
           </td>
           <td><span style="font-size:0.72rem;background:rgba(99,102,241,0.1);color:#6366F1;
@@ -7155,6 +7196,10 @@ document.addEventListener('DOMContentLoaded', () => {
         } catch (e) { showToast('Lỗi xóa: ' + e.message, 'error'); }
       });
     });
+
+    tbody.querySelectorAll('.doc-preview-btn').forEach(btn => {
+      btn.addEventListener('click', () => openDocPreview(docs[parseInt(btn.dataset.idx)]));
+    });
   };
 
   const setupDocUpload = () => {
@@ -7187,13 +7232,14 @@ document.addEventListener('DOMContentLoaded', () => {
               storagePath = '';
             }
           }
+          const nowTs = firebase.firestore.Timestamp.fromDate(new Date());
           await db.collection('students').doc(_crmDocsCustomerId).collection('documents').add({
             name: file.name,
             size: file.size,
             type: file.type,
             url,
             storagePath,
-            uploadedAt: firebase.firestore.FieldValue.serverTimestamp(),
+            uploadedAt: nowTs,
           });
           done++;
         } catch (e) { showToast('Lỗi lưu ' + file.name + ': ' + e.message, 'error'); }

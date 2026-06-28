@@ -7011,6 +7011,28 @@
       </div>
     </div>
 
+    <!-- File Preview Panel (slide from right) -->
+    <div id="docPreviewOverlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.45);z-index:1200;backdrop-filter:blur(3px);" onclick="document.getElementById('docPreviewOverlay').style.display='none'"></div>
+    <div id="docPreviewPanel" style="position:fixed;top:0;right:0;width:min(520px,95vw);height:100vh;background:#fff;z-index:1201;display:flex;flex-direction:column;box-shadow:-8px 0 40px rgba(0,0,0,0.18);transform:translateX(100%);transition:transform 0.32s cubic-bezier(.4,0,.2,1);">
+      <div style="padding:1.25rem 1.5rem;border-bottom:1px solid #F0F0F0;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;">
+        <div>
+          <div style="font-size:0.65rem;letter-spacing:1.5px;color:var(--text-muted);font-weight:600;margin-bottom:3px;">XEM TRƯỚC TÀI LIỆU</div>
+          <div id="docPreviewName" style="font-size:0.95rem;font-weight:700;color:var(--text-main);max-width:380px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"></div>
+        </div>
+        <button onclick="document.getElementById('docPreviewOverlay').style.display='none';document.getElementById('docPreviewPanel').style.transform='translateX(100%)';"
+          style="background:#F3F4F6;border:none;width:32px;height:32px;border-radius:50%;cursor:pointer;font-size:1.1rem;display:flex;align-items:center;justify-content:center;">&times;</button>
+      </div>
+      <div id="docPreviewMeta" style="padding:1rem 1.5rem;border-bottom:1px solid #F9F9F9;display:flex;gap:1.5rem;flex-shrink:0;"></div>
+      <div id="docPreviewContent" style="flex:1;overflow:hidden;display:flex;align-items:center;justify-content:center;padding:1rem;background:#F8F9FA;"></div>
+      <div style="padding:1rem 1.5rem;border-top:1px solid #F0F0F0;display:flex;gap:0.75rem;flex-shrink:0;">
+        <a id="docPreviewDownload" href="#" target="_blank" style="flex:1;padding:0.55rem;background:#2563EB;color:#fff;border-radius:9px;text-align:center;font-size:0.8rem;font-weight:600;text-decoration:none;display:flex;align-items:center;justify-content:center;gap:0.4rem;">
+          <svg viewBox="0 0 24 24" style="width:15px;height:15px;fill:currentColor;"><path d="M5,20H19V18H5M19,9H15V3H9V9H5L12,16L19,9Z"/></svg> Tải xuống
+        </a>
+        <button onclick="document.getElementById('docPreviewOverlay').style.display='none';document.getElementById('docPreviewPanel').style.transform='translateX(100%)';"
+          style="padding:0.55rem 1.2rem;background:#F3F4F6;border:none;border-radius:9px;font-size:0.8rem;cursor:pointer;">Đóng</button>
+      </div>
+    </div>
+
     <!-- Toast Notification Wrapper -->
     <div class="toast-container" id="toastContainer"></div>
 
