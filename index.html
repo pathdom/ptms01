@@ -2435,60 +2435,171 @@
         <!-- end crm-dashboard -->
 
         <!-- TEST NĂNG LỰC NV DASHBOARD (ADMIN) -->
-        <div id="test-dashboard" class="dashboard-wrapper" style="display:none;flex-direction:column;padding:2rem;gap:1.5rem;">
-          <div class="hrm-section-header" style="display:flex;align-items:center;justify-content:space-between;padding-bottom:1rem;border-bottom:1px solid var(--color-border);">
-            <h2 style="font-family:'Cormorant Garamond',serif;font-size:1.5rem;font-weight:400;color:var(--color-text-main);">Test Năng Lực Nhân Viên</h2>
-            <button type="button" id="btnRefreshTestResults" class="hrm-btn-primary" style="padding:0.5rem 1.1rem;font-size:0.8rem;">Làm mới</button>
-          </div>
-          <!-- Stats row -->
-          <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:1rem;" id="testStatCards">
-            <div class="hrm-metric-card" style="padding:1.25rem;text-align:center;">
-              <div style="font-size:1.8rem;font-weight:600;color:#6366F1;" id="testTotalCount">—</div>
-              <div style="font-size:0.75rem;color:#6B6A67;margin-top:0.25rem;">Tổng bài đã nộp</div>
-            </div>
-            <div class="hrm-metric-card" style="padding:1.25rem;text-align:center;">
-              <div style="font-size:1.8rem;font-weight:600;color:#10B981;" id="testAvgScore">—</div>
-              <div style="font-size:0.75rem;color:#6B6A67;margin-top:0.25rem;">Điểm TB</div>
-            </div>
-            <div class="hrm-metric-card" style="padding:1.25rem;text-align:center;">
-              <div style="font-size:1.8rem;font-weight:600;color:#F97316;" id="testPassCount">—</div>
-              <div style="font-size:0.75rem;color:#6B6A67;margin-top:0.25rem;">Đạt (≥ 7/10)</div>
-            </div>
-            <div class="hrm-metric-card" style="padding:1.25rem;text-align:center;">
-              <div style="font-size:1.8rem;font-weight:600;color:#EF4444;" id="testFailCount">—</div>
-              <div style="font-size:0.75rem;color:#6B6A67;margin-top:0.25rem;">Chưa đạt (&lt; 7/10)</div>
+        <div id="test-dashboard" class="dashboard-wrapper" style="display:none;flex-direction:column;padding:2rem 2rem 0;gap:0;overflow:hidden;">
+
+          <!-- Header + Tab bar -->
+          <div style="display:flex;align-items:center;justify-content:space-between;padding-bottom:0;border-bottom:2px solid var(--color-border);margin-bottom:0;">
+            <h2 style="font-family:'Cormorant Garamond',serif;font-size:1.45rem;font-weight:400;color:var(--color-text-main);">Test Năng Lực Nhân Viên</h2>
+            <div class="test-admin-tabs">
+              <button class="test-admin-tab active" data-testtab="tab-exams">📚 Quản lý Đề Thi</button>
+              <button class="test-admin-tab" data-testtab="tab-results">📊 Kết Quả</button>
             </div>
           </div>
-          <!-- Department filter -->
-          <div style="display:flex;gap:0.5rem;flex-wrap:wrap;align-items:center;">
-            <span style="font-size:0.8rem;color:#6B6A67;">Phòng ban:</span>
-            <button class="test-dept-filter active" data-dept="all">Tất cả</button>
-            <button class="test-dept-filter" data-dept="Tuyển dụng">Tuyển dụng</button>
-            <button class="test-dept-filter" data-dept="Hành chính">Hành chính</button>
-            <button class="test-dept-filter" data-dept="Đào tạo">Đào tạo</button>
-            <button class="test-dept-filter" data-dept="Tư vấn Visa">Tư vấn Visa</button>
+
+          <!-- TAB: Quản lý Đề Thi -->
+          <div id="tab-exams" class="test-admin-panel" style="display:flex;flex-direction:column;gap:1rem;padding-top:1.25rem;overflow-y:auto;flex:1;">
+            <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:0.75rem;">
+              <div style="display:flex;gap:0.4rem;flex-wrap:wrap;align-items:center;">
+                <span style="font-size:0.78rem;color:#6B6A67;margin-right:0.25rem;">Phòng ban:</span>
+                <button class="test-dept-filter active" data-dept="all">Tất cả</button>
+                <button class="test-dept-filter" data-dept="Tuyển dụng">Tuyển dụng</button>
+                <button class="test-dept-filter" data-dept="Hành chính">Hành chính</button>
+                <button class="test-dept-filter" data-dept="Đào tạo">Đào tạo</button>
+                <button class="test-dept-filter" data-dept="Tư vấn Visa">Tư vấn Visa</button>
+              </div>
+              <button type="button" id="btnCreateExam" class="hrm-btn-primary" style="display:flex;align-items:center;gap:0.4rem;padding:0.55rem 1.1rem;font-size:0.82rem;">
+                <svg viewBox="0 0 24 24" style="width:15px;height:15px;fill:currentColor;"><path d="M19,13H13V19H11V13H5V11H11V5H13V11H19V13Z"/></svg>
+                Tạo đề thi mới
+              </button>
+            </div>
+            <!-- Exam list -->
+            <div id="examListContainer">
+              <div style="text-align:center;padding:3rem 1rem;color:#6B6A67;">Đang tải danh sách đề thi…</div>
+            </div>
           </div>
-          <!-- Results table -->
-          <div class="hrm-metric-card" style="padding:0;overflow:hidden;">
-            <div class="mini-table-container">
-              <table class="financial-table" style="min-width:600px;">
-                <thead>
-                  <tr>
-                    <th>NHÂN VIÊN</th>
-                    <th>PHÒNG BAN</th>
-                    <th style="text-align:center;">KẾT QUẢ</th>
-                    <th style="text-align:center;">XẾP LOẠI</th>
-                    <th>NGÀY THI</th>
-                  </tr>
-                </thead>
-                <tbody id="testResultsBody">
-                  <tr><td colspan="5" style="text-align:center;padding:2rem;color:#6B6A67;">Đang tải…</td></tr>
-                </tbody>
-              </table>
+
+          <!-- TAB: Kết Quả -->
+          <div id="tab-results" class="test-admin-panel" style="display:none;flex-direction:column;gap:1rem;padding-top:1.25rem;overflow-y:auto;flex:1;">
+            <!-- Stats row -->
+            <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:1rem;">
+              <div class="hrm-metric-card" style="padding:1.1rem;text-align:center;">
+                <div style="font-size:1.75rem;font-weight:700;color:#6366F1;" id="testTotalCount">—</div>
+                <div style="font-size:0.72rem;color:#6B6A67;margin-top:0.2rem;letter-spacing:0.04em;">TỔNG BÀI NỘP</div>
+              </div>
+              <div class="hrm-metric-card" style="padding:1.1rem;text-align:center;">
+                <div style="font-size:1.75rem;font-weight:700;color:#10B981;" id="testAvgScore">—</div>
+                <div style="font-size:0.72rem;color:#6B6A67;margin-top:0.2rem;letter-spacing:0.04em;">ĐIỂM TRUNG BÌNH</div>
+              </div>
+              <div class="hrm-metric-card" style="padding:1.1rem;text-align:center;">
+                <div style="font-size:1.75rem;font-weight:700;color:#10B981;" id="testPassCount">—</div>
+                <div style="font-size:0.72rem;color:#6B6A67;margin-top:0.2rem;letter-spacing:0.04em;">ĐẠT (≥ 7/10)</div>
+              </div>
+              <div class="hrm-metric-card" style="padding:1.1rem;text-align:center;">
+                <div style="font-size:1.75rem;font-weight:700;color:#EF4444;" id="testFailCount">—</div>
+                <div style="font-size:0.72rem;color:#6B6A67;margin-top:0.2rem;letter-spacing:0.04em;">CHƯA ĐẠT (&lt;7)</div>
+              </div>
+            </div>
+            <!-- Filter + refresh -->
+            <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:0.5rem;">
+              <div style="display:flex;gap:0.4rem;flex-wrap:wrap;align-items:center;">
+                <span style="font-size:0.78rem;color:#6B6A67;">Lọc:</span>
+                <button class="test-result-filter active" data-rdept="all">Tất cả</button>
+                <button class="test-result-filter" data-rdept="Tuyển dụng">Tuyển dụng</button>
+                <button class="test-result-filter" data-rdept="Hành chính">Hành chính</button>
+                <button class="test-result-filter" data-rdept="Đào tạo">Đào tạo</button>
+                <button class="test-result-filter" data-rdept="Tư vấn Visa">Tư vấn Visa</button>
+              </div>
+              <button type="button" id="btnRefreshTestResults" class="hrm-btn-primary" style="padding:0.45rem 1rem;font-size:0.78rem;">⟳ Làm mới</button>
+            </div>
+            <!-- Results table -->
+            <div class="hrm-metric-card" style="padding:0;overflow:hidden;margin-bottom:2rem;">
+              <div class="mini-table-container">
+                <table class="financial-table" style="min-width:700px;">
+                  <thead>
+                    <tr>
+                      <th>NHÂN VIÊN</th>
+                      <th>PHÒNG BAN</th>
+                      <th>ĐỀ THI</th>
+                      <th style="text-align:center;">KẾT QUẢ</th>
+                      <th style="text-align:center;">XẾP LOẠI</th>
+                      <th>NGÀY THI</th>
+                      <th style="text-align:center;">CHI TIẾT</th>
+                    </tr>
+                  </thead>
+                  <tbody id="testResultsBody">
+                    <tr><td colspan="7" style="text-align:center;padding:2rem;color:#6B6A67;">Đang tải…</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+        </div>
+        <!-- end test-dashboard -->
+
+        <!-- MODAL: Tạo / Sửa Đề Thi -->
+        <div id="examCreateModal" style="display:none;position:fixed;inset:0;z-index:9000;background:rgba(0,0,0,0.5);align-items:center;justify-content:center;">
+          <div style="background:#fff;border-radius:16px;width:min(860px,96vw);max-height:90vh;display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,0.25);">
+            <!-- Modal header -->
+            <div style="display:flex;align-items:center;justify-content:space-between;padding:1.25rem 1.5rem;border-bottom:1px solid var(--color-border);flex-shrink:0;">
+              <div>
+                <h3 id="examModalTitle" style="font-family:'Cormorant Garamond',serif;font-size:1.3rem;font-weight:400;margin:0;">Tạo đề thi mới</h3>
+                <p style="font-size:0.78rem;color:#6B6A67;margin:0.2rem 0 0;">Điền đầy đủ 10 câu hỏi và đánh dấu đáp án đúng</p>
+              </div>
+              <button type="button" id="btnCloseExamModal" style="background:none;border:none;font-size:1.3rem;cursor:pointer;color:#6B6A67;line-height:1;padding:0.25rem 0.5rem;">✕</button>
+            </div>
+            <!-- Meta fields -->
+            <div style="display:grid;grid-template-columns:1fr 1fr auto;gap:0.75rem;padding:1rem 1.5rem;flex-shrink:0;border-bottom:1px solid var(--color-border);">
+              <div>
+                <label style="font-size:0.75rem;color:#6B6A67;letter-spacing:0.05em;font-weight:600;display:block;margin-bottom:0.3rem;">PHÒNG BAN *</label>
+                <select id="examDeptSelect" style="width:100%;padding:0.5rem 0.75rem;border:1.5px solid #E8E5DF;border-radius:8px;font-size:0.85rem;background:#fff;">
+                  <option value="">-- Chọn phòng ban --</option>
+                  <option value="Tuyển dụng">Tuyển dụng</option>
+                  <option value="Hành chính">Hành chính</option>
+                  <option value="Đào tạo">Đào tạo</option>
+                  <option value="Tư vấn Visa">Tư vấn Visa</option>
+                </select>
+              </div>
+              <div>
+                <label style="font-size:0.75rem;color:#6B6A67;letter-spacing:0.05em;font-weight:600;display:block;margin-bottom:0.3rem;">TÊN ĐỀ THI *</label>
+                <input type="text" id="examTitleInput" placeholder="VD: Bài Test Tuyển Dụng Q3/2026…" style="width:100%;padding:0.5rem 0.75rem;border:1.5px solid #E8E5DF;border-radius:8px;font-size:0.85rem;box-sizing:border-box;" />
+              </div>
+              <div style="display:flex;align-items:flex-end;">
+                <button type="button" id="btnLoadTemplate" style="padding:0.5rem 0.9rem;border:1.5px solid #A88B58;border-radius:8px;background:#FEFCE8;color:#A88B58;font-size:0.78rem;font-weight:600;cursor:pointer;white-space:nowrap;">📋 Tải mẫu</button>
+              </div>
+            </div>
+            <!-- Questions area -->
+            <div id="examQuestionsContainer" style="overflow-y:auto;flex:1;padding:1rem 1.5rem;display:flex;flex-direction:column;gap:0.85rem;">
+              <!-- Built by JS -->
+            </div>
+            <!-- Footer -->
+            <div style="display:flex;align-items:center;justify-content:space-between;padding:1rem 1.5rem;border-top:1px solid var(--color-border);flex-shrink:0;gap:0.75rem;">
+              <div id="examSaveStatus" style="font-size:0.8rem;color:#6B6A67;"></div>
+              <div style="display:flex;gap:0.65rem;">
+                <button type="button" id="btnSaveExamDraft" style="padding:0.55rem 1.2rem;border:1.5px solid #E8E5DF;border-radius:8px;background:#fff;font-size:0.82rem;color:#6B6A67;cursor:pointer;font-weight:500;">Lưu nháp</button>
+                <button type="button" id="btnSaveExamActive" class="hrm-btn-primary" style="padding:0.55rem 1.4rem;font-size:0.82rem;">Lưu &amp; Kích hoạt</button>
+              </div>
             </div>
           </div>
         </div>
-        <!-- end test-dashboard -->
+
+        <!-- MODAL: Xem đề thi (read-only) -->
+        <div id="examViewModal" style="display:none;position:fixed;inset:0;z-index:9000;background:rgba(0,0,0,0.5);align-items:center;justify-content:center;">
+          <div style="background:#fff;border-radius:16px;width:min(740px,96vw);max-height:90vh;display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,0.25);">
+            <div style="display:flex;align-items:center;justify-content:space-between;padding:1.25rem 1.5rem;border-bottom:1px solid var(--color-border);flex-shrink:0;">
+              <div>
+                <h3 id="examViewTitle" style="font-family:'Cormorant Garamond',serif;font-size:1.3rem;font-weight:400;margin:0;">Xem đề thi</h3>
+                <p id="examViewMeta" style="font-size:0.78rem;color:#6B6A67;margin:0.2rem 0 0;"></p>
+              </div>
+              <button type="button" id="btnCloseExamView" style="background:none;border:none;font-size:1.3rem;cursor:pointer;color:#6B6A67;padding:0.25rem 0.5rem;">✕</button>
+            </div>
+            <div id="examViewContent" style="overflow-y:auto;flex:1;padding:1.25rem 1.5rem;display:flex;flex-direction:column;gap:0.85rem;"></div>
+          </div>
+        </div>
+
+        <!-- MODAL: Chi tiết bài làm của nhân viên -->
+        <div id="testDetailModal" style="display:none;position:fixed;inset:0;z-index:9000;background:rgba(0,0,0,0.5);align-items:center;justify-content:center;">
+          <div style="background:#fff;border-radius:16px;width:min(720px,96vw);max-height:90vh;display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,0.25);">
+            <div style="display:flex;align-items:center;justify-content:space-between;padding:1.25rem 1.5rem;border-bottom:1px solid var(--color-border);flex-shrink:0;">
+              <div>
+                <h3 id="tdStaffName" style="font-family:'Cormorant Garamond',serif;font-size:1.3rem;font-weight:400;margin:0;"></h3>
+                <p id="tdMeta" style="font-size:0.78rem;color:#6B6A67;margin:0.2rem 0 0;"></p>
+              </div>
+              <button type="button" id="btnCloseTestDetail" style="background:none;border:none;font-size:1.3rem;cursor:pointer;color:#6B6A67;padding:0.25rem 0.5rem;">✕</button>
+            </div>
+            <div id="testDetailContent" style="overflow-y:auto;flex:1;padding:1.25rem 1.5rem;display:flex;flex-direction:column;gap:0.75rem;"></div>
+          </div>
+        </div>
 
         <!-- STAFF PORTAL: Personal Profile Dashboard -->
         <div id="staff-profile-dashboard" class="dashboard-wrapper" style="display:none; flex-direction:column; height:100%;">

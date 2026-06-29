@@ -9892,6 +9892,22 @@ document.addEventListener('DOMContentLoaded', () => {
   //  TEST NĂNG LỰC
   // ===========================================================================
 
+  // Dept color map (shared)
+  const DEPT_COLORS = {
+    'Tuyển dụng':  { color: '#6366F1', bg: '#EEF2FF' },
+    'Hành chính':  { color: '#0EA5E9', bg: '#E0F2FE' },
+    'Đào tạo':     { color: '#D97706', bg: '#FEF3C7' },
+    'Tư vấn Visa': { color: '#10B981', bg: '#ECFDF5' },
+  };
+
+  const gradeInfo = (score) => {
+    if (score >= 9) return { grade: 'Xuất sắc', color: '#6366F1', bg: '#EEF2FF' };
+    if (score >= 7) return { grade: 'Đạt',      color: '#10B981', bg: '#ECFDF5' };
+    if (score >= 5) return { grade: 'Trung bình',color: '#F97316', bg: '#FFF7ED' };
+    return             { grade: 'Chưa đạt',    color: '#EF4444', bg: '#FEF2F2' };
+  };
+
+  // Default question bank (seed / fallback when admin hasn't uploaded exam yet)
   const QUESTION_BANK = {
     'Tuyển dụng': [
       {
@@ -10103,52 +10119,104 @@ document.addEventListener('DOMContentLoaded', () => {
     ],
   };
 
-  // Track answers: { [qIndex]: optionIndex }
-  let _ctAnswers = {};
-  let _ctDept = '';
-  let _ctSubmitted = false;
+  // ---- State ----
+  let _ctAnswers    = {};   // { qIndex: chosenOptIndex }
+  let _ctQuestions  = [];   // active question array for current test
+  let _ctDept       = '';
+  let _ctExamId     = null;
+  let _ctExamTitle  = '';
+  let _ctSubmitted  = false;
   let _testResultsAll = [];
-  let _testDeptFilter = 'all';
+  let _testResultFilter = 'all';
+  let _examList     = [];
+  let _examDeptFilter = 'all';
+  let _examEditId   = null; // null = create, string = editing
 
-  const renderCompetencyTestForStaff = () => {
+  // =====================================================================
+  //  STAFF: Take the test
+  // =====================================================================
+
+  const renderCompetencyTestForStaff = async () => {
     const wrapper = document.getElementById('competency-test-wrapper');
     if (!wrapper) return;
 
     const staff = _spCurrentStaff || {};
-    const dept = staff.department || '';
+    const dept  = staff.department || '';
 
-    if (!dept || !QUESTION_BANK[dept]) {
+    if (!dept) {
       wrapper.innerHTML = `<div style="text-align:center;padding:3rem 1rem;">
         <div style="font-size:2.5rem;margin-bottom:1rem;">🏢</div>
-        <p style="color:#6B6A67;font-size:0.9rem;">Phòng ban của bạn chưa được phân công bài test.<br>Vui lòng liên hệ HR để cập nhật thông tin.</p>
+        <p style="color:#6B6A67;font-size:0.9rem;">Phòng ban của bạn chưa được phân công.<br>Vui lòng liên hệ HR để cập nhật thông tin.</p>
       </div>`;
       return;
     }
 
-    _ctDept = dept;
-    _ctAnswers = {};
+    wrapper.innerHTML = `<div style="text-align:center;padding:3rem 1rem;color:#6B6A67;">Đang tải đề thi…</div>`;
+
+    let qs = null;
+    let examId = null;
+    let examTitle = null;
+
+    // Fetch active Firestore exam first
+    try {
+      const snap = await db.collection('competency_exams')
+        .where('department', '==', dept)
+        .where('isActive', '==', true)
+        .limit(1)
+        .get();
+      if (!snap.empty) {
+        const ex = { id: snap.docs[0].id, ...snap.docs[0].data() };
+        qs        = ex.questions || [];
+        examId    = ex.id;
+        examTitle = ex.title || `Bài Test ${dept}`;
+      }
+    } catch (e) {
+      console.warn('Firestore exam fetch failed, falling back to bank:', e);
+    }
+
+    // Fallback to built-in bank
+    if (!qs || !qs.length) {
+      qs        = QUESTION_BANK[dept] || [];
+      examId    = null;
+      examTitle = `Bài Test ${dept} (Mặc định)`;
+    }
+
+    if (!qs.length) {
+      wrapper.innerHTML = `<div style="text-align:center;padding:3rem 1rem;">
+        <div style="font-size:2.5rem;margin-bottom:1rem;">📭</div>
+        <p style="color:#6B6A67;font-size:0.9rem;">Chưa có đề thi nào cho phòng ban <strong>${dept}</strong>.<br>Admin sẽ upload đề sớm.</p>
+      </div>`;
+      return;
+    }
+
+    _ctDept      = dept;
+    _ctQuestions = qs;
+    _ctExamId    = examId;
+    _ctExamTitle = examTitle;
+    _ctAnswers   = {};
     _ctSubmitted = false;
-    const qs = QUESTION_BANK[dept];
+
+    const dc = DEPT_COLORS[dept] || { color: '#6366F1', bg: '#EEF2FF' };
 
     const buildQuizHtml = () => {
-      const answeredCount = Object.keys(_ctAnswers).length;
-      const progressPct = Math.round((answeredCount / qs.length) * 100);
+      const answered = Object.keys(_ctAnswers).length;
+      const pct = Math.round((answered / qs.length) * 100);
       let html = `<div class="competency-test-header">
-        <h3>Bài Test: ${dept}</h3>
-        <p>${qs.length} câu hỏi · 3 đáp án · Chọn đáp án đúng nhất</p>
+        <h3>Bài Test: <span style="color:${dc.color};">${dept}</span></h3>
+        <p>${qs.length} câu hỏi · 3 đáp án · Tích vào đáp án đúng nhất · <em>${examTitle}</em></p>
       </div>
       <div class="competency-progress-bar">
-        <div class="competency-progress-fill" style="width:${progressPct}%"></div>
+        <div class="competency-progress-fill" style="width:${pct}%;background:${dc.color};"></div>
       </div>`;
       qs.forEach((item, i) => {
-        const selected = _ctAnswers[i] !== undefined ? _ctAnswers[i] : -1;
+        const sel = _ctAnswers[i] !== undefined ? _ctAnswers[i] : -1;
         html += `<div class="competency-q-block">
           <div class="competency-q-num">Câu ${i + 1} / ${qs.length}</div>
           <div class="competency-q-text">${item.q}</div>
           <div class="competency-options">
             ${item.opts.map((opt, j) => `
-              <label class="competency-option${selected === j ? ' selected' : ''}" data-qi="${i}" data-oi="${j}">
-                <input type="radio" name="cq_${i}" value="${j}" ${selected === j ? 'checked' : ''} />
+              <label class="competency-option${sel === j ? ' selected' : ''}" data-qi="${i}" data-oi="${j}">
+                <input type="radio" name="cq_${i}" value="${j}" ${sel === j ? 'checked' : ''} />
                 <span class="competency-option-dot"></span>
                 <span>${String.fromCharCode(65 + j)}. ${opt}</span>
               </label>`).join('')}
@@ -10156,17 +10224,25 @@ document.addEventListener('DOMContentLoaded', () => {
         </div>`;
       });
       html += `<div class="competency-submit-row">
-        <span class="competency-answered-count">Đã trả lời: <strong>${answeredCount}/${qs.length}</strong></span>
-        <button type="button" class="competency-submit-btn" id="btnSubmitTest" ${answeredCount < qs.length ? 'disabled' : ''}>
+        <span class="competency-answered-count">Đã trả lời: <strong>${answered}/${qs.length}</strong></span>
+        <button type="button" class="competency-submit-btn" id="btnSubmitTest" ${answered < qs.length ? 'disabled' : ''}>
           Nộp bài
         </button>
       </div>`;
       return html;
     };
 
-    wrapper.innerHTML = buildQuizHtml();
+    const attachClickHandlers = () => {
+      wrapper.onclick = null;
+      wrapper.addEventListener('click', handleQuizClick, { capture: false });
+      const btn = document.getElementById('btnSubmitTest');
+      if (btn) btn.onclick = handleSubmitTest;
+    };
 
-    wrapper.addEventListener('click', (e) => {
+    wrapper.innerHTML = buildQuizHtml();
+    attachClickHandlers();
+
+    function handleQuizClick(e) {
       if (_ctSubmitted) return;
       const label = e.target.closest('.competency-option');
       if (!label) return;
@@ -10174,39 +10250,33 @@ document.addEventListener('DOMContentLoaded', () => {
       const oi = parseInt(label.dataset.oi);
       _ctAnswers[qi] = oi;
       wrapper.innerHTML = buildQuizHtml();
-      attachSubmitHandler();
-    });
-
-    const attachSubmitHandler = () => {
-      const btn = document.getElementById('btnSubmitTest');
-      if (btn) btn.addEventListener('click', handleSubmitTest);
-    };
-    attachSubmitHandler();
+      attachClickHandlers();
+    }
   };
 
   const handleSubmitTest = async () => {
     if (_ctSubmitted) return;
+    const qs    = _ctQuestions;
     const staff = _spCurrentStaff || {};
-    const dept = _ctDept;
-    const qs = QUESTION_BANK[dept] || [];
     if (!qs.length) return;
 
     let correct = 0;
-    qs.forEach((item, i) => {
-      if (_ctAnswers[i] === item.ans) correct++;
-    });
+    qs.forEach((item, i) => { if (_ctAnswers[i] === item.ans) correct++; });
     const score = correct;
     const total = qs.length;
     _ctSubmitted = true;
 
     try {
       await db.collection('competency_tests').add({
-        staffId: staff.id || '',
-        staffName: staff.name || 'Nhân viên',
-        department: dept,
+        staffId:    staff.id || '',
+        staffName:  staff.name || 'Nhân viên',
+        department: _ctDept,
         score,
         total,
-        answers: _ctAnswers,
+        answers:    { ..._ctAnswers },
+        examId:     _ctExamId || null,
+        examTitle:  _ctExamTitle || '',
+        questions:  qs,           // snapshot of questions at time of test
         submittedAt: firebase.firestore.Timestamp.fromDate(new Date()),
       });
     } catch (err) {
@@ -10217,106 +10287,444 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!wrapper) return;
 
     const pct = Math.round((score / total) * 100);
-    let grade, gradeColor, gradeBg;
-    if (score >= 9) { grade = 'Xuất sắc'; gradeColor = '#6366F1'; gradeBg = '#EEF2FF'; }
-    else if (score >= 7) { grade = 'Đạt'; gradeColor = '#10B981'; gradeBg = '#ECFDF5'; }
-    else if (score >= 5) { grade = 'Trung bình'; gradeColor = '#F97316'; gradeBg = '#FFF7ED'; }
-    else { grade = 'Chưa đạt'; gradeColor = '#EF4444'; gradeBg = '#FEF2F2'; }
-
+    const gi  = gradeInfo(score);
     wrapper.innerHTML = `<div class="competency-result-card">
-      <div style="font-size:3rem;margin-bottom:0.75rem;">🎉</div>
-      <div class="competency-result-score" style="color:${gradeColor};">${score}<span style="font-size:1.5rem;font-weight:400;color:#6B6A67;">/${total}</span></div>
+      <div style="font-size:3rem;margin-bottom:0.75rem;">${score >= 7 ? '🎉' : '📖'}</div>
+      <div class="competency-result-score" style="color:${gi.color};">${score}<span style="font-size:1.5rem;font-weight:400;color:#6B6A67;">/${total}</span></div>
       <div class="competency-result-label">Bạn trả lời đúng <strong>${score}</strong> trên <strong>${total}</strong> câu — ${pct}%</div>
-      <div class="competency-result-badge" style="color:${gradeColor};background:${gradeBg};">${grade}</div>
+      <div class="competency-result-badge" style="color:${gi.color};background:${gi.bg};">${gi.grade}</div>
       <p style="font-size:0.82rem;color:#6B6A67;margin-top:1.25rem;">Kết quả đã được gửi đến quản lý.</p>
     </div>`;
 
     showToast(`Nộp bài thành công! Kết quả: ${score}/${total}`, 'success');
   };
 
-  // Admin: load and render test results
-  const loadCompetencyTestResults = async () => {
+  // =====================================================================
+  //  ADMIN: Main entry — init the whole test dashboard
+  // =====================================================================
+
+  const loadCompetencyTestResults = () => {
+    // Init admin-tab switcher once
+    if (!document.getElementById('test-dashboard').dataset.tabsBound) {
+      document.getElementById('test-dashboard').dataset.tabsBound = '1';
+
+      document.querySelectorAll('.test-admin-tab').forEach(tab => {
+        tab.addEventListener('click', () => {
+          document.querySelectorAll('.test-admin-tab').forEach(t => t.classList.remove('active'));
+          document.querySelectorAll('.test-admin-panel').forEach(p => { p.style.display = 'none'; p.classList.remove('active-panel'); });
+          tab.classList.add('active');
+          const panel = document.getElementById(tab.dataset.testtab);
+          if (panel) { panel.style.display = 'flex'; panel.classList.add('active-panel'); }
+          if (tab.dataset.testtab === 'tab-results') adminLoadResults();
+          if (tab.dataset.testtab === 'tab-exams')   adminLoadExams();
+        });
+      });
+
+      // Exam dept filter (tab-exams)
+      document.querySelectorAll('.test-dept-filter').forEach(btn => {
+        btn.addEventListener('click', () => {
+          document.querySelectorAll('.test-dept-filter').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          _examDeptFilter = btn.dataset.dept;
+          renderExamList();
+        });
+      });
+
+      // Result dept filter (tab-results)
+      document.querySelectorAll('.test-result-filter').forEach(btn => {
+        btn.addEventListener('click', () => {
+          document.querySelectorAll('.test-result-filter').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          _testResultFilter = btn.dataset.rdept;
+          renderResultTable();
+        });
+      });
+
+      document.getElementById('btnRefreshTestResults')?.addEventListener('click', adminLoadResults);
+      document.getElementById('btnCreateExam')?.addEventListener('click', () => openExamCreateModal(null));
+      document.getElementById('btnCloseExamModal')?.addEventListener('click', () => { document.getElementById('examCreateModal').style.display = 'none'; });
+      document.getElementById('btnCloseExamView')?.addEventListener('click',   () => { document.getElementById('examViewModal').style.display = 'none'; });
+      document.getElementById('btnCloseTestDetail')?.addEventListener('click', () => { document.getElementById('testDetailModal').style.display = 'none'; });
+      document.getElementById('btnLoadTemplate')?.addEventListener('click', loadExamTemplate);
+      document.getElementById('btnSaveExamDraft')?.addEventListener('click',  () => saveExam(false));
+      document.getElementById('btnSaveExamActive')?.addEventListener('click', () => saveExam(true));
+
+      // Click outside modals to close
+      ['examCreateModal','examViewModal','testDetailModal'].forEach(id => {
+        document.getElementById(id)?.addEventListener('click', e => {
+          if (e.target.id === id) document.getElementById(id).style.display = 'none';
+        });
+      });
+    }
+
+    // Show exam tab by default
+    document.querySelectorAll('.test-admin-panel').forEach(p => { p.style.display = 'none'; p.classList.remove('active-panel'); });
+    const examsTab = document.getElementById('tab-exams');
+    if (examsTab) { examsTab.style.display = 'flex'; examsTab.classList.add('active-panel'); }
+    document.querySelectorAll('.test-admin-tab').forEach(t => t.classList.remove('active'));
+    document.querySelector('.test-admin-tab[data-testtab="tab-exams"]')?.classList.add('active');
+
+    adminLoadExams();
+  };
+
+  // =====================================================================
+  //  ADMIN: Exam Management
+  // =====================================================================
+
+  const adminLoadExams = async () => {
+    const container = document.getElementById('examListContainer');
+    if (!container) return;
+    container.innerHTML = '<div style="padding:2rem;text-align:center;color:#6B6A67;">Đang tải…</div>';
+    try {
+      const snap = await db.collection('competency_exams').orderBy('createdAt', 'desc').get();
+      _examList = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    } catch (err) {
+      container.innerHTML = '<div style="padding:2rem;text-align:center;color:#EF4444;">Không thể tải đề thi.</div>';
+      return;
+    }
+    renderExamList();
+  };
+
+  const renderExamList = () => {
+    const container = document.getElementById('examListContainer');
+    if (!container) return;
+    const list = _examDeptFilter === 'all' ? _examList : _examList.filter(e => e.department === _examDeptFilter);
+    if (!list.length) {
+      container.innerHTML = `<div style="text-align:center;padding:3rem 1rem;color:#6B6A67;">
+        <div style="font-size:2rem;margin-bottom:0.75rem;">📋</div>
+        <p style="font-size:0.88rem;">Chưa có đề thi nào${_examDeptFilter !== 'all' ? ` cho phòng <strong>${_examDeptFilter}</strong>` : ''}.<br>
+        Nhấn <strong>+ Tạo đề thi mới</strong> để bắt đầu.</p>
+      </div>`;
+      return;
+    }
+    container.innerHTML = list.map(ex => {
+      const dc   = DEPT_COLORS[ex.department] || { color: '#6B6A67', bg: '#F5F4F2' };
+      const date = ex.createdAt?.toDate ? ex.createdAt.toDate().toLocaleDateString('vi-VN') : '—';
+      const qLen = ex.questions?.length || 0;
+      return `<div class="exam-card${ex.isActive ? ' is-active-exam' : ''}" data-exam-id="${ex.id}">
+        <div class="exam-card-body">
+          <span class="exam-dept-tag" style="color:${dc.color};background:${dc.bg};">${ex.department}</span>
+          <div class="exam-card-title">${ex.title || 'Chưa đặt tên'}</div>
+          <div class="exam-card-meta">${qLen} câu hỏi · Tạo ${date}${ex.createdBy ? ' · bởi ' + ex.createdBy : ''}</div>
+        </div>
+        <div class="exam-card-actions">
+          ${ex.isActive
+            ? `<span class="exam-active-badge">● Đang hoạt động</span>`
+            : `<button class="exam-btn exam-btn-activate" data-id="${ex.id}" data-dept="${ex.department}">Kích hoạt</button>`
+          }
+          <button class="exam-btn exam-btn-view"   data-id="${ex.id}">Xem đề</button>
+          <button class="exam-btn exam-btn-edit"   data-id="${ex.id}">Sửa</button>
+          <button class="exam-btn exam-btn-delete" data-id="${ex.id}" data-title="${(ex.title||'').replace(/"/g,'&quot;')}">Xóa</button>
+        </div>
+      </div>`;
+    }).join('');
+
+    container.querySelectorAll('.exam-btn-view').forEach(btn => {
+      btn.addEventListener('click', () => { const ex = _examList.find(e => e.id === btn.dataset.id); if (ex) openExamViewModal(ex); });
+    });
+    container.querySelectorAll('.exam-btn-edit').forEach(btn => {
+      btn.addEventListener('click', () => { const ex = _examList.find(e => e.id === btn.dataset.id); if (ex) openExamCreateModal(ex); });
+    });
+    container.querySelectorAll('.exam-btn-activate').forEach(btn => {
+      btn.addEventListener('click', () => activateExam(btn.dataset.id, btn.dataset.dept));
+    });
+    container.querySelectorAll('.exam-btn-delete').forEach(btn => {
+      btn.addEventListener('click', () => {
+        if (confirm(`Xóa đề thi "${btn.dataset.title}"?`)) deleteExam(btn.dataset.id);
+      });
+    });
+  };
+
+  const activateExam = async (examId, dept) => {
+    try {
+      const batch = db.batch();
+      _examList.filter(e => e.department === dept).forEach(e => {
+        batch.update(db.collection('competency_exams').doc(e.id), { isActive: false });
+      });
+      batch.update(db.collection('competency_exams').doc(examId), { isActive: true });
+      await batch.commit();
+      showToast('Đề thi đã được kích hoạt! Nhân viên có thể thi ngay.', 'success');
+      adminLoadExams();
+    } catch (err) { showToast('Lỗi: ' + err.message, 'error'); }
+  };
+
+  const deleteExam = async (examId) => {
+    try {
+      await db.collection('competency_exams').doc(examId).delete();
+      showToast('Đã xóa đề thi!', 'success');
+      adminLoadExams();
+    } catch (err) { showToast('Lỗi: ' + err.message, 'error'); }
+  };
+
+  // ---- Exam Create Modal ----
+
+  const buildQBlockHtml = (i, q) => {
+    const qText = q ? q.q : '';
+    return `<div class="exam-q-builder" data-qi="${i}">
+      <div class="exam-q-builder-header">
+        <span class="exam-q-num-label">Câu ${i + 1}</span>
+        <span class="exam-q-correct-hint">📌 Tích ✓ vào ô bên trái đáp án đúng</span>
+      </div>
+      <textarea class="exam-q-text-input" placeholder="Nội dung câu hỏi ${i + 1}…" rows="2">${qText}</textarea>
+      <div>
+        ${[0, 1, 2].map(j => {
+          const optText = q ? (q.opts[j] || '') : '';
+          const isCorrect = q && q.ans === j;
+          return `<div class="exam-q-opt-row${isCorrect ? ' is-correct' : ''}">
+            <div class="exam-q-opt-radio">
+              <input type="radio" name="ans_${i}" value="${j}" title="Đáp án đúng" ${isCorrect ? 'checked' : ''} />
+            </div>
+            <span class="exam-q-opt-letter">${['A','B','C'][j]}</span>
+            <input type="text" class="exam-q-opt-input" placeholder="Đáp án ${['A','B','C'][j]}…" value="${optText}" />
+          </div>`;
+        }).join('')}
+      </div>
+    </div>`;
+  };
+
+  const openExamCreateModal = (exam) => {
+    _examEditId = exam ? exam.id : null;
+    const modal = document.getElementById('examCreateModal');
+    document.getElementById('examModalTitle').textContent = exam ? 'Sửa đề thi' : 'Tạo đề thi mới';
+    document.getElementById('examDeptSelect').value   = exam ? exam.department : '';
+    document.getElementById('examTitleInput').value   = exam ? (exam.title || '') : '';
+    document.getElementById('examSaveStatus').textContent = '';
+
+    const qContainer = document.getElementById('examQuestionsContainer');
+    const existingQs = exam ? (exam.questions || []) : [];
+    qContainer.innerHTML = Array.from({ length: 10 }, (_, i) => buildQBlockHtml(i, existingQs[i] || null)).join('');
+
+    // Highlight correct-answer row when radio changes
+    qContainer.addEventListener('change', (e) => {
+      if (e.target.type !== 'radio') return;
+      const block = e.target.closest('.exam-q-builder');
+      if (!block) return;
+      block.querySelectorAll('.exam-q-opt-row').forEach(row => row.classList.remove('is-correct'));
+      e.target.closest('.exam-q-opt-row').classList.add('is-correct');
+    }, { capture: true });
+
+    modal.style.display = 'flex';
+  };
+
+  const loadExamTemplate = () => {
+    const dept = document.getElementById('examDeptSelect').value;
+    if (!dept || !QUESTION_BANK[dept]) {
+      showToast('Chọn phòng ban trước!', 'error'); return;
+    }
+    const qs = QUESTION_BANK[dept];
+    const qContainer = document.getElementById('examQuestionsContainer');
+    qContainer.innerHTML = qs.map((q, i) => buildQBlockHtml(i, q)).join('');
+    if (!document.getElementById('examTitleInput').value) {
+      document.getElementById('examTitleInput').value = `Bài Test ${dept}`;
+    }
+    showToast(`Đã tải mẫu ${dept} (${qs.length} câu)`, 'success');
+  };
+
+  const collectExamFormData = () => {
+    const dept  = document.getElementById('examDeptSelect').value.trim();
+    const title = document.getElementById('examTitleInput').value.trim();
+    const qContainer = document.getElementById('examQuestionsContainer');
+    const questions = [];
+    let errors = [];
+
+    if (!dept)  errors.push('Chưa chọn phòng ban');
+    if (!title) errors.push('Chưa nhập tên đề thi');
+
+    qContainer.querySelectorAll('.exam-q-builder').forEach((block, i) => {
+      const qText = block.querySelector('.exam-q-text-input').value.trim();
+      const opts  = [...block.querySelectorAll('.exam-q-opt-input')].map(inp => inp.value.trim());
+      const ansEl = block.querySelector(`input[name="ans_${i}"]:checked`);
+      const ans   = ansEl ? parseInt(ansEl.value) : -1;
+      if (!qText)           errors.push(`Câu ${i+1}: thiếu nội dung câu hỏi`);
+      opts.forEach((o, j) => { if (!o) errors.push(`Câu ${i+1}: thiếu đáp án ${['A','B','C'][j]}`); });
+      if (ans === -1)       errors.push(`Câu ${i+1}: chưa chọn đáp án đúng`);
+      questions.push({ q: qText, opts, ans });
+    });
+
+    return { dept, title, questions, errors };
+  };
+
+  const saveExam = async (activate) => {
+    const { dept, title, questions, errors } = collectExamFormData();
+    const statusEl = document.getElementById('examSaveStatus');
+
+    if (errors.length) {
+      statusEl.textContent = '⚠ ' + errors[0] + (errors.length > 1 ? ` (+${errors.length - 1} lỗi khác)` : '');
+      statusEl.style.color = '#EF4444';
+      return;
+    }
+
+    statusEl.textContent = 'Đang lưu…';
+    statusEl.style.color = '#6B6A67';
+
+    try {
+      const payload = {
+        department:  dept,
+        title,
+        questions,
+        isActive:    activate,
+        createdBy:   currentUser?.displayName || currentUser?.email || 'Admin',
+        createdAt:   firebase.firestore.Timestamp.fromDate(new Date()),
+      };
+
+      if (activate) {
+        // Deactivate other exams in same dept first
+        const batch = db.batch();
+        _examList.filter(e => e.department === dept && e.id !== _examEditId).forEach(e => {
+          batch.update(db.collection('competency_exams').doc(e.id), { isActive: false });
+        });
+        await batch.commit();
+      }
+
+      if (_examEditId) {
+        await db.collection('competency_exams').doc(_examEditId).update(payload);
+      } else {
+        await db.collection('competency_exams').add(payload);
+      }
+
+      document.getElementById('examCreateModal').style.display = 'none';
+      showToast(activate ? 'Đề thi đã lưu và kích hoạt cho nhân viên!' : 'Đã lưu đề thi (nháp).', 'success');
+      adminLoadExams();
+    } catch (err) {
+      statusEl.textContent = 'Lỗi: ' + err.message;
+      statusEl.style.color = '#EF4444';
+    }
+  };
+
+  // ---- Exam View Modal (read-only) ----
+
+  const openExamViewModal = (exam) => {
+    const dc   = DEPT_COLORS[exam.department] || { color: '#6B6A67', bg: '#F5F4F2' };
+    const date = exam.createdAt?.toDate ? exam.createdAt.toDate().toLocaleDateString('vi-VN') : '—';
+    document.getElementById('examViewTitle').textContent = exam.title || 'Xem đề thi';
+    document.getElementById('examViewMeta').innerHTML =
+      `<span style="display:inline-block;padding:0.15rem 0.65rem;border-radius:20px;font-size:0.7rem;font-weight:700;color:${dc.color};background:${dc.bg};">${exam.department}</span>
+       &nbsp;${(exam.questions||[]).length} câu · Tạo ${date}${exam.createdBy ? ' · ' + exam.createdBy : ''}
+       ${exam.isActive ? '&nbsp;<span style="color:#10B981;font-weight:700;">● Đang hoạt động</span>' : ''}`;
+
+    const content = document.getElementById('examViewContent');
+    content.innerHTML = (exam.questions || []).map((q, i) => `
+      <div class="exam-view-q">
+        <div class="exam-view-q-num">Câu ${i + 1}</div>
+        <div class="exam-view-q-text">${q.q}</div>
+        ${(q.opts || []).map((opt, j) => `
+          <div class="exam-view-opt${j === q.ans ? ' correct-opt' : ''}">
+            <span class="exam-view-opt-letter">${['A','B','C'][j]}</span>
+            ${opt}
+            ${j === q.ans ? ' <strong>✓</strong>' : ''}
+          </div>`).join('')}
+      </div>`).join('');
+
+    document.getElementById('examViewModal').style.display = 'flex';
+  };
+
+  // =====================================================================
+  //  ADMIN: Results Tab
+  // =====================================================================
+
+  const adminLoadResults = async () => {
     const tbody = document.getElementById('testResultsBody');
     if (!tbody) return;
-    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:2rem;color:#6B6A67;">Đang tải…</td></tr>';
-
+    tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:2rem;color:#6B6A67;">Đang tải…</td></tr>`;
     try {
       const snap = await db.collection('competency_tests').orderBy('submittedAt', 'desc').get();
       _testResultsAll = snap.docs.map(d => ({ id: d.id, ...d.data() }));
     } catch (err) {
-      tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:2rem;color:#EF4444;">Không thể tải dữ liệu.</td></tr>';
+      tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:2rem;color:#EF4444;">Không thể tải dữ liệu.</td></tr>`;
       return;
     }
+    renderResultTable();
+  };
 
-    const updateStats = (list) => {
-      document.getElementById('testTotalCount').textContent = list.length;
-      if (!list.length) {
-        document.getElementById('testAvgScore').textContent = '—';
-        document.getElementById('testPassCount').textContent = '0';
-        document.getElementById('testFailCount').textContent = '0';
-        return;
-      }
-      const avg = (list.reduce((s, r) => s + r.score, 0) / list.length).toFixed(1);
-      document.getElementById('testAvgScore').textContent = avg + '/10';
-      document.getElementById('testPassCount').textContent = list.filter(r => r.score >= 7).length;
-      document.getElementById('testFailCount').textContent = list.filter(r => r.score < 7).length;
-    };
+  const renderResultTable = () => {
+    const tbody = document.getElementById('testResultsBody');
+    if (!tbody) return;
+    const list = _testResultFilter === 'all'
+      ? _testResultsAll
+      : _testResultsAll.filter(r => r.department === _testResultFilter);
 
-    const renderTable = (list) => {
-      if (!list.length) {
-        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:2rem;color:#6B6A67;">Chưa có kết quả nào.</td></tr>';
-        updateStats([]);
-        return;
-      }
-      updateStats(list);
-      const deptColors = {
-        'Tuyển dụng': { color: '#6366F1', bg: '#EEF2FF' },
-        'Hành chính': { color: '#0EA5E9', bg: '#E0F2FE' },
-        'Đào tạo': { color: '#D97706', bg: '#FEF3C7' },
-        'Tư vấn Visa': { color: '#10B981', bg: '#ECFDF5' },
-      };
-      tbody.innerHTML = list.map(r => {
-        const dc = deptColors[r.department] || { color: '#6B6A67', bg: '#F5F4F2' };
-        let grade, gradeColor, gradeBg;
-        if (r.score >= 9) { grade = 'Xuất sắc'; gradeColor = '#6366F1'; gradeBg = '#EEF2FF'; }
-        else if (r.score >= 7) { grade = 'Đạt'; gradeColor = '#10B981'; gradeBg = '#ECFDF5'; }
-        else if (r.score >= 5) { grade = 'Trung bình'; gradeColor = '#F97316'; gradeBg = '#FFF7ED'; }
-        else { grade = 'Chưa đạt'; gradeColor = '#EF4444'; gradeBg = '#FEF2F2'; }
-        const date = r.submittedAt?.toDate ? r.submittedAt.toDate().toLocaleDateString('vi-VN') : '—';
-        return `<tr>
-          <td style="font-weight:500;">${r.staffName || '—'}</td>
-          <td><span style="display:inline-block;padding:0.2rem 0.65rem;border-radius:20px;font-size:0.75rem;font-weight:600;color:${dc.color};background:${dc.bg};">${r.department || '—'}</span></td>
-          <td style="text-align:center;font-size:1.05rem;font-weight:700;color:${gradeColor};">${r.score}<span style="font-size:0.82rem;font-weight:400;color:#6B6A67;">/${r.total || 10}</span></td>
-          <td style="text-align:center;"><span style="display:inline-block;padding:0.2rem 0.75rem;border-radius:20px;font-size:0.75rem;font-weight:600;color:${gradeColor};background:${gradeBg};">${grade}</span></td>
-          <td style="color:#6B6A67;font-size:0.82rem;">${date}</td>
-        </tr>`;
-      }).join('');
-    };
+    // Update stat cards
+    document.getElementById('testTotalCount').textContent = list.length;
+    if (!list.length) {
+      document.getElementById('testAvgScore').textContent  = '—';
+      document.getElementById('testPassCount').textContent = '0';
+      document.getElementById('testFailCount').textContent = '0';
+      tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:2rem;color:#6B6A67;">Chưa có kết quả nào.</td></tr>`;
+      return;
+    }
+    const avg = (list.reduce((s, r) => s + (r.score || 0), 0) / list.length).toFixed(1);
+    document.getElementById('testAvgScore').textContent  = avg + '/10';
+    document.getElementById('testPassCount').textContent = list.filter(r => r.score >= 7).length;
+    document.getElementById('testFailCount').textContent = list.filter(r => r.score < 7).length;
 
-    const filterAndRender = () => {
-      const filtered = _testDeptFilter === 'all'
-        ? _testResultsAll
-        : _testResultsAll.filter(r => r.department === _testDeptFilter);
-      renderTable(filtered);
-    };
+    tbody.innerHTML = list.map(r => {
+      const dc  = DEPT_COLORS[r.department] || { color: '#6B6A67', bg: '#F5F4F2' };
+      const gi  = gradeInfo(r.score);
+      const dt  = r.submittedAt?.toDate ? r.submittedAt.toDate().toLocaleString('vi-VN') : '—';
+      return `<tr>
+        <td style="font-weight:500;">${r.staffName || '—'}</td>
+        <td><span style="display:inline-block;padding:0.18rem 0.6rem;border-radius:20px;font-size:0.72rem;font-weight:700;color:${dc.color};background:${dc.bg};">${r.department || '—'}</span></td>
+        <td style="font-size:0.78rem;color:#6B6A67;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${r.examTitle||''}">${r.examTitle || '—'}</td>
+        <td style="text-align:center;font-size:1.1rem;font-weight:700;color:${gi.color};">${r.score}<span style="font-size:0.8rem;font-weight:400;color:#6B6A67;">/${r.total || 10}</span></td>
+        <td style="text-align:center;"><span style="display:inline-block;padding:0.18rem 0.7rem;border-radius:20px;font-size:0.72rem;font-weight:700;color:${gi.color};background:${gi.bg};">${gi.grade}</span></td>
+        <td style="color:#6B6A67;font-size:0.78rem;white-space:nowrap;">${dt}</td>
+        <td style="text-align:center;">
+          <button class="exam-btn exam-btn-view result-detail-btn" style="font-size:0.72rem;padding:0.22rem 0.65rem;" data-rid="${r.id}">Chi tiết</button>
+        </td>
+      </tr>`;
+    }).join('');
 
-    filterAndRender();
-
-    // Department filter button clicks
-    document.querySelectorAll('.test-dept-filter').forEach(btn => {
+    // Bind detail buttons
+    tbody.querySelectorAll('.result-detail-btn').forEach(btn => {
       btn.addEventListener('click', () => {
-        document.querySelectorAll('.test-dept-filter').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        _testDeptFilter = btn.dataset.dept;
-        filterAndRender();
+        const r = _testResultsAll.find(x => x.id === btn.dataset.rid);
+        if (r) openTestDetailModal(r);
       });
     });
+  };
 
-    // Refresh button
-    const refreshBtn = document.getElementById('btnRefreshTestResults');
-    if (refreshBtn) {
-      refreshBtn.onclick = () => loadCompetencyTestResults();
+  // ---- Test Detail Modal (admin sees staff's answers) ----
+
+  const openTestDetailModal = (r) => {
+    const gi  = gradeInfo(r.score);
+    const dt  = r.submittedAt?.toDate ? r.submittedAt.toDate().toLocaleString('vi-VN') : '—';
+    document.getElementById('tdStaffName').textContent = r.staffName || '—';
+    document.getElementById('tdMeta').innerHTML =
+      `Phòng: <strong>${r.department}</strong> &nbsp;·&nbsp; Đề: <em>${r.examTitle || 'Mặc định'}</em>
+       &nbsp;·&nbsp; Ngày thi: ${dt}
+       &nbsp;·&nbsp; Kết quả: <strong style="color:${gi.color};">${r.score}/${r.total || 10} — ${gi.grade}</strong>`;
+
+    const qs  = r.questions || [];
+    const ans = r.answers   || {};
+    const content = document.getElementById('testDetailContent');
+
+    if (!qs.length) {
+      content.innerHTML = `<p style="color:#6B6A67;text-align:center;padding:2rem;">Không có dữ liệu câu hỏi (bài thi cũ).</p>`;
+    } else {
+      content.innerHTML = qs.map((q, i) => {
+        const chosen  = ans[i] !== undefined ? parseInt(ans[i]) : -1;
+        const correct = q.ans;
+        const isRight = chosen === correct;
+        return `<div class="td-q-block">
+          <div style="display:flex;align-items:baseline;gap:0.5rem;margin-bottom:0.5rem;">
+            <span style="font-size:0.7rem;font-weight:700;color:#6366F1;letter-spacing:0.07em;">Câu ${i+1}</span>
+            <span class="td-q-result-icon">${isRight ? '✅' : '❌'}</span>
+          </div>
+          <div style="font-size:0.85rem;font-weight:500;color:#1A1A1A;margin-bottom:0.5rem;line-height:1.5;">${q.q}</div>
+          ${(q.opts||[]).map((opt, j) => {
+            let bg='', fw='400', prefix='';
+            if (j === correct && j === chosen)  { bg='#ECFDF5'; fw='600'; prefix='✓ '; }
+            else if (j === correct)              { bg='#ECFDF5'; fw='600'; prefix='✓ '; }
+            else if (j === chosen)               { bg='#FEF2F2'; fw='500'; prefix='✗ '; }
+            return `<div style="padding:0.3rem 0.65rem;border-radius:6px;font-size:0.8rem;margin-bottom:0.25rem;font-weight:${fw};background:${bg||'transparent'};color:${j===correct?'#059669':j===chosen?'#DC2626':'#1A1A1A'};">
+              ${prefix}${['A','B','C'][j]}. ${opt}
+            </div>`;
+          }).join('')}
+        </div>`;
+      }).join('');
     }
+
+    document.getElementById('testDetailModal').style.display = 'flex';
   };
 
 });
