@@ -10346,6 +10346,7 @@ document.addEventListener('DOMContentLoaded', () => {
       document.getElementById('btnCloseExamView')?.addEventListener('click',   () => { document.getElementById('examViewModal').style.display = 'none'; });
       document.getElementById('btnCloseTestDetail')?.addEventListener('click', () => { document.getElementById('testDetailModal').style.display = 'none'; });
       document.getElementById('btnLoadTemplate')?.addEventListener('click', loadExamTemplate);
+      document.getElementById('examJsonFileInput')?.addEventListener('change', importExamFromJson);
       document.getElementById('btnSaveExamDraft')?.addEventListener('click',  () => saveExam(false));
       document.getElementById('btnSaveExamActive')?.addEventListener('click', () => saveExam(true));
 
@@ -10518,6 +10519,50 @@ document.addEventListener('DOMContentLoaded', () => {
       document.getElementById('examTitleInput').value = `Bài Test ${dept}`;
     }
     showToast(`Đã tải mẫu ${dept} (${qs.length} câu)`, 'success');
+  };
+
+  const importExamFromJson = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      let data;
+      try {
+        data = JSON.parse(ev.target.result);
+      } catch {
+        showToast('File JSON không hợp lệ!', 'error');
+        return;
+      }
+
+      const qs   = data.questions;
+      const dept = data.department;
+      const title = data.title;
+
+      if (!qs || !Array.isArray(qs) || qs.length === 0) {
+        showToast('File không có mảng "questions"!', 'error'); return;
+      }
+      if (qs.length !== 10) {
+        showToast(`File có ${qs.length} câu — cần đúng 10 câu!`, 'error'); return;
+      }
+
+      // Auto-fill department & title
+      if (dept) document.getElementById('examDeptSelect').value = dept;
+      if (title && !document.getElementById('examTitleInput').value)
+        document.getElementById('examTitleInput').value = title;
+
+      // Render question blocks from imported data
+      const qContainer = document.getElementById('examQuestionsContainer');
+      qContainer.innerHTML = qs.map((q, i) => buildQBlockHtml(i, q)).join('');
+
+      document.getElementById('examSaveStatus').textContent = `✓ Đã import ${qs.length} câu từ "${file.name}"`;
+      document.getElementById('examSaveStatus').style.color = '#10B981';
+      showToast(`Import thành công ${qs.length} câu hỏi!`, 'success');
+    };
+    reader.onerror = () => showToast('Không đọc được file!', 'error');
+    reader.readAsText(file, 'UTF-8');
+
+    // Reset input so same file can be re-imported
+    e.target.value = '';
   };
 
   const collectExamFormData = () => {

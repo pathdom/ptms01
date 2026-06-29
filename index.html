@@ -2554,8 +2554,12 @@
                 <label style="font-size:0.75rem;color:#6B6A67;letter-spacing:0.05em;font-weight:600;display:block;margin-bottom:0.3rem;">TÊN ĐỀ THI *</label>
                 <input type="text" id="examTitleInput" placeholder="VD: Bài Test Tuyển Dụng Q3/2026…" style="width:100%;padding:0.5rem 0.75rem;border:1.5px solid #E8E5DF;border-radius:8px;font-size:0.85rem;box-sizing:border-box;" />
               </div>
-              <div style="display:flex;align-items:flex-end;">
+              <div style="display:flex;align-items:flex-end;gap:0.5rem;">
                 <button type="button" id="btnLoadTemplate" style="padding:0.5rem 0.9rem;border:1.5px solid #A88B58;border-radius:8px;background:#FEFCE8;color:#A88B58;font-size:0.78rem;font-weight:600;cursor:pointer;white-space:nowrap;">📋 Tải mẫu</button>
+                <label id="btnImportExam" style="padding:0.5rem 0.9rem;border:1.5px solid #6366F1;border-radius:8px;background:#EEF2FF;color:#4338CA;font-size:0.78rem;font-weight:600;cursor:pointer;white-space:nowrap;display:inline-flex;align-items:center;">
+                  📁 Import JSON
+                  <input type="file" id="examJsonFileInput" accept=".json" style="display:none;" />
+                </label>
               </div>
             </div>
             <!-- Questions area -->

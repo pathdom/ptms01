@@ -1,0 +1,56 @@
+{
+  "department": "Đào tạo",
+  "title": "Bài Test Đào Tạo Q3/2026",
+  "questions": [
+    {
+      "q": "Mô hình đánh giá đào tạo Kirkpatrick gồm bao nhiêu cấp độ?",
+      "opts": ["3 cấp độ", "4 cấp độ", "5 cấp độ"],
+      "ans": 1
+    },
+    {
+      "q": "OJT (On the Job Training) là hình thức đào tạo nào?",
+      "opts": ["Đào tạo hoàn toàn trực tuyến", "Đào tạo trực tiếp ngay tại nơi làm việc", "Đào tạo theo nhóm lớn"],
+      "ans": 1
+    },
+    {
+      "q": "Mục tiêu đào tạo theo chuẩn SMART cần đảm bảo yếu tố nào?",
+      "opts": ["Cụ thể, đo được, khả thi, liên quan và có thời hạn", "Đơn giản, nhanh chóng và tiết kiệm chi phí", "Sáng tạo, thú vị và hấp dẫn học viên"],
+      "ans": 0
+    },
+    {
+      "q": "E-learning có ưu điểm chính là gì?",
+      "opts": ["Tương tác trực tiếp với giảng viên cao", "Linh hoạt về thời gian học và tiết kiệm chi phí đào tạo", "Kiểm tra kết quả chặt chẽ hơn học offline"],
+      "ans": 1
+    },
+    {
+      "q": "Training Needs Analysis (TNA) được dùng để làm gì?",
+      "opts": ["Đánh giá mức lương của nhân viên", "Xác định khoảng cách kỹ năng và nhu cầu đào tạo thực tế", "Lên lịch nghỉ phép cho nhân viên"],
+      "ans": 1
+    },
+    {
+      "q": "Lý thuyết học qua trải nghiệm (Experiential Learning) do ai đề xuất?",
+      "opts": ["Abraham Maslow", "David Kolb", "Peter Drucker"],
+      "ans": 1
+    },
+    {
+      "q": "Đánh giá sau đào tạo cần tập trung đo lường điều gì?",
+      "opts": ["Tổng số giờ tham gia của học viên", "Mức độ áp dụng kiến thức vào công việc thực tế sau khoá học", "Số lượng tài liệu được phát cho học viên"],
+      "ans": 1
+    },
+    {
+      "q": "Buddy system trong đào tạo nhân viên mới là gì?",
+      "opts": ["Phương pháp học nhóm đông người", "Nhân viên mới được hỗ trợ bởi một nhân viên có kinh nghiệm", "Thi đua kết quả giữa các phòng ban"],
+      "ans": 1
+    },
+    {
+      "q": "LMS (Learning Management System) là gì?",
+      "opts": ["Hệ thống quản lý lương và phúc lợi", "Nền tảng quản lý và triển khai các khoá đào tạo trực tuyến", "Phần mềm chấm công điện tử"],
+      "ans": 1
+    },
+    {
+      "q": "Blended Learning kết hợp giữa hai hình thức nào?",
+      "opts": ["Lý thuyết và thực hành trong cùng một lớp học", "Học trực tuyến (online) và học trực tiếp (offline)", "Đào tạo cá nhân và đào tạo nhóm"],
+      "ans": 1
+    }
+  ]
+}

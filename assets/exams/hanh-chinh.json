@@ -1,0 +1,56 @@
+{
+  "department": "Hành chính",
+  "title": "Bài Test Hành Chính Q3/2026",
+  "questions": [
+    {
+      "q": "Văn bản hành chính cần có yếu tố bắt buộc nào?",
+      "opts": ["Chữ ký và con dấu hợp lệ", "Màu sắc đẹp và bắt mắt", "Bắt buộc dùng font Times New Roman"],
+      "ans": 0
+    },
+    {
+      "q": "Lưu trữ hồ sơ văn phòng nên theo nguyên tắc nào?",
+      "opts": ["Theo màu sắc của file kẹp", "Theo thứ tự thời gian và phân loại rõ ràng", "Theo họ tên của nhân viên"],
+      "ans": 1
+    },
+    {
+      "q": "Khi nhận công văn đến, việc đầu tiên cần làm là?",
+      "opts": ["Trả lời ngay lập tức", "Đăng ký vào sổ theo dõi và chuyển đúng bộ phận phụ trách", "Photo và lưu vào tủ ngay"],
+      "ans": 1
+    },
+    {
+      "q": "Quản lý tài sản văn phòng đúng quy trình bao gồm?",
+      "opts": ["Mua sắm tự do khi cần", "Kiểm kê định kỳ, bàn giao và thanh lý đúng quy trình", "Chỉ quan tâm khi tài sản hỏng"],
+      "ans": 1
+    },
+    {
+      "q": "Cuộc họp nội bộ hiệu quả cần đáp ứng điều gì?",
+      "opts": ["Càng nhiều người tham gia càng tốt", "Có agenda rõ ràng, đúng giờ và ghi biên bản đầy đủ", "Không cần chuẩn bị trước"],
+      "ans": 1
+    },
+    {
+      "q": "ISO trong quản lý hành chính liên quan đến lĩnh vực nào?",
+      "opts": ["Phần mềm kế toán tài chính", "Tiêu chuẩn chất lượng và quy trình quản lý", "Thiết kế và trang trí nội thất"],
+      "ans": 1
+    },
+    {
+      "q": "Bảo mật thông tin nội bộ cần tuân thủ nguyên tắc nào?",
+      "opts": ["Chia sẻ tự do với mọi người trong công ty", "Phân quyền truy cập và ký cam kết bảo mật với nhân viên", "Chỉ bảo mật với người ngoài công ty"],
+      "ans": 1
+    },
+    {
+      "q": "Khi xảy ra sự cố thiết bị văn phòng, cần làm gì?",
+      "opts": ["Tự sửa chữa ngay lập tức", "Báo cáo bộ phận kỹ thuật và ghi nhận sự cố vào sổ theo dõi", "Vứt bỏ và mua thiết bị mới"],
+      "ans": 1
+    },
+    {
+      "q": "Chi phí văn phòng phẩm được kiểm soát hiệu quả bằng cách nào?",
+      "opts": ["Mua bổ sung khi nào hết", "Lập kế hoạch ngân sách và phê duyệt định mức theo tháng", "Để nhân viên tự mua và thanh toán"],
+      "ans": 1
+    },
+    {
+      "q": "Kỹ năng quan trọng nhất của nhân viên hành chính là?",
+      "opts": ["Kỹ năng thiết kế đồ hoạ", "Tổ chức công việc, giao tiếp và quản lý thời gian hiệu quả", "Kỹ năng lập trình phần mềm"],
+      "ans": 1
+    }
+  ]
+}
