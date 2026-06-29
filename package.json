@@ -8,5 +8,8 @@
     "express": "^4.22.2",
     "firebase": "^12.13.0",
     "firebase-admin": "^14.0.0"
+  },
+  "devDependencies": {
+    "docx": "^9.7.1"
   }
 }
