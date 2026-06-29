@@ -4447,6 +4447,10 @@ document.addEventListener('DOMContentLoaded', () => {
             const studentAppRoot = document.getElementById('student-app-root');
             if (studentAppRoot) studentAppRoot.style.display = 'flex';
 
+            // Init notification bell and polling for students
+            initNotificationBell();
+            startNotifPolling();
+
             // Show flight notifications as toast for students on login
             showStudentFlightNotifications();
 
@@ -10010,26 +10014,39 @@ document.addEventListener('DOMContentLoaded', () => {
   let _notifOpen  = false;
 
   const initNotificationBell = () => {
+    const wrapper  = document.getElementById('globalNotifBell');
     const bell     = document.getElementById('btnNotifBell');
     const dropdown = document.getElementById('notifDropdown');
     const markAll  = document.getElementById('btnMarkAllRead');
-    if (!bell || !dropdown) return;
+    if (!bell || !dropdown || !wrapper) return;
+
+    // Show the global bell widget
+    wrapper.style.display = 'block';
 
     bell.addEventListener('click', (e) => {
       e.stopPropagation();
       _notifOpen = !_notifOpen;
-      dropdown.style.display = _notifOpen ? 'flex' : 'none';
+      dropdown.classList.toggle('open', _notifOpen);
       if (_notifOpen) fetchNotifications();
     });
 
     document.addEventListener('click', (e) => {
-      if (_notifOpen && !dropdown.contains(e.target) && e.target !== bell) {
+      if (_notifOpen && !wrapper.contains(e.target)) {
         _notifOpen = false;
-        dropdown.style.display = 'none';
+        dropdown.classList.remove('open');
       }
     });
 
     markAll?.addEventListener('click', markAllNotifsRead);
+
+    // Ring bell every 5 seconds
+    setInterval(() => {
+      bell.classList.remove('bell-ringing');
+      // Force reflow so animation restarts even if already applied
+      void bell.offsetWidth;
+      bell.classList.add('bell-ringing');
+      setTimeout(() => bell.classList.remove('bell-ringing'), 700);
+    }, 5000);
   };
 
   const fetchNotifications = async () => {
@@ -10074,7 +10091,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!list) return;
 
     if (!_notifList.length) {
-      list.innerHTML = `<div style="padding:1.5rem;text-align:center;color:#6B6A67;font-size:0.82rem;">Không có thông báo nào.</div>`;
+      list.innerHTML = `<div class="notif-empty">Không có thông báo nào.</div>`;
       return;
     }
 
@@ -10097,9 +10114,9 @@ document.addEventListener('DOMContentLoaded', () => {
   };
 
   const updateNotifBadge = () => {
-    const badge   = document.getElementById('notifBadge');
+    const badge = document.getElementById('notifBadge');
     if (!badge) return;
-    const unread  = _notifList.filter(n => !n.isRead).length;
+    const unread = _notifList.filter(n => !n.isRead).length;
     if (unread > 0) {
       badge.style.display = 'flex';
       badge.textContent   = unread > 9 ? '9+' : String(unread);

@@ -6448,15 +6448,141 @@ body.dark-theme-crm {
 }
 
 /* ==========================================================================
-   NOTIFICATION BELL
+   GLOBAL NOTIFICATION BELL (fixed top-right, all roles)
    ========================================================================== */
+#globalNotifBell {
+  position: fixed;
+  top: 14px;
+  right: 20px;
+  z-index: 99999;
+}
+
+/* Bell button */
+.global-notif-btn {
+  position: relative;
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  border: none;
+  background: var(--bg-card, #fff);
+  box-shadow: 0 2px 12px rgba(0,0,0,0.13);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: box-shadow 0.2s, background 0.2s;
+  color: #1A1A1A;
+}
+.global-notif-btn:hover {
+  background: #F3F4FF;
+  box-shadow: 0 4px 18px rgba(99,102,241,0.18);
+}
+
+/* Bell icon wrapper — the element that rotates */
+.global-notif-bell-icon {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Ring animation */
+@keyframes bell-ring {
+  0%   { transform: rotate(0deg); }
+  8%   { transform: rotate(18deg); }
+  16%  { transform: rotate(-15deg); }
+  24%  { transform: rotate(12deg); }
+  32%  { transform: rotate(-9deg); }
+  40%  { transform: rotate(6deg); }
+  48%  { transform: rotate(-3deg); }
+  56%  { transform: rotate(1deg); }
+  64%  { transform: rotate(0deg); }
+  100% { transform: rotate(0deg); }
+}
+.bell-ringing .global-notif-bell-icon {
+  animation: bell-ring 0.7s ease;
+}
+
+/* Badge */
 #notifBadge {
-  animation: notif-pulse 2s infinite;
+  display: none;
+  position: absolute;
+  top: -5px;
+  right: -7px;
+  background: #EF4444;
+  color: #fff;
+  font-size: 0.58rem;
+  font-weight: 700;
+  min-width: 17px;
+  height: 17px;
+  border-radius: 9px;
+  align-items: center;
+  justify-content: center;
+  padding: 0 3px;
+  line-height: 1;
+  border: 2px solid #fff;
+  animation: badge-pop 0.3s ease;
 }
-@keyframes notif-pulse {
-  0%, 100% { transform: scale(1); }
-  50%       { transform: scale(1.15); }
+@keyframes badge-pop {
+  0%   { transform: scale(0.6); }
+  70%  { transform: scale(1.2); }
+  100% { transform: scale(1); }
 }
+
+/* Dropdown panel */
+#notifDropdown {
+  display: none;
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  width: 320px;
+  background: #fff;
+  border: 1.5px solid #E8E5DF;
+  border-radius: 16px;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.14);
+  overflow: hidden;
+  flex-direction: column;
+  max-height: 380px;
+}
+#notifDropdown.open {
+  display: flex;
+}
+.notif-dropdown-header {
+  padding: 0.9rem 1.1rem 0.65rem;
+  border-bottom: 1px solid #F0EDE8;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-shrink: 0;
+}
+.notif-dropdown-title {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #1A1A1A;
+  letter-spacing: 0.06em;
+}
+.notif-dropdown-header button {
+  font-size: 0.72rem;
+  color: #6366F1;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-weight: 600;
+  font-family: inherit;
+}
+#notifList {
+  overflow-y: auto;
+  flex: 1;
+  padding: 0.3rem 0;
+}
+.notif-empty {
+  padding: 1.5rem;
+  text-align: center;
+  color: #6B6A67;
+  font-size: 0.82rem;
+}
+
+/* Notification items */
 .notif-item {
   display: flex;
   gap: 0.65rem;
