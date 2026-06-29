@@ -23,6 +23,8 @@
 
     <!-- SheetJS Library for Excel import/export -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <!-- Mammoth.js — parse Word .docx to text -->
+    <script src="https://cdn.jsdelivr.net/npm/mammoth@1.6.0/mammoth.browser.min.js"></script>
   </head>
 
   <body class="admin-portal-body">
@@ -2556,10 +2558,12 @@
               </div>
               <div style="display:flex;align-items:flex-end;gap:0.5rem;">
                 <button type="button" id="btnLoadTemplate" style="padding:0.5rem 0.9rem;border:1.5px solid #A88B58;border-radius:8px;background:#FEFCE8;color:#A88B58;font-size:0.78rem;font-weight:600;cursor:pointer;white-space:nowrap;">📋 Tải mẫu</button>
-                <label id="btnImportExam" style="padding:0.5rem 0.9rem;border:1.5px solid #6366F1;border-radius:8px;background:#EEF2FF;color:#4338CA;font-size:0.78rem;font-weight:600;cursor:pointer;white-space:nowrap;display:inline-flex;align-items:center;">
-                  📁 Import JSON
-                  <input type="file" id="examJsonFileInput" accept=".json" style="display:none;" />
+                <label id="btnImportExam" style="padding:0.5rem 0.9rem;border:1.5px solid #6366F1;border-radius:8px;background:#EEF2FF;color:#4338CA;font-size:0.78rem;font-weight:600;cursor:pointer;white-space:nowrap;display:inline-flex;align-items:center;gap:0.3rem;">
+                  📁 Import file
+                  <span style="font-size:0.65rem;opacity:0.8;">(.xlsx .docx .json)</span>
+                  <input type="file" id="examJsonFileInput" accept=".json,.xlsx,.xls,.docx,.doc,.csv" style="display:none;" />
                 </label>
+                <button type="button" id="btnDownloadTemplate" style="padding:0.5rem 0.9rem;border:1.5px solid #10B981;border-radius:8px;background:#ECFDF5;color:#059669;font-size:0.78rem;font-weight:600;cursor:pointer;white-space:nowrap;">⬇ Template</button>
               </div>
             </div>
             <!-- Questions area -->

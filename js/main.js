@@ -10346,7 +10346,8 @@ document.addEventListener('DOMContentLoaded', () => {
       document.getElementById('btnCloseExamView')?.addEventListener('click',   () => { document.getElementById('examViewModal').style.display = 'none'; });
       document.getElementById('btnCloseTestDetail')?.addEventListener('click', () => { document.getElementById('testDetailModal').style.display = 'none'; });
       document.getElementById('btnLoadTemplate')?.addEventListener('click', loadExamTemplate);
-      document.getElementById('examJsonFileInput')?.addEventListener('change', importExamFromJson);
+      document.getElementById('examJsonFileInput')?.addEventListener('change', importExamFile);
+      document.getElementById('btnDownloadTemplate')?.addEventListener('click', downloadExamTemplate);
       document.getElementById('btnSaveExamDraft')?.addEventListener('click',  () => saveExam(false));
       document.getElementById('btnSaveExamActive')?.addEventListener('click', () => saveExam(true));
 
@@ -10521,48 +10522,204 @@ document.addEventListener('DOMContentLoaded', () => {
     showToast(`Đã tải mẫu ${dept} (${qs.length} câu)`, 'success');
   };
 
-  const importExamFromJson = (e) => {
+  // Apply parsed question data into the modal form
+  const applyImportedExam = (data, fileName) => {
+    const qs    = data.questions;
+    const dept  = data.department || '';
+    const title = data.title || '';
+
+    if (!qs || !Array.isArray(qs) || qs.length === 0) {
+      showToast('Không tìm thấy câu hỏi trong file!', 'error'); return;
+    }
+    if (qs.length !== 10) {
+      showToast(`File có ${qs.length} câu — cần đúng 10 câu!`, 'error'); return;
+    }
+    // Validate each question
+    for (let i = 0; i < qs.length; i++) {
+      const q = qs[i];
+      if (!q.q || !q.opts || q.opts.length < 3 || q.ans === undefined) {
+        showToast(`Câu ${i + 1} thiếu dữ liệu (câu hỏi / đáp án / đáp án đúng)!`, 'error'); return;
+      }
+    }
+
+    if (dept) document.getElementById('examDeptSelect').value = dept;
+    if (title) document.getElementById('examTitleInput').value = title;
+
+    document.getElementById('examQuestionsContainer').innerHTML =
+      qs.map((q, i) => buildQBlockHtml(i, q)).join('');
+
+    const statusEl = document.getElementById('examSaveStatus');
+    statusEl.textContent = `✓ Đã import ${qs.length} câu từ "${fileName}"`;
+    statusEl.style.color = '#10B981';
+    showToast(`Import thành công ${qs.length} câu hỏi!`, 'success');
+  };
+
+  // Route to correct parser based on file extension
+  const importExamFile = async (e) => {
     const file = e.target.files[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = (ev) => {
-      let data;
-      try {
-        data = JSON.parse(ev.target.result);
-      } catch {
-        showToast('File JSON không hợp lệ!', 'error');
-        return;
-      }
-
-      const qs   = data.questions;
-      const dept = data.department;
-      const title = data.title;
-
-      if (!qs || !Array.isArray(qs) || qs.length === 0) {
-        showToast('File không có mảng "questions"!', 'error'); return;
-      }
-      if (qs.length !== 10) {
-        showToast(`File có ${qs.length} câu — cần đúng 10 câu!`, 'error'); return;
-      }
-
-      // Auto-fill department & title
-      if (dept) document.getElementById('examDeptSelect').value = dept;
-      if (title && !document.getElementById('examTitleInput').value)
-        document.getElementById('examTitleInput').value = title;
-
-      // Render question blocks from imported data
-      const qContainer = document.getElementById('examQuestionsContainer');
-      qContainer.innerHTML = qs.map((q, i) => buildQBlockHtml(i, q)).join('');
-
-      document.getElementById('examSaveStatus').textContent = `✓ Đã import ${qs.length} câu từ "${file.name}"`;
-      document.getElementById('examSaveStatus').style.color = '#10B981';
-      showToast(`Import thành công ${qs.length} câu hỏi!`, 'success');
-    };
-    reader.onerror = () => showToast('Không đọc được file!', 'error');
-    reader.readAsText(file, 'UTF-8');
-
-    // Reset input so same file can be re-imported
     e.target.value = '';
+    if (!file) return;
+
+    const ext = file.name.split('.').pop().toLowerCase();
+    const statusEl = document.getElementById('examSaveStatus');
+    statusEl.textContent = `Đang đọc "${file.name}"…`;
+    statusEl.style.color = '#6B6A67';
+
+    try {
+      if (ext === 'json') {
+        await importJson(file);
+      } else if (['xlsx', 'xls', 'csv'].includes(ext)) {
+        await importExcel(file);
+      } else if (['docx', 'doc'].includes(ext)) {
+        await importWord(file);
+      } else {
+        showToast('Định dạng không hỗ trợ! Dùng .xlsx, .docx, hoặc .json', 'error');
+      }
+    } catch (err) {
+      showToast('Lỗi đọc file: ' + err.message, 'error');
+      statusEl.textContent = '';
+    }
+  };
+
+  // --- JSON parser ---
+  const importJson = async (file) => {
+    const text = await file.text();
+    let data;
+    try { data = JSON.parse(text); }
+    catch { throw new Error('File JSON không hợp lệ'); }
+    applyImportedExam(data, file.name);
+  };
+
+  // --- Excel / CSV parser ---
+  // Expected format:
+  //   Row 1: [PHÒNG BAN, value]
+  //   Row 2: [TÊN ĐỀ THI, value]
+  //   Row 3: (header row — ignored)
+  //   Rows 4–13: [CÂU HỎI, ĐÁP ÁN A, ĐÁP ÁN B, ĐÁP ÁN C, ĐÁP ÁN ĐÚNG (A/B/C)]
+  const importExcel = async (file) => {
+    if (!window.XLSX) throw new Error('Thư viện SheetJS chưa tải');
+    const buf  = await file.arrayBuffer();
+    const wb   = XLSX.read(buf, { type: 'array' });
+    const ws   = wb.Sheets[wb.SheetNames[0]];
+    const rows = XLSX.utils.sheet_to_json(ws, { header: 1, defval: '' });
+
+    if (rows.length < 4) throw new Error('File Excel cần ít nhất 4 dòng (xem template)');
+
+    const dept  = String(rows[0]?.[1] || '').trim();
+    const title = String(rows[1]?.[1] || '').trim();
+
+    // Questions start at row index 3 (row 4 in Excel, after header row)
+    const qRows = rows.slice(3).filter(r => String(r[0] || '').trim() !== '');
+    if (qRows.length < 10) throw new Error(`Chỉ có ${qRows.length} câu hỏi — cần đúng 10`);
+
+    const ansMap = { A: 0, B: 1, C: 2, a: 0, b: 1, c: 2, '0': 0, '1': 1, '2': 2 };
+    const questions = qRows.slice(0, 10).map((r, i) => {
+      const q    = String(r[0] || '').trim();
+      const optA = String(r[1] || '').trim();
+      const optB = String(r[2] || '').trim();
+      const optC = String(r[3] || '').trim();
+      const ansRaw = String(r[4] || '').trim();
+      const ans  = ansMap[ansRaw];
+      if (!q || !optA || !optB || !optC)
+        throw new Error(`Dòng câu ${i + 1}: thiếu nội dung câu hỏi hoặc đáp án`);
+      if (ans === undefined)
+        throw new Error(`Dòng câu ${i + 1}: đáp án đúng "${ansRaw}" không hợp lệ — nhập A, B hoặc C`);
+      return { q, opts: [optA, optB, optC], ans };
+    });
+
+    applyImportedExam({ department: dept, title, questions }, file.name);
+  };
+
+  // --- Word / DOCX parser ---
+  // Expected format in Word document:
+  //   Line: "Phòng ban: Hành chính"
+  //   Line: "Tên đề thi: Bài Test ..."
+  //   (blank line)
+  //   "Câu 1: <question text>"
+  //   "A. <option>"  or  "A: <option>"
+  //   "B. <option>"
+  //   "C. <option>"
+  //   "Đáp án: A"    (or B / C)
+  //   (blank line)
+  //   "Câu 2: ..."
+  const importWord = async (file) => {
+    if (!window.mammoth) throw new Error('Thư viện Mammoth chưa tải');
+    const buf    = await file.arrayBuffer();
+    const result = await mammoth.extractRawText({ arrayBuffer: buf });
+    const text   = result.value;
+    parseWordText(text, file.name);
+  };
+
+  const parseWordText = (text, fileName) => {
+    const lines = text.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+
+    let dept = '', title = '';
+    const questions = [];
+    let curQ = null;
+
+    const ansMap = { A: 0, B: 1, C: 2, a: 0, b: 1, c: 2 };
+
+    for (const line of lines) {
+      // Department / Title header lines
+      const deptMatch  = line.match(/^ph[oò]ng\s*ban\s*[:：]\s*(.+)/i);
+      const titleMatch = line.match(/^t[eê]n\s*[đd][eề]\s*thi\s*[:：]\s*(.+)/i);
+      if (deptMatch)  { dept  = deptMatch[1].trim();  continue; }
+      if (titleMatch) { title = titleMatch[1].trim();  continue; }
+
+      // Question line: "Câu 1: ..." or "1. ..." or "1) ..."
+      const qMatch = line.match(/^(?:c[aâ]u\s*)?(\d+)\s*[:.）)]\s*(.+)/i);
+      if (qMatch) {
+        if (curQ && curQ.opts.length === 3 && curQ.ans !== undefined) questions.push(curQ);
+        curQ = { q: qMatch[2].trim(), opts: [], ans: undefined };
+        continue;
+      }
+
+      // Option line: "A. ..." or "A: ..." or "A) ..."
+      const optMatch = line.match(/^([ABC])\s*[.:)）]\s*(.+)/i);
+      if (optMatch && curQ) {
+        curQ.opts.push(optMatch[2].trim());
+        continue;
+      }
+
+      // Answer line: "Đáp án: A" or "Đáp án đúng: B"
+      const ansMatch = line.match(/^[đd][aá]p\s*[aá]n(?:\s*[đd][uú]ng)?\s*[:：]\s*([ABC])/i);
+      if (ansMatch && curQ) {
+        curQ.ans = ansMap[ansMatch[1].toUpperCase()];
+        continue;
+      }
+    }
+    // Push last question
+    if (curQ && curQ.opts.length === 3 && curQ.ans !== undefined) questions.push(curQ);
+
+    if (questions.length === 0) {
+      showToast('Không đọc được câu hỏi. Kiểm tra lại format theo template!', 'error'); return;
+    }
+
+    applyImportedExam({ department: dept, title, questions }, fileName);
+  };
+
+  // --- Generate & download Excel template ---
+  const downloadExamTemplate = () => {
+    if (!window.XLSX) { showToast('Thư viện SheetJS chưa tải!', 'error'); return; }
+    const dept = document.getElementById('examDeptSelect').value || 'Hành chính';
+
+    const data = [
+      ['PHÒNG BAN', dept],
+      ['TÊN ĐỀ THI', `Bài Test ${dept} Q3/2026`],
+      [],
+      ['CÂU HỎI', 'ĐÁP ÁN A', 'ĐÁP ÁN B', 'ĐÁP ÁN C', 'ĐÁP ÁN ĐÚNG (A/B/C)'],
+      ...Array.from({ length: 10 }, (_, i) => [`Câu hỏi ${i + 1}`, 'Đáp án A', 'Đáp án B', 'Đáp án C', 'A']),
+    ];
+
+    const ws = XLSX.utils.aoa_to_sheet(data);
+
+    // Column widths
+    ws['!cols'] = [{ wch: 55 }, { wch: 30 }, { wch: 30 }, { wch: 30 }, { wch: 22 }];
+
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Đề Thi');
+    XLSX.writeFile(wb, `template-de-thi-${dept.toLowerCase().replace(/\s+/g, '-')}.xlsx`);
+    showToast('Đã tải template Excel!', 'success');
   };
 
   const collectExamFormData = () => {
