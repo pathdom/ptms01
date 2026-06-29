@@ -6446,3 +6446,81 @@ body.dark-theme-crm {
   font-size: 0.85rem;
   margin-right: 0.35rem;
 }
+
+/* ==========================================================================
+   NOTIFICATION BELL
+   ========================================================================== */
+#notifBadge {
+  animation: notif-pulse 2s infinite;
+}
+@keyframes notif-pulse {
+  0%, 100% { transform: scale(1); }
+  50%       { transform: scale(1.15); }
+}
+.notif-item {
+  display: flex;
+  gap: 0.65rem;
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid #F5F4F2;
+  cursor: pointer;
+  transition: background 0.12s ease;
+  align-items: flex-start;
+}
+.notif-item:last-child { border-bottom: none; }
+.notif-item:hover      { background: #FAFAF9; }
+.notif-item.unread     { background: #EEF2FF; }
+.notif-item.unread:hover { background: #E0E7FF; }
+.notif-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #6366F1, #818CF8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  font-size: 0.9rem;
+}
+.notif-body { flex: 1; min-width: 0; }
+.notif-msg {
+  font-size: 0.78rem;
+  color: #1A1A1A;
+  line-height: 1.45;
+  margin-bottom: 0.2rem;
+}
+.notif-time {
+  font-size: 0.68rem;
+  color: #6B6A67;
+}
+.notif-unread-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #6366F1;
+  flex-shrink: 0;
+  margin-top: 5px;
+}
+
+/* Flight date input in student table */
+.flight-date-input {
+  border: 1.5px solid #E8E5DF;
+  border-radius: 7px;
+  padding: 0.28rem 0.45rem;
+  font-size: 0.76rem;
+  color: #1A1A1A;
+  background: #fff;
+  cursor: pointer;
+  font-family: inherit;
+  transition: border-color 0.15s ease;
+  width: 115px;
+}
+.flight-date-input:focus {
+  outline: none;
+  border-color: #6366F1;
+}
+.flight-date-input.has-date {
+  border-color: #6EE7B7;
+  background: #F0FDF4;
+  color: #059669;
+  font-weight: 600;
+}

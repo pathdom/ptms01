@@ -30,7 +30,7 @@ document.addEventListener('DOMContentLoaded', () => {
   };
 
   // Toast Generator
-  const showToast = (message, type = 'info') => {
+  const showToast = (message, type = 'info', duration = 4000) => {
     const container = document.getElementById('toastContainer');
     if (!container) return;
 
@@ -66,7 +66,7 @@ document.addEventListener('DOMContentLoaded', () => {
         toast.classList.add('toast-fade-out');
         setTimeout(() => toast.remove(), 400);
       }
-    }, 4000);
+    }, duration);
   };
 
   /* ==========================================================================
@@ -2705,7 +2705,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (filteredList.length === 0) {
       tableBody.innerHTML = `
         <tr>
-          <td colspan="7" style="text-align:center; padding: 3rem; color:var(--text-muted); font-size:0.85rem;">
+          <td colspan="8" style="text-align:center; padding: 3rem; color:var(--text-muted); font-size:0.85rem;">
             Không tìm thấy hồ sơ học viên nào phù hợp.
           </td>
         </tr>
@@ -2745,6 +2745,20 @@ document.addEventListener('DOMContentLoaded', () => {
         <td style="text-align:center;font-size:0.82rem;font-weight:500">${enrollDateStr}</td>
         <td style="text-align:center;"><span class="crm-badge ${badgeClass}">${student.status}</span></td>
         <td style="text-align:center;">
+          ${(() => {
+            // flight date stored as Timestamp or ISO string
+            let fVal = '';
+            if (student.flightDate) {
+              const fd = student.flightDate.toDate ? student.flightDate.toDate() : new Date(student.flightDate);
+              const y = fd.getFullYear(), m = String(fd.getMonth()+1).padStart(2,'0'), d = String(fd.getDate()).padStart(2,'0');
+              fVal = `${y}-${m}-${d}`;
+            }
+            return `<input type="date" class="flight-date-input${fVal ? ' has-date' : ''}"
+              data-id="${student.id}" data-name="${student.name.replace(/"/g,'&quot;')}" data-code="${displayCode}"
+              value="${fVal}" title="${fVal ? '✈ Ngày bay: ' + fVal : 'Chưa có lịch bay'}" />`;
+          })()}
+        </td>
+        <td style="text-align:center;">
           <div style="display:flex;gap:0.3rem;justify-content:center;align-items:center;">
             <button class="action-icon-btn btn-view-student" data-id="${student.id}" title="Chi tiết" style="padding:6px;color:#6366F1;background:#EEF2FF;border:none;cursor:pointer;border-radius:7px">
               <svg viewBox="0 0 24 24" style="width:16px;height:16px;fill:currentColor;"><path d="M12,9A3,3 0 0,0 9,12A3,3 0 0,0 12,15A3,3 0 0,0 15,12A3,3 0 0,0 12,9M12,4.5C7,4.5 2.73,7.61 1,12C2.73,16.39 7,19.5 12,19.5C17,19.5 21.27,16.39 23,12C21.27,7.61 17,4.5 12,4.5Z"/></svg>
@@ -2763,6 +2777,29 @@ document.addEventListener('DOMContentLoaded', () => {
       tr.querySelector(".btn-view-student").addEventListener("click", () => openStudentDetailModal(student));
       tr.querySelector(".btn-edit-student").addEventListener("click", () => openEditStudentModal(student));
       tr.querySelector(".btn-delete-student").addEventListener("click", () => handleDeleteStudent(student));
+
+      // Flight date change → save + create notifications
+      tr.querySelector('.flight-date-input').addEventListener('change', async function () {
+        const dateStr = this.value;
+        const sid     = this.dataset.id;
+        const sname   = this.dataset.name;
+        const scode   = this.dataset.code;
+        try {
+          await saveFlightDate(sid, sname, scode, dateStr);
+          this.classList.toggle('has-date', !!dateStr);
+          this.title = dateStr ? `✈ Ngày bay: ${dateStr}` : 'Chưa có lịch bay';
+          const fd = dateStr ? dateStrToMidnight(dateStr) : null;
+          const daysLeft = fd ? Math.round((fd - new Date()) / 86400000) : null;
+          showToast(
+            dateStr
+              ? `Đã lưu lịch bay ${sname} · ${daysLeft >= 0 ? `còn ${daysLeft} ngày` : 'đã qua'} · Thông báo sẽ gửi trước 7 ngày và 3 ngày!`
+              : `Đã xóa lịch bay của ${sname}`,
+            dateStr ? 'success' : 'warning'
+          );
+        } catch (err) {
+          showToast('Lỗi lưu lịch bay: ' + err.message, 'error');
+        }
+      });
 
       tableBody.appendChild(tr);
     });
@@ -4406,9 +4443,12 @@ document.addEventListener('DOMContentLoaded', () => {
             // SHOW Student App Root, hide Login Panel and Admin Portal
             if (loginContainer) loginContainer.style.display = 'none';
             if (appRoot) appRoot.style.display = 'none';
-            
+
             const studentAppRoot = document.getElementById('student-app-root');
             if (studentAppRoot) studentAppRoot.style.display = 'flex';
+
+            // Show flight notifications as toast for students on login
+            showStudentFlightNotifications();
 
             // Query dynamic profile details from Firestore
             try {
@@ -4757,6 +4797,10 @@ document.addEventListener('DOMContentLoaded', () => {
             if (studentAppRoot) studentAppRoot.style.display = 'none';
             if (loginContainer) loginContainer.style.display = 'none';
             if (appRoot) appRoot.style.display = 'flex';
+
+            // Init notification bell for admin/staff
+            initNotificationBell();
+            startNotifPolling();
 
             // Load users cache (one-time fetch)
             subscribeToUsersCache();
@@ -9879,6 +9923,248 @@ document.addEventListener('DOMContentLoaded', () => {
         const records = snap.docs.map(d => ({ id: d.id, ...d.data() }));
         renderLeavePanel({ prefix: 'sp', total, used: records.length, months, joinStr, records, canCancel: true });
       }, err => console.error('Leave sub error:', err));
+  };
+
+  // ===========================================================================
+  //  LỊCH BAY + THÔNG BÁO TỰ ĐỘNG
+  // ===========================================================================
+
+  // ---- Helpers ----
+  const dateStrToMidnight = (dateStr) => {
+    // "YYYY-MM-DD" → Date at local midnight
+    const [y, m, d] = dateStr.split('-').map(Number);
+    return new Date(y, m - 1, d);
+  };
+
+  const formatDateVN = (date) => {
+    const p = n => String(n).padStart(2, '0');
+    return `${p(date.getDate())}/${p(date.getMonth()+1)}/${date.getFullYear()}`;
+  };
+
+  // ---- Save flight date & upsert notifications ----
+  const saveFlightDate = async (studentId, studentName, studentCode, dateStr) => {
+    const flightTs = dateStr
+      ? firebase.firestore.Timestamp.fromDate(dateStrToMidnight(dateStr))
+      : null;
+
+    await db.collection('students').doc(studentId).update({ flightDate: flightTs || firebase.firestore.FieldValue.delete() });
+
+    if (flightTs) {
+      await upsertFlightNotifications(studentId, studentName, studentCode, dateStrToMidnight(dateStr));
+    } else {
+      // Clear existing notifications for this student's flight
+      const snap = await db.collection('notifications')
+        .where('recipientStudentId', '==', studentId)
+        .where('type', 'in', ['flight_7day', 'flight_3day'])
+        .get();
+      const batch = db.batch();
+      snap.docs.forEach(d => batch.delete(d.ref));
+      await batch.commit();
+    }
+  };
+
+  const upsertFlightNotifications = async (studentId, studentName, studentCode, flightDate) => {
+    const msg = `${studentName}, mã số ${studentCode} chuẩn bị bay, vui lòng check đủ hồ sơ để chuẩn bị cho chuyến bay tốt nhất, chúc bạn may mắn!`;
+
+    // Get student email for recipient lookup
+    const studentDoc = await db.collection('students').doc(studentId).get();
+    const studentEmail = studentDoc.data()?.email || '';
+
+    const notifDays = [
+      { type: 'flight_7day', daysBefor: 7, label: '7 ngày' },
+      { type: 'flight_3day', daysBefor: 3, label: '3 ngày' },
+    ];
+
+    const batch = db.batch();
+
+    // Delete old notifications for this student's flight first
+    const oldSnap = await db.collection('notifications')
+      .where('recipientStudentId', '==', studentId)
+      .where('type', 'in', ['flight_7day', 'flight_3day'])
+      .get();
+    oldSnap.docs.forEach(d => batch.delete(d.ref));
+
+    for (const { type, daysBefor, label } of notifDays) {
+      const dueDate = new Date(flightDate.getTime());
+      dueDate.setDate(dueDate.getDate() - daysBefor);
+
+      const ref = db.collection('notifications').doc();
+      batch.set(ref, {
+        recipientStudentId: studentId,
+        recipientEmail:     studentEmail,
+        type,
+        title:   `✈ Nhắc nhở chuyến bay (còn ${label})`,
+        message: msg,
+        flightDate: firebase.firestore.Timestamp.fromDate(flightDate),
+        dueDate:    firebase.firestore.Timestamp.fromDate(dueDate),
+        isRead:  false,
+        createdAt: firebase.firestore.Timestamp.fromDate(new Date()),
+      });
+    }
+
+    await batch.commit();
+  };
+
+  // ---- Notification Bell UI ----
+  let _notifList  = [];
+  let _notifOpen  = false;
+
+  const initNotificationBell = () => {
+    const bell     = document.getElementById('btnNotifBell');
+    const dropdown = document.getElementById('notifDropdown');
+    const markAll  = document.getElementById('btnMarkAllRead');
+    if (!bell || !dropdown) return;
+
+    bell.addEventListener('click', (e) => {
+      e.stopPropagation();
+      _notifOpen = !_notifOpen;
+      dropdown.style.display = _notifOpen ? 'flex' : 'none';
+      if (_notifOpen) fetchNotifications();
+    });
+
+    document.addEventListener('click', (e) => {
+      if (_notifOpen && !dropdown.contains(e.target) && e.target !== bell) {
+        _notifOpen = false;
+        dropdown.style.display = 'none';
+      }
+    });
+
+    markAll?.addEventListener('click', markAllNotifsRead);
+  };
+
+  const fetchNotifications = async () => {
+    if (!currentUser) return;
+    const list = document.getElementById('notifList');
+    if (!list) return;
+
+    try {
+      const now   = new Date();
+      // Match by email (works for students AND staff viewing their own notifs)
+      const snap  = await db.collection('notifications')
+        .where('recipientEmail', '==', currentUser.email)
+        .where('dueDate', '<=', firebase.firestore.Timestamp.fromDate(now))
+        .orderBy('dueDate', 'desc')
+        .limit(20)
+        .get();
+
+      _notifList = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    } catch (err) {
+      // If index not ready, fallback without dueDate filter
+      try {
+        const snap2 = await db.collection('notifications')
+          .where('recipientEmail', '==', currentUser.email)
+          .orderBy('createdAt', 'desc')
+          .limit(20)
+          .get();
+        const now = new Date();
+        _notifList = snap2.docs
+          .map(d => ({ id: d.id, ...d.data() }))
+          .filter(n => n.dueDate?.toDate ? n.dueDate.toDate() <= now : true);
+      } catch (e2) {
+        _notifList = [];
+      }
+    }
+
+    renderNotifDropdown();
+    updateNotifBadge();
+  };
+
+  const renderNotifDropdown = () => {
+    const list = document.getElementById('notifList');
+    if (!list) return;
+
+    if (!_notifList.length) {
+      list.innerHTML = `<div style="padding:1.5rem;text-align:center;color:#6B6A67;font-size:0.82rem;">Không có thông báo nào.</div>`;
+      return;
+    }
+
+    list.innerHTML = _notifList.map(n => {
+      const timeStr = n.dueDate?.toDate ? formatDateVN(n.dueDate.toDate()) : '';
+      return `<div class="notif-item${n.isRead ? '' : ' unread'}" data-nid="${n.id}">
+        <div class="notif-icon">✈</div>
+        <div class="notif-body">
+          <div class="notif-msg">${n.message}</div>
+          <div class="notif-time">${n.title || ''} · ${timeStr}</div>
+        </div>
+        ${n.isRead ? '' : '<div class="notif-unread-dot"></div>'}
+      </div>`;
+    }).join('');
+
+    // Click to mark read
+    list.querySelectorAll('.notif-item').forEach(el => {
+      el.addEventListener('click', () => markNotifRead(el.dataset.nid));
+    });
+  };
+
+  const updateNotifBadge = () => {
+    const badge   = document.getElementById('notifBadge');
+    if (!badge) return;
+    const unread  = _notifList.filter(n => !n.isRead).length;
+    if (unread > 0) {
+      badge.style.display = 'flex';
+      badge.textContent   = unread > 9 ? '9+' : String(unread);
+    } else {
+      badge.style.display = 'none';
+    }
+  };
+
+  const markNotifRead = async (notifId) => {
+    try {
+      await db.collection('notifications').doc(notifId).update({ isRead: true });
+      const n = _notifList.find(x => x.id === notifId);
+      if (n) n.isRead = true;
+      renderNotifDropdown();
+      updateNotifBadge();
+    } catch (e) { /* silent */ }
+  };
+
+  const markAllNotifsRead = async () => {
+    const unread = _notifList.filter(n => !n.isRead);
+    if (!unread.length) return;
+    const batch = db.batch();
+    unread.forEach(n => {
+      batch.update(db.collection('notifications').doc(n.id), { isRead: true });
+      n.isRead = true;
+    });
+    await batch.commit();
+    renderNotifDropdown();
+    updateNotifBadge();
+  };
+
+  // Poll every 60 s when bell is closed (silent background check)
+  const startNotifPolling = () => {
+    fetchNotifications();
+    setInterval(() => { if (!_notifOpen) fetchNotifications(); }, 60000);
+  };
+
+  // For students: show due flight notifications as toast + modal on login
+  const showStudentFlightNotifications = async () => {
+    if (!currentUser?.email) return;
+    try {
+      const now  = new Date();
+      const snap = await db.collection('notifications')
+        .where('recipientEmail', '==', currentUser.email)
+        .where('isRead', '==', false)
+        .get();
+
+      const due = snap.docs
+        .map(d => ({ id: d.id, ...d.data() }))
+        .filter(n => n.dueDate?.toDate ? n.dueDate.toDate() <= now : false);
+
+      if (!due.length) return;
+
+      // Show each as a toast with slight delay
+      due.forEach((n, i) => {
+        setTimeout(() => {
+          showToast(`✈ ${n.message}`, 'info', 8000);
+        }, i * 1200);
+      });
+
+      // Mark all as read after showing
+      const batch = db.batch();
+      due.forEach(n => batch.update(db.collection('notifications').doc(n.id), { isRead: true }));
+      await batch.commit();
+    } catch (e) { /* silent */ }
   };
 
   // ---- Employee Personal Attendance ----

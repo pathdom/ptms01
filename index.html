@@ -256,6 +256,29 @@
           </ul>
         </nav>
 
+        <!-- Notification Bell -->
+        <div style="position:relative;padding:0 0.75rem 0.5rem;">
+          <button id="btnNotifBell" style="display:flex;align-items:center;gap:0.6rem;width:100%;padding:0.65rem 0.9rem;border:none;background:none;cursor:pointer;border-radius:10px;color:#6B6A67;font-size:0.82rem;transition:background 0.15s;text-align:left;" onmouseover="this.style.background='rgba(99,102,241,0.08)'" onmouseout="this.style.background='none'">
+            <div style="position:relative;flex-shrink:0;">
+              <svg viewBox="0 0 24 24" style="width:20px;height:20px;fill:currentColor;">
+                <path d="M21,19V20H3V19L5,17V11C5,7.9 7.03,5.17 10,4.29C10,4.19 10,4.1 10,4A2,2 0 0,1 12,2A2,2 0 0,1 14,4C14,4.1 14,4.19 14,4.29C16.97,5.17 19,7.9 19,11V17L21,19M14,21A2,2 0 0,1 12,23A2,2 0 0,1 10,21"/>
+              </svg>
+              <span id="notifBadge" style="display:none;position:absolute;top:-5px;right:-6px;background:#EF4444;color:#fff;font-size:0.6rem;font-weight:700;min-width:16px;height:16px;border-radius:8px;display:flex;align-items:center;justify-content:center;padding:0 3px;line-height:1;">0</span>
+            </div>
+            <span>Thông báo</span>
+          </button>
+          <!-- Notification Dropdown -->
+          <div id="notifDropdown" style="display:none;position:absolute;bottom:calc(100% + 4px);left:0.75rem;right:0.75rem;background:#fff;border:1.5px solid #E8E5DF;border-radius:14px;box-shadow:0 8px 32px rgba(0,0,0,0.15);z-index:500;overflow:hidden;max-height:360px;display:flex;flex-direction:column;">
+            <div style="padding:0.9rem 1rem 0.6rem;border-bottom:1px solid #F0EDE8;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;">
+              <span style="font-size:0.82rem;font-weight:700;color:#1A1A1A;letter-spacing:0.03em;">THÔNG BÁO</span>
+              <button id="btnMarkAllRead" style="font-size:0.72rem;color:#6366F1;background:none;border:none;cursor:pointer;font-weight:600;">Đọc tất cả</button>
+            </div>
+            <div id="notifList" style="overflow-y:auto;flex:1;padding:0.4rem 0;">
+              <div style="padding:1.5rem;text-align:center;color:#6B6A67;font-size:0.82rem;">Đang tải…</div>
+            </div>
+          </div>
+        </div>
+
         <!-- Sidebar Footer Controls -->
         <div class="sidebar-footer">
           <button
@@ -578,6 +601,7 @@
                         <th>QUỐC GIA</th>
                         <th>NGÀY NHẬP HỌC</th>
                         <th>TRẠNG THÁI</th>
+                        <th style="text-align:center;">LỊCH BAY ✈</th>
                         <th style="text-align: center">HÀNH ĐỘNG</th>
                       </tr>
                     </thead>
