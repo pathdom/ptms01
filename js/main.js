@@ -996,18 +996,22 @@ document.addEventListener('DOMContentLoaded', () => {
     const menuItemCreateUsers = document.getElementById('menuItemCreateUsers');
     const menuItemCreateStudentUsers = document.getElementById('menuItemCreateStudentUsers');
     const menuItemHRM = document.getElementById('menuItemHRM');
+    const menuItemTest = document.getElementById('menuItemTest');
     if (user.role === 'admin') {
       if (menuItemCreateUsers) menuItemCreateUsers.style.display = 'flex';
       if (menuItemCreateStudentUsers) menuItemCreateStudentUsers.style.display = 'flex';
       if (menuItemHRM) menuItemHRM.style.display = 'flex';
+      if (menuItemTest) menuItemTest.style.display = 'flex';
     } else if (user.role === 'student') {
       if (menuItemCreateUsers) menuItemCreateUsers.style.display = 'none';
       if (menuItemCreateStudentUsers) menuItemCreateStudentUsers.style.display = 'none';
       if (menuItemHRM) menuItemHRM.style.display = 'none';
+      if (menuItemTest) menuItemTest.style.display = 'none';
     } else {
       if (menuItemCreateUsers) menuItemCreateUsers.style.display = 'none';
       if (menuItemCreateStudentUsers) menuItemCreateStudentUsers.style.display = 'none';
       if (menuItemHRM) menuItemHRM.style.display = 'flex';
+      if (menuItemTest) menuItemTest.style.display = 'none';
     }
   };
 
@@ -1126,7 +1130,8 @@ document.addEventListener('DOMContentLoaded', () => {
     // Show selected dashboard
     const targetElement = document.getElementById(targetViewId);
     if (targetElement) {
-      targetElement.style.display = 'block';
+      const flexDashboards = ['staff-profile-dashboard', 'staff-attendance-dashboard', 'test-dashboard'];
+      targetElement.style.display = flexDashboards.includes(targetViewId) ? 'flex' : 'block';
     }
 
     // Update active nav menu link styling
@@ -1157,6 +1162,8 @@ document.addEventListener('DOMContentLoaded', () => {
       initStaffProfileDashboard();
     } else if (targetViewId === 'staff-attendance-dashboard') {
       initStaffAttendanceDashboard();
+    } else if (targetViewId === 'test-dashboard') {
+      loadCompetencyTestResults();
     } else {
       if (typeof teardownCrmChat === 'function') teardownCrmChat();
     }
@@ -8013,6 +8020,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // ── CRM Staff ──────────────────────────────────────────────────────────────
   let _allCrmStaff = [];
   let _crmStaffProfileStaff = null;
+  let _spCurrentStaff = null; // logged-in staff profile for staff portal
 
   const reloadCrmStaff = () => {
     db.collection('hrm_staff').orderBy('name').get()
@@ -9622,6 +9630,9 @@ document.addEventListener('DOMContentLoaded', () => {
         btn.classList.add('active');
         const panel = document.getElementById(btn.getAttribute('data-sptab'));
         if (panel) panel.classList.add('active');
+        if (btn.getAttribute('data-sptab') === 'sptab-test') {
+          renderCompetencyTestForStaff();
+        }
       });
     }
 
@@ -9694,6 +9705,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
       if (!snap.empty) {
         const s = { id: snap.docs[0].id, ...snap.docs[0].data() };
+        _spCurrentStaff = s;
         populateStaffProfileDashboard(s);
         // Setup leave tab
         _leaveStaffEmail = s.email || currentUser.email;
@@ -9874,6 +9886,437 @@ document.addEventListener('DOMContentLoaded', () => {
     const dashboard = document.getElementById('staff-attendance-dashboard');
     if (dashboard) dashboard.style.display = 'flex';
     if (window.AttendanceService) AttendanceService.init();
+  };
+
+  // ===========================================================================
+  //  TEST NĂNG LỰC
+  // ===========================================================================
+
+  const QUESTION_BANK = {
+    'Tuyển dụng': [
+      {
+        q: 'Điều nào quan trọng nhất khi viết JD (Mô tả công việc)?',
+        opts: ['Yêu cầu bằng cấp thật cao', 'Mô tả rõ trách nhiệm và yêu cầu ứng viên', 'Chỉ cần ghi lương hấp dẫn'],
+        ans: 1,
+      },
+      {
+        q: 'Phương pháp phỏng vấn STAR dùng để làm gì?',
+        opts: ['Đánh giá ngoại hình ứng viên', 'Khai thác kinh nghiệm thực tế qua tình huống', 'Kiểm tra chỉ số IQ'],
+        ans: 1,
+      },
+      {
+        q: 'Onboarding nhân viên mới bao gồm nội dung chính nào?',
+        opts: ['Giao việc ngay từ ngày đầu tiên', 'Định hướng văn hoá, quy trình và giới thiệu đội ngũ', 'Chỉ cần ký hợp đồng lao động'],
+        ans: 1,
+      },
+      {
+        q: 'KPI trong tuyển dụng thường đo lường chỉ số nào?',
+        opts: ['Số CV nhận được mỗi tuần', 'Tỷ lệ vòng lọc hồ sơ', 'Thời gian tuyển dụng và tỷ lệ giữ chân nhân viên'],
+        ans: 2,
+      },
+      {
+        q: 'Headhunting khác với tuyển dụng thông thường ở điểm nào?',
+        opts: ['Không cần phỏng vấn ứng viên', 'Chủ động tìm kiếm ứng viên không chủ động tìm việc', 'Chỉ tuyển vị trí cấp thấp'],
+        ans: 1,
+      },
+      {
+        q: 'Employer Branding là gì?',
+        opts: ['Thiết kế logo và nhận diện thương hiệu', 'Xây dựng hình ảnh nhà tuyển dụng hấp dẫn trên thị trường', 'Quảng cáo sản phẩm của công ty'],
+        ans: 1,
+      },
+      {
+        q: 'Khi ứng viên từ chối offer, bước tiếp theo nên là?',
+        opts: ['Tuyển lại từ đầu quy trình', 'Liên hệ ứng viên tiềm năng thứ 2 trong danh sách dự phòng', 'Tăng lương cho tất cả ứng viên'],
+        ans: 1,
+      },
+      {
+        q: 'ATS (Applicant Tracking System) được dùng để làm gì?',
+        opts: ['Chấm công nhân viên hàng ngày', 'Quản lý và theo dõi hồ sơ ứng viên trong quá trình tuyển dụng', 'Tính lương và phúc lợi'],
+        ans: 1,
+      },
+      {
+        q: 'Phỏng vấn hội đồng có ưu điểm chính nào?',
+        opts: ['Tiết kiệm thời gian nhất cho ứng viên', 'Giảm thiểu thiên kiến cá nhân trong đánh giá ứng viên', 'Ứng viên cảm thấy thoải mái hơn'],
+        ans: 1,
+      },
+      {
+        q: 'Background check nên được thực hiện khi nào?',
+        opts: ['Trước vòng phỏng vấn đầu tiên', 'Sau khi có offer nhưng trước khi ký hợp đồng chính thức', 'Sau 3 tháng thử việc'],
+        ans: 1,
+      },
+    ],
+    'Hành chính': [
+      {
+        q: 'Văn bản hành chính cần có yếu tố bắt buộc nào?',
+        opts: ['Chữ ký và con dấu hợp lệ', 'Màu sắc đẹp và bắt mắt', 'Bắt buộc dùng font Times New Roman'],
+        ans: 0,
+      },
+      {
+        q: 'Lưu trữ hồ sơ văn phòng nên theo nguyên tắc nào?',
+        opts: ['Theo màu sắc của file kẹp', 'Theo thứ tự thời gian và phân loại rõ ràng', 'Theo họ tên của nhân viên'],
+        ans: 1,
+      },
+      {
+        q: 'Khi nhận công văn đến, việc đầu tiên cần làm là?',
+        opts: ['Trả lời ngay lập tức', 'Đăng ký vào sổ theo dõi và chuyển đúng bộ phận phụ trách', 'Photo và lưu vào tủ ngay'],
+        ans: 1,
+      },
+      {
+        q: 'Quản lý tài sản văn phòng đúng quy trình bao gồm?',
+        opts: ['Mua sắm tự do khi cần', 'Kiểm kê định kỳ, bàn giao và thanh lý đúng quy trình', 'Chỉ quan tâm khi tài sản hỏng'],
+        ans: 1,
+      },
+      {
+        q: 'Cuộc họp nội bộ hiệu quả cần đáp ứng điều gì?',
+        opts: ['Càng nhiều người tham gia càng tốt', 'Có agenda rõ ràng, đúng giờ và ghi biên bản đầy đủ', 'Không cần chuẩn bị trước'],
+        ans: 1,
+      },
+      {
+        q: 'ISO trong quản lý hành chính liên quan đến lĩnh vực nào?',
+        opts: ['Phần mềm kế toán tài chính', 'Tiêu chuẩn chất lượng và quy trình quản lý', 'Thiết kế và trang trí nội thất'],
+        ans: 1,
+      },
+      {
+        q: 'Bảo mật thông tin nội bộ cần tuân thủ nguyên tắc nào?',
+        opts: ['Chia sẻ tự do với mọi người trong công ty', 'Phân quyền truy cập và ký cam kết bảo mật với nhân viên', 'Chỉ bảo mật với người ngoài công ty'],
+        ans: 1,
+      },
+      {
+        q: 'Khi xảy ra sự cố thiết bị văn phòng, cần làm gì?',
+        opts: ['Tự sửa chữa ngay lập tức', 'Báo cáo bộ phận kỹ thuật và ghi nhận sự cố vào sổ theo dõi', 'Vứt bỏ và mua thiết bị mới'],
+        ans: 1,
+      },
+      {
+        q: 'Chi phí văn phòng phẩm được kiểm soát hiệu quả bằng cách nào?',
+        opts: ['Mua bổ sung khi nào hết', 'Lập kế hoạch ngân sách và phê duyệt định mức theo tháng', 'Để nhân viên tự mua và thanh toán'],
+        ans: 1,
+      },
+      {
+        q: 'Kỹ năng quan trọng nhất của nhân viên hành chính là?',
+        opts: ['Kỹ năng thiết kế đồ hoạ', 'Tổ chức công việc, giao tiếp và quản lý thời gian hiệu quả', 'Kỹ năng lập trình phần mềm'],
+        ans: 1,
+      },
+    ],
+    'Đào tạo': [
+      {
+        q: 'Mô hình đánh giá đào tạo Kirkpatrick gồm bao nhiêu cấp độ?',
+        opts: ['3 cấp độ', '4 cấp độ', '5 cấp độ'],
+        ans: 1,
+      },
+      {
+        q: 'OJT (On the Job Training) là hình thức đào tạo nào?',
+        opts: ['Đào tạo hoàn toàn trực tuyến', 'Đào tạo trực tiếp ngay tại nơi làm việc', 'Đào tạo theo nhóm lớn'],
+        ans: 1,
+      },
+      {
+        q: 'Mục tiêu đào tạo theo chuẩn SMART cần đảm bảo yếu tố nào?',
+        opts: ['Cụ thể, đo được, khả thi, liên quan và có thời hạn', 'Đơn giản, nhanh chóng và tiết kiệm chi phí', 'Sáng tạo, thú vị và hấp dẫn học viên'],
+        ans: 0,
+      },
+      {
+        q: 'E-learning có ưu điểm chính là gì?',
+        opts: ['Tương tác trực tiếp với giảng viên cao', 'Linh hoạt về thời gian học và tiết kiệm chi phí đào tạo', 'Kiểm tra kết quả chặt chẽ hơn học offline'],
+        ans: 1,
+      },
+      {
+        q: 'Training Needs Analysis (TNA) được dùng để làm gì?',
+        opts: ['Đánh giá mức lương của nhân viên', 'Xác định khoảng cách kỹ năng và nhu cầu đào tạo thực tế', 'Lên lịch nghỉ phép cho nhân viên'],
+        ans: 1,
+      },
+      {
+        q: 'Lý thuyết học qua trải nghiệm (Experiential Learning) do ai đề xuất?',
+        opts: ['Abraham Maslow', 'David Kolb', 'Peter Drucker'],
+        ans: 1,
+      },
+      {
+        q: 'Đánh giá sau đào tạo cần tập trung đo lường điều gì?',
+        opts: ['Tổng số giờ tham gia của học viên', 'Mức độ áp dụng kiến thức vào công việc thực tế sau khoá học', 'Số lượng tài liệu được phát cho học viên'],
+        ans: 1,
+      },
+      {
+        q: 'Buddy system trong đào tạo nhân viên mới là gì?',
+        opts: ['Phương pháp học nhóm đông người', 'Nhân viên mới được hỗ trợ bởi một nhân viên có kinh nghiệm', 'Thi đua kết quả giữa các phòng ban'],
+        ans: 1,
+      },
+      {
+        q: 'LMS (Learning Management System) là gì?',
+        opts: ['Hệ thống quản lý lương và phúc lợi', 'Nền tảng quản lý và triển khai các khoá đào tạo trực tuyến', 'Phần mềm chấm công điện tử'],
+        ans: 1,
+      },
+      {
+        q: 'Blended Learning kết hợp giữa hai hình thức nào?',
+        opts: ['Lý thuyết và thực hành trong cùng một lớp học', 'Học trực tuyến (online) và học trực tiếp (offline)', 'Đào tạo cá nhân và đào tạo nhóm'],
+        ans: 1,
+      },
+    ],
+    'Tư vấn Visa': [
+      {
+        q: 'Hồ sơ xin visa du học Nhật Bản yêu cầu bắt buộc điều gì?',
+        opts: ['Bằng chứng chỉ tiếng Nhật JLPT N1', 'Thư nhập học từ trường và chứng minh tài chính đủ điều kiện', 'Tối thiểu 2 năm kinh nghiệm làm việc'],
+        ans: 1,
+      },
+      {
+        q: 'Thời gian xử lý visa du học tại Nhật Bản thường là bao lâu?',
+        opts: ['Khoảng 1 tuần làm việc', '1 đến 3 tháng tùy từng trường hợp', 'Tối thiểu 6 tháng'],
+        ans: 1,
+      },
+      {
+        q: 'Certificate of Eligibility (COE) tại Nhật Bản là gì?',
+        opts: ['Chứng chỉ trình độ tiếng Nhật', 'Giấy tư cách lưu trú do cơ quan xuất nhập cảnh Nhật cấp', 'Hợp đồng học bổng với trường'],
+        ans: 1,
+      },
+      {
+        q: 'Khi hồ sơ visa bị từ chối, bước đầu tiên cần làm là?',
+        opts: ['Nộp lại ngay hồ sơ cũ không thay đổi', 'Tìm hiểu lý do từ chối và bổ sung/điều chỉnh hồ sơ phù hợp', 'Chuyển ngay sang tư vấn quốc gia khác'],
+        ans: 1,
+      },
+      {
+        q: 'Chứng minh tài chính trong hồ sơ visa du học thường cần tài liệu gì?',
+        opts: ['Sao kê tài khoản ngân hàng 3–6 tháng gần nhất', 'Hóa đơn điện nước hàng tháng', 'Bảng lương tháng hiện tại của phụ huynh'],
+        ans: 0,
+      },
+      {
+        q: 'Visa Working Holiday tại Nhật Bản dành cho độ tuổi nào?',
+        opts: ['Dưới 18 tuổi', '18 đến 30 tuổi', '25 đến 40 tuổi'],
+        ans: 1,
+      },
+      {
+        q: 'Học viên nên nộp hồ sơ xin visa du học trước ngày nhập học bao lâu?',
+        opts: ['Khoảng 1 tuần trước khi nhập học', 'Ít nhất 2 đến 3 tháng trước khi nhập học', 'Trước 1 năm để đảm bảo an toàn'],
+        ans: 1,
+      },
+      {
+        q: 'Giấy tờ nào KHÔNG cần thiết trong hồ sơ xin visa du học (nếu độc thân)?',
+        opts: ['Hộ chiếu còn hạn ít nhất 6 tháng', 'Giấy đăng ký kết hôn (khi chưa có gia đình)', 'Ảnh thẻ đúng quy cách'],
+        ans: 1,
+      },
+      {
+        q: 'Khi tư vấn học viên, điều quan trọng nhất cần làm đầu tiên là?',
+        opts: ['Giới thiệu ngay các gói học phí hiện có', 'Tìm hiểu mục tiêu, khả năng tài chính và năng lực của học viên', 'Yêu cầu học viên đặt cọc ngay để giữ chỗ'],
+        ans: 1,
+      },
+      {
+        q: 'Học viên cần chuẩn bị tài liệu nào để chứng minh năng lực tiếng Nhật khi xin visa?',
+        opts: ['Không cần chứng chỉ nếu học tại trường tiếng Nhật', 'Kết quả thi JLPT hoặc chứng chỉ tiếng Nhật tương đương', 'Chỉ cần thư giới thiệu từ giáo viên'],
+        ans: 1,
+      },
+    ],
+  };
+
+  // Track answers: { [qIndex]: optionIndex }
+  let _ctAnswers = {};
+  let _ctDept = '';
+  let _ctSubmitted = false;
+  let _testResultsAll = [];
+  let _testDeptFilter = 'all';
+
+  const renderCompetencyTestForStaff = () => {
+    const wrapper = document.getElementById('competency-test-wrapper');
+    if (!wrapper) return;
+
+    const staff = _spCurrentStaff || {};
+    const dept = staff.department || '';
+
+    if (!dept || !QUESTION_BANK[dept]) {
+      wrapper.innerHTML = `<div style="text-align:center;padding:3rem 1rem;">
+        <div style="font-size:2.5rem;margin-bottom:1rem;">🏢</div>
+        <p style="color:#6B6A67;font-size:0.9rem;">Phòng ban của bạn chưa được phân công bài test.<br>Vui lòng liên hệ HR để cập nhật thông tin.</p>
+      </div>`;
+      return;
+    }
+
+    _ctDept = dept;
+    _ctAnswers = {};
+    _ctSubmitted = false;
+    const qs = QUESTION_BANK[dept];
+
+    const buildQuizHtml = () => {
+      const answeredCount = Object.keys(_ctAnswers).length;
+      const progressPct = Math.round((answeredCount / qs.length) * 100);
+      let html = `<div class="competency-test-header">
+        <h3>Bài Test: ${dept}</h3>
+        <p>${qs.length} câu hỏi · 3 đáp án · Chọn đáp án đúng nhất</p>
+      </div>
+      <div class="competency-progress-bar">
+        <div class="competency-progress-fill" style="width:${progressPct}%"></div>
+      </div>`;
+      qs.forEach((item, i) => {
+        const selected = _ctAnswers[i] !== undefined ? _ctAnswers[i] : -1;
+        html += `<div class="competency-q-block">
+          <div class="competency-q-num">Câu ${i + 1} / ${qs.length}</div>
+          <div class="competency-q-text">${item.q}</div>
+          <div class="competency-options">
+            ${item.opts.map((opt, j) => `
+              <label class="competency-option${selected === j ? ' selected' : ''}" data-qi="${i}" data-oi="${j}">
+                <input type="radio" name="cq_${i}" value="${j}" ${selected === j ? 'checked' : ''} />
+                <span class="competency-option-dot"></span>
+                <span>${String.fromCharCode(65 + j)}. ${opt}</span>
+              </label>`).join('')}
+          </div>
+        </div>`;
+      });
+      html += `<div class="competency-submit-row">
+        <span class="competency-answered-count">Đã trả lời: <strong>${answeredCount}/${qs.length}</strong></span>
+        <button type="button" class="competency-submit-btn" id="btnSubmitTest" ${answeredCount < qs.length ? 'disabled' : ''}>
+          Nộp bài
+        </button>
+      </div>`;
+      return html;
+    };
+
+    wrapper.innerHTML = buildQuizHtml();
+
+    wrapper.addEventListener('click', (e) => {
+      if (_ctSubmitted) return;
+      const label = e.target.closest('.competency-option');
+      if (!label) return;
+      const qi = parseInt(label.dataset.qi);
+      const oi = parseInt(label.dataset.oi);
+      _ctAnswers[qi] = oi;
+      wrapper.innerHTML = buildQuizHtml();
+      attachSubmitHandler();
+    });
+
+    const attachSubmitHandler = () => {
+      const btn = document.getElementById('btnSubmitTest');
+      if (btn) btn.addEventListener('click', handleSubmitTest);
+    };
+    attachSubmitHandler();
+  };
+
+  const handleSubmitTest = async () => {
+    if (_ctSubmitted) return;
+    const staff = _spCurrentStaff || {};
+    const dept = _ctDept;
+    const qs = QUESTION_BANK[dept] || [];
+    if (!qs.length) return;
+
+    let correct = 0;
+    qs.forEach((item, i) => {
+      if (_ctAnswers[i] === item.ans) correct++;
+    });
+    const score = correct;
+    const total = qs.length;
+    _ctSubmitted = true;
+
+    try {
+      await db.collection('competency_tests').add({
+        staffId: staff.id || '',
+        staffName: staff.name || 'Nhân viên',
+        department: dept,
+        score,
+        total,
+        answers: _ctAnswers,
+        submittedAt: firebase.firestore.Timestamp.fromDate(new Date()),
+      });
+    } catch (err) {
+      console.warn('Could not save test result:', err);
+    }
+
+    const wrapper = document.getElementById('competency-test-wrapper');
+    if (!wrapper) return;
+
+    const pct = Math.round((score / total) * 100);
+    let grade, gradeColor, gradeBg;
+    if (score >= 9) { grade = 'Xuất sắc'; gradeColor = '#6366F1'; gradeBg = '#EEF2FF'; }
+    else if (score >= 7) { grade = 'Đạt'; gradeColor = '#10B981'; gradeBg = '#ECFDF5'; }
+    else if (score >= 5) { grade = 'Trung bình'; gradeColor = '#F97316'; gradeBg = '#FFF7ED'; }
+    else { grade = 'Chưa đạt'; gradeColor = '#EF4444'; gradeBg = '#FEF2F2'; }
+
+    wrapper.innerHTML = `<div class="competency-result-card">
+      <div style="font-size:3rem;margin-bottom:0.75rem;">🎉</div>
+      <div class="competency-result-score" style="color:${gradeColor};">${score}<span style="font-size:1.5rem;font-weight:400;color:#6B6A67;">/${total}</span></div>
+      <div class="competency-result-label">Bạn trả lời đúng <strong>${score}</strong> trên <strong>${total}</strong> câu — ${pct}%</div>
+      <div class="competency-result-badge" style="color:${gradeColor};background:${gradeBg};">${grade}</div>
+      <p style="font-size:0.82rem;color:#6B6A67;margin-top:1.25rem;">Kết quả đã được gửi đến quản lý.</p>
+    </div>`;
+
+    showToast(`Nộp bài thành công! Kết quả: ${score}/${total}`, 'success');
+  };
+
+  // Admin: load and render test results
+  const loadCompetencyTestResults = async () => {
+    const tbody = document.getElementById('testResultsBody');
+    if (!tbody) return;
+    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:2rem;color:#6B6A67;">Đang tải…</td></tr>';
+
+    try {
+      const snap = await db.collection('competency_tests').orderBy('submittedAt', 'desc').get();
+      _testResultsAll = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    } catch (err) {
+      tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:2rem;color:#EF4444;">Không thể tải dữ liệu.</td></tr>';
+      return;
+    }
+
+    const updateStats = (list) => {
+      document.getElementById('testTotalCount').textContent = list.length;
+      if (!list.length) {
+        document.getElementById('testAvgScore').textContent = '—';
+        document.getElementById('testPassCount').textContent = '0';
+        document.getElementById('testFailCount').textContent = '0';
+        return;
+      }
+      const avg = (list.reduce((s, r) => s + r.score, 0) / list.length).toFixed(1);
+      document.getElementById('testAvgScore').textContent = avg + '/10';
+      document.getElementById('testPassCount').textContent = list.filter(r => r.score >= 7).length;
+      document.getElementById('testFailCount').textContent = list.filter(r => r.score < 7).length;
+    };
+
+    const renderTable = (list) => {
+      if (!list.length) {
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:2rem;color:#6B6A67;">Chưa có kết quả nào.</td></tr>';
+        updateStats([]);
+        return;
+      }
+      updateStats(list);
+      const deptColors = {
+        'Tuyển dụng': { color: '#6366F1', bg: '#EEF2FF' },
+        'Hành chính': { color: '#0EA5E9', bg: '#E0F2FE' },
+        'Đào tạo': { color: '#D97706', bg: '#FEF3C7' },
+        'Tư vấn Visa': { color: '#10B981', bg: '#ECFDF5' },
+      };
+      tbody.innerHTML = list.map(r => {
+        const dc = deptColors[r.department] || { color: '#6B6A67', bg: '#F5F4F2' };
+        let grade, gradeColor, gradeBg;
+        if (r.score >= 9) { grade = 'Xuất sắc'; gradeColor = '#6366F1'; gradeBg = '#EEF2FF'; }
+        else if (r.score >= 7) { grade = 'Đạt'; gradeColor = '#10B981'; gradeBg = '#ECFDF5'; }
+        else if (r.score >= 5) { grade = 'Trung bình'; gradeColor = '#F97316'; gradeBg = '#FFF7ED'; }
+        else { grade = 'Chưa đạt'; gradeColor = '#EF4444'; gradeBg = '#FEF2F2'; }
+        const date = r.submittedAt?.toDate ? r.submittedAt.toDate().toLocaleDateString('vi-VN') : '—';
+        return `<tr>
+          <td style="font-weight:500;">${r.staffName || '—'}</td>
+          <td><span style="display:inline-block;padding:0.2rem 0.65rem;border-radius:20px;font-size:0.75rem;font-weight:600;color:${dc.color};background:${dc.bg};">${r.department || '—'}</span></td>
+          <td style="text-align:center;font-size:1.05rem;font-weight:700;color:${gradeColor};">${r.score}<span style="font-size:0.82rem;font-weight:400;color:#6B6A67;">/${r.total || 10}</span></td>
+          <td style="text-align:center;"><span style="display:inline-block;padding:0.2rem 0.75rem;border-radius:20px;font-size:0.75rem;font-weight:600;color:${gradeColor};background:${gradeBg};">${grade}</span></td>
+          <td style="color:#6B6A67;font-size:0.82rem;">${date}</td>
+        </tr>`;
+      }).join('');
+    };
+
+    const filterAndRender = () => {
+      const filtered = _testDeptFilter === 'all'
+        ? _testResultsAll
+        : _testResultsAll.filter(r => r.department === _testDeptFilter);
+      renderTable(filtered);
+    };
+
+    filterAndRender();
+
+    // Department filter button clicks
+    document.querySelectorAll('.test-dept-filter').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.test-dept-filter').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        _testDeptFilter = btn.dataset.dept;
+        filterAndRender();
+      });
+    });
+
+    // Refresh button
+    const refreshBtn = document.getElementById('btnRefreshTestResults');
+    if (refreshBtn) {
+      refreshBtn.onclick = () => loadCompetencyTestResults();
+    }
   };
 
 });

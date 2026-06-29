@@ -245,6 +245,12 @@
               </svg>
               <span>Quản lý CRM</span>
             </li>
+            <li class="menu-item" data-target="test-dashboard" id="menuItemTest">
+              <svg viewBox="0 0 24 24" style="width: 20px; height: 20px; fill: currentColor">
+                <path d="M9,20.42L2.79,14.21L5.62,11.38L9,14.77L18.88,4.88L21.71,7.71L9,20.42Z"/>
+              </svg>
+              <span>Test Năng Lực NV</span>
+            </li>
           </ul>
         </nav>
 
@@ -2428,6 +2434,62 @@
         </div>
         <!-- end crm-dashboard -->
 
+        <!-- TEST NĂNG LỰC NV DASHBOARD (ADMIN) -->
+        <div id="test-dashboard" class="dashboard-wrapper" style="display:none;flex-direction:column;padding:2rem;gap:1.5rem;">
+          <div class="hrm-section-header" style="display:flex;align-items:center;justify-content:space-between;padding-bottom:1rem;border-bottom:1px solid var(--color-border);">
+            <h2 style="font-family:'Cormorant Garamond',serif;font-size:1.5rem;font-weight:400;color:var(--color-text-main);">Test Năng Lực Nhân Viên</h2>
+            <button type="button" id="btnRefreshTestResults" class="hrm-btn-primary" style="padding:0.5rem 1.1rem;font-size:0.8rem;">Làm mới</button>
+          </div>
+          <!-- Stats row -->
+          <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:1rem;" id="testStatCards">
+            <div class="hrm-metric-card" style="padding:1.25rem;text-align:center;">
+              <div style="font-size:1.8rem;font-weight:600;color:#6366F1;" id="testTotalCount">—</div>
+              <div style="font-size:0.75rem;color:#6B6A67;margin-top:0.25rem;">Tổng bài đã nộp</div>
+            </div>
+            <div class="hrm-metric-card" style="padding:1.25rem;text-align:center;">
+              <div style="font-size:1.8rem;font-weight:600;color:#10B981;" id="testAvgScore">—</div>
+              <div style="font-size:0.75rem;color:#6B6A67;margin-top:0.25rem;">Điểm TB</div>
+            </div>
+            <div class="hrm-metric-card" style="padding:1.25rem;text-align:center;">
+              <div style="font-size:1.8rem;font-weight:600;color:#F97316;" id="testPassCount">—</div>
+              <div style="font-size:0.75rem;color:#6B6A67;margin-top:0.25rem;">Đạt (≥ 7/10)</div>
+            </div>
+            <div class="hrm-metric-card" style="padding:1.25rem;text-align:center;">
+              <div style="font-size:1.8rem;font-weight:600;color:#EF4444;" id="testFailCount">—</div>
+              <div style="font-size:0.75rem;color:#6B6A67;margin-top:0.25rem;">Chưa đạt (&lt; 7/10)</div>
+            </div>
+          </div>
+          <!-- Department filter -->
+          <div style="display:flex;gap:0.5rem;flex-wrap:wrap;align-items:center;">
+            <span style="font-size:0.8rem;color:#6B6A67;">Phòng ban:</span>
+            <button class="test-dept-filter active" data-dept="all">Tất cả</button>
+            <button class="test-dept-filter" data-dept="Tuyển dụng">Tuyển dụng</button>
+            <button class="test-dept-filter" data-dept="Hành chính">Hành chính</button>
+            <button class="test-dept-filter" data-dept="Đào tạo">Đào tạo</button>
+            <button class="test-dept-filter" data-dept="Tư vấn Visa">Tư vấn Visa</button>
+          </div>
+          <!-- Results table -->
+          <div class="hrm-metric-card" style="padding:0;overflow:hidden;">
+            <div class="mini-table-container">
+              <table class="financial-table" style="min-width:600px;">
+                <thead>
+                  <tr>
+                    <th>NHÂN VIÊN</th>
+                    <th>PHÒNG BAN</th>
+                    <th style="text-align:center;">KẾT QUẢ</th>
+                    <th style="text-align:center;">XẾP LOẠI</th>
+                    <th>NGÀY THI</th>
+                  </tr>
+                </thead>
+                <tbody id="testResultsBody">
+                  <tr><td colspan="5" style="text-align:center;padding:2rem;color:#6B6A67;">Đang tải…</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+        <!-- end test-dashboard -->
+
         <!-- STAFF PORTAL: Personal Profile Dashboard -->
         <div id="staff-profile-dashboard" class="dashboard-wrapper" style="display:none; flex-direction:column; height:100%;">
           <!-- Tab Navigation Bar -->
@@ -2438,6 +2500,7 @@
               <button class="sp-tab" data-sptab="sptab-contract">Công việc &amp; Hợp đồng</button>
               <button class="sp-tab" data-sptab="sptab-salary">Lương &amp; Phúc lợi</button>
               <button class="sp-tab" data-sptab="sptab-leave">Thông tin phép</button>
+              <button class="sp-tab" data-sptab="sptab-test">🎯 Test Năng Lực</button>
             </div>
             <div class="hrm-profile-header-actions">
               <div class="topbar-user-wrapper" style="position:relative;">
@@ -2724,7 +2787,15 @@
               </div>
             </div>
           </div>
-    
+
+          <!-- Tab: Test Năng Lực -->
+          <div id="sptab-test" class="crmsp-panel">
+            <div id="competency-test-wrapper">
+              <!-- rendered by JS: renderCompetencyTestForStaff() -->
+              <div style="text-align:center;padding:3rem 1rem;color:#6B6A67;">Đang tải bài test…</div>
+            </div>
+          </div>
+
         </div>
 
         <!-- STAFF PORTAL: Personal Attendance -->
