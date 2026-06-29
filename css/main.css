@@ -6452,30 +6452,30 @@ body.dark-theme-crm {
    ========================================================================== */
 #globalNotifBell {
   position: fixed;
-  top: 14px;
-  right: 20px;
+  top: 18px;
+  right: 18px;
   z-index: 99999;
 }
 
 /* Bell button */
 .global-notif-btn {
   position: relative;
-  width: 42px;
-  height: 42px;
+  width: 22px;
+  height: 22px;
   border-radius: 50%;
   border: none;
-  background: var(--bg-card, #fff);
-  box-shadow: 0 2px 12px rgba(0,0,0,0.13);
+  background: transparent;
+  box-shadow: none;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: box-shadow 0.2s, background 0.2s;
-  color: #1A1A1A;
+  transition: opacity 0.2s;
+  color: #6B6A67;
+  padding: 0;
 }
 .global-notif-btn:hover {
-  background: #F3F4FF;
-  box-shadow: 0 4px 18px rgba(99,102,241,0.18);
+  opacity: 0.7;
 }
 
 /* Bell icon wrapper — the element that rotates */
@@ -6484,43 +6484,43 @@ body.dark-theme-crm {
   display: flex;
   align-items: center;
   justify-content: center;
+  transform-origin: top center;
 }
 
 /* Ring animation */
 @keyframes bell-ring {
   0%   { transform: rotate(0deg); }
-  8%   { transform: rotate(18deg); }
-  16%  { transform: rotate(-15deg); }
-  24%  { transform: rotate(12deg); }
-  32%  { transform: rotate(-9deg); }
-  40%  { transform: rotate(6deg); }
-  48%  { transform: rotate(-3deg); }
-  56%  { transform: rotate(1deg); }
-  64%  { transform: rotate(0deg); }
+  10%  { transform: rotate(20deg); }
+  20%  { transform: rotate(-17deg); }
+  30%  { transform: rotate(13deg); }
+  40%  { transform: rotate(-9deg); }
+  50%  { transform: rotate(5deg); }
+  60%  { transform: rotate(-2deg); }
+  70%  { transform: rotate(0deg); }
   100% { transform: rotate(0deg); }
 }
 .bell-ringing .global-notif-bell-icon {
-  animation: bell-ring 0.7s ease;
+  animation: bell-ring 0.65s cubic-bezier(0.36,0.07,0.19,0.97);
 }
 
 /* Badge */
 #notifBadge {
   display: none;
   position: absolute;
-  top: -5px;
-  right: -7px;
+  top: -4px;
+  right: -5px;
   background: #EF4444;
   color: #fff;
-  font-size: 0.58rem;
+  font-size: 0.42rem;
   font-weight: 700;
-  min-width: 17px;
-  height: 17px;
-  border-radius: 9px;
+  min-width: 10px;
+  height: 10px;
+  border-radius: 5px;
   align-items: center;
   justify-content: center;
-  padding: 0 3px;
+  padding: 0 2px;
   line-height: 1;
-  border: 2px solid #fff;
+  border: 1.5px solid #fff;
   animation: badge-pop 0.3s ease;
 }
 @keyframes badge-pop {
