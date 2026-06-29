@@ -5909,14 +5909,18 @@ document.addEventListener('DOMContentLoaded', () => {
       }
 
       const depts = [
-        { key: 'Tuyển dụng',  color: '#3FA2F6', bg: 'rgba(63,162,246,0.12)',
-          icon: '<svg viewBox="0 0 24 24"><path d="M15,14C12.33,14 7,15.33 7,18V20H23V18C23,15.33 17.67,14 15,14M6,8.17V5H4V8.17C2.78,8.58 2,9.7 2,11C2,12.3 2.78,13.42 4,13.83V17H6V13.83C7.22,13.42 8,12.3 8,11C8,9.7 7.22,8.58 6,8.17M15,12A4,4 0 0,0 19,8A4,4 0 0,0 15,4A4,4 0 0,0 11,8A4,4 0 0,0 15,12Z"/></svg>' },
-        { key: 'Đào tạo',     color: '#10B981', bg: 'rgba(16,185,129,0.12)',
-          icon: '<svg viewBox="0 0 24 24"><path d="M12,3L1,9L12,15L21,10.09V17H23V9M5,13.18V17.18L12,21L19,17.18V13.18L12,17L5,13.18Z"/></svg>' },
-        { key: 'Hành chính',  color: '#F59E0B', bg: 'rgba(245,158,11,0.12)',
+        { key: 'Hành chính kế toán', color: '#0EA5E9', bg: 'rgba(14,165,233,0.12)',
           icon: '<svg viewBox="0 0 24 24"><path d="M19,3H5C3.89,3 3,3.89 3,5V19A2,2 0 0,0 5,21H19A2,2 0 0,0 21,19V5C21,3.89 20.1,3 19,3M19,19H5V5H19V19M17,12H7V10H17V12M17,16H7V14H17V16M14,8H7V6H14V8Z"/></svg>' },
-        { key: 'Tư vấn Visa', color: '#8B5CF6', bg: 'rgba(139,92,246,0.12)',
-          icon: '<svg viewBox="0 0 24 24"><path d="M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M12,20C7.59,20 4,16.41 4,12C4,7.59 7.59,4 12,4C16.41,4 20,7.59 20,12C20,16.41 16.41,20 12,20M12.5,7H11V13L16.75,16.5L17.5,15.25L12.5,12.25V7Z"/></svg>' }
+        { key: 'Marketing',          color: '#EC4899', bg: 'rgba(236,72,153,0.12)',
+          icon: '<svg viewBox="0 0 24 24"><path d="M16,6L18.29,8.29L13.41,13.17L9.41,9.17L2,16.59L3.41,18L9.41,12L13.41,16L19.71,9.71L22,12V6H16Z"/></svg>' },
+        { key: 'Đối ngoại',          color: '#14B8A6', bg: 'rgba(20,184,166,0.12)',
+          icon: '<svg viewBox="0 0 24 24"><path d="M17.9,17.39C17.64,16.59 16.89,16 16,16H15V13A1,1 0 0,0 14,12H8V10H10A1,1 0 0,0 11,9V7H13A2,2 0 0,0 15,5V4.59C17.93,5.77 20,8.64 20,12C20,14.08 19.2,15.97 17.9,17.39M11,19.93C7.05,19.44 4,16.08 4,12C4,11.38 4.08,10.78 4.21,10.21L9,15V16A2,2 0 0,0 11,18M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2Z"/></svg>' },
+        { key: 'Hồ sơ',              color: '#F59E0B', bg: 'rgba(245,158,11,0.12)',
+          icon: '<svg viewBox="0 0 24 24"><path d="M20,18H4V8H20M20,6H12L10,4H4C2.89,4 2,4.89 2,6V18A2,2 0 0,0 4,20H20A2,2 0 0,0 22,18V8C22,6.89 21.1,6 20,6Z"/></svg>' },
+        { key: 'Đào tạo',            color: '#D97706', bg: 'rgba(217,119,6,0.12)',
+          icon: '<svg viewBox="0 0 24 24"><path d="M12,3L1,9L12,15L21,10.09V17H23V9M5,13.18V17.18L12,21L19,17.18V13.18L12,17L5,13.18Z"/></svg>' },
+        { key: 'Kinh doanh',         color: '#6366F1', bg: 'rgba(99,102,241,0.12)',
+          icon: '<svg viewBox="0 0 24 24"><path d="M20,6H16V4A2,2 0 0,0 14,2H10A2,2 0 0,0 8,4V6H4A2,2 0 0,0 2,8V19A2,2 0 0,0 4,21H20A2,2 0 0,0 22,19V8A2,2 0 0,0 20,6M10,4H14V6H10V4Z"/></svg>' },
       ];
 
       grid.innerHTML = depts.map(dept => {
@@ -6536,7 +6540,7 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('hrmStaffEditId').value = s.id;
     document.getElementById('hrmStaffName').value     = s.name       || '';
     document.getElementById('hrmStaffEmail').value    = s.email      || '';
-    document.getElementById('hrmStaffDept').value     = s.department || 'Tuyển dụng';
+    document.getElementById('hrmStaffDept').value     = s.department || DEPARTMENTS[0];
     document.getElementById('hrmStaffPhone').value    = s.phone      || '';
     document.getElementById('hrmStaffStatus').value   = s.status     || 'Đang làm việc';
     const bdEl = document.getElementById('hrmStaffBirthday');
@@ -10195,12 +10199,61 @@ document.addEventListener('DOMContentLoaded', () => {
   //  TEST NĂNG LỰC
   // ===========================================================================
 
+  // ── Single source of truth for all department names ──────────────────────
+  const DEPARTMENTS = [
+    'Hành chính kế toán',
+    'Marketing',
+    'Đối ngoại',
+    'Hồ sơ',
+    'Đào tạo',
+    'Kinh doanh',
+  ];
+
+  // Populate all department-related selects and filter buttons from DEPARTMENTS
+  const populateDeptSelects = () => {
+    const deptOpts    = DEPARTMENTS.map(d => `<option value="${d}">${d}</option>`).join('');
+    const deptOptsAll = `<option value="All">Tất cả phòng ban</option>${deptOpts}`;
+
+    // Selects
+    const selAll = document.getElementById('hrmStaffDeptFilter');
+    if (selAll) selAll.innerHTML = deptOptsAll;
+
+    ['hrmStaffDept', 'hrmPayDept'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.innerHTML = deptOpts;
+    });
+
+    const examSel = document.getElementById('examDeptSelect');
+    if (examSel) examSel.innerHTML = `<option value="">-- Chọn phòng ban --</option>${deptOpts}`;
+
+    // Exam dept filter buttons
+    const examGroup = document.getElementById('examDeptFilterGroup');
+    if (examGroup) {
+      examGroup.innerHTML = `<span style="font-size:0.78rem;color:#6B6A67;margin-right:0.25rem;">Phòng ban:</span>
+        <button class="test-dept-filter active" data-dept="all">Tất cả</button>
+        ${DEPARTMENTS.map(d => `<button class="test-dept-filter" data-dept="${d}">${d}</button>`).join('')}`;
+    }
+
+    // Result dept filter buttons
+    const resGroup = document.getElementById('resultDeptFilterGroup');
+    if (resGroup) {
+      resGroup.innerHTML = `<span style="font-size:0.78rem;color:#6B6A67;">Lọc:</span>
+        <button class="test-result-filter active" data-rdept="all">Tất cả</button>
+        ${DEPARTMENTS.map(d => `<button class="test-result-filter" data-rdept="${d}">${d}</button>`).join('')}`;
+    }
+  };
+
+  // Run once on DOMContentLoaded — all dept UI derives from DEPARTMENTS
+  populateDeptSelects();
+
   // Dept color map (shared)
   const DEPT_COLORS = {
-    'Tuyển dụng':  { color: '#6366F1', bg: '#EEF2FF' },
-    'Hành chính':  { color: '#0EA5E9', bg: '#E0F2FE' },
-    'Đào tạo':     { color: '#D97706', bg: '#FEF3C7' },
-    'Tư vấn Visa': { color: '#10B981', bg: '#ECFDF5' },
+    'Hành chính kế toán': { color: '#0EA5E9', bg: '#E0F2FE' },
+    'Marketing':          { color: '#EC4899', bg: '#FDF2F8' },
+    'Đối ngoại':          { color: '#14B8A6', bg: '#F0FDFA' },
+    'Hồ sơ':              { color: '#F59E0B', bg: '#FFFBEB' },
+    'Đào tạo':            { color: '#D97706', bg: '#FEF3C7' },
+    'Kinh doanh':         { color: '#6366F1', bg: '#EEF2FF' },
   };
 
   const gradeInfo = (score) => {
@@ -10212,213 +10265,137 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Default question bank (seed / fallback when admin hasn't uploaded exam yet)
   const QUESTION_BANK = {
-    'Tuyển dụng': [
-      {
-        q: 'Điều nào quan trọng nhất khi viết JD (Mô tả công việc)?',
-        opts: ['Yêu cầu bằng cấp thật cao', 'Mô tả rõ trách nhiệm và yêu cầu ứng viên', 'Chỉ cần ghi lương hấp dẫn'],
-        ans: 1,
-      },
-      {
-        q: 'Phương pháp phỏng vấn STAR dùng để làm gì?',
-        opts: ['Đánh giá ngoại hình ứng viên', 'Khai thác kinh nghiệm thực tế qua tình huống', 'Kiểm tra chỉ số IQ'],
-        ans: 1,
-      },
-      {
-        q: 'Onboarding nhân viên mới bao gồm nội dung chính nào?',
-        opts: ['Giao việc ngay từ ngày đầu tiên', 'Định hướng văn hoá, quy trình và giới thiệu đội ngũ', 'Chỉ cần ký hợp đồng lao động'],
-        ans: 1,
-      },
-      {
-        q: 'KPI trong tuyển dụng thường đo lường chỉ số nào?',
-        opts: ['Số CV nhận được mỗi tuần', 'Tỷ lệ vòng lọc hồ sơ', 'Thời gian tuyển dụng và tỷ lệ giữ chân nhân viên'],
-        ans: 2,
-      },
-      {
-        q: 'Headhunting khác với tuyển dụng thông thường ở điểm nào?',
-        opts: ['Không cần phỏng vấn ứng viên', 'Chủ động tìm kiếm ứng viên không chủ động tìm việc', 'Chỉ tuyển vị trí cấp thấp'],
-        ans: 1,
-      },
-      {
-        q: 'Employer Branding là gì?',
-        opts: ['Thiết kế logo và nhận diện thương hiệu', 'Xây dựng hình ảnh nhà tuyển dụng hấp dẫn trên thị trường', 'Quảng cáo sản phẩm của công ty'],
-        ans: 1,
-      },
-      {
-        q: 'Khi ứng viên từ chối offer, bước tiếp theo nên là?',
-        opts: ['Tuyển lại từ đầu quy trình', 'Liên hệ ứng viên tiềm năng thứ 2 trong danh sách dự phòng', 'Tăng lương cho tất cả ứng viên'],
-        ans: 1,
-      },
-      {
-        q: 'ATS (Applicant Tracking System) được dùng để làm gì?',
-        opts: ['Chấm công nhân viên hàng ngày', 'Quản lý và theo dõi hồ sơ ứng viên trong quá trình tuyển dụng', 'Tính lương và phúc lợi'],
-        ans: 1,
-      },
-      {
-        q: 'Phỏng vấn hội đồng có ưu điểm chính nào?',
-        opts: ['Tiết kiệm thời gian nhất cho ứng viên', 'Giảm thiểu thiên kiến cá nhân trong đánh giá ứng viên', 'Ứng viên cảm thấy thoải mái hơn'],
-        ans: 1,
-      },
-      {
-        q: 'Background check nên được thực hiện khi nào?',
-        opts: ['Trước vòng phỏng vấn đầu tiên', 'Sau khi có offer nhưng trước khi ký hợp đồng chính thức', 'Sau 3 tháng thử việc'],
-        ans: 1,
-      },
+    'Hành chính kế toán': [
+      { q: 'Văn bản hành chính cần có yếu tố bắt buộc nào?',
+        opts: ['Chữ ký và con dấu hợp lệ', 'Màu sắc đẹp và bắt mắt', 'Bắt buộc dùng font Times New Roman'], ans: 0 },
+      { q: 'Nguyên tắc kép (Double Entry) trong kế toán có nghĩa là?',
+        opts: ['Ghi sổ hai lần để kiểm tra', 'Mỗi giao dịch ghi Nợ và Có bằng nhau', 'Lập báo cáo tài chính 2 lần/năm'], ans: 1 },
+      { q: 'Khi nhận công văn đến, việc đầu tiên cần làm là?',
+        opts: ['Trả lời ngay lập tức', 'Đăng ký vào sổ theo dõi và chuyển đúng bộ phận phụ trách', 'Photo và lưu vào tủ ngay'], ans: 1 },
+      { q: 'Hoá đơn VAT cần có thông tin bắt buộc nào?',
+        opts: ['Chỉ cần tên người mua và số tiền', 'Mã số thuế bên bán, bên mua, tên hàng hoá, ngày xuất hoá đơn', 'Chữ ký giám đốc và con dấu doanh nghiệp'], ans: 1 },
+      { q: 'Báo cáo tài chính năm bắt buộc gồm những loại nào?',
+        opts: ['Chỉ cần Bảng cân đối kế toán', 'Bảng cân đối kế toán, Kết quả kinh doanh, Lưu chuyển tiền tệ và Thuyết minh', 'Bảng lương và sổ quỹ tiền mặt'], ans: 1 },
+      { q: 'Quản lý tài sản văn phòng đúng quy trình bao gồm?',
+        opts: ['Mua sắm tự do khi cần', 'Kiểm kê định kỳ, bàn giao và thanh lý đúng quy trình', 'Chỉ quan tâm khi tài sản hỏng'], ans: 1 },
+      { q: 'Phân biệt "tài sản ngắn hạn" và "tài sản dài hạn" theo chuẩn kế toán?',
+        opts: ['Dựa vào giá trị tiền tệ của tài sản', 'Thời gian thu hồi hoặc sử dụng trong/ngoài 1 chu kỳ kinh doanh (thường 12 tháng)', 'Dựa vào vị trí bảo quản tài sản'], ans: 1 },
+      { q: 'Chi phí văn phòng phẩm được kiểm soát hiệu quả bằng cách nào?',
+        opts: ['Mua bổ sung khi nào hết', 'Lập kế hoạch ngân sách và phê duyệt định mức theo tháng/quý', 'Để nhân viên tự mua và thanh toán'], ans: 1 },
+      { q: 'Cuộc họp nội bộ hiệu quả cần đáp ứng điều gì?',
+        opts: ['Càng nhiều người tham gia càng tốt', 'Có agenda rõ ràng, đúng giờ và ghi biên bản đầy đủ', 'Không cần chuẩn bị trước'], ans: 1 },
+      { q: 'Kỹ năng quan trọng nhất của nhân viên Hành chính Kế toán là?',
+        opts: ['Kỹ năng thiết kế đồ hoạ và lập trình', 'Chính xác trong số liệu, tổ chức công việc và giao tiếp hiệu quả', 'Kỹ năng thuyết trình trước đám đông'], ans: 1 },
     ],
-    'Hành chính': [
-      {
-        q: 'Văn bản hành chính cần có yếu tố bắt buộc nào?',
-        opts: ['Chữ ký và con dấu hợp lệ', 'Màu sắc đẹp và bắt mắt', 'Bắt buộc dùng font Times New Roman'],
-        ans: 0,
-      },
-      {
-        q: 'Lưu trữ hồ sơ văn phòng nên theo nguyên tắc nào?',
-        opts: ['Theo màu sắc của file kẹp', 'Theo thứ tự thời gian và phân loại rõ ràng', 'Theo họ tên của nhân viên'],
-        ans: 1,
-      },
-      {
-        q: 'Khi nhận công văn đến, việc đầu tiên cần làm là?',
-        opts: ['Trả lời ngay lập tức', 'Đăng ký vào sổ theo dõi và chuyển đúng bộ phận phụ trách', 'Photo và lưu vào tủ ngay'],
-        ans: 1,
-      },
-      {
-        q: 'Quản lý tài sản văn phòng đúng quy trình bao gồm?',
-        opts: ['Mua sắm tự do khi cần', 'Kiểm kê định kỳ, bàn giao và thanh lý đúng quy trình', 'Chỉ quan tâm khi tài sản hỏng'],
-        ans: 1,
-      },
-      {
-        q: 'Cuộc họp nội bộ hiệu quả cần đáp ứng điều gì?',
-        opts: ['Càng nhiều người tham gia càng tốt', 'Có agenda rõ ràng, đúng giờ và ghi biên bản đầy đủ', 'Không cần chuẩn bị trước'],
-        ans: 1,
-      },
-      {
-        q: 'ISO trong quản lý hành chính liên quan đến lĩnh vực nào?',
-        opts: ['Phần mềm kế toán tài chính', 'Tiêu chuẩn chất lượng và quy trình quản lý', 'Thiết kế và trang trí nội thất'],
-        ans: 1,
-      },
-      {
-        q: 'Bảo mật thông tin nội bộ cần tuân thủ nguyên tắc nào?',
-        opts: ['Chia sẻ tự do với mọi người trong công ty', 'Phân quyền truy cập và ký cam kết bảo mật với nhân viên', 'Chỉ bảo mật với người ngoài công ty'],
-        ans: 1,
-      },
-      {
-        q: 'Khi xảy ra sự cố thiết bị văn phòng, cần làm gì?',
-        opts: ['Tự sửa chữa ngay lập tức', 'Báo cáo bộ phận kỹ thuật và ghi nhận sự cố vào sổ theo dõi', 'Vứt bỏ và mua thiết bị mới'],
-        ans: 1,
-      },
-      {
-        q: 'Chi phí văn phòng phẩm được kiểm soát hiệu quả bằng cách nào?',
-        opts: ['Mua bổ sung khi nào hết', 'Lập kế hoạch ngân sách và phê duyệt định mức theo tháng', 'Để nhân viên tự mua và thanh toán'],
-        ans: 1,
-      },
-      {
-        q: 'Kỹ năng quan trọng nhất của nhân viên hành chính là?',
-        opts: ['Kỹ năng thiết kế đồ hoạ', 'Tổ chức công việc, giao tiếp và quản lý thời gian hiệu quả', 'Kỹ năng lập trình phần mềm'],
-        ans: 1,
-      },
+    'Marketing': [
+      { q: 'KPI phổ biến nhất của chiến dịch digital marketing là gì?',
+        opts: ['Số lượng nhân sự thực hiện chiến dịch', 'CTR, CPC, ROAS và tỷ lệ chuyển đổi (Conversion Rate)', 'Số bài đăng mạng xã hội mỗi tuần'], ans: 1 },
+      { q: 'Content marketing khác với quảng cáo truyền thống ở điểm nào?',
+        opts: ['Tốn kém hơn và khó đo lường hơn', 'Cung cấp giá trị thực cho người dùng thay vì chỉ quảng bá sản phẩm', 'Chỉ áp dụng trên các nền tảng số'], ans: 1 },
+      { q: 'Marketing Funnel gồm các giai đoạn cơ bản nào?',
+        opts: ['Sáng tạo → Sản xuất → Phân phối → Bán hàng', 'Nhận thức → Quan tâm → Cân nhắc → Mua hàng → Giữ chân', 'Nghiên cứu → Lên kế hoạch → Thực hiện → Đo lường'], ans: 1 },
+      { q: 'SEO (Search Engine Optimization) tập trung vào mục tiêu gì?',
+        opts: ['Chạy quảng cáo trả phí trên Google', 'Tối ưu nội dung và cấu trúc website để xuất hiện cao trên kết quả tìm kiếm tự nhiên', 'Tăng số lượng followers trên mạng xã hội'], ans: 1 },
+      { q: 'A/B Testing trong marketing được dùng để làm gì?',
+        opts: ['So sánh ngân sách hai chiến dịch khác nhau', 'So sánh hai phiên bản nội dung/thiết kế để xác định phiên bản hiệu quả hơn', 'Kiểm tra hiệu suất của hai nhân viên'], ans: 1 },
+      { q: 'Buyer Persona (chân dung khách hàng) là gì?',
+        opts: ['Ảnh chụp chân dung khách hàng thật', 'Hồ sơ đại diện của khách hàng mục tiêu dựa trên dữ liệu nghiên cứu thực tế', 'Danh sách tên các khách hàng đã mua hàng'], ans: 1 },
+      { q: 'Chỉ số CPM trong quảng cáo có nghĩa là?',
+        opts: ['Chi phí trung bình mỗi lần nhấp chuột', 'Chi phí trên mỗi 1.000 lượt hiển thị quảng cáo', 'Chi phí mỗi lần người dùng điền form'], ans: 1 },
+      { q: 'Email marketing hiệu quả cần đảm bảo yếu tố nào?',
+        opts: ['Gửi càng nhiều email càng tốt mỗi ngày', 'Tiêu đề hấp dẫn, nội dung đúng đối tượng và CTA rõ ràng', 'Chỉ gửi vào các ngày cuối tuần'], ans: 1 },
+      { q: 'Viral marketing dựa vào nguyên tắc nào?',
+        opts: ['Chi nhiều tiền để boosting nội dung', 'Người dùng tự lan truyền nội dung dựa vào giá trị hoặc cảm xúc', 'Hợp tác với người nổi tiếng quảng cáo'], ans: 1 },
+      { q: 'ROI của chiến dịch marketing được tính như thế nào?',
+        opts: ['Tổng doanh thu / Tổng chi phí vận hành', '(Doanh thu từ marketing − Chi phí marketing) / Chi phí marketing × 100%', 'Số khách hàng mới / Tổng chi phí marketing'], ans: 1 },
+    ],
+    'Đối ngoại': [
+      { q: 'MOU (Memorandum of Understanding) trong quan hệ đối ngoại là gì?',
+        opts: ['Hợp đồng kinh tế có giá trị pháp lý cao nhất', 'Biên bản ghi nhớ thể hiện ý định hợp tác giữa các bên', 'Bản báo cáo tài chính hàng năm'], ans: 1 },
+      { q: 'Khi chuẩn bị tiếp đón đoàn khách nước ngoài, ưu tiên đầu tiên là?',
+        opts: ['Đặt nhà hàng và phòng nghỉ sang trọng', 'Tìm hiểu văn hoá, giao thức ứng xử và mục đích chuyến thăm của đối tác', 'Chuẩn bị quà tặng đắt tiền'], ans: 1 },
+      { q: 'Follow-up sau cuộc họp đối ngoại nên thực hiện như thế nào?',
+        opts: ['Chờ đối tác liên hệ trước để tránh làm phiền', 'Gửi email tóm tắt các điểm đã thống nhất trong vòng 24–48 giờ', 'Lên lịch họp tiếp theo ít nhất 1 tháng sau'], ans: 1 },
+      { q: 'Kỹ năng quan trọng nhất trong giao tiếp đối ngoại là?',
+        opts: ['Kỹ năng thiết kế và trình bày bản vẽ', 'Ngoại ngữ, lắng nghe chủ động và xây dựng quan hệ bền vững', 'Kỹ năng tính toán số liệu tài chính'], ans: 1 },
+      { q: 'Nghi thức trao đổi danh thiếp trong môi trường quốc tế yêu cầu gì?',
+        opts: ['Ném danh thiếp về phía đối tác để thể hiện sự thân thiện', 'Nhận và trao danh thiếp bằng hai tay, xem qua trước khi cất cẩn thận', 'Chỉ trao danh thiếp khi được yêu cầu'], ans: 1 },
+      { q: 'Thư ngỏ hợp tác (Partnership Proposal) cần có nội dung chính nào?',
+        opts: ['Chỉ cần ghi tên công ty và số điện thoại liên hệ', 'Giới thiệu tổ chức, mục tiêu hợp tác và giá trị mang lại cho cả hai bên', 'Báo giá chi tiết tất cả dịch vụ ngay trong thư đầu tiên'], ans: 1 },
+      { q: 'Stakeholder bên ngoài công ty bao gồm đối tượng nào?',
+        opts: ['Chỉ có ban giám đốc và cổ đông', 'Đối tác, cơ quan nhà nước, truyền thông và cộng đồng địa phương', 'Chỉ có khách hàng trực tiếp'], ans: 1 },
+      { q: 'Xử lý bất đồng ý kiến với đối tác nước ngoài nên ưu tiên cách nào?',
+        opts: ['Kiên quyết giữ lập trường để thể hiện sức mạnh', 'Lắng nghe, tìm điểm chung và đề xuất giải pháp dựa trên lợi ích hai bên', 'Tạm dừng hợp tác để tránh xung đột thêm'], ans: 1 },
+      { q: 'Tài liệu nào KHÔNG nên chia sẻ với đối tác bên ngoài khi chưa được phê duyệt?',
+        opts: ['Tài liệu giới thiệu công ty đã được ban hành', 'Báo cáo nội bộ, chiến lược kinh doanh và thông tin tài chính chưa công bố', 'Catalogue sản phẩm và bảng giá niêm yết'], ans: 1 },
+      { q: 'Phiên dịch trong cuộc họp đối ngoại quan trọng vì?',
+        opts: ['Để ghi âm lại toàn bộ nội dung cuộc họp', 'Đảm bảo thông điệp được truyền đạt chính xác, tránh hiểu nhầm dẫn đến tranh chấp', 'Để giảm chi phí thuê phiên dịch ngoài'], ans: 1 },
+    ],
+    'Hồ sơ': [
+      { q: 'Kiểm tra hồ sơ du học đầy đủ cần xem xét những yếu tố nào?',
+        opts: ['Chỉ cần hộ chiếu và ảnh thẻ', 'Giấy tờ tuỳ thân, chứng minh tài chính, thư nhập học và lý lịch học tập', 'Chỉ cần thư nhập học từ trường'], ans: 1 },
+      { q: 'Khi phát hiện thông tin sai trong hồ sơ học viên, cần xử lý như thế nào?',
+        opts: ['Tự điều chỉnh thông tin mà không cần báo học viên', 'Thông báo ngay cho học viên và hướng dẫn bổ sung/điều chỉnh theo quy trình', 'Nộp hồ sơ trước rồi điều chỉnh sau'], ans: 1 },
+      { q: 'Thứ tự ưu tiên khi xử lý nhiều hồ sơ cùng lúc nên dựa theo?',
+        opts: ['Hồ sơ đến trước xử lý trước (FIFO) bất kể hoàn cảnh', 'Deadline nộp hồ sơ và mức độ khẩn cấp của từng trường hợp cụ thể', 'Hồ sơ của học viên có nhiều dịch vụ hơn'], ans: 1 },
+      { q: 'Bảo quản hồ sơ gốc của học viên cần tuân thủ nguyên tắc gì?',
+        opts: ['Để trên bàn làm việc để tiện tra cứu', 'Lưu trữ trong tủ khoá, hạn chế người tiếp cận và sao lưu bản số hoá', 'Gửi về nhà để bảo quản an toàn hơn'], ans: 1 },
+      { q: 'Hồ sơ scan nộp online cần đảm bảo tiêu chuẩn gì?',
+        opts: ['Bất kỳ độ phân giải nào cũng được', 'Đủ sáng, không bị mờ/cắt góc, đúng định dạng và dung lượng file yêu cầu', 'Chỉ cần chụp ảnh bằng điện thoại'], ans: 1 },
+      { q: 'Khi bàn giao hồ sơ giữa các bộ phận cần thực hiện gì?',
+        opts: ['Để hồ sơ trên bàn đồng nghiệp và nhắn tin báo', 'Lập biên bản bàn giao có chữ ký hai bên và ghi rõ danh sách tài liệu kèm theo', 'Gửi ảnh chụp hồ sơ qua Zalo là đủ'], ans: 1 },
+      { q: 'Deadline nộp hồ sơ bị trễ, cần làm gì đầu tiên?',
+        opts: ['Im lặng và nộp muộn mà không giải thích', 'Thông báo ngay cho học viên và quản lý, đồng thời liên hệ phía tiếp nhận để xin gia hạn', 'Đổ lỗi cho học viên chậm cung cấp giấy tờ'], ans: 1 },
+      { q: 'Cập nhật trạng thái hồ sơ cho học viên nên thực hiện như thế nào?',
+        opts: ['Chỉ cần cập nhật khi hồ sơ được chấp nhận hoặc từ chối', 'Thông báo mỗi khi có thay đổi quan trọng và ít nhất một lần mỗi tuần', 'Để học viên tự hỏi khi cần thiết'], ans: 1 },
+      { q: 'Hồ sơ bị từ chối cần được xử lý như thế nào?',
+        opts: ['Thông báo thẳng cho học viên và đóng hồ sơ', 'Phân tích nguyên nhân, tư vấn bổ sung/điều chỉnh và nộp lại đúng hướng dẫn', 'Tự động chuyển sang trường/quốc gia khác'], ans: 1 },
+      { q: 'Bảo mật thông tin trong hồ sơ học viên quan trọng vì?',
+        opts: ['Để tránh đối thủ cạnh tranh biết học viên của mình', 'Đây là dữ liệu cá nhân được bảo vệ theo quy định pháp luật về bảo mật thông tin', 'Để học viên không tự nộp hồ sơ một mình'], ans: 1 },
     ],
     'Đào tạo': [
-      {
-        q: 'Mô hình đánh giá đào tạo Kirkpatrick gồm bao nhiêu cấp độ?',
-        opts: ['3 cấp độ', '4 cấp độ', '5 cấp độ'],
-        ans: 1,
-      },
-      {
-        q: 'OJT (On the Job Training) là hình thức đào tạo nào?',
-        opts: ['Đào tạo hoàn toàn trực tuyến', 'Đào tạo trực tiếp ngay tại nơi làm việc', 'Đào tạo theo nhóm lớn'],
-        ans: 1,
-      },
-      {
-        q: 'Mục tiêu đào tạo theo chuẩn SMART cần đảm bảo yếu tố nào?',
-        opts: ['Cụ thể, đo được, khả thi, liên quan và có thời hạn', 'Đơn giản, nhanh chóng và tiết kiệm chi phí', 'Sáng tạo, thú vị và hấp dẫn học viên'],
-        ans: 0,
-      },
-      {
-        q: 'E-learning có ưu điểm chính là gì?',
-        opts: ['Tương tác trực tiếp với giảng viên cao', 'Linh hoạt về thời gian học và tiết kiệm chi phí đào tạo', 'Kiểm tra kết quả chặt chẽ hơn học offline'],
-        ans: 1,
-      },
-      {
-        q: 'Training Needs Analysis (TNA) được dùng để làm gì?',
-        opts: ['Đánh giá mức lương của nhân viên', 'Xác định khoảng cách kỹ năng và nhu cầu đào tạo thực tế', 'Lên lịch nghỉ phép cho nhân viên'],
-        ans: 1,
-      },
-      {
-        q: 'Lý thuyết học qua trải nghiệm (Experiential Learning) do ai đề xuất?',
-        opts: ['Abraham Maslow', 'David Kolb', 'Peter Drucker'],
-        ans: 1,
-      },
-      {
-        q: 'Đánh giá sau đào tạo cần tập trung đo lường điều gì?',
-        opts: ['Tổng số giờ tham gia của học viên', 'Mức độ áp dụng kiến thức vào công việc thực tế sau khoá học', 'Số lượng tài liệu được phát cho học viên'],
-        ans: 1,
-      },
-      {
-        q: 'Buddy system trong đào tạo nhân viên mới là gì?',
-        opts: ['Phương pháp học nhóm đông người', 'Nhân viên mới được hỗ trợ bởi một nhân viên có kinh nghiệm', 'Thi đua kết quả giữa các phòng ban'],
-        ans: 1,
-      },
-      {
-        q: 'LMS (Learning Management System) là gì?',
-        opts: ['Hệ thống quản lý lương và phúc lợi', 'Nền tảng quản lý và triển khai các khoá đào tạo trực tuyến', 'Phần mềm chấm công điện tử'],
-        ans: 1,
-      },
-      {
-        q: 'Blended Learning kết hợp giữa hai hình thức nào?',
-        opts: ['Lý thuyết và thực hành trong cùng một lớp học', 'Học trực tuyến (online) và học trực tiếp (offline)', 'Đào tạo cá nhân và đào tạo nhóm'],
-        ans: 1,
-      },
+      { q: 'Mô hình đánh giá đào tạo Kirkpatrick gồm bao nhiêu cấp độ?',
+        opts: ['3 cấp độ', '4 cấp độ', '5 cấp độ'], ans: 1 },
+      { q: 'OJT (On the Job Training) là hình thức đào tạo nào?',
+        opts: ['Đào tạo hoàn toàn trực tuyến', 'Đào tạo trực tiếp ngay tại nơi làm việc', 'Đào tạo theo nhóm lớn ngoài văn phòng'], ans: 1 },
+      { q: 'Mục tiêu đào tạo theo chuẩn SMART cần đảm bảo yếu tố nào?',
+        opts: ['Cụ thể, đo được, khả thi, liên quan và có thời hạn', 'Đơn giản, nhanh chóng và tiết kiệm chi phí', 'Sáng tạo, thú vị và hấp dẫn học viên'], ans: 0 },
+      { q: 'E-learning có ưu điểm chính là gì?',
+        opts: ['Tương tác trực tiếp với giảng viên cao hơn', 'Linh hoạt về thời gian và tiết kiệm chi phí đào tạo đáng kể', 'Kiểm tra kết quả chặt chẽ hơn học offline'], ans: 1 },
+      { q: 'Training Needs Analysis (TNA) được dùng để làm gì?',
+        opts: ['Đánh giá mức lương và phúc lợi nhân viên', 'Xác định khoảng cách kỹ năng và nhu cầu đào tạo thực tế', 'Lên lịch nghỉ phép cho nhân viên'], ans: 1 },
+      { q: 'Lý thuyết học qua trải nghiệm (Experiential Learning) do ai đề xuất?',
+        opts: ['Abraham Maslow', 'David Kolb', 'Peter Drucker'], ans: 1 },
+      { q: 'Đánh giá sau đào tạo cần tập trung đo lường điều gì?',
+        opts: ['Tổng số giờ tham gia của học viên', 'Mức độ áp dụng kiến thức vào công việc thực tế sau khoá học', 'Số lượng tài liệu được phát cho học viên'], ans: 1 },
+      { q: 'Buddy system trong đào tạo nhân viên mới là gì?',
+        opts: ['Phương pháp học nhóm đông người', 'Nhân viên mới được hỗ trợ bởi một nhân viên có kinh nghiệm', 'Thi đua kết quả giữa các phòng ban'], ans: 1 },
+      { q: 'LMS (Learning Management System) là gì?',
+        opts: ['Hệ thống quản lý lương và phúc lợi nhân viên', 'Nền tảng quản lý và triển khai các khoá đào tạo trực tuyến', 'Phần mềm chấm công điện tử'], ans: 1 },
+      { q: 'Blended Learning kết hợp giữa hai hình thức nào?',
+        opts: ['Lý thuyết và thực hành trong cùng một lớp học', 'Học trực tuyến (online) và học trực tiếp (offline)', 'Đào tạo cá nhân và đào tạo nhóm lớn'], ans: 1 },
     ],
-    'Tư vấn Visa': [
-      {
-        q: 'Hồ sơ xin visa du học Nhật Bản yêu cầu bắt buộc điều gì?',
-        opts: ['Bằng chứng chỉ tiếng Nhật JLPT N1', 'Thư nhập học từ trường và chứng minh tài chính đủ điều kiện', 'Tối thiểu 2 năm kinh nghiệm làm việc'],
-        ans: 1,
-      },
-      {
-        q: 'Thời gian xử lý visa du học tại Nhật Bản thường là bao lâu?',
-        opts: ['Khoảng 1 tuần làm việc', '1 đến 3 tháng tùy từng trường hợp', 'Tối thiểu 6 tháng'],
-        ans: 1,
-      },
-      {
-        q: 'Certificate of Eligibility (COE) tại Nhật Bản là gì?',
-        opts: ['Chứng chỉ trình độ tiếng Nhật', 'Giấy tư cách lưu trú do cơ quan xuất nhập cảnh Nhật cấp', 'Hợp đồng học bổng với trường'],
-        ans: 1,
-      },
-      {
-        q: 'Khi hồ sơ visa bị từ chối, bước đầu tiên cần làm là?',
-        opts: ['Nộp lại ngay hồ sơ cũ không thay đổi', 'Tìm hiểu lý do từ chối và bổ sung/điều chỉnh hồ sơ phù hợp', 'Chuyển ngay sang tư vấn quốc gia khác'],
-        ans: 1,
-      },
-      {
-        q: 'Chứng minh tài chính trong hồ sơ visa du học thường cần tài liệu gì?',
-        opts: ['Sao kê tài khoản ngân hàng 3–6 tháng gần nhất', 'Hóa đơn điện nước hàng tháng', 'Bảng lương tháng hiện tại của phụ huynh'],
-        ans: 0,
-      },
-      {
-        q: 'Visa Working Holiday tại Nhật Bản dành cho độ tuổi nào?',
-        opts: ['Dưới 18 tuổi', '18 đến 30 tuổi', '25 đến 40 tuổi'],
-        ans: 1,
-      },
-      {
-        q: 'Học viên nên nộp hồ sơ xin visa du học trước ngày nhập học bao lâu?',
-        opts: ['Khoảng 1 tuần trước khi nhập học', 'Ít nhất 2 đến 3 tháng trước khi nhập học', 'Trước 1 năm để đảm bảo an toàn'],
-        ans: 1,
-      },
-      {
-        q: 'Giấy tờ nào KHÔNG cần thiết trong hồ sơ xin visa du học (nếu độc thân)?',
-        opts: ['Hộ chiếu còn hạn ít nhất 6 tháng', 'Giấy đăng ký kết hôn (khi chưa có gia đình)', 'Ảnh thẻ đúng quy cách'],
-        ans: 1,
-      },
-      {
-        q: 'Khi tư vấn học viên, điều quan trọng nhất cần làm đầu tiên là?',
-        opts: ['Giới thiệu ngay các gói học phí hiện có', 'Tìm hiểu mục tiêu, khả năng tài chính và năng lực của học viên', 'Yêu cầu học viên đặt cọc ngay để giữ chỗ'],
-        ans: 1,
-      },
-      {
-        q: 'Học viên cần chuẩn bị tài liệu nào để chứng minh năng lực tiếng Nhật khi xin visa?',
-        opts: ['Không cần chứng chỉ nếu học tại trường tiếng Nhật', 'Kết quả thi JLPT hoặc chứng chỉ tiếng Nhật tương đương', 'Chỉ cần thư giới thiệu từ giáo viên'],
-        ans: 1,
-      },
+    'Kinh doanh': [
+      { q: 'Quy trình tư vấn bán hàng hiệu quả thường bắt đầu bằng bước nào?',
+        opts: ['Chốt giá ngay để không mất khách', 'Xác định nhu cầu, mục tiêu và khả năng tài chính của khách hàng', 'Giới thiệu tất cả sản phẩm dịch vụ hiện có'], ans: 1 },
+      { q: 'Kỹ năng quan trọng nhất của nhân viên kinh doanh du học là?',
+        opts: ['Kỹ năng thiết kế tài liệu đẹp', 'Lắng nghe, thấu hiểu nhu cầu và xây dựng niềm tin với khách hàng', 'Nói nhanh và thuyết phục theo kịch bản'], ans: 1 },
+      { q: 'Upselling trong kinh doanh có nghĩa là?',
+        opts: ['Giảm giá để thu hút thêm khách hàng', 'Đề xuất khách hàng nâng cấp lên sản phẩm/gói dịch vụ cao hơn', 'Bán thêm sản phẩm không liên quan'], ans: 1 },
+      { q: 'Khi khách hàng phản đối về giá, cách xử lý phù hợp nhất là?',
+        opts: ['Giảm giá ngay lập tức để chốt nhanh', 'Nhấn mạnh giá trị và lợi ích thực sự của dịch vụ so với chi phí bỏ ra', 'Kết thúc buổi tư vấn và chờ khách quay lại'], ans: 1 },
+      { q: 'Báo cáo doanh số hàng tuần cần gồm những chỉ số nào?',
+        opts: ['Chỉ cần tổng doanh thu đạt được', 'Số lượng khách tiếp cận, tỷ lệ chốt hợp đồng và doanh thu thực tế so với target', 'Danh sách tên khách hàng đã tư vấn'], ans: 1 },
+      { q: 'CRM (Customer Relationship Management) trong kinh doanh dùng để làm gì?',
+        opts: ['Quản lý lịch nghỉ phép của nhân viên', 'Quản lý thông tin và lịch sử tương tác với khách hàng để nâng cao chất lượng dịch vụ', 'Thiết kế giao diện website bán hàng'], ans: 1 },
+      { q: 'Chăm sóc khách hàng sau khi ký hợp đồng quan trọng vì?',
+        opts: ['Để thu thêm phí dịch vụ phát sinh', 'Tạo sự tin tưởng, tăng khả năng giới thiệu khách mới và tái ký hợp đồng', 'Để tránh khiếu nại và hoàn tiền'], ans: 1 },
+      { q: 'Phân biệt "Lead" (khách hàng tiềm năng) và "Customer" (khách đã mua)?',
+        opts: ['Chỉ khác nhau về độ tuổi và thu nhập', 'Lead là người quan tâm chưa mua; Customer là người đã sử dụng dịch vụ', 'Không có sự khác biệt trong quy trình chăm sóc'], ans: 1 },
+      { q: 'Tỷ lệ chốt hợp đồng (Conversion Rate) được tính như thế nào?',
+        opts: ['Tổng doanh thu / Tổng số lần liên hệ khách hàng', 'Số hợp đồng ký được / Tổng số khách hàng tiếp cận × 100%', 'Tổng số giờ tư vấn / Số hợp đồng'], ans: 1 },
+      { q: 'Khi không đạt target doanh số, bước quan trọng nhất cần làm là?',
+        opts: ['Đổ lỗi cho thị trường và khách hàng khó tính', 'Phân tích nguyên nhân, điều chỉnh cách tiếp cận và lên kế hoạch hành động cụ thể', 'Tăng số lượng cuộc gọi lên gấp đôi ngay lập tức'], ans: 1 },
     ],
   };
 
@@ -10434,6 +10411,7 @@ document.addEventListener('DOMContentLoaded', () => {
   let _examList     = [];
   let _examDeptFilter = 'all';
   let _examEditId   = null; // null = create, string = editing
+  let _examQCount   = 10;  // active question count: 10 | 20 | 30 | 40
 
   // =====================================================================
   //  STAFF: Take the test
@@ -10713,10 +10691,9 @@ document.addEventListener('DOMContentLoaded', () => {
           <div class="exam-card-meta">${qLen} câu hỏi · Tạo ${date}${ex.createdBy ? ' · bởi ' + ex.createdBy : ''}</div>
         </div>
         <div class="exam-card-actions">
-          ${ex.isActive
-            ? `<span class="exam-active-badge">● Đang hoạt động</span>`
-            : `<button class="exam-btn exam-btn-activate" data-id="${ex.id}" data-dept="${ex.department}">Kích hoạt</button>`
-          }
+          <button class="exam-btn exam-btn-activate${ex.isActive ? ' is-on' : ''}" data-id="${ex.id}">
+            ${ex.isActive ? '● Đang hoạt động' : 'Kích hoạt'}
+          </button>
           <button class="exam-btn exam-btn-view"   data-id="${ex.id}">Xem đề</button>
           <button class="exam-btn exam-btn-edit"   data-id="${ex.id}">Sửa</button>
           <button class="exam-btn exam-btn-delete" data-id="${ex.id}" data-title="${(ex.title||'').replace(/"/g,'&quot;')}">Xóa</button>
@@ -10731,7 +10708,7 @@ document.addEventListener('DOMContentLoaded', () => {
       btn.addEventListener('click', () => { const ex = _examList.find(e => e.id === btn.dataset.id); if (ex) openExamCreateModal(ex); });
     });
     container.querySelectorAll('.exam-btn-activate').forEach(btn => {
-      btn.addEventListener('click', () => activateExam(btn.dataset.id, btn.dataset.dept));
+      btn.addEventListener('click', () => activateExam(btn.dataset.id));
     });
     container.querySelectorAll('.exam-btn-delete').forEach(btn => {
       btn.addEventListener('click', () => {
@@ -10740,15 +10717,13 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   };
 
-  const activateExam = async (examId, dept) => {
+  const activateExam = async (examId) => {
+    const exam = _examList.find(e => e.id === examId);
+    if (!exam) return;
+    const newState = !exam.isActive;
     try {
-      const batch = db.batch();
-      _examList.filter(e => e.department === dept).forEach(e => {
-        batch.update(db.collection('competency_exams').doc(e.id), { isActive: false });
-      });
-      batch.update(db.collection('competency_exams').doc(examId), { isActive: true });
-      await batch.commit();
-      showToast('Đề thi đã được kích hoạt! Nhân viên có thể thi ngay.', 'success');
+      await db.collection('competency_exams').doc(examId).update({ isActive: newState });
+      showToast(newState ? 'Đề thi đã kích hoạt — nhân viên có thể thi ngay.' : 'Đề thi đã tắt.', 'success');
       adminLoadExams();
     } catch (err) { showToast('Lỗi: ' + err.message, 'error'); }
   };
@@ -10789,24 +10764,59 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const openExamCreateModal = (exam) => {
     _examEditId = exam ? exam.id : null;
+    // Determine question count: fixed from existing exam, or default 10 for new
+    _examQCount = exam ? (exam.questions?.length || 10) : 10;
+
     const modal = document.getElementById('examCreateModal');
     document.getElementById('examModalTitle').textContent = exam ? 'Sửa đề thi' : 'Tạo đề thi mới';
-    document.getElementById('examDeptSelect').value   = exam ? exam.department : '';
-    document.getElementById('examTitleInput').value   = exam ? (exam.title || '') : '';
+    document.getElementById('examDeptSelect').value       = exam ? (exam.department || '') : '';
+    document.getElementById('examTitleInput').value       = exam ? (exam.title || '') : '';
     document.getElementById('examSaveStatus').textContent = '';
 
-    const qContainer = document.getElementById('examQuestionsContainer');
-    const existingQs = exam ? (exam.questions || []) : [];
-    qContainer.innerHTML = Array.from({ length: 10 }, (_, i) => buildQBlockHtml(i, existingQs[i] || null)).join('');
+    const existingQs  = exam ? (exam.questions || []) : [];
+    const qContainer  = document.getElementById('examQuestionsContainer');
+    const subtitle    = document.getElementById('examModalSubtitle');
+    const hint        = document.getElementById('examQCountHint');
+    const isEditing   = !!exam;
 
-    // Highlight correct-answer row when radio changes
-    qContainer.addEventListener('change', (e) => {
+    // Rebuild question blocks for current _examQCount
+    const rebuildBlocks = () => {
+      qContainer.innerHTML = Array.from({ length: _examQCount }, (_, i) =>
+        buildQBlockHtml(i, existingQs[i] || null)
+      ).join('');
+    };
+
+    // Sync the count selector UI
+    const syncCountUI = () => {
+      document.querySelectorAll('.exam-qcount-btn').forEach(btn => {
+        const n = parseInt(btn.dataset.count);
+        btn.classList.toggle('active', n === _examQCount);
+        btn.disabled = isEditing;
+      });
+      if (subtitle) subtitle.textContent = `Điền đầy đủ ${_examQCount} câu hỏi và đánh dấu đáp án đúng`;
+      if (hint) hint.textContent = isEditing ? `(cố định theo đề gốc)` : '';
+    };
+
+    syncCountUI();
+    rebuildBlocks();
+
+    // Wire count buttons (only for new exams)
+    document.querySelectorAll('.exam-qcount-btn').forEach(btn => {
+      btn.onclick = isEditing ? null : () => {
+        _examQCount = parseInt(btn.dataset.count);
+        syncCountUI();
+        rebuildBlocks();
+      };
+    });
+
+    // Highlight correct-answer row on radio change (event delegation, attach once per open)
+    qContainer.onchange = (e) => {
       if (e.target.type !== 'radio') return;
       const block = e.target.closest('.exam-q-builder');
       if (!block) return;
       block.querySelectorAll('.exam-q-opt-row').forEach(row => row.classList.remove('is-correct'));
       e.target.closest('.exam-q-opt-row').classList.add('is-correct');
-    }, { capture: true });
+    };
 
     modal.style.display = 'flex';
   };
@@ -10816,13 +10826,15 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!dept || !QUESTION_BANK[dept]) {
       showToast('Chọn phòng ban trước!', 'error'); return;
     }
-    const qs = QUESTION_BANK[dept];
+    const bank = QUESTION_BANK[dept];
+    // Cycle through bank questions to fill _examQCount blocks
+    const qs = Array.from({ length: _examQCount }, (_, i) => bank[i % bank.length]);
     const qContainer = document.getElementById('examQuestionsContainer');
     qContainer.innerHTML = qs.map((q, i) => buildQBlockHtml(i, q)).join('');
     if (!document.getElementById('examTitleInput').value) {
       document.getElementById('examTitleInput').value = `Bài Test ${dept}`;
     }
-    showToast(`Đã tải mẫu ${dept} (${qs.length} câu)`, 'success');
+    showToast(`Đã tải mẫu ${dept} (${_examQCount} câu)`, 'success');
   };
 
   // Apply parsed question data into the modal form
@@ -10834,8 +10846,9 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!qs || !Array.isArray(qs) || qs.length === 0) {
       showToast('Không tìm thấy câu hỏi trong file!', 'error'); return;
     }
-    if (qs.length !== 10) {
-      showToast(`File có ${qs.length} câu — cần đúng 10 câu!`, 'error'); return;
+    const validCounts = [10, 20, 30, 40];
+    if (!validCounts.includes(qs.length)) {
+      showToast(`File có ${qs.length} câu — cần đúng 10, 20, 30 hoặc 40 câu!`, 'error'); return;
     }
     // Validate each question
     for (let i = 0; i < qs.length; i++) {
@@ -10844,6 +10857,14 @@ document.addEventListener('DOMContentLoaded', () => {
         showToast(`Câu ${i + 1} thiếu dữ liệu (câu hỏi / đáp án / đáp án đúng)!`, 'error'); return;
       }
     }
+
+    // Auto-sync count selector to match imported file
+    _examQCount = qs.length;
+    document.querySelectorAll('.exam-qcount-btn').forEach(b => {
+      b.classList.toggle('active', parseInt(b.dataset.count) === _examQCount);
+    });
+    const subtitle = document.getElementById('examModalSubtitle');
+    if (subtitle) subtitle.textContent = `Điền đầy đủ ${_examQCount} câu hỏi và đánh dấu đáp án đúng`;
 
     if (dept) document.getElementById('examDeptSelect').value = dept;
     if (title) document.getElementById('examTitleInput').value = title;
@@ -11004,14 +11025,14 @@ document.addEventListener('DOMContentLoaded', () => {
   // --- Generate & download Excel template ---
   const downloadExamTemplate = () => {
     if (!window.XLSX) { showToast('Thư viện SheetJS chưa tải!', 'error'); return; }
-    const dept = document.getElementById('examDeptSelect').value || 'Hành chính';
+    const dept = document.getElementById('examDeptSelect').value || DEPARTMENTS[0];
 
     const data = [
       ['PHÒNG BAN', dept],
       ['TÊN ĐỀ THI', `Bài Test ${dept} Q3/2026`],
       [],
       ['CÂU HỎI', 'ĐÁP ÁN A', 'ĐÁP ÁN B', 'ĐÁP ÁN C', 'ĐÁP ÁN ĐÚNG (A/B/C)'],
-      ...Array.from({ length: 10 }, (_, i) => [`Câu hỏi ${i + 1}`, 'Đáp án A', 'Đáp án B', 'Đáp án C', 'A']),
+      ...Array.from({ length: _examQCount }, (_, i) => [`Câu hỏi ${i + 1}`, 'Đáp án A', 'Đáp án B', 'Đáp án C', 'A']),
     ];
 
     const ws = XLSX.utils.aoa_to_sheet(data);
