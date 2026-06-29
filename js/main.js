@@ -10871,7 +10871,10 @@ document.addEventListener('DOMContentLoaded', () => {
         <td style="text-align:center;"><span style="display:inline-block;padding:0.18rem 0.7rem;border-radius:20px;font-size:0.72rem;font-weight:700;color:${gi.color};background:${gi.bg};">${gi.grade}</span></td>
         <td style="color:#6B6A67;font-size:0.78rem;white-space:nowrap;">${dt}</td>
         <td style="text-align:center;">
-          <button class="exam-btn exam-btn-view result-detail-btn" style="font-size:0.72rem;padding:0.22rem 0.65rem;" data-rid="${r.id}">Chi tiết</button>
+          <div style="display:flex;gap:0.35rem;justify-content:center;">
+            <button class="exam-btn exam-btn-view result-detail-btn" style="font-size:0.72rem;padding:0.22rem 0.65rem;" data-rid="${r.id}">Chi tiết</button>
+            <button class="exam-btn exam-btn-delete result-delete-btn" style="font-size:0.72rem;padding:0.22rem 0.65rem;" data-rid="${r.id}" data-name="${(r.staffName||'').replace(/"/g,'&quot;')}">Xóa</button>
+          </div>
         </td>
       </tr>`;
     }).join('');
@@ -10881,6 +10884,21 @@ document.addEventListener('DOMContentLoaded', () => {
       btn.addEventListener('click', () => {
         const r = _testResultsAll.find(x => x.id === btn.dataset.rid);
         if (r) openTestDetailModal(r);
+      });
+    });
+
+    // Bind delete buttons
+    tbody.querySelectorAll('.result-delete-btn').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        if (!confirm(`Xóa kết quả bài thi của "${btn.dataset.name}"?`)) return;
+        try {
+          await db.collection('competency_tests').doc(btn.dataset.rid).delete();
+          _testResultsAll = _testResultsAll.filter(x => x.id !== btn.dataset.rid);
+          renderResultTable();
+          showToast('Đã xóa kết quả bài thi!', 'success');
+        } catch (err) {
+          showToast('Lỗi xóa: ' + err.message, 'error');
+        }
       });
     });
   };
