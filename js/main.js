@@ -10249,7 +10249,7 @@ document.addEventListener('DOMContentLoaded', () => {
       <path d="M21,19V20H3V19L5,17V11C5,7.9 7.03,5.17 10,4.29C10,4.19 10,4.1 10,4A2,2 0 0,1 12,2A2,2 0 0,1 14,4C14,4.1 14,4.19 14,4.29C16.97,5.17 19,7.9 19,11V17L21,19M14,21A2,2 0 0,1 12,23A2,2 0 0,1 10,21"/>
     </svg>`;
 
-  // Shared bell ring helper — used by both the 5s interval and onSnapshot
+  // Shared bell ring helper — triggered by onSnapshot when new notifications arrive
   const ringBells = () => {
     document.querySelectorAll('.topbar-notif-btn').forEach(btn => {
       btn.classList.remove('bell-ringing');
@@ -10300,10 +10300,6 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     });
 
-    // Ring every 5 s while there are unread notifications
-    setInterval(() => {
-      if (_notifList.some(n => !n.isRead)) ringBells();
-    }, 5000);
   };
 
   const fetchNotifications = async () => {
@@ -10430,15 +10426,12 @@ document.addEventListener('DOMContentLoaded', () => {
         .where('recipientEmail', '==', currentUser.email)
         .limit(30)
         .onSnapshot(onNewSnap, (err) => {
-          console.warn('Notification listener error, falling back to polling:', err.message);
+          console.warn('Notification listener error:', err.message);
           _notifUnsubscribe = null;
-          // Fallback: poll every 2 minutes
           fetchNotifications();
-          setInterval(() => fetchNotifications(), 2 * 60 * 1000);
         });
     } catch (e) {
       fetchNotifications();
-      setInterval(() => fetchNotifications(), 2 * 60 * 1000);
     }
   };
 
