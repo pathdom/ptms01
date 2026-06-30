@@ -1193,6 +1193,8 @@ document.addEventListener('DOMContentLoaded', () => {
       initStaffAttendanceDashboard();
     } else if (targetViewId === 'test-dashboard') {
       loadCompetencyTestResults();
+    } else if (targetViewId === 'orgchart-dashboard') {
+      initOrgChartDashboard();
     } else {
       if (typeof teardownCrmChat === 'function') teardownCrmChat();
     }
@@ -10567,6 +10569,148 @@ document.addEventListener('DOMContentLoaded', () => {
     if (dashboard) dashboard.style.display = 'flex';
     if (window.AttendanceService) AttendanceService.init();
   };
+
+  // ════════════════════════════════════════
+  //  SƠ ĐỒ TỔ CHỨC
+  // ════════════════════════════════════════
+  const initOrgChartDashboard = (() => {
+    let _bound = false;
+
+    return async () => {
+      const fileInput     = document.getElementById('orgChartFileInput');
+      const uploadZone    = document.getElementById('orgChartUploadZone');
+      const previewWrap   = document.getElementById('orgChartPreviewWrap');
+      const imgEl         = document.getElementById('orgChartImg');
+      const metaEl        = document.getElementById('orgChartMeta');
+      const progressWrap  = document.getElementById('orgChartProgress');
+      const progressBar   = document.getElementById('orgChartProgressBar');
+      const progressLabel = document.getElementById('orgChartProgressLabel');
+      const btnView       = document.getElementById('btnViewOrgChart');
+      const btnDelete     = document.getElementById('btnDeleteOrgChart');
+      const lightbox      = document.getElementById('orgChartLightbox');
+      const lightboxImg   = document.getElementById('orgChartLightboxImg');
+      const btnCloseLb    = document.getElementById('btnCloseLightbox');
+
+      const FIRESTORE_DOC = () => db.collection('siteSettings').doc('orgChart');
+
+      const showImage = (base64, meta = {}) => {
+        imgEl.src = base64;
+        imgEl.style.display = 'block';
+        uploadZone.style.display = 'none';
+        previewWrap.style.display = 'block';
+        progressWrap.style.display = 'none';
+        if (btnView) btnView.style.display = '';
+        if (btnDelete) btnDelete.style.display = '';
+        if (metaEl && meta.name) {
+          metaEl.innerHTML = `<span>📎 ${meta.name}</span><span>${meta.size || ''}</span><span>Cập nhật: ${meta.updatedAt || '--'}</span>`;
+        }
+      };
+
+      const clearImage = () => {
+        imgEl.src = '';
+        imgEl.style.display = 'none';
+        uploadZone.style.display = 'flex';
+        previewWrap.style.display = 'none';
+        if (btnView) btnView.style.display = 'none';
+        if (btnDelete) btnDelete.style.display = 'none';
+        if (metaEl) metaEl.innerHTML = '';
+      };
+
+      // Load existing image from Firestore
+      try {
+        const doc = await FIRESTORE_DOC().get();
+        if (doc.exists && doc.data().imageBase64) {
+          showImage(doc.data().imageBase64, doc.data().meta || {});
+        } else {
+          clearImage();
+        }
+      } catch (e) {
+        clearImage();
+      }
+
+      if (_bound) return;
+      _bound = true;
+
+      // Upload handler
+      fileInput?.addEventListener('change', async (e) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        if (file.size > 5 * 1024 * 1024) {
+          showToast('Ảnh quá lớn — tối đa 5 MB!', 'error');
+          return;
+        }
+
+        // Show progress UI
+        uploadZone.style.display = 'none';
+        previewWrap.style.display = 'block';
+        imgEl.style.display = 'none';
+        progressWrap.style.display = 'flex';
+        progressBar.style.width = '0%';
+        progressLabel.textContent = 'Đang đọc file…';
+
+        const reader = new FileReader();
+        reader.onprogress = (ev) => {
+          if (ev.lengthComputable) {
+            const pct = Math.round((ev.loaded / ev.total) * 50);
+            progressBar.style.width = pct + '%';
+          }
+        };
+        reader.onload = async (ev) => {
+          progressBar.style.width = '70%';
+          progressLabel.textContent = 'Đang lưu lên hệ thống…';
+          const base64 = ev.target.result;
+          const sizeStr = (file.size / 1024).toFixed(0) + ' KB';
+          const now = new Date().toLocaleString('vi-VN');
+          const meta = { name: file.name, size: sizeStr, updatedAt: now };
+          try {
+            await FIRESTORE_DOC().set({ imageBase64: base64, meta });
+            progressBar.style.width = '100%';
+            progressLabel.textContent = 'Hoàn tất!';
+            setTimeout(() => showImage(base64, meta), 400);
+            showToast('Sơ đồ đã được cập nhật!', 'success');
+          } catch (err) {
+            showToast('Lỗi lưu ảnh — thử lại!', 'error');
+            clearImage();
+          }
+          fileInput.value = '';
+        };
+        reader.onerror = () => { showToast('Đọc file thất bại!', 'error'); clearImage(); };
+        reader.readAsDataURL(file);
+      });
+
+      // View fullscreen
+      btnView?.addEventListener('click', () => {
+        if (!imgEl.src) return;
+        lightboxImg.src = imgEl.src;
+        lightbox.style.display = 'flex';
+      });
+
+      // Click image to open lightbox
+      imgEl?.addEventListener('click', () => {
+        if (!imgEl.src) return;
+        lightboxImg.src = imgEl.src;
+        lightbox.style.display = 'flex';
+      });
+
+      // Close lightbox
+      const closeLb = () => { lightbox.style.display = 'none'; lightboxImg.src = ''; };
+      btnCloseLb?.addEventListener('click', closeLb);
+      lightbox?.addEventListener('click', (e) => { if (e.target === lightbox) closeLb(); });
+      document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeLb(); });
+
+      // Delete
+      btnDelete?.addEventListener('click', async () => {
+        if (!confirm('Xóa ảnh sơ đồ hiện tại?')) return;
+        try {
+          await FIRESTORE_DOC().delete();
+          clearImage();
+          showToast('Đã xóa sơ đồ!', 'info');
+        } catch (err) {
+          showToast('Lỗi xóa ảnh!', 'error');
+        }
+      });
+    };
+  })();
 
   // ===========================================================================
   //  TEST NĂNG LỰC

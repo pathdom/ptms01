@@ -3547,6 +3547,100 @@ body.dark-theme-crm .profile-status-badge.inactive-badge { background: rgba(220,
   max-width: 55%;
 }
 
+/* ══════════════════════════════════════
+   SƠ ĐỒ (ORG CHART) PAGE
+══════════════════════════════════════ */
+.orgchart-page { padding: 2rem; }
+
+.orgchart-info-card {
+  background: var(--bg-card, #fff);
+  border: 1px solid var(--color-border, #E8E5DF);
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+.orgchart-info-header {
+  display: flex; align-items: flex-start;
+  justify-content: space-between; gap: 1rem;
+  padding: 1.5rem 1.75rem 1.25rem;
+  border-bottom: 1px solid var(--color-border, #E8E5DF);
+}
+
+.orgchart-title {
+  font-size: 1.25rem; font-weight: 600;
+  color: var(--color-text-main, #1A1A1A); margin: 0 0 0.25rem;
+}
+.orgchart-subtitle { font-size: 0.82rem; color: var(--color-text-muted, #6B6A67); margin: 0; }
+
+.orgchart-actions { display: flex; align-items: center; gap: 0.6rem; flex-shrink: 0; }
+
+.btn-upload-orgchart {
+  display: inline-flex; align-items: center; gap: 0.4rem;
+  padding: 0.5rem 1rem; border-radius: 8px; cursor: pointer;
+  font-size: 0.83rem; font-weight: 600;
+  background: #EEF2FF; color: #6366F1; border: none;
+  transition: background 0.15s, color 0.15s; white-space: nowrap;
+}
+.btn-upload-orgchart:hover { background: #6366F1; color: #fff; }
+
+.btn-view-orgchart {
+  display: inline-flex; align-items: center; gap: 0.4rem;
+  padding: 0.5rem 1rem; border-radius: 8px; cursor: pointer;
+  font-size: 0.83rem; font-weight: 600;
+  background: var(--color-bg, #FAF8F5);
+  border: 1px solid var(--color-border, #E8E5DF);
+  color: var(--color-text-main, #1A1A1A);
+  transition: background 0.15s; white-space: nowrap;
+}
+.btn-view-orgchart:hover { background: var(--color-border, #E8E5DF); }
+
+.btn-delete-orgchart {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 34px; height: 34px; border-radius: 8px; cursor: pointer;
+  background: #FEF2F2; color: #EF4444; border: none;
+  transition: background 0.15s;
+}
+.btn-delete-orgchart:hover { background: #EF4444; color: #fff; }
+
+/* Upload zone */
+.orgchart-upload-zone {
+  padding: 4rem 2rem;
+  display: flex; align-items: center; justify-content: center;
+  border: 2px dashed var(--color-border, #E8E5DF);
+  margin: 1.5rem; border-radius: 12px;
+  transition: border-color 0.2s, background 0.2s;
+}
+.orgchart-upload-zone:hover { border-color: #6366F1; background: #F5F3FF; }
+
+/* Preview */
+.orgchart-preview-wrap { padding: 1.5rem; }
+
+.orgchart-upload-progress {
+  background: #F5F3FF; border-radius: 10px;
+  padding: 1rem 1.25rem; margin-bottom: 1rem;
+  display: flex; flex-direction: column; gap: 0.5rem;
+}
+.orgchart-progress-bar {
+  height: 6px; border-radius: 99px;
+  background: linear-gradient(90deg, #6366F1, #818CF8);
+  width: 0%; transition: width 0.3s ease;
+}
+.orgchart-progress-label { font-size: 0.8rem; color: #6366F1; font-weight: 500; }
+
+.orgchart-img {
+  width: 100%; border-radius: 10px;
+  border: 1px solid var(--color-border, #E8E5DF);
+  cursor: zoom-in; transition: box-shadow 0.2s;
+  display: block;
+}
+.orgchart-img:hover { box-shadow: 0 8px 32px rgba(0,0,0,0.12); }
+
+.orgchart-img-meta {
+  margin-top: 0.75rem; font-size: 0.78rem;
+  color: var(--color-text-muted, #6B6A67);
+  display: flex; gap: 1rem; flex-wrap: wrap;
+}
+
 /* ── Metric Card Action Buttons ── */
 .metric-card-actions { display: flex; align-items: center; gap: 0.4rem; }
 .metric-action-btn {
