@@ -4827,6 +4827,8 @@ document.addEventListener('DOMContentLoaded', () => {
         }
       } else {
         currentUser = null;
+        if (_notifUnsubscribe) { _notifUnsubscribe(); _notifUnsubscribe = null; }
+        _notifList = [];
         if (usersSubscription) {
           usersSubscription();
           usersSubscription = null;
@@ -9614,6 +9616,21 @@ document.addEventListener('DOMContentLoaded', () => {
     const phoneEl = document.getElementById('spPPhone');
     if (phoneEl) { phoneEl.textContent = s.phone || '--'; phoneEl.href = s.phone ? `tel:${s.phone}` : '#'; }
 
+    // Emergency contact summary
+    const ecSummary = s.emergencyContactName
+      ? `${s.emergencyContactName}${s.emergencyContactPhone ? ' · ' + s.emergencyContactPhone : ''}${s.emergencyContactRelation ? ' (' + s.emergencyContactRelation + ')' : ''}`
+      : '--';
+    setText('spPEmergencyContactSummary', ecSummary);
+
+    // Skills tags
+    const skillTagsEl = document.getElementById('spProfileSkillTags');
+    if (skillTagsEl) {
+      const skills = Array.isArray(s.skills) ? s.skills : [];
+      skillTagsEl.innerHTML = skills.length
+        ? skills.map(sk => `<span class="skill-tag">${esc(sk)}</span>`).join('')
+        : '<span class="skill-tag-empty">Chưa cập nhật</span>';
+    }
+
     const badge = document.getElementById('spProfileStatusBadge');
     if (badge) {
       badge.textContent = s.status || '--';
@@ -9623,9 +9640,42 @@ document.addEventListener('DOMContentLoaded', () => {
       else badge.classList.add('inactive-badge');
     }
 
+    // Work overview fields
+    const wsdEl = document.getElementById('spPWorkStartDate');
+    if (wsdEl) wsdEl.textContent = s.joinDate ? new Date(s.joinDate).toLocaleDateString('vi-VN') : '--';
+
+    const kpiEl = document.getElementById('spPKpi');
+    if (kpiEl) {
+      const storedKpi = (s.kpi != null && s.kpi !== '') ? Number(s.kpi) : null;
+      if (storedKpi != null) {
+        kpiEl.textContent = storedKpi + '%';
+        kpiEl.style.color = storedKpi >= 90 ? '#10B981' : storedKpi >= 70 ? '#6366F1' : storedKpi >= 50 ? '#F59E0B' : '#EF4444';
+      } else {
+        kpiEl.textContent = 'Chưa cập nhật';
+        kpiEl.style.color = 'var(--color-text-muted,#6B6A67)';
+      }
+    }
+
+    const spSalaryEl = document.getElementById('spPSalary');
+    if (spSalaryEl) {
+      spSalaryEl.textContent = (s.salary > 0) ? Number(s.salary).toLocaleString('vi-VN') + ' đ' : '-- đ';
+      spSalaryEl.style.color = s.salary > 0 ? '#059669' : 'var(--color-text-muted,#6B6A67)';
+    }
+
+    setText('spPDept', s.department);
+    setText('spPLineManager', s.manager || 'Ban Giám đốc');
+
+    // Work days & attendance — show loading, filled async below
+    const spWdEl = document.getElementById('spPWorkDays');
+    const spAttEl = document.getElementById('spPAttendance');
+    if (spWdEl)  { spWdEl.textContent  = '...'; spWdEl.style.color  = 'var(--color-text-muted,#6B6A67)'; }
+    if (spAttEl) { spAttEl.textContent = '...'; spAttEl.style.color = 'var(--color-text-muted,#6B6A67)'; }
+
+    // Income
     const incomeEl = document.getElementById('spPIncome');
     if (incomeEl) incomeEl.textContent = s.salary > 0 ? Number(s.salary).toLocaleString('vi-VN') + ' đ' : '-- đ';
 
+    // Work efficiency donut (task-based)
     const seed = (s.id || s.name || 'x').split('').reduce((a, c) => a + c.charCodeAt(0), 0);
     const early = 25 + (seed % 20);
     const onTime = 8 + (seed % 12);
@@ -9636,6 +9686,100 @@ document.addEventListener('DOMContentLoaded', () => {
     setText('spLegOnTime', onTime + '%');
     setText('spLegLate', late + '%');
     setText('spLegPending', pending + '%');
+
+    // HR Score (read-only, same formula as admin)
+    const _applySpHrScore = (kpiDisplay, attPct) => {
+      const totalScore = Math.round(kpiDisplay * 0.6 + attPct * 0.4);
+      const grade = totalScore >= 90 ? 'A' : totalScore >= 80 ? 'B+' : totalScore >= 70 ? 'B' : totalScore >= 60 ? 'C' : 'D';
+      const gradeColor = totalScore >= 90 ? '#10B981' : totalScore >= 80 ? '#6366F1' : totalScore >= 70 ? '#3B82F6' : totalScore >= 60 ? '#F59E0B' : '#EF4444';
+      const gradeNote = totalScore >= 90 ? '🏆 Xuất sắc — Nhân viên tiêu biểu'
+        : totalScore >= 80 ? '🌟 Tốt — Vượt kỳ vọng'
+        : totalScore >= 70 ? '👍 Khá — Đạt yêu cầu'
+        : totalScore >= 60 ? '⚠️ Trung bình — Cần cải thiện'
+        : '🔴 Yếu — Cần hỗ trợ đặc biệt';
+      const scoreValEl   = document.getElementById('spHrScoreVal');
+      const scoreGradeEl = document.getElementById('spHrScoreGrade');
+      const scoreArcEl   = document.getElementById('spHrScoreArc');
+      const kpiBarEl     = document.getElementById('spHrKpiBar');
+      const attBarEl     = document.getElementById('spHrAttBar');
+      const kpiValEl     = document.getElementById('spHrKpiVal');
+      const attValEl     = document.getElementById('spHrAttVal');
+      const noteEl       = document.getElementById('spHrScoreNote');
+      if (scoreValEl)   scoreValEl.textContent   = totalScore;
+      if (scoreGradeEl) { scoreGradeEl.textContent = grade; scoreGradeEl.style.color = gradeColor; }
+      if (scoreArcEl) {
+        scoreArcEl.style.stroke = gradeColor;
+        scoreArcEl.style.transition = 'none';
+        scoreArcEl.style.strokeDashoffset = '326.7';
+        requestAnimationFrame(() => {
+          scoreArcEl.style.transition = 'stroke-dashoffset 1.1s cubic-bezier(.4,0,.2,1), stroke 0.3s';
+          scoreArcEl.style.strokeDashoffset = String(326.7 - (totalScore / 100) * 326.7);
+        });
+      }
+      if (kpiBarEl) { kpiBarEl.style.width = '0%'; requestAnimationFrame(() => { kpiBarEl.style.transition = 'width 1s ease'; kpiBarEl.style.width = kpiDisplay + '%'; }); }
+      if (attBarEl) { attBarEl.style.width = '0%'; requestAnimationFrame(() => { attBarEl.style.transition = 'width 1s ease'; attBarEl.style.width = attPct + '%'; }); }
+      if (kpiValEl) kpiValEl.textContent = kpiDisplay + '%';
+      if (attValEl) attValEl.textContent = attPct + '%';
+      if (noteEl)   { noteEl.textContent = gradeNote; noteEl.style.color = gradeColor; }
+    };
+
+    // Initial HR score with stored KPI (attendance will update after async fetch)
+    const storedKpiInit = (s.kpi != null && s.kpi !== '') ? Number(s.kpi) : 75;
+    _applySpHrScore(storedKpiInit, 80); // placeholder att, overwritten when attendance loads
+
+    // Async: fetch real attendance → update work days, attendance %, HR Score
+    (async () => {
+      const now = new Date();
+      const monthStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+      const { S: standardDays } = calcStandardDays(monthStr);
+      const todayDay = now.getDate();
+      const days = {};
+
+      try {
+        const attDoc = await db.collection('attendance').doc(`${s.id}_${monthStr}`).get();
+        if (attDoc.exists && attDoc.data().days) Object.assign(days, attDoc.data().days);
+      } catch (e) { /* non-critical */ }
+
+      if (s.email) {
+        try {
+          const logsSnap = await db.collection('checkin_logs')
+            .where('month', '==', monthStr).where('email', '==', s.email).get();
+          logsSnap.forEach(doc => {
+            const d = doc.data();
+            if (d.date && d.checkin_time) {
+              const dayKey = String(parseInt(d.date.split('-')[2], 10));
+              if (!days[dayKey]) days[dayKey] = '1';
+            }
+          });
+        } catch (e) { /* non-critical */ }
+      }
+
+      let actualDays = 0;
+      Object.entries(days).forEach(([dayStr, v]) => {
+        if (parseInt(dayStr, 10) > todayDay) return;
+        if (v === '1') actualDays += 1;
+        else if (v === '0.5') actualDays += 0.5;
+      });
+
+      let elapsedStd = 0;
+      for (let d = 1; d <= todayDay; d++) {
+        const dow = new Date(now.getFullYear(), now.getMonth(), d).getDay();
+        if (dow >= 1 && dow <= 5) elapsedStd++;
+        else if (dow === 6) elapsedStd += 0.5;
+      }
+      const attPct = elapsedStd > 0 ? Math.min(100, Math.round((actualDays / elapsedStd) * 100)) : 0;
+      const kpiForScore = (s.kpi != null && s.kpi !== '') ? Number(s.kpi) : 0;
+
+      if (spWdEl) {
+        spWdEl.textContent = (actualDays % 1 === 0 ? actualDays : actualDays.toFixed(1)) + ' / ' + standardDays + ' ngày';
+        spWdEl.style.color = '';
+      }
+      if (spAttEl) {
+        spAttEl.textContent = attPct + '%';
+        spAttEl.style.color = attPct >= 95 ? '#10B981' : attPct >= 80 ? '#6366F1' : attPct >= 65 ? '#F59E0B' : '#EF4444';
+      }
+      _applySpHrScore(kpiForScore, attPct);
+    })();
 
     // Populate resume form inputs (employee edits these)
     const setInput = (id, val) => { const el = document.getElementById(id); if (el) el.value = val || ''; };
@@ -10116,8 +10260,6 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     }, 5000);
 
-    // Auto-poll Firestore every 2 minutes so new notifications appear without clicking bell
-    setInterval(() => { fetchNotifications(); }, 2 * 60 * 1000);
   };
 
   const fetchNotifications = async () => {
@@ -10168,7 +10310,7 @@ document.addEventListener('DOMContentLoaded', () => {
     list.innerHTML = _notifList.map(n => {
       const dateObj = n.createdAt?.toDate?.() || n.dueDate?.toDate?.() || null;
       const timeStr = dateObj ? formatDateVN(dateObj) : '';
-      const icon    = n.type === 'flight' || n.dueDate ? '✈' : '🔔';
+      const icon    = (n.type?.startsWith('flight') || n.dueDate) ? '✈' : '🔔';
       return `<div class="notif-item${n.isRead ? '' : ' unread'}" data-nid="${n.id}">
         <div class="notif-icon">${icon}</div>
         <div class="notif-body">
@@ -10216,10 +10358,53 @@ document.addEventListener('DOMContentLoaded', () => {
     updateNotifBadge();
   };
 
-  // Poll every 60 s when bell is closed (silent background check)
+  // Real-time notification listener — fires immediately on any Firestore change
+  let _notifUnsubscribe = null;
   const startNotifPolling = () => {
-    fetchNotifications();
-    setInterval(() => { if (!_notifOpen) fetchNotifications(); }, 60000);
+    if (!currentUser?.email) return;
+    if (_notifUnsubscribe) { _notifUnsubscribe(); _notifUnsubscribe = null; }
+
+    const ringBell = () => {
+      document.querySelectorAll('.topbar-notif-btn').forEach(btn => {
+        btn.classList.remove('bell-ringing');
+        void btn.offsetWidth;
+        btn.classList.add('bell-ringing');
+        setTimeout(() => btn.classList.remove('bell-ringing'), 700);
+      });
+    };
+
+    const onNewSnap = (snap) => {
+      const prevUnread = _notifList.filter(n => !n.isRead).length;
+      _notifList = snap.docs
+        .map(d => ({ id: d.id, ...d.data() }))
+        .sort((a, b) => {
+          const ta = a.createdAt?.toDate?.()?.getTime() || 0;
+          const tb = b.createdAt?.toDate?.()?.getTime() || 0;
+          return tb - ta;
+        });
+      renderNotifDropdown();
+      updateNotifBadge();
+      const nowUnread = _notifList.filter(n => !n.isRead).length;
+      // Ring bell immediately when new unread notification arrives
+      if (nowUnread > 0 && nowUnread > prevUnread) ringBell();
+    };
+
+    // Attach real-time listener (no orderBy → no index required)
+    try {
+      _notifUnsubscribe = db.collection('notifications')
+        .where('recipientEmail', '==', currentUser.email)
+        .limit(30)
+        .onSnapshot(onNewSnap, (err) => {
+          console.warn('Notification listener error, falling back to polling:', err.message);
+          _notifUnsubscribe = null;
+          // Fallback: poll every 2 minutes
+          fetchNotifications();
+          setInterval(() => fetchNotifications(), 2 * 60 * 1000);
+        });
+    } catch (e) {
+      fetchNotifications();
+      setInterval(() => fetchNotifications(), 2 * 60 * 1000);
+    }
   };
 
   // For students: show due flight notifications as toast + modal on login
