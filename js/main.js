@@ -10210,18 +10210,27 @@ document.addEventListener('DOMContentLoaded', () => {
       <path d="M21,19V20H3V19L5,17V11C5,7.9 7.03,5.17 10,4.29C10,4.19 10,4.1 10,4A2,2 0 0,1 12,2A2,2 0 0,1 14,4C14,4.1 14,4.19 14,4.29C16.97,5.17 19,7.9 19,11V17L21,19M14,21A2,2 0 0,1 12,23A2,2 0 0,1 10,21"/>
     </svg>`;
 
+  // Shared bell ring helper — used by both the 5s interval and onSnapshot
+  const ringBells = () => {
+    document.querySelectorAll('.topbar-notif-btn').forEach(btn => {
+      btn.classList.remove('bell-ringing');
+      void btn.offsetWidth;
+      btn.classList.add('bell-ringing');
+      setTimeout(() => btn.classList.remove('bell-ringing'), 700);
+    });
+  };
+
+  let _bellInit = false;
   const initNotificationBell = () => {
     const dropdown = document.getElementById('notifDropdown');
-    const markAll  = document.getElementById('btnMarkAllRead');
     if (!dropdown) return;
 
-    // Inject bell button before every .topbar-user-wrapper (staff/admin portals)
-    // and before .student-profile-dropdown (student portal)
-    const bellTargets = [
+    // Inject bell button before every .topbar-user-wrapper (admin/staff) and
+    // .student-profile-dropdown (student). Safe to call multiple times — duplicate guard below.
+    [
       ...document.querySelectorAll('.topbar-user-wrapper'),
       ...document.querySelectorAll('.student-profile-dropdown'),
-    ];
-    bellTargets.forEach(anchor => {
+    ].forEach(anchor => {
       if (anchor.previousElementSibling?.classList.contains('topbar-notif-btn')) return;
       const btn = document.createElement('button');
       btn.className = 'topbar-notif-btn';
@@ -10231,7 +10240,13 @@ document.addEventListener('DOMContentLoaded', () => {
       anchor.parentElement.insertBefore(btn, anchor);
     });
 
-    // Single event delegation on document for all injected bells
+    // Only wire event listeners and intervals ONCE per page load
+    if (_bellInit) return;
+    _bellInit = true;
+
+    document.getElementById('btnMarkAllRead')?.addEventListener('click', markAllNotifsRead);
+
+    // Bell click — single document listener, registered exactly once
     document.addEventListener('click', (e) => {
       if (e.target.closest('.topbar-notif-btn')) {
         e.stopPropagation();
@@ -10246,20 +10261,10 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     });
 
-    markAll?.addEventListener('click', markAllNotifsRead);
-
-    // Ring bells every 5 seconds — only when there are unread notifications
+    // Ring every 5 s while there are unread notifications
     setInterval(() => {
-      const hasUnread = _notifList.some(n => !n.isRead);
-      if (!hasUnread) return;
-      document.querySelectorAll('.topbar-notif-btn').forEach(btn => {
-        btn.classList.remove('bell-ringing');
-        void btn.offsetWidth;
-        btn.classList.add('bell-ringing');
-        setTimeout(() => btn.classList.remove('bell-ringing'), 700);
-      });
+      if (_notifList.some(n => !n.isRead)) ringBells();
     }, 5000);
-
   };
 
   const fetchNotifications = async () => {
@@ -10364,15 +10369,6 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!currentUser?.email) return;
     if (_notifUnsubscribe) { _notifUnsubscribe(); _notifUnsubscribe = null; }
 
-    const ringBell = () => {
-      document.querySelectorAll('.topbar-notif-btn').forEach(btn => {
-        btn.classList.remove('bell-ringing');
-        void btn.offsetWidth;
-        btn.classList.add('bell-ringing');
-        setTimeout(() => btn.classList.remove('bell-ringing'), 700);
-      });
-    };
-
     const onNewSnap = (snap) => {
       const prevUnread = _notifList.filter(n => !n.isRead).length;
       _notifList = snap.docs
@@ -10386,7 +10382,7 @@ document.addEventListener('DOMContentLoaded', () => {
       updateNotifBadge();
       const nowUnread = _notifList.filter(n => !n.isRead).length;
       // Ring bell immediately when new unread notification arrives
-      if (nowUnread > 0 && nowUnread > prevUnread) ringBell();
+      if (nowUnread > 0 && nowUnread > prevUnread) ringBells();
     };
 
     // Attach real-time listener (no orderBy → no index required)

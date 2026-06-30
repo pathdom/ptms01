@@ -6581,6 +6581,7 @@ body.dark-theme-crm {
   top: 84px;
   right: 18px;
   width: 320px;
+  z-index: 9999;
   background: #fff;
   border: 1.5px solid #E8E5DF;
   border-radius: 16px;
