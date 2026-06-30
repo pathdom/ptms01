@@ -9957,10 +9957,10 @@ document.addEventListener('DOMContentLoaded', () => {
     if (flightTs) {
       await upsertFlightNotifications(studentId, studentName, studentCode, dateStrToMidnight(dateStr));
     } else {
-      // Clear existing notifications for this student's flight
+      // Clear ALL notifications for this student's flight (student reminders + staff broadcasts)
       const snap = await db.collection('notifications')
         .where('recipientStudentId', '==', studentId)
-        .where('type', 'in', ['flight_7day', 'flight_3day'])
+        .where('type', 'in', ['flight_7day', 'flight_3day', 'flight_announce'])
         .get();
       const batch = db.batch();
       snap.docs.forEach(d => batch.delete(d.ref));
@@ -9969,45 +9969,72 @@ document.addEventListener('DOMContentLoaded', () => {
   };
 
   const upsertFlightNotifications = async (studentId, studentName, studentCode, flightDate) => {
-    const msg = `${studentName}, mã số ${studentCode} chuẩn bị bay, vui lòng check đủ hồ sơ để chuẩn bị cho chuyến bay tốt nhất, chúc bạn may mắn!`;
+    const flightDateStr = formatDateVN(flightDate);
+    const now     = firebase.firestore.Timestamp.fromDate(new Date());
+    const flightTs = firebase.firestore.Timestamp.fromDate(flightDate);
 
-    // Get student email for recipient lookup
-    const studentDoc = await db.collection('students').doc(studentId).get();
+    // Message for student (reminder before flight)
+    const studentMsg = `${studentName}, mã số ${studentCode} chuẩn bị bay, vui lòng check đủ hồ sơ để chuẩn bị cho chuyến bay tốt nhất, chúc bạn may mắn!`;
+
+    // Message for ALL staff (immediate broadcast when flight date is set)
+    const staffMsg = `Thông báo bạn ${studentName} - ${studentCode} sẽ xuất cảnh ngày ${flightDateStr}. Đề nghị các phòng ban liên quan chú ý bám sát để bạn có chuyến bay thuận lợi nhất. Trân trọng,`;
+
+    // Fetch student email + all staff emails in parallel
+    const [studentDoc, staffSnap] = await Promise.all([
+      db.collection('students').doc(studentId).get(),
+      db.collection('hrm_staff').get(),
+    ]);
     const studentEmail = studentDoc.data()?.email || '';
-
-    const notifDays = [
-      { type: 'flight_7day', daysBefor: 7, label: '7 ngày' },
-      { type: 'flight_3day', daysBefor: 3, label: '3 ngày' },
-    ];
+    const staffEmails  = staffSnap.docs.map(d => d.data().email).filter(Boolean);
 
     const batch = db.batch();
 
-    // Delete old notifications for this student's flight first
+    // Remove old notifications for this student (all types: reminders + old broadcasts)
     const oldSnap = await db.collection('notifications')
       .where('recipientStudentId', '==', studentId)
-      .where('type', 'in', ['flight_7day', 'flight_3day'])
+      .where('type', 'in', ['flight_7day', 'flight_3day', 'flight_announce'])
       .get();
     oldSnap.docs.forEach(d => batch.delete(d.ref));
 
-    for (const { type, daysBefor, label } of notifDays) {
-      const dueDate = new Date(flightDate.getTime());
-      dueDate.setDate(dueDate.getDate() - daysBefor);
+    // Student reminder notifications: 7-day and 3-day before flight
+    if (studentEmail) {
+      const notifDays = [
+        { type: 'flight_7day', daysBefor: 7, label: '7 ngày' },
+        { type: 'flight_3day', daysBefor: 3, label: '3 ngày' },
+      ];
+      for (const { type, daysBefor, label } of notifDays) {
+        const dueDate = new Date(flightDate.getTime());
+        dueDate.setDate(dueDate.getDate() - daysBefor);
+        batch.set(db.collection('notifications').doc(), {
+          recipientStudentId: studentId,
+          recipientEmail:     studentEmail,
+          type,
+          title:     `✈ Nhắc nhở chuyến bay (còn ${label})`,
+          message:   studentMsg,
+          flightDate: flightTs,
+          dueDate:   firebase.firestore.Timestamp.fromDate(dueDate),
+          isRead:    false,
+          createdAt: now,
+        });
+      }
+    }
 
-      const ref = db.collection('notifications').doc();
-      batch.set(ref, {
+    // Immediate broadcast notification for every staff member
+    for (const email of staffEmails) {
+      batch.set(db.collection('notifications').doc(), {
         recipientStudentId: studentId,
-        recipientEmail:     studentEmail,
-        type,
-        title:   `✈ Nhắc nhở chuyến bay (còn ${label})`,
-        message: msg,
-        flightDate: firebase.firestore.Timestamp.fromDate(flightDate),
-        dueDate:    firebase.firestore.Timestamp.fromDate(dueDate),
-        isRead:  false,
-        createdAt: firebase.firestore.Timestamp.fromDate(new Date()),
+        recipientEmail:     email,
+        type:      'flight_announce',
+        title:     '✈ Thông báo lịch xuất cảnh',
+        message:   staffMsg,
+        flightDate: flightTs,
+        isRead:    false,
+        createdAt: now,
       });
     }
 
     await batch.commit();
+    showToast(`Đã gửi thông báo lịch bay đến ${staffEmails.length} nhân viên.`, 'success');
   };
 
   // ---- Notification Bell UI ----
