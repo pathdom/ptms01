@@ -5503,6 +5503,8 @@ document.addEventListener('DOMContentLoaded', () => {
       const pwConfirm = document.getElementById('hrmStaffPasswordConfirm');
       if (pwInput) pwInput.required = true;
       if (pwConfirm) pwConfirm.required = true;
+      const emailElNew = document.getElementById('hrmStaffEmail');
+      if (emailElNew) { emailElNew.readOnly = false; emailElNew.style.opacity = ''; emailElNew.style.cursor = ''; }
       if (staffModal) staffModal.style.display = 'flex';
     });
     document.getElementById('btnCloseHrmStaffModal')?.addEventListener('click', () => {
@@ -5701,14 +5703,19 @@ document.addEventListener('DOMContentLoaded', () => {
     // Staff form
     document.getElementById('hrmStaffForm')?.addEventListener('submit', async (e) => {
       e.preventDefault();
-      const editId = document.getElementById('hrmStaffEditId').value;
-      const email = document.getElementById('hrmStaffEmail').value.trim();
-      const name = document.getElementById('hrmStaffName').value.trim();
+      const editId = document.getElementById('hrmStaffEditId').value.trim();
+      const email  = document.getElementById('hrmStaffEmail').value.trim();
+      const name   = document.getElementById('hrmStaffName').value.trim();
+      const dept   = document.getElementById('hrmStaffDept').value;
+
+      if (!name)  { showToast('Vui lòng nhập họ tên nhân viên!', 'error'); return; }
+      if (!dept)  { showToast('Vui lòng chọn phòng ban!', 'error'); return; }
+      if (!editId && !email) { showToast('Vui lòng nhập email!', 'error'); return; }
 
       const data = {
         name,
         email,
-        department: document.getElementById('hrmStaffDept').value,
+        department: dept,
         workType:   document.getElementById('hrmStaffWorkType')?.value || 'Full-time',
         phone:      document.getElementById('hrmStaffPhone').value.trim(),
         birthday:   document.getElementById('hrmStaffBirthday')?.value || null,
@@ -5720,7 +5727,7 @@ document.addEventListener('DOMContentLoaded', () => {
       try {
         if (editId) {
           await db.collection('hrm_staff').doc(editId).update(data);
-          logHrmActivity(editId, 'Cập nhật thông tin nhân sự');
+          await logHrmActivity(editId, 'Cập nhật thông tin nhân sự');
           showToast('Đã cập nhật thông tin nhân sự!', 'success');
         } else {
           // Validate password
@@ -6535,24 +6542,38 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const editHrmStaff = (s) => {
     document.getElementById('hrmStaffEditId').value = s.id;
-    document.getElementById('hrmStaffName').value     = s.name       || '';
-    document.getElementById('hrmStaffEmail').value    = s.email      || '';
-    document.getElementById('hrmStaffDept').value     = s.department || DEPARTMENTS[0];
-    document.getElementById('hrmStaffPhone').value    = s.phone      || '';
-    document.getElementById('hrmStaffStatus').value   = s.status     || 'Đang làm việc';
+    document.getElementById('hrmStaffName').value = s.name || '';
+
+    const emailEl = document.getElementById('hrmStaffEmail');
+    if (emailEl) {
+      emailEl.value = s.email || '';
+      emailEl.readOnly = true;
+      emailEl.style.opacity = '0.6';
+      emailEl.style.cursor = 'not-allowed';
+    }
+
+    const deptEl = document.getElementById('hrmStaffDept');
+    if (deptEl) {
+      deptEl.value = s.department || DEPARTMENTS[0];
+      if (!deptEl.value) deptEl.value = DEPARTMENTS[0];
+    }
+
+    document.getElementById('hrmStaffPhone').value = s.phone || '';
+    document.getElementById('hrmStaffStatus').value = s.status || 'Đang làm việc';
+
     const bdEl = document.getElementById('hrmStaffBirthday');
     const wtEl = document.getElementById('hrmStaffWorkType');
     const jdEl = document.getElementById('hrmStaffJoinDate');
     if (bdEl) bdEl.value = s.birthday || '';
-    if (wtEl) wtEl.value = s.workType  || 'Full-time';
-    if (jdEl) jdEl.value = s.joinDate  || '';
+    if (wtEl) wtEl.value = s.workType || 'Full-time';
+    if (jdEl) jdEl.value = s.joinDate || '';
 
     document.getElementById('hrmStaffModalTitle').textContent = '✏️ SỬA THÔNG TIN NHÂN SỰ';
     const pwSection = document.getElementById('hrmStaffPasswordSection');
     if (pwSection) pwSection.style.display = 'none';
     const pwInput = document.getElementById('hrmStaffPassword');
     const pwConfirm = document.getElementById('hrmStaffPasswordConfirm');
-    if (pwInput)   { pwInput.required = false;   pwInput.value = ''; }
+    if (pwInput)   { pwInput.required = false; pwInput.value = ''; }
     if (pwConfirm) { pwConfirm.required = false; pwConfirm.value = ''; }
     document.getElementById('hrmStaffModal').style.display = 'flex';
   };
