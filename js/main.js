@@ -4436,6 +4436,17 @@ document.addEventListener('DOMContentLoaded', () => {
   // Startup and Reload Session Handler
   const checkPortalSession = () => {
     // 2. Setup Auth state changed listener
+    let _authResolved = false;
+    const _hideLoadingOverlay = () => {
+      if (_authResolved) return;
+      _authResolved = true;
+      const overlay = document.getElementById('app-loading-overlay');
+      if (overlay) {
+        overlay.style.opacity = '0';
+        setTimeout(() => overlay.remove(), 260);
+      }
+    };
+
     auth.onAuthStateChanged(async (user) => {
       if (user) {
         try {
@@ -4860,8 +4871,11 @@ document.addEventListener('DOMContentLoaded', () => {
         } catch (e) {
           console.error("Error setting up logged in user session:", e);
           showToast("Lỗi đồng bộ dữ liệu người dùng!", "error");
+        } finally {
+          _hideLoadingOverlay();
         }
       } else {
+        _hideLoadingOverlay();
         currentUser = null;
         _stopIdleWatch();
         if (_notifUnsubscribe) { _notifUnsubscribe(); _notifUnsubscribe = null; }
