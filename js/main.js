@@ -10115,6 +10115,9 @@ document.addEventListener('DOMContentLoaded', () => {
         setTimeout(() => btn.classList.remove('bell-ringing'), 700);
       });
     }, 5000);
+
+    // Auto-poll Firestore every 2 minutes so new notifications appear without clicking bell
+    setInterval(() => { fetchNotifications(); }, 2 * 60 * 1000);
   };
 
   const fetchNotifications = async () => {
