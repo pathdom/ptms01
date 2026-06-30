@@ -9671,21 +9671,19 @@ document.addEventListener('DOMContentLoaded', () => {
     if (spWdEl)  { spWdEl.textContent  = '...'; spWdEl.style.color  = 'var(--color-text-muted,#6B6A67)'; }
     if (spAttEl) { spAttEl.textContent = '...'; spAttEl.style.color = 'var(--color-text-muted,#6B6A67)'; }
 
-    // Income
+    // Income card (clean display — no unit suffix, card shows "đồng / tháng")
     const incomeEl = document.getElementById('spPIncome');
-    if (incomeEl) incomeEl.textContent = s.salary > 0 ? Number(s.salary).toLocaleString('vi-VN') + ' đ' : '-- đ';
+    if (incomeEl) incomeEl.textContent = s.salary > 0 ? Number(s.salary).toLocaleString('vi-VN') : '--';
 
-    // Work efficiency donut (task-based)
+    // Contract / hợp đồng card
+    const workTypeLabels = { fulltime: 'Toàn thời gian', parttime: 'Bán thời gian', intern: 'Thực tập sinh', remote: 'Làm từ xa' };
+    setText('spPWorkType2', workTypeLabels[s.workType] || s.workType || '--');
+    setText('spPJoinDate2', s.joinDate ? new Date(s.joinDate).toLocaleDateString('vi-VN') : '--');
+    setText('spPDept2', s.department || '--');
+    setText('spPLineManager2', s.manager || 'Ban Giám đốc');
+
+    // Seed for radar chart only
     const seed = (s.id || s.name || 'x').split('').reduce((a, c) => a + c.charCodeAt(0), 0);
-    const early = 25 + (seed % 20);
-    const onTime = 8 + (seed % 12);
-    const late = 8 + ((seed * 3) % 18);
-    const pending = Math.max(5, 100 - early - onTime - late);
-    const totalTasks = 18 + (seed % 28);
-    setText('spLegEarly', early + '%');
-    setText('spLegOnTime', onTime + '%');
-    setText('spLegLate', late + '%');
-    setText('spLegPending', pending + '%');
 
     // HR Score (read-only, same formula as admin)
     const _applySpHrScore = (kpiDisplay, attPct) => {
@@ -9811,12 +9809,6 @@ document.addEventListener('DOMContentLoaded', () => {
     setInput('spInputTaxCode',         s.taxCode);
 
     requestAnimationFrame(() => {
-      drawDonutChart('spWorkEfficiencyChart', totalTasks, [
-        { value: early, color: '#4CAF50' },
-        { value: onTime, color: '#3FA2F6' },
-        { value: late, color: '#FFC107' },
-        { value: pending, color: '#F44336' }
-      ]);
       drawRadarChart('spSkillsRadarChart', [
         { label: 'Tổ chức', value: 2 + (seed % 3), max: 5 },
         { label: 'Văn hóa', value: 2 + ((seed * 2) % 3), max: 5 },
@@ -9831,6 +9823,53 @@ document.addEventListener('DOMContentLoaded', () => {
   const initStaffProfileDashboard = async () => {
     const dashboard = document.getElementById('staff-profile-dashboard');
     if (dashboard) dashboard.style.display = 'flex';
+
+    // ── Staff topbar user dropdown (position:fixed bypasses overflow-x:auto clipping) ──
+    const spWrapper = document.querySelector('#staff-profile-dashboard .topbar-user-wrapper');
+    const spDrop    = spWrapper?.querySelector('.topbar-user-dropdown');
+    if (spWrapper && spDrop && !spWrapper.dataset.dropBound) {
+      spWrapper.dataset.dropBound = '1';
+
+      let _hideTimer;
+      const showDrop = () => {
+        clearTimeout(_hideTimer);
+        const r = spWrapper.getBoundingClientRect();
+        Object.assign(spDrop.style, {
+          display:  'block',
+          position: 'fixed',
+          top:      (r.bottom + 4) + 'px',
+          right:    (window.innerWidth - r.right) + 'px',
+          left:     'auto',
+          zIndex:   '10000',
+          minWidth: '180px',
+        });
+      };
+      const hideDrop = () => {
+        _hideTimer = setTimeout(() => { spDrop.style.display = 'none'; }, 120);
+      };
+
+      spWrapper.addEventListener('mouseenter', showDrop);
+      spWrapper.addEventListener('mouseleave', hideDrop);
+      spDrop.addEventListener('mouseenter',   () => clearTimeout(_hideTimer));
+      spDrop.addEventListener('mouseleave',   hideDrop);
+
+      // Click on badge also toggles dropdown (mobile / touch)
+      spWrapper.querySelector('.user-profile-badge-inline')
+        ?.addEventListener('click', (e) => {
+          e.stopPropagation();
+          spDrop.style.display === 'none' || !spDrop.style.display ? showDrop() : hideDrop();
+        });
+
+      // Close dropdown when any item inside is clicked (actual actions handled by global listeners)
+      spDrop.addEventListener('click', () => { spDrop.style.display = 'none'; });
+
+      // Close on outside click
+      document.addEventListener('click', (e) => {
+        if (!spWrapper.contains(e.target) && !spDrop.contains(e.target)) {
+          spDrop.style.display = 'none';
+        }
+      });
+    }
 
     // Bind tab click events once via delegation
     const spTabNav = document.querySelector('#staff-profile-dashboard .hrm-profile-topbar');

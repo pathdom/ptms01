@@ -2751,30 +2751,35 @@
                   </div>
                   <div class="hr-score-note" id="spHrScoreNote"></div>
                 </div>
-                <!-- Hiệu quả công việc -->
-                <div class="hrm-metric-card">
-                  <div class="metric-card-header"><h4>Hiệu quả công việc</h4></div>
-                  <div class="donut-chart-wrapper">
-                    <canvas id="spWorkEfficiencyChart" width="180" height="180"></canvas>
+                <!-- Thu nhập -->
+                <div class="hrm-metric-card sp-income-card">
+                  <div class="metric-card-header"><h4>Thu nhập</h4></div>
+                  <div class="sp-income-body">
+                    <span class="sp-income-amount" id="spPIncome">--</span>
+                    <span class="sp-income-unit">đồng / tháng</span>
                   </div>
-                  <div class="efficiency-legend">
-                    <div class="legend-item"><span class="legend-dot" style="background:#4CAF50"></span>Hoàn thành trước hạn<strong id="spLegEarly">--</strong></div>
-                    <div class="legend-item"><span class="legend-dot" style="background:#3FA2F6"></span>Hoàn thành đúng hạn<strong id="spLegOnTime">--</strong></div>
-                    <div class="legend-item"><span class="legend-dot" style="background:#FFC107"></span>Hoàn thành quá hạn<strong id="spLegLate">--</strong></div>
-                    <div class="legend-item"><span class="legend-dot" style="background:#F44336"></span>Chưa hoàn thành<strong id="spLegPending">--</strong></div>
+                  <div class="sp-income-divider"></div>
+                  <div class="sp-income-meta">
+                    <span class="sp-income-meta-label">Hình thức</span>
+                    <span class="sp-income-meta-val" id="spPWorkType2">--</span>
                   </div>
                 </div>
-                <!-- Thu nhập -->
-                <div class="hrm-metric-card">
-                  <div class="metric-card-header"><h4>Thu nhập</h4></div>
-                  <div class="income-display">
-                    <span class="income-label">
-                      <span class="income-icon">
-                        <svg viewBox="0 0 24 24"><path d="M11.5,2C6.81,2 3,5.81 3,10.5C3,14.63 5.75,18.1 9.5,19.22V20H8V22H16V20H14.5V19.22C18.25,18.1 21,14.63 21,10.5C21,5.81 17.19,2 12.5,2H11.5M11.5,4H12.5C16.09,4 19,6.91 19,10.5C19,14.09 16.09,17 12.5,17H11.5C7.91,17 5,14.09 5,10.5C5,6.91 7.91,4 11.5,4M12,6V7.19C11,7.37 10,8.12 10,9.25C10,10.5 11,11.12 12.25,11.5C13.5,11.87 13.75,12.25 13.75,12.75C13.75,13.37 13.12,13.75 12.25,13.75C11.37,13.75 10.87,13.37 10.75,12.75H9.25C9.37,13.87 10.19,14.75 11.25,15V16H12.75V15C13.87,14.75 14.75,13.87 14.75,12.75C14.75,11.5 13.75,10.87 12.5,10.5C11.25,10.12 11,9.75 11,9.25C11,8.75 11.5,8.25 12.25,8.25C12.87,8.25 13.37,8.62 13.5,9.25H15C14.87,8.12 14.06,7.31 13,7.06V6H12Z"/></svg>
-                      </span>
-                      Tổng thu nhập
-                    </span>
-                    <span class="income-amount" id="spPIncome">-- đ</span>
+                <!-- Hợp đồng -->
+                <div class="hrm-metric-card sp-contract-card">
+                  <div class="metric-card-header"><h4>Hợp đồng</h4></div>
+                  <div class="sp-contract-rows">
+                    <div class="sp-contract-row">
+                      <span class="sp-ctr-label">Ngày vào làm</span>
+                      <span class="sp-ctr-val" id="spPJoinDate2">--</span>
+                    </div>
+                    <div class="sp-contract-row">
+                      <span class="sp-ctr-label">Phòng ban</span>
+                      <span class="sp-ctr-val" id="spPDept2">--</span>
+                    </div>
+                    <div class="sp-contract-row">
+                      <span class="sp-ctr-label">Quản lý</span>
+                      <span class="sp-ctr-val" id="spPLineManager2">--</span>
+                    </div>
                   </div>
                 </div>
               </div>
