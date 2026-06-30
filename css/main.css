@@ -6490,20 +6490,14 @@ body.dark-theme-crm {
 }
 
 /* ==========================================================================
-   GLOBAL NOTIFICATION BELL (fixed top-right, all roles)
+   NOTIFICATION BELL — inline in each topbar, injected by JS
    ========================================================================== */
-#globalNotifBell {
-  position: fixed;
-  top: 18px;
-  right: 18px;
-  z-index: 99999;
-}
 
-/* Bell button */
-.global-notif-btn {
+/* Bell button (inline inside topbar-right / hrm-profile-header-actions) */
+.topbar-notif-btn {
   position: relative;
-  width: 22px;
-  height: 22px;
+  width: 36px;
+  height: 36px;
   border-radius: 50%;
   border: none;
   background: transparent;
@@ -6512,12 +6506,14 @@ body.dark-theme-crm {
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: opacity 0.2s;
+  transition: background 0.15s, opacity 0.15s;
   color: #6B6A67;
   padding: 0;
+  flex-shrink: 0;
 }
-.global-notif-btn:hover {
-  opacity: 0.7;
+.topbar-notif-btn:hover {
+  background: rgba(0, 0, 0, 0.05);
+  opacity: 0.85;
 }
 
 /* Bell icon wrapper — the element that rotates */
@@ -6541,26 +6537,26 @@ body.dark-theme-crm {
   70%  { transform: rotate(0deg); }
   100% { transform: rotate(0deg); }
 }
-.bell-ringing .global-notif-bell-icon {
+.topbar-notif-btn.bell-ringing .global-notif-bell-icon {
   animation: bell-ring 0.65s cubic-bezier(0.36,0.07,0.19,0.97);
 }
 
 /* Badge */
-#notifBadge {
+.notif-badge {
   display: none;
   position: absolute;
-  top: -4px;
-  right: -5px;
+  top: -3px;
+  right: -4px;
   background: #EF4444;
   color: #fff;
-  font-size: 0.42rem;
+  font-size: 0.5rem;
   font-weight: 700;
-  min-width: 10px;
-  height: 10px;
-  border-radius: 5px;
+  min-width: 14px;
+  height: 14px;
+  border-radius: 7px;
   align-items: center;
   justify-content: center;
-  padding: 0 2px;
+  padding: 0 3px;
   line-height: 1;
   border: 1.5px solid #fff;
   animation: badge-pop 0.3s ease;
@@ -6571,12 +6567,12 @@ body.dark-theme-crm {
   100% { transform: scale(1); }
 }
 
-/* Dropdown panel */
+/* Dropdown panel — fixed, floats below the 80px topbar */
 #notifDropdown {
   display: none;
-  position: absolute;
-  top: calc(100% + 10px);
-  right: 0;
+  position: fixed;
+  top: 84px;
+  right: 18px;
   width: 320px;
   background: #fff;
   border: 1.5px solid #E8E5DF;

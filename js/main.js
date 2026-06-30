@@ -4451,9 +4451,6 @@ document.addEventListener('DOMContentLoaded', () => {
             initNotificationBell();
             startNotifPolling();
 
-            // Show flight notifications as toast for students on login
-            showStudentFlightNotifications();
-
             // Query dynamic profile details from Firestore
             try {
               const profileQuery = await db.collection("students").where("email", "==", user.email).get();
@@ -10017,25 +10014,41 @@ document.addEventListener('DOMContentLoaded', () => {
   let _notifList  = [];
   let _notifOpen  = false;
 
+  const _bellSvgHtml = `<svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20">
+      <path d="M21,19V20H3V19L5,17V11C5,7.9 7.03,5.17 10,4.29C10,4.19 10,4.1 10,4A2,2 0 0,1 12,2A2,2 0 0,1 14,4C14,4.1 14,4.19 14,4.29C16.97,5.17 19,7.9 19,11V17L21,19M14,21A2,2 0 0,1 12,23A2,2 0 0,1 10,21"/>
+    </svg>`;
+
   const initNotificationBell = () => {
-    const wrapper  = document.getElementById('globalNotifBell');
-    const bell     = document.getElementById('btnNotifBell');
     const dropdown = document.getElementById('notifDropdown');
     const markAll  = document.getElementById('btnMarkAllRead');
-    if (!bell || !dropdown || !wrapper) return;
+    if (!dropdown) return;
 
-    // Show the global bell widget
-    wrapper.style.display = 'block';
-
-    bell.addEventListener('click', (e) => {
-      e.stopPropagation();
-      _notifOpen = !_notifOpen;
-      dropdown.classList.toggle('open', _notifOpen);
-      if (_notifOpen) fetchNotifications();
+    // Inject bell button before every .topbar-user-wrapper (staff/admin portals)
+    // and before .student-profile-dropdown (student portal)
+    const bellTargets = [
+      ...document.querySelectorAll('.topbar-user-wrapper'),
+      ...document.querySelectorAll('.student-profile-dropdown'),
+    ];
+    bellTargets.forEach(anchor => {
+      if (anchor.previousElementSibling?.classList.contains('topbar-notif-btn')) return;
+      const btn = document.createElement('button');
+      btn.className = 'topbar-notif-btn';
+      btn.title = 'Thông báo';
+      btn.setAttribute('aria-label', 'Thông báo');
+      btn.innerHTML = `<span class="global-notif-bell-icon">${_bellSvgHtml}<span class="notif-badge">0</span></span>`;
+      anchor.parentElement.insertBefore(btn, anchor);
     });
 
+    // Single event delegation on document for all injected bells
     document.addEventListener('click', (e) => {
-      if (_notifOpen && !wrapper.contains(e.target)) {
+      if (e.target.closest('.topbar-notif-btn')) {
+        e.stopPropagation();
+        _notifOpen = !_notifOpen;
+        dropdown.classList.toggle('open', _notifOpen);
+        if (_notifOpen) fetchNotifications();
+        return;
+      }
+      if (_notifOpen && !dropdown.contains(e.target)) {
         _notifOpen = false;
         dropdown.classList.remove('open');
       }
@@ -10043,13 +10056,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
     markAll?.addEventListener('click', markAllNotifsRead);
 
-    // Ring bell every 5 seconds
+    // Ring bells every 5 seconds — only when there are unread notifications
     setInterval(() => {
-      bell.classList.remove('bell-ringing');
-      // Force reflow so animation restarts even if already applied
-      void bell.offsetWidth;
-      bell.classList.add('bell-ringing');
-      setTimeout(() => bell.classList.remove('bell-ringing'), 700);
+      const hasUnread = _notifList.some(n => !n.isRead);
+      if (!hasUnread) return;
+      document.querySelectorAll('.topbar-notif-btn').forEach(btn => {
+        btn.classList.remove('bell-ringing');
+        void btn.offsetWidth;
+        btn.classList.add('bell-ringing');
+        setTimeout(() => btn.classList.remove('bell-ringing'), 700);
+      });
     }, 5000);
   };
 
@@ -10059,28 +10075,27 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!list) return;
 
     try {
-      const now   = new Date();
-      // Match by email (works for students AND staff viewing their own notifs)
-      const snap  = await db.collection('notifications')
+      // Fetch all notifications for this user, newest first — no dueDate gate
+      const snap = await db.collection('notifications')
         .where('recipientEmail', '==', currentUser.email)
-        .where('dueDate', '<=', firebase.firestore.Timestamp.fromDate(now))
-        .orderBy('dueDate', 'desc')
-        .limit(20)
+        .orderBy('createdAt', 'desc')
+        .limit(30)
         .get();
-
       _notifList = snap.docs.map(d => ({ id: d.id, ...d.data() }));
     } catch (err) {
-      // If index not ready, fallback without dueDate filter
       try {
+        // Fallback: no orderBy (avoids missing index error)
         const snap2 = await db.collection('notifications')
           .where('recipientEmail', '==', currentUser.email)
-          .orderBy('createdAt', 'desc')
-          .limit(20)
+          .limit(30)
           .get();
-        const now = new Date();
         _notifList = snap2.docs
           .map(d => ({ id: d.id, ...d.data() }))
-          .filter(n => n.dueDate?.toDate ? n.dueDate.toDate() <= now : true);
+          .sort((a, b) => {
+            const ta = a.createdAt?.toDate?.() || 0;
+            const tb = b.createdAt?.toDate?.() || 0;
+            return tb - ta;
+          });
       } catch (e2) {
         _notifList = [];
       }
@@ -10100,12 +10115,14 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     list.innerHTML = _notifList.map(n => {
-      const timeStr = n.dueDate?.toDate ? formatDateVN(n.dueDate.toDate()) : '';
+      const dateObj = n.createdAt?.toDate?.() || n.dueDate?.toDate?.() || null;
+      const timeStr = dateObj ? formatDateVN(dateObj) : '';
+      const icon    = n.type === 'flight' || n.dueDate ? '✈' : '🔔';
       return `<div class="notif-item${n.isRead ? '' : ' unread'}" data-nid="${n.id}">
-        <div class="notif-icon">✈</div>
+        <div class="notif-icon">${icon}</div>
         <div class="notif-body">
-          <div class="notif-msg">${n.message}</div>
-          <div class="notif-time">${n.title || ''} · ${timeStr}</div>
+          <div class="notif-msg">${n.message || n.title || ''}</div>
+          <div class="notif-time">${n.title ? n.title + ' · ' : ''}${timeStr}</div>
         </div>
         ${n.isRead ? '' : '<div class="notif-unread-dot"></div>'}
       </div>`;
@@ -10118,15 +10135,11 @@ document.addEventListener('DOMContentLoaded', () => {
   };
 
   const updateNotifBadge = () => {
-    const badge = document.getElementById('notifBadge');
-    if (!badge) return;
     const unread = _notifList.filter(n => !n.isRead).length;
-    if (unread > 0) {
-      badge.style.display = 'flex';
-      badge.textContent   = unread > 9 ? '9+' : String(unread);
-    } else {
-      badge.style.display = 'none';
-    }
+    document.querySelectorAll('.notif-badge').forEach(badge => {
+      badge.textContent  = unread > 9 ? '9+' : String(unread);
+      badge.style.display = unread > 0 ? 'flex' : 'none';
+    });
   };
 
   const markNotifRead = async (notifId) => {
