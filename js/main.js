@@ -9780,17 +9780,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (spAttEl) { spAttEl.textContent = '...'; spAttEl.style.color = 'var(--color-text-muted,#6B6A67)'; }
 
     // Income card (clean display — no unit suffix, card shows "đồng / tháng")
-    const incomeEl = document.getElementById('spPIncome');
-    if (incomeEl) incomeEl.textContent = s.salary > 0 ? Number(s.salary).toLocaleString('vi-VN') : '--';
-
-    // Contract / hợp đồng card
-    const workTypeLabels = { fulltime: 'Toàn thời gian', parttime: 'Bán thời gian', intern: 'Thực tập sinh', remote: 'Làm từ xa' };
-    setText('spPWorkType2', workTypeLabels[s.workType] || s.workType || '--');
-    setText('spPJoinDate2', s.joinDate ? new Date(s.joinDate).toLocaleDateString('vi-VN') : '--');
-    setText('spPDept2', s.department || '--');
-    setText('spPLineManager2', s.manager || 'Ban Giám đốc');
-
-    // Seed for radar chart only
+    // Seed for skill chart (kept for other uses)
     const seed = (s.id || s.name || 'x').split('').reduce((a, c) => a + c.charCodeAt(0), 0);
 
     // HR Score (read-only, same formula as admin)
@@ -9916,16 +9906,6 @@ document.addEventListener('DOMContentLoaded', () => {
     setInput('spInputBankAccountName', s.bankAccountName);
     setInput('spInputTaxCode',         s.taxCode);
 
-    requestAnimationFrame(() => {
-      drawRadarChart('spSkillsRadarChart', [
-        { label: 'Tổ chức', value: 2 + (seed % 3), max: 5 },
-        { label: 'Văn hóa', value: 2 + ((seed * 2) % 3), max: 5 },
-        { label: 'Giao tiếp', value: 2 + ((seed * 3) % 3), max: 5 },
-        { label: 'Chuyên môn', value: 2 + ((seed * 4) % 3), max: 5 },
-        { label: 'Sáng tạo', value: 1 + ((seed * 5) % 4), max: 5 },
-        { label: 'Nhóm', value: 2 + ((seed * 6) % 3), max: 5 }
-      ]);
-    });
   };
 
   const initStaffProfileDashboard = async () => {
