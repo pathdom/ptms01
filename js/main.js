@@ -862,9 +862,38 @@ document.addEventListener('DOMContentLoaded', () => {
   firebase.initializeApp(firebaseConfig);
   const auth = firebase.auth();
   
-  // Set persistence to NONE so the session is never saved in storage (always log in on refresh/new tab)
-  auth.setPersistence(firebase.auth.Auth.Persistence.NONE)
-    .catch((err) => console.error("Error setting Firebase persistence to NONE:", err));
+  // Persist session across page reloads; idle timeout handles auto-logout
+  auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL)
+    .catch((err) => console.error("Error setting Firebase persistence:", err));
+
+  // ── Idle timeout: logout after 10 minutes of inactivity ──
+  const IDLE_LIMIT_MS = 10 * 60 * 1000;
+  let _idleTimer = null;
+  let _idleCheckInterval = null;
+  let _lastActivity = Date.now();
+
+  const _resetIdleTimer = () => { _lastActivity = Date.now(); };
+
+  const _startIdleWatch = () => {
+    ['mousemove', 'mousedown', 'keydown', 'touchstart', 'scroll', 'click'].forEach(evt =>
+      document.addEventListener(evt, _resetIdleTimer, { passive: true })
+    );
+    _idleCheckInterval = setInterval(() => {
+      if (Date.now() - _lastActivity >= IDLE_LIMIT_MS) {
+        _stopIdleWatch();
+        showToast('Phiên đăng nhập hết hạn do không hoạt động.', 'info');
+        handlePortalLogout();
+      }
+    }, 30 * 1000);
+  };
+
+  const _stopIdleWatch = () => {
+    clearInterval(_idleCheckInterval);
+    _idleCheckInterval = null;
+    ['mousemove', 'mousedown', 'keydown', 'touchstart', 'scroll', 'click'].forEach(evt =>
+      document.removeEventListener(evt, _resetIdleTimer)
+    );
+  };
 
   const db = firebase.firestore();
 
@@ -1190,6 +1219,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // Logout actions
   const handlePortalLogout = async () => {
     try {
+      _stopIdleWatch();
       if (usersSubscription) {
         usersSubscription(); // Unsubscribe users
         usersSubscription = null;
@@ -4439,6 +4469,10 @@ document.addEventListener('DOMContentLoaded', () => {
           // Sync credentials to UI headers
           syncUserInfoUI(currentUser);
 
+          // Start idle watcher — auto logout after 10 min inactivity
+          _lastActivity = Date.now();
+          _startIdleWatch();
+
           if (currentUser.role === 'student') {
             // SHOW Student App Root, hide Login Panel and Admin Portal
             if (loginContainer) loginContainer.style.display = 'none';
@@ -4827,6 +4861,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
       } else {
         currentUser = null;
+        _stopIdleWatch();
         if (_notifUnsubscribe) { _notifUnsubscribe(); _notifUnsubscribe = null; }
         _notifList = [];
         if (usersSubscription) {
@@ -5339,6 +5374,63 @@ document.addEventListener('DOMContentLoaded', () => {
     setText('profileBankAccountName', s.bankAccountName);
     setText('profileTaxCode', s.taxCode);
 
+    // ── Salary inline edit ──
+    const salaryViewEl  = document.getElementById('salaryViewMode');
+    const salaryEditEl  = document.getElementById('salaryEditMode');
+    const btnEditSal    = document.getElementById('btnEditSalaryCard');
+    const btnCancelSal  = document.getElementById('btnCancelSalaryEdit');
+    const btnSaveSal    = document.getElementById('btnSaveSalaryEdit');
+    const inputBase     = document.getElementById('inputBaseSalary');
+    const inputAllow    = document.getElementById('inputAllowanceSalary');
+    const inputIns      = document.getElementById('inputInsuranceSalary');
+
+    const showSalaryView = () => {
+      if (salaryViewEl) salaryViewEl.style.display = '';
+      if (salaryEditEl) salaryEditEl.style.display = 'none';
+      if (btnEditSal)   btnEditSal.style.display = '';
+    };
+
+    if (btnEditSal) btnEditSal.onclick = () => {
+      if (inputBase)  inputBase.value  = s.salary || '';
+      if (inputAllow) inputAllow.value = s.allowanceSalary || '';
+      if (inputIns)   inputIns.value   = s.insuranceSalary || 'Không';
+      if (salaryViewEl) salaryViewEl.style.display = 'none';
+      if (salaryEditEl) salaryEditEl.style.display = '';
+      if (btnEditSal)   btnEditSal.style.display = 'none';
+    };
+
+    if (btnCancelSal) btnCancelSal.onclick = showSalaryView;
+
+    if (btnSaveSal) btnSaveSal.onclick = async () => {
+      const newSalary    = Number(inputBase?.value) || 0;
+      const newAllowance = Number(inputAllow?.value) || 0;
+      const newInsurance = inputIns?.value || 'Không';
+      try {
+        btnSaveSal.disabled = true;
+        btnSaveSal.textContent = 'Đang lưu…';
+        await db.collection('hrm_staff').doc(s.id).update({
+          salary:          newSalary,
+          allowanceSalary: newAllowance,
+          insuranceSalary: newInsurance,
+        });
+        s.salary          = newSalary;
+        s.allowanceSalary = newAllowance;
+        s.insuranceSalary = newInsurance;
+        setText('profileBaseSalary',    fmtCurrency(newSalary));
+        setText('profileAllowanceLunch', newAllowance ? fmtCurrency(newAllowance) : '0 đ');
+        setText('profileInsurance',      newInsurance);
+        showSalaryView();
+        showToast('Đã cập nhật lương & phúc lợi!', 'success');
+        await logHrmActivity(s.id, 'Cập nhật lương & phúc lợi');
+      } catch (err) {
+        showToast('Lỗi lưu dữ liệu!', 'error');
+        console.error(err);
+      } finally {
+        btnSaveSal.disabled = false;
+        btnSaveSal.textContent = 'Lưu thay đổi';
+      }
+    };
+
     // Load leave data for admin view
     if (s.email) loadLeaveData(s.email, s.joinDate, 'adm', false);
 
@@ -5718,6 +5810,8 @@ document.addEventListener('DOMContentLoaded', () => {
         name,
         email,
         department: dept,
+        jobTitle:   document.getElementById('hrmStaffJobTitle')?.value || 'Nhân viên',
+        level:      document.getElementById('hrmStaffLevel')?.value || 'Cấp 1',
         workType:   document.getElementById('hrmStaffWorkType')?.value || 'Full-time',
         phone:      document.getElementById('hrmStaffPhone').value.trim(),
         birthday:   document.getElementById('hrmStaffBirthday')?.value || null,
@@ -6114,6 +6208,8 @@ document.addEventListener('DOMContentLoaded', () => {
           </td>
           <td style="font-size:0.82rem">${fmtDate(birthday)}</td>
           <td style="font-size:0.83rem;font-weight:500;color:var(--text-main)">${s.department || '--'}</td>
+          <td style="font-size:0.82rem;color:var(--text-main)">${s.jobTitle || '--'}</td>
+          <td style="font-size:0.82rem;color:var(--text-muted)">${s.level || '--'}</td>
           <td>
             <span class="hrm-work-type-tag" style="background:${wtMeta.bg};color:${wtMeta.color}">${wt}</span>
           </td>
@@ -6558,6 +6654,18 @@ document.addEventListener('DOMContentLoaded', () => {
     if (deptEl) {
       deptEl.value = s.department || DEPARTMENTS[0];
       if (!deptEl.value) deptEl.value = DEPARTMENTS[0];
+    }
+
+    const jtEl = document.getElementById('hrmStaffJobTitle');
+    if (jtEl) {
+      jtEl.value = s.jobTitle || 'Nhân viên';
+      if (!jtEl.value) jtEl.value = 'Nhân viên';
+    }
+
+    const lvEl = document.getElementById('hrmStaffLevel');
+    if (lvEl) {
+      lvEl.value = s.level || 'Cấp 1';
+      if (!lvEl.value) lvEl.value = 'Cấp 1';
     }
 
     document.getElementById('hrmStaffPhone').value = s.phone || '';
@@ -10347,7 +10455,15 @@ document.addEventListener('DOMContentLoaded', () => {
       return;
     }
 
-    list.innerHTML = _notifList.map(n => {
+    // Unread lên trên, read đùn xuống dưới — mỗi nhóm mới nhất trước
+    const sorted = [..._notifList].sort((a, b) => {
+      if (a.isRead !== b.isRead) return a.isRead ? 1 : -1;
+      const ta = a.createdAt?.toDate?.()?.getTime() || 0;
+      const tb = b.createdAt?.toDate?.()?.getTime() || 0;
+      return tb - ta;
+    });
+
+    list.innerHTML = sorted.map(n => {
       const dateObj = n.createdAt?.toDate?.() || n.dueDate?.toDate?.() || null;
       const timeStr = dateObj ? formatDateVN(dateObj) : '';
       const icon    = (n.type?.startsWith('flight') || n.dueDate) ? '✈' : '🔔';
@@ -10486,6 +10602,9 @@ document.addEventListener('DOMContentLoaded', () => {
     'Kinh doanh',
   ];
 
+  const POSITIONS = ['Chủ tịch', 'Giám đốc', 'Phó Giám đốc', 'Trưởng Phòng', 'Phó phòng', 'Nhân viên'];
+  const LEVELS    = ['Cấp 1', 'Cấp 2', 'Cấp 3', 'Cấp 4', 'Cấp 5'];
+
   // Populate all department-related selects and filter buttons from DEPARTMENTS
   const populateDeptSelects = () => {
     const deptOpts    = DEPARTMENTS.map(d => `<option value="${d}">${d}</option>`).join('');
@@ -10499,6 +10618,11 @@ document.addEventListener('DOMContentLoaded', () => {
       const el = document.getElementById(id);
       if (el) el.innerHTML = deptOpts;
     });
+
+    const posEl = document.getElementById('hrmStaffJobTitle');
+    if (posEl) posEl.innerHTML = POSITIONS.map(p => `<option value="${p}">${p}</option>`).join('');
+    const lvlEl = document.getElementById('hrmStaffLevel');
+    if (lvlEl) lvlEl.innerHTML = LEVELS.map(l => `<option value="${l}">${l}</option>`).join('');
 
     const examSel = document.getElementById('examDeptSelect');
     if (examSel) examSel.innerHTML = `<option value="">-- Chọn phòng ban --</option>${deptOpts}`;

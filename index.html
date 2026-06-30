@@ -1115,6 +1115,8 @@
                         <th>HỌ VÀ TÊN</th>
                         <th>NGÀY SINH</th>
                         <th>BỘ PHẬN</th>
+                        <th>CHỨC DANH</th>
+                        <th>CẤP ĐỘ</th>
                         <th>HÌNH THỨC</th>
                         <th>LIÊN HỆ</th>
                         <th>NGÀY VÀO LÀM</th>
@@ -1672,11 +1674,42 @@
                 <div class="hrm-profile-tab-grid">
                   <!-- Card 1: Lương & Phúc lợi -->
                   <div class="hrm-metric-card" style="margin-bottom: 0;">
-                    <div class="metric-card-header"><h4>MỨC LƯƠNG &amp; PHÚC LỢI</h4></div>
-                    <div class="profile-info-rows">
+                    <div class="metric-card-header">
+                      <h4>MỨC LƯƠNG &amp; PHÚC LỢI</h4>
+                      <button class="metric-action-btn" id="btnEditSalaryCard" title="Chỉnh sửa lương">
+                        <svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor"><path d="M20.71,7.04C21.1,6.65 21.1,6 20.71,5.63L18.37,3.29C18,2.9 17.35,2.9 16.96,3.29L15.12,5.12L18.87,8.87M3,17.25V21H6.75L17.81,9.93L14.06,6.18L3,17.25Z"/></svg>
+                        Chỉnh sửa
+                      </button>
+                    </div>
+                    <!-- View mode -->
+                    <div class="profile-info-rows" id="salaryViewMode">
                       <div class="profile-info-row"><span class="info-label">Lương cơ bản</span><span class="info-val" id="profileBaseSalary" style="font-weight: 600; color: var(--accent);">--</span></div>
                       <div class="profile-info-row"><span class="info-label">Phụ cấp</span><span class="info-val" id="profileAllowanceLunch">--</span></div>
                       <div class="profile-info-row"><span class="info-label">Đóng BHXH</span><span class="info-val" id="profileInsurance">--</span></div>
+                    </div>
+                    <!-- Edit mode -->
+                    <div id="salaryEditMode" style="display:none; padding-top:0.75rem;">
+                      <div class="salary-edit-grid">
+                        <div class="salary-edit-row">
+                          <label class="salary-edit-label">Lương cơ bản (đ)</label>
+                          <input type="number" id="inputBaseSalary" class="salary-edit-input" placeholder="VD: 8000000" min="0" step="500000">
+                        </div>
+                        <div class="salary-edit-row">
+                          <label class="salary-edit-label">Phụ cấp (đ)</label>
+                          <input type="number" id="inputAllowanceSalary" class="salary-edit-input" placeholder="VD: 500000" min="0" step="100000">
+                        </div>
+                        <div class="salary-edit-row">
+                          <label class="salary-edit-label">Đóng BHXH</label>
+                          <select id="inputInsuranceSalary" class="salary-edit-input">
+                            <option value="Không">Không</option>
+                            <option value="Có">Có</option>
+                          </select>
+                        </div>
+                      </div>
+                      <div class="salary-edit-actions">
+                        <button class="btn-secondary" id="btnCancelSalaryEdit">Hủy</button>
+                        <button class="btn-primary" id="btnSaveSalaryEdit">Lưu thay đổi</button>
+                      </div>
                     </div>
                   </div>
                   <!-- Card 2: Tài khoản nhận lương -->
@@ -2651,7 +2684,6 @@
                   </div>
                 </div>
                 <div class="profile-info-rows">
-                  <div class="profile-info-row"><span class="info-label">Tên tài khoản</span><span class="info-val" id="spPUsername">--</span></div>
                   <div class="profile-info-row"><span class="info-label">Ngày nhận việc</span><span class="info-val" id="spPJoinDate">--</span></div>
                   <div class="profile-info-row"><span class="info-label">Email</span><a class="info-val link" id="spPEmail" href="#">--</a></div>
                   <div class="profile-info-row"><span class="info-label">Ngày sinh</span><span class="info-val" id="spPBirthday">--</span></div>
@@ -6928,6 +6960,18 @@
                 <option value="Intern">Intern</option>
                 <option value="Thời vụ">Thời vụ</option>
                 <option value="Freelance">Freelance</option>
+              </select>
+            </div>
+          </div>
+          <div class="hrm-form-row">
+            <div class="form-group-login"><label for="hrmStaffJobTitle">Chức danh</label>
+              <select id="hrmStaffJobTitle">
+                <!-- Populated by POSITIONS constant in main.js -->
+              </select>
+            </div>
+            <div class="form-group-login"><label for="hrmStaffLevel">Cấp độ</label>
+              <select id="hrmStaffLevel">
+                <!-- Populated by LEVELS constant in main.js -->
               </select>
             </div>
           </div>

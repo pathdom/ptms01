@@ -3564,6 +3564,26 @@ body.dark-theme-crm .profile-status-badge.inactive-badge { background: rgba(220,
 }
 .metric-action-btn.metric-action-btn-outline:hover { background: var(--border); color: var(--text-main); }
 
+/* ── Salary inline edit form ── */
+.salary-edit-grid { display: flex; flex-direction: column; gap: 0.75rem; }
+.salary-edit-row { display: flex; flex-direction: column; gap: 0.3rem; }
+.salary-edit-label { font-size: 0.78rem; color: var(--color-text-muted, #6B6A67); font-weight: 500; }
+.salary-edit-input {
+  width: 100%; padding: 0.5rem 0.75rem;
+  border: 1px solid var(--color-border, #E8E5DF);
+  border-radius: 8px; font-size: 0.88rem;
+  color: var(--color-text-main, #1A1A1A);
+  background: var(--color-bg, #FAF8F5);
+  outline: none; transition: border-color 0.15s;
+  box-sizing: border-box;
+}
+.salary-edit-input:focus { border-color: #6366F1; }
+.salary-edit-actions {
+  display: flex; justify-content: flex-end; gap: 0.5rem;
+  margin-top: 1rem; padding-top: 0.75rem;
+  border-top: 1px solid var(--color-border, #E8E5DF);
+}
+
 /* ── Left Card: Skills + Docs ── */
 .profile-card-sep {
   height: 1px; background: var(--border-light);
