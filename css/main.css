@@ -6489,6 +6489,13 @@ body.dark-theme-crm {
   margin-right: 0.35rem;
 }
 
+/* Topbar right slot — flex so bell and user badge sit side by side */
+.topbar-right {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
 /* ==========================================================================
    NOTIFICATION BELL — inline in each topbar, injected by JS
    ========================================================================== */
