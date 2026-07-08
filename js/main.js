@@ -4459,8 +4459,10 @@ document.addEventListener('DOMContentLoaded', () => {
     set('stpLearningMonth', p.learningMonth || 'Tháng 1');
     set('stpNotes',         p.notes || 'Chưa có ghi chú tư vấn.');
 
-    // Enrollment date
-    const enrollDate = getFixedEnrollDate(p.email, p.createdAt);
+    // Enrollment date — use real createdAt from Firestore
+    const enrollDate = p.createdAt
+      ? (p.createdAt.toDate ? p.createdAt.toDate() : new Date(p.createdAt))
+      : new Date();
     set('stpEnrollDate', enrollDate.toLocaleDateString('vi-VN'));
 
     // Status badge
@@ -4527,8 +4529,10 @@ document.addEventListener('DOMContentLoaded', () => {
       { month: 'Tháng 5', label: 'Luyện đề chuyên sâu', sub: 'Ôn thi & mô phỏng phỏng vấn' },
       { month: 'Tháng 6', label: 'Tổng ôn & mô phỏng', sub: 'Chuẩn bị hồ sơ & xuất cảnh' },
     ];
-    const MONTH_ORDER = { 'Tháng 1':1,'Tháng 2':2,'Tháng 3':3,'Tháng 4':4,'Tháng 5':5,'Tháng 6':6,'Hoàn thành':7 };
-    const currentIdx = MONTH_ORDER[p.learningMonth] || 1;
+    // Calculate current step from real enrollment date + today
+    const today = new Date();
+    const monthsComplete = Math.max(0, Math.floor((today - enrollDate) / (1000 * 60 * 60 * 24 * 30.44)));
+    const currentIdx = Math.min(monthsComplete + 1, 7); // 1–6 = active month, 7 = all done
     const roadmapEl = document.getElementById('stpRoadmap');
     if (roadmapEl) {
       roadmapEl.innerHTML = ROADMAP_STEPS.map((s, i) => {
@@ -4551,9 +4555,10 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // ── Học kì ──
-    const sem1Status = currentIdx <= 2 ? (currentIdx === 1 || currentIdx === 2 ? 'Đang học' : 'Chưa bắt đầu') : 'Hoàn thành';
+    // Kì I: tháng 1–2 | Kì II: tháng 3–4 | Kì III: tháng 5–6
+    const sem1Status = currentIdx <= 2 ? 'Đang học' : 'Hoàn thành';
     const sem2Status = currentIdx <= 2 ? 'Chưa bắt đầu' : currentIdx <= 4 ? 'Đang học' : 'Hoàn thành';
-    const sem3Status = currentIdx <= 4 ? 'Chưa bắt đầu' : currentIdx <= 6 ? 'Đang học' : 'Hoàn thành';
+    const sem3Status = currentIdx <= 4 ? 'Chưa bắt đầu' : 'Đang học';
     const applyTag = (id, txt) => {
       const el = document.getElementById(id);
       if (!el) return;
