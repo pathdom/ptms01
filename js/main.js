@@ -11905,473 +11905,670 @@ document.addEventListener('DOMContentLoaded', () => {
   };
 
   // ════════════════════════════════════════
-  //  QUY TRÌNH (WORKFLOW)
+  // ════════════════════════════════════════
+  //  QUY TRÌNH v2 — WORKFLOW DASHBOARD
   // ════════════════════════════════════════
   const initWorkflowDashboard = (() => {
     let _bound = false;
-
-    // Pre-seeded study-abroad workflows
-    const SEED_WORKFLOWS = [
-      {
-        name: 'Quy trình tuyển sinh du học Nhật Bản',
-        description: 'Toàn bộ quy trình xử lý hồ sơ tuyển sinh, visa và xuất cảnh du học Nhật Bản tại Aladdin Group',
-        category: 'Tuyển sinh', status: 'active',
-        steps: [
-          { name: 'Tiếp nhận & tư vấn học viên', type: 'task', assignee: 'Tư vấn viên',
-            description: '- Gặp gỡ, thu thập thông tin cá nhân học viên\n- Tư vấn chương trình phù hợp\n- Xác nhận mục tiêu và ngân sách học viên',
-            deadline: 3, checklist: [{text:'Thu thập thông tin cá nhân',done:false},{text:'Xác nhận mục tiêu học tập',done:false},{text:'Tư vấn chương trình phù hợp',done:false}], status:'pending' },
-          { name: 'Chuẩn bị & kiểm tra hồ sơ', type: 'task', assignee: 'Chuyên viên hồ sơ',
-            description: '- Hướng dẫn học viên chuẩn bị giấy tờ cần thiết\n- Kiểm tra tính hợp lệ của hồ sơ\n- Dịch thuật và công chứng các giấy tờ',
-            deadline: 7, checklist: [{text:'Hộ chiếu còn hạn',done:false},{text:'Bằng tốt nghiệp / học bạ',done:false},{text:'Sổ hộ khẩu / CMND',done:false},{text:'Ảnh thẻ 3x4',done:false},{text:'Dịch thuật công chứng',done:false}], status:'pending' },
-          { name: 'Ký hợp đồng & đóng học phí', type: 'approve', assignee: 'Kế toán',
-            description: '- Trình bày và ký kết hợp đồng dịch vụ\n- Thu học phí đợt 1\n- Cấp biên lai và hồ sơ cho học viên',
-            deadline: 3, checklist: [{text:'Ký hợp đồng dịch vụ',done:false},{text:'Thu học phí đợt 1',done:false},{text:'Cấp biên lai',done:false}], status:'pending' },
-          { name: 'Nộp hồ sơ cho trường / đối tác', type: 'task', assignee: 'Chuyên viên hồ sơ',
-            description: '- Hoàn thiện hồ sơ theo yêu cầu trường\n- Nộp hồ sơ qua đối tác tại Nhật\n- Theo dõi tiến độ xét tuyển',
-            deadline: 14, checklist: [{text:'Hoàn thiện hồ sơ trường',done:false},{text:'Nộp qua đối tác Nhật',done:false},{text:'Xác nhận đã nhận hồ sơ',done:false}], status:'pending' },
-          { name: 'Phỏng vấn & đỗ trường', type: 'approve', assignee: 'Tư vấn viên',
-            description: '- Luyện phỏng vấn tiếng Nhật\n- Hỗ trợ học viên trong buổi phỏng vấn\n- Nhận kết quả từ phía trường',
-            deadline: 30, checklist: [{text:'Hoàn thành luyện phỏng vấn',done:false},{text:'Tham dự phỏng vấn',done:false},{text:'Nhận kết quả đỗ/trượt',done:false}], status:'pending' },
-          { name: 'Xin visa Nhật Bản', type: 'task', assignee: 'Chuyên viên visa',
-            description: '- Chuẩn bị hồ sơ xin visa du học\n- Nộp hồ sơ tại đại sứ quán hoặc qua đối tác\n- Theo dõi và nhận visa',
-            deadline: 21, checklist: [{text:'COE từ trường Nhật',done:false},{text:'Hồ sơ tài chính',done:false},{text:'Nộp hồ sơ đại sứ quán',done:false},{text:'Nhận visa',done:false}], status:'pending' },
-          { name: 'Chuẩn bị xuất cảnh', type: 'task', assignee: 'Tư vấn viên',
-            description: '- Hướng dẫn chuẩn bị hành lý và thủ tục\n- Tư vấn cuộc sống tại Nhật\n- Đặt vé máy bay và sắp xếp đón tại sân bay',
-            deadline: 7, checklist: [{text:'Mua vé máy bay',done:false},{text:'Chuẩn bị hành lý',done:false},{text:'Thông báo nơi ở tại Nhật',done:false},{text:'Liên hệ người đón sân bay',done:false}], status:'pending' },
-          { name: 'Xuất cảnh & bàn giao', type: 'end', assignee: 'Tư vấn viên',
-            description: '- Tiễn học viên tại sân bay\n- Bàn giao thông tin liên lạc hỗ trợ\n- Cập nhật trạng thái học viên đã xuất cảnh',
-            deadline: 1, checklist: [{text:'Học viên xuất cảnh thành công',done:false},{text:'Cập nhật hồ sơ hệ thống',done:false}], status:'pending' },
-        ]
-      },
-      {
-        name: 'Quy trình tuyển sinh du học Hàn Quốc',
-        description: 'Quy trình xử lý hồ sơ và thủ tục du học Hàn Quốc — D-2, D-4 visa',
-        category: 'Tuyển sinh', status: 'active',
-        steps: [
-          { name: 'Tư vấn & đánh giá năng lực', type: 'task', assignee: 'Tư vấn viên',
-            description: '- Đánh giá trình độ học vấn và tài chính\n- Chọn trường và chương trình phù hợp\n- Giải thích lộ trình và chi phí',
-            deadline: 3, checklist: [{text:'Đánh giá học vấn',done:false},{text:'Kiểm tra điều kiện tài chính',done:false},{text:'Chọn trường phù hợp',done:false}], status:'pending' },
-          { name: 'Chuẩn bị hồ sơ', type: 'task', assignee: 'Chuyên viên hồ sơ',
-            description: '- Giấy tờ cá nhân, hộ chiếu, bằng cấp\n- Giấy tờ tài chính đảm bảo\n- Dịch thuật công chứng sang tiếng Hàn',
-            deadline: 10, checklist: [{text:'Hộ chiếu',done:false},{text:'Bằng tốt nghiệp',done:false},{text:'Sao kê ngân hàng 3 tháng',done:false},{text:'Dịch thuật công chứng',done:false}], status:'pending' },
-          { name: 'Ký hợp đồng & thanh toán', type: 'approve', assignee: 'Kế toán',
-            description: '- Ký hợp đồng dịch vụ\n- Thanh toán phí dịch vụ và học phí\n- Đăng ký nhập học chính thức',
-            deadline: 3, checklist: [{text:'Ký hợp đồng',done:false},{text:'Thanh toán học phí',done:false}], status:'pending' },
-          { name: 'Nộp hồ sơ & nhận thư mời', type: 'task', assignee: 'Chuyên viên hồ sơ',
-            description: '- Gửi hồ sơ tới trường đại học Hàn Quốc\n- Nhận thư mời nhập học (COR)\n- Xác nhận với học viên',
-            deadline: 21, checklist: [{text:'Nộp hồ sơ trường',done:false},{text:'Nhận thư mời COR',done:false}], status:'pending' },
-          { name: 'Xin visa D-2 / D-4', type: 'task', assignee: 'Chuyên viên visa',
-            description: '- Chuẩn bị đầy đủ hồ sơ xin visa Hàn Quốc\n- Nộp hồ sơ tại Lãnh sự quán\n- Nhận visa và xác nhận',
-            deadline: 21, checklist: [{text:'COR từ trường Hàn',done:false},{text:'Hồ sơ tài chính',done:false},{text:'Nộp visa tại lãnh sự quán',done:false},{text:'Nhận visa',done:false}], status:'pending' },
-          { name: 'Xuất cảnh sang Hàn Quốc', type: 'end', assignee: 'Tư vấn viên',
-            description: '- Đặt vé máy bay\n- Tiễn học viên xuất cảnh\n- Cập nhật trạng thái hệ thống',
-            deadline: 3, checklist: [{text:'Mua vé máy bay',done:false},{text:'Xuất cảnh thành công',done:false}], status:'pending' },
-        ]
-      },
-      {
-        name: 'Xử lý gia hạn & thay đổi visa',
-        description: 'Quy trình hỗ trợ học viên gia hạn visa, chuyển đổi visa hoặc xử lý vi phạm cư trú',
-        category: 'Visa', status: 'active',
-        steps: [
-          { name: 'Tiếp nhận yêu cầu', type: 'task', assignee: 'Tư vấn viên',
-            description: '- Xác nhận loại visa và thời hạn hiện tại\n- Xác định lý do gia hạn / thay đổi\n- Tư vấn thủ tục và chi phí',
-            deadline: 2, checklist: [{text:'Kiểm tra visa hiện tại',done:false},{text:'Xác định loại yêu cầu',done:false}], status:'pending' },
-          { name: 'Thu thập hồ sơ gia hạn', type: 'task', assignee: 'Chuyên viên visa',
-            description: '- Hộ chiếu và visa hiện tại\n- Giấy tờ từ trường học (xác nhận đang học)\n- Giấy tờ tài chính cập nhật',
-            deadline: 5, checklist: [{text:'Hộ chiếu còn hạn',done:false},{text:'Xác nhận đang học',done:false},{text:'Sao kê ngân hàng',done:false}], status:'pending' },
-          { name: 'Nộp hồ sơ gia hạn', type: 'task', assignee: 'Chuyên viên visa',
-            description: '- Hoàn thiện và nộp hồ sơ tại cơ quan có thẩm quyền\n- Theo dõi tiến độ xử lý',
-            deadline: 7, checklist: [{text:'Nộp hồ sơ',done:false},{text:'Nhận biên nhận',done:false}], status:'pending' },
-          { name: 'Nhận kết quả & bàn giao', type: 'approve', assignee: 'Tư vấn viên',
-            description: '- Nhận visa gia hạn / quyết định\n- Bàn giao cho học viên\n- Cập nhật hồ sơ hệ thống',
-            deadline: 3, checklist: [{text:'Nhận visa gia hạn',done:false},{text:'Bàn giao học viên',done:false},{text:'Cập nhật hệ thống',done:false}], status:'pending' },
-        ]
-      },
-      {
-        name: 'Quy trình hoàn trả học phí',
-        description: 'Xử lý yêu cầu hoàn trả học phí khi học viên rút hồ sơ, bị từ chối visa hoặc trường hợp bất khả kháng',
-        category: 'Tài chính', status: 'active',
-        steps: [
-          { name: 'Tiếp nhận yêu cầu hoàn phí', type: 'task', assignee: 'Kế toán',
-            description: '- Xác nhận lý do yêu cầu hoàn phí\n- Kiểm tra điều khoản hợp đồng\n- Thông báo chính sách hoàn phí',
-            deadline: 2, checklist: [{text:'Kiểm tra hợp đồng',done:false},{text:'Xác nhận lý do',done:false}], status:'pending' },
-          { name: 'Thẩm định & phê duyệt', type: 'approve', assignee: 'Giám đốc',
-            description: '- Xem xét hồ sơ yêu cầu hoàn phí\n- Kiểm tra các chi phí đã phát sinh\n- Phê duyệt số tiền hoàn trả',
-            deadline: 5, checklist: [{text:'Thẩm định hồ sơ',done:false},{text:'Tính toán số tiền hoàn',done:false},{text:'Ký phê duyệt',done:false}], status:'pending' },
-          { name: 'Thực hiện hoàn trả', type: 'task', assignee: 'Kế toán',
-            description: '- Chuyển khoản số tiền đã phê duyệt\n- Lấy xác nhận từ học viên\n- Đóng hồ sơ',
-            deadline: 5, checklist: [{text:'Chuyển khoản hoàn phí',done:false},{text:'Xác nhận học viên nhận',done:false}], status:'pending' },
-          { name: 'Cập nhật hệ thống', type: 'end', assignee: 'Kế toán',
-            description: '- Cập nhật trạng thái học viên\n- Lưu hồ sơ hoàn phí\n- Thông báo nội bộ',
-            deadline: 1, checklist: [{text:'Cập nhật trạng thái học viên',done:false},{text:'Lưu hồ sơ',done:false}], status:'pending' },
-        ]
-      },
-      {
-        name: 'Quy trình thực tập sinh Nhật Bản',
-        description: 'Quy trình đưa thực tập sinh sang Nhật Bản theo chương trình IM Japan, hợp tác xã',
-        category: 'Xuất cảnh', status: 'active',
-        steps: [
-          { name: 'Tuyển dụng & sơ tuyển', type: 'task', assignee: 'Tư vấn viên',
-            description: '- Tiếp nhận hồ sơ ứng viên\n- Kiểm tra điều kiện sức khỏe, học vấn\n- Phỏng vấn sơ bộ',
-            deadline: 7, checklist: [{text:'Kiểm tra độ tuổi (18-30)',done:false},{text:'Kiểm tra sức khỏe cơ bản',done:false},{text:'Phỏng vấn sơ bộ',done:false}], status:'pending' },
-          { name: 'Đào tạo tiếng Nhật', type: 'task', assignee: 'Giáo viên',
-            description: '- Đào tạo tiếng Nhật N5-N4\n- Học văn hóa và kỹ năng lao động Nhật\n- Thi đầu ra',
-            deadline: 90, checklist: [{text:'Hoàn thành khóa tiếng Nhật',done:false},{text:'Đạt thi đầu ra N5',done:false},{text:'Kiểm tra kỹ năng nghề',done:false}], status:'pending' },
-          { name: 'Phỏng vấn với công ty Nhật', type: 'approve', assignee: 'Tư vấn viên',
-            description: '- Chuẩn bị hồ sơ phỏng vấn\n- Thông dịch viên hỗ trợ phỏng vấn\n- Nhận kết quả và thông báo',
-            deadline: 14, checklist: [{text:'Hồ sơ phỏng vấn đầy đủ',done:false},{text:'Tham dự phỏng vấn',done:false},{text:'Nhận kết quả',done:false}], status:'pending' },
-          { name: 'Làm hồ sơ & xin visa', type: 'task', assignee: 'Chuyên viên hồ sơ',
-            description: '- Chuẩn bị hồ sơ xuất cảnh đầy đủ\n- Xin visa thực tập sinh\n- Khám sức khỏe xuất cảnh',
-            deadline: 30, checklist: [{text:'Hồ sơ visa TP',done:false},{text:'Khám sức khỏe',done:false},{text:'Nhận visa',done:false}], status:'pending' },
-          { name: 'Xuất cảnh sang Nhật', type: 'end', assignee: 'Tư vấn viên',
-            description: '- Tiễn thực tập sinh tại sân bay\n- Bàn giao cho đối tác tại Nhật\n- Cập nhật hệ thống',
-            deadline: 1, checklist: [{text:'Xuất cảnh thành công',done:false},{text:'Bàn giao đối tác Nhật',done:false}], status:'pending' },
-        ]
-      },
-    ];
-
-    const wfCol = () => db.collection('workflows');
     let _workflows = [];
-    let _activeWfId = null;
+    let _activeId = null;
     let _activeStepIdx = null;
-    let _editMode = false;
+    let _zoom = 1;
+    let _page = 1;
+    const PER_PAGE = 6;
 
-    const TYPE_ICON = { task:'📋', approve:'✅', notify:'🔔', condition:'⬦', end:'🔴' };
-    const TYPE_LABEL = { task:'Công việc', approve:'Phê duyệt', notify:'Thông báo', condition:'Điều kiện', end:'Kết thúc' };
+    const WF_COL = () => db.collection('workflows');
 
-    const statusLabel = (s) => ({ active:'Đang hoạt động', draft:'Nháp', archived:'Lưu trữ' }[s] || s);
-
-    // ── Render sidebar list ──
-    const renderList = () => {
-      const search = (document.getElementById('wfSearch')?.value || '').toLowerCase();
-      const cat    = document.getElementById('wfCategoryFilter')?.value || '';
-      const listEl = document.getElementById('wfList');
-      if (!listEl) return;
-      const filtered = _workflows.filter(w =>
-        (!search || w.name.toLowerCase().includes(search)) &&
-        (!cat || w.category === cat)
-      );
-      if (filtered.length === 0) {
-        listEl.innerHTML = '<div style="padding:1.5rem;text-align:center;font-size:.8rem;color:#6B6A67;">Không có quy trình nào</div>';
-        return;
-      }
-      listEl.innerHTML = filtered.map(w => `
-        <div class="wf-list-item ${w.id === _activeWfId ? 'active' : ''}" data-id="${w.id}">
-          <div class="wf-list-item-name">${w.name}</div>
-          <div class="wf-list-item-meta">
-            <span class="wf-status-dot ${w.status}"></span>
-            <span>${statusLabel(w.status)}</span>
-            <span class="wf-cat-tag">${w.category}</span>
-          </div>
-          <div style="font-size:.7rem;color:#9CA3AF;margin-top:3px;">${(w.steps||[]).length} bước · Cập nhật ${w.updatedAt?.toDate?.()?.toLocaleDateString('vi-VN') || '--'}</div>
-        </div>
-      `).join('');
-      listEl.querySelectorAll('.wf-list-item').forEach(el => {
-        el.addEventListener('click', () => openWorkflow(el.dataset.id));
-      });
+    const STEP_SEEDS = {
+      'Tuyển sinh du học Nhật Bản': {
+        desc: 'Quy trình xử lý hồ sơ tuyển sinh du học Nhật Bản tại Aladdin Group',
+        cat: 'Tuyển sinh',
+        steps: [
+          { name:'Tiếp nhận & tư vấn học viên', type:'task', assignee:'Tư vấn viên', description:'- Gặp gỡ, thu thập thông tin cá nhân học viên\n- Tư vấn chương trình phù hợp\n- Xác nhận mục tiêu và ngân sách', deadline:3, checklist:[{text:'Thu thập thông tin cá nhân',done:false},{text:'Tư vấn chương trình',done:false}], status:'done' },
+          { name:'Chuẩn bị & kiểm tra hồ sơ', type:'task', assignee:'Chuyên viên hồ sơ', description:'- Hướng dẫn chuẩn bị giấy tờ\n- Kiểm tra tính hợp lệ\n- Dịch thuật và công chứng', deadline:7, checklist:[{text:'Hộ chiếu còn hạn',done:true},{text:'Bằng tốt nghiệp/học bạ',done:true},{text:'Sổ hộ khẩu / CMND',done:false},{text:'Dịch thuật công chứng',done:false}], status:'done' },
+          { name:'Kiểm tra hồ sơ đạt yêu cầu?', type:'condition', assignee:'Lê Thị Mai', description:'Kiểm tra hồ sơ có đủ điều kiện nộp không', deadline:2, checklist:[{text:'Kiểm tra tính hợp lệ hồ sơ',done:true},{text:'Đối chiếu giấy tờ',done:true},{text:'Kiểm tra điều kiện đầu vào',done:false},{text:'Cập nhật trạng thái hồ sơ',done:false}], status:'active', conditionText:'Hồ sơ đạt yêu cầu', rejectStep:{name:'Yêu cầu bổ sung hồ sơ', assignee:'Lê Thị Mai', code:'03A'} },
+          { name:'Ký hợp đồng & đóng học phí', type:'approve', assignee:'Kế toán', description:'- Ký hợp đồng dịch vụ\n- Thu học phí đợt 1\n- Cấp biên lai', deadline:3, checklist:[{text:'Ký hợp đồng dịch vụ',done:false},{text:'Thu học phí đợt 1',done:false}], status:'pending' },
+          { name:'Xin visa Nhật Bản', type:'task', assignee:'Trần Văn Nam', description:'- Chuẩn bị hồ sơ visa\n- Nộp tại đại sứ quán\n- Nhận visa', deadline:21, checklist:[{text:'COE từ trường',done:false},{text:'Hồ sơ tài chính',done:false},{text:'Nhận visa',done:false}], status:'pending' },
+          { name:'Xuất cảnh sang Nhật Bản', type:'end', assignee:'Tư vấn viên', description:'Tiễn học viên và bàn giao đối tác Nhật', deadline:1, checklist:[{text:'Mua vé máy bay',done:false},{text:'Xuất cảnh thành công',done:false}], status:'pending' },
+        ]
+      },
+      'Tuyển sinh du học Hàn Quốc': { desc:'Quy trình xử lý hồ sơ tuyển sinh du học Hàn Quốc — D-2, D-4 visa', cat:'Tuyển sinh',
+        steps:[
+          {name:'Tư vấn & đánh giá năng lực',type:'task',assignee:'Tư vấn viên',description:'Đánh giá và tư vấn chương trình',deadline:3,checklist:[{text:'Đánh giá học vấn',done:false}],status:'pending'},
+          {name:'Chuẩn bị hồ sơ',type:'task',assignee:'Chuyên viên hồ sơ',description:'Chuẩn bị giấy tờ cần thiết',deadline:10,checklist:[{text:'Hộ chiếu',done:false},{text:'Bằng tốt nghiệp',done:false}],status:'pending'},
+          {name:'Ký hợp đồng & thanh toán',type:'approve',assignee:'Kế toán',description:'Ký HĐ và thanh toán',deadline:3,checklist:[{text:'Ký hợp đồng',done:false}],status:'pending'},
+          {name:'Nộp hồ sơ & nhận thư mời',type:'task',assignee:'Chuyên viên hồ sơ',description:'Gửi hồ sơ và nhận COR',deadline:21,checklist:[{text:'Nộp hồ sơ',done:false},{text:'Nhận COR',done:false}],status:'pending'},
+          {name:'Xin visa D-2/D-4',type:'task',assignee:'Chuyên viên visa',description:'Nộp hồ sơ visa tại lãnh sự quán',deadline:21,checklist:[{text:'Nộp visa',done:false},{text:'Nhận visa',done:false}],status:'pending'},
+          {name:'Xuất cảnh sang Hàn Quốc',type:'end',assignee:'Tư vấn viên',description:'Tiễn học viên xuất cảnh',deadline:1,checklist:[{text:'Mua vé máy bay',done:false}],status:'pending'},
+        ]
+      },
+      'Xử lý gia hạn & thay đổi visa': {desc:'Hỗ trợ gia hạn visa, chuyển đổi visa',cat:'Visa',
+        steps:[
+          {name:'Tiếp nhận yêu cầu',type:'task',assignee:'Tư vấn viên',description:'Xác nhận yêu cầu gia hạn',deadline:2,checklist:[{text:'Kiểm tra visa hiện tại',done:false}],status:'pending'},
+          {name:'Thu thập hồ sơ gia hạn',type:'task',assignee:'Chuyên viên visa',description:'Hộ chiếu, xác nhận đang học, tài chính',deadline:5,checklist:[{text:'Hộ chiếu còn hạn',done:false},{text:'Xác nhận đang học',done:false}],status:'pending'},
+          {name:'Nộp hồ sơ gia hạn',type:'task',assignee:'Chuyên viên visa',description:'Nộp và theo dõi tiến độ',deadline:7,checklist:[{text:'Nộp hồ sơ',done:false}],status:'pending'},
+          {name:'Nhận kết quả & bàn giao',type:'approve',assignee:'Tư vấn viên',description:'Nhận visa gia hạn và bàn giao',deadline:3,checklist:[{text:'Nhận visa',done:false},{text:'Cập nhật hệ thống',done:false}],status:'pending'},
+        ]
+      },
+      'Quy trình hoàn trả học phí': {desc:'Xử lý yêu cầu hoàn trả học phí',cat:'Tài chính',
+        steps:[
+          {name:'Tiếp nhận yêu cầu hoàn phí',type:'task',assignee:'Kế toán',description:'Xác nhận lý do và kiểm tra hợp đồng',deadline:2,checklist:[{text:'Kiểm tra hợp đồng',done:false}],status:'pending'},
+          {name:'Thẩm định & phê duyệt',type:'approve',assignee:'Giám đốc',description:'Xem xét và ký phê duyệt',deadline:5,checklist:[{text:'Thẩm định hồ sơ',done:false},{text:'Ký phê duyệt',done:false}],status:'pending'},
+          {name:'Thực hiện hoàn trả',type:'task',assignee:'Kế toán',description:'Chuyển khoản và xác nhận',deadline:5,checklist:[{text:'Chuyển khoản',done:false},{text:'Xác nhận nhận tiền',done:false}],status:'pending'},
+          {name:'Cập nhật hệ thống',type:'end',assignee:'Kế toán',description:'Lưu hồ sơ và đóng ticket',deadline:1,checklist:[{text:'Cập nhật trạng thái',done:false}],status:'pending'},
+        ]
+      },
+      'Quy trình thực tập sinh Nhật Bản': {desc:'Đưa thực tập sinh sang Nhật theo chương trình IM Japan',cat:'Xuất cảnh',
+        steps:[
+          {name:'Tuyển dụng & sơ tuyển',type:'task',assignee:'Tư vấn viên',description:'Tiếp nhận và sơ tuyển ứng viên',deadline:7,checklist:[{text:'Kiểm tra độ tuổi',done:false},{text:'Sức khỏe cơ bản',done:false}],status:'pending'},
+          {name:'Đào tạo tiếng Nhật',type:'task',assignee:'Giáo viên',description:'Đào tạo N5-N4 và kỹ năng nghề',deadline:90,checklist:[{text:'Hoàn thành tiếng Nhật',done:false},{text:'Đạt thi đầu ra N5',done:false}],status:'pending'},
+          {name:'Phỏng vấn với công ty Nhật',type:'approve',assignee:'Tư vấn viên',description:'Phỏng vấn và nhận kết quả',deadline:14,checklist:[{text:'Tham dự phỏng vấn',done:false},{text:'Nhận kết quả',done:false}],status:'pending'},
+          {name:'Làm hồ sơ & xin visa',type:'task',assignee:'Chuyên viên hồ sơ',description:'Hồ sơ xuất cảnh và visa thực tập sinh',deadline:30,checklist:[{text:'Hồ sơ visa TP',done:false},{text:'Khám sức khỏe',done:false}],status:'pending'},
+          {name:'Xuất cảnh sang Nhật',type:'end',assignee:'Tư vấn viên',description:'Tiễn và bàn giao đối tác Nhật',deadline:1,checklist:[{text:'Xuất cảnh thành công',done:false}],status:'pending'},
+        ]
+      },
     };
 
-    // ── Open a workflow ──
-    const openWorkflow = (id) => {
-      _activeWfId = id;
-      _activeStepIdx = null;
-      const wf = _workflows.find(w => w.id === id);
-      if (!wf) return;
-      renderList();
+    const STATUS_LABEL = {active:'Đang hoạt động', draft:'Nháp', archived:'Lưu trữ', expired:'Hết hạn'};
+    const TYPE_ICON = {task:'⏱', approve:'✅', notify:'🔔', condition:'⬦', parallel:'⊞', end:'⏹'};
+    const TYPE_LABEL = {task:'Bước công việc', approve:'Bước phê duyệt', notify:'Bước thông báo', condition:'Bước điều kiện', parallel:'Bước song song', end:'Bước kết thúc'};
 
-      const head   = document.getElementById('wfCenterHead');
-      const title  = document.getElementById('wfTitle');
-      const desc   = document.getElementById('wfDesc');
-      const badge  = document.getElementById('wfStatusBadge');
-      const empty  = document.getElementById('wfFlowEmpty');
-      const flow   = document.getElementById('wfFlow');
-      const detail = document.getElementById('wfDetail');
-      const addBar = document.getElementById('wfAddStepBar');
+    // Layout constants
+    const MX = 300;
+    const RX = 90;
+    const NW = 240;
+    const NH = 90;
+    const DW = 90;
+    const SY = 40;
+    const GAP = 48;
+    const ROW = NH + GAP;
+    const CANVAS_W = 580;
 
-      if (head)  head.style.display = 'flex';
-      if (title) title.textContent  = wf.name;
-      if (desc)  desc.textContent   = wf.description || '';
-      if (badge) { badge.textContent = statusLabel(wf.status); badge.className = `wf-status-badge ${wf.status}`; }
-      if (empty) empty.style.display = 'none';
-      if (flow)  { flow.style.display = 'flex'; renderFlow(wf); }
-      if (detail) detail.style.display = 'none';
-      if (addBar) addBar.style.display = _editMode ? 'flex' : 'none';
+    const nodeTop = (idx, extra) => SY + 68 + idx * ROW + (extra || 0);
+
+    const svgNS = 'http://www.w3.org/2000/svg';
+    const svgEl = (tag, attrs) => {
+      const el = document.createElementNS(svgNS, tag);
+      Object.entries(attrs).forEach(([k,v]) => el.setAttribute(k,v));
+      return el;
     };
 
-    // ── Render flow diagram ──
-    const renderFlow = (wf) => {
-      const flow = document.getElementById('wfFlow');
-      if (!flow) return;
+    const drawArrow = (svg, x1,y1,x2,y2, mid) => {
+      const line = svgEl('line', {x1, y1, x2, y2, stroke: mid||'#94A3B8', 'stroke-width':'2', 'marker-end': mid==='#EF4444' ? 'url(#wf2ArrowRed)' : mid==='#22C55E' ? 'url(#wf2ArrowGreen)' : 'url(#wf2Arrow)'});
+      svg.appendChild(line);
+    };
+    const drawPath = (svg, d, color, markerId) => {
+      const p = svgEl('path', {d, stroke: color||'#94A3B8', 'stroke-width':'2', fill:'none'});
+      if (markerId) p.setAttribute('marker-end', `url(#${markerId})`);
+      svg.appendChild(p);
+    };
+
+    const renderCanvas = (wf) => {
+      const svg   = document.getElementById('wf2Svg');
+      const nodes = document.getElementById('wf2Nodes');
+      const canvas= document.getElementById('wf2Canvas');
+      if (!svg || !nodes) return;
+
+      while (svg.children.length > 1) svg.removeChild(svg.lastChild);
+      nodes.innerHTML = '';
+
       const steps = wf.steps || [];
+      let extraAcc = 0;
+      const extraByIdx = steps.map((s, i) => {
+        const e = extraAcc;
+        if (s.type === 'condition') extraAcc += 48;
+        return e;
+      });
 
-      let html = `<div class="wf-node-wrap"><div class="wf-start-node">▶ BẮT ĐẦU</div></div>`;
+      const totalH = nodeTop(steps.length, extraAcc) + 120;
+      canvas.style.minHeight = totalH + 'px';
+      canvas.style.minWidth  = CANVAS_W + 'px';
+      svg.setAttribute('viewBox', `0 0 ${CANVAS_W} ${totalH}`);
+      svg.style.width  = CANVAS_W + 'px';
+      svg.style.height = totalH + 'px';
+
+      // START node
+      const startDiv = document.createElement('div');
+      startDiv.className = 'wf2-node';
+      startDiv.style.cssText = `left:${MX-62}px;top:${SY}px;`;
+      startDiv.innerHTML = '<div class="wf2-node-start"><span>▶</span> BẮT ĐẦU</div>';
+      nodes.appendChild(startDiv);
+
+      if (steps.length) {
+        drawArrow(svg, MX, SY+28, MX, nodeTop(0, extraByIdx[0]) - 2);
+      }
 
       steps.forEach((s, i) => {
-        const doneCount = (s.checklist||[]).filter(c=>c.done).length;
-        const totalCheck = (s.checklist||[]).length;
-        const progressDots = (s.checklist||[]).map(c =>
-          `<span class="wf-step-check-dot ${c.done?'done':''}"></span>`).join('');
-        const statusCls = s.status === 'done' ? 'done' : s.status === 'active' ? 'active-step' : s.status === 'blocked' ? 'blocked' : '';
-        const checkMark = s.status === 'done' ? '<div class="wf-step-done-check">✓</div>' : '';
+        const extra = extraByIdx[i];
+        const ty = nodeTop(i, extra);
+        const isDone   = s.status === 'done';
+        const isActive = s.status === 'active';
+        const isBlocked= s.status === 'blocked';
+        const selCls   = _activeStepIdx === i ? 'selected' : '';
+        const statusCls= isDone ? 'done' : isActive ? 'active-step' : isBlocked ? 'blocked' : '';
+        const num      = String(i+1).padStart(2,'0');
 
-        html += `
-        <div class="wf-node-wrap">
-          <div class="wf-connector"></div>
-          <div class="wf-step-node ${statusCls} ${i === _activeStepIdx ? 'selected' : ''}" data-idx="${i}">
-            <div class="wf-step-header">
-              <div class="wf-step-num">${i+1}</div>
-              <div class="wf-step-name">${s.name}</div>
-              <span class="wf-step-type-icon" title="${TYPE_LABEL[s.type]||''}">${TYPE_ICON[s.type]||'📋'}</span>
-              ${checkMark}
+        if (s.type === 'condition') {
+          // Diamond
+          const dx = MX - DW/2;
+          const wrap = document.createElement('div');
+          wrap.className = 'wf2-node wf2-node-diamond-wrap';
+          wrap.style.cssText = `left:${dx}px;top:${ty}px;width:${DW}px;height:${DW}px;`;
+          const txt = (s.conditionText || s.name || '?').replace(/\?$/, '').trim();
+          wrap.innerHTML = `
+            <div class="wf2-node-diamond ${selCls}" data-step-idx="${i}">
+              <div class="wf2-node-diamond-inner">
+                <span class="wf2-node-num-sm">${num}</span>
+                <div class="wf2-node-diamond-text">${txt}?</div>
+              </div>
             </div>
-            <div class="wf-step-body">
-              ${s.assignee ? `<div class="wf-step-assignee">👤 ${s.assignee}</div>` : ''}
-              ${s.description ? `<div class="wf-step-desc-preview">${s.description.split('\n')[0]}</div>` : ''}
-              ${totalCheck > 0 ? `<div class="wf-step-progress" title="${doneCount}/${totalCheck} hoàn thành">${progressDots}</div>` : ''}
-              ${s.deadline ? `<div class="wf-step-deadline">⏱ ${s.deadline} ngày</div>` : ''}
-            </div>
-          </div>
-        </div>`;
+            <span class="wf2-branch-yes">Có</span>
+            <span class="wf2-branch-no">Không</span>`;
+          nodes.appendChild(wrap);
+
+          // Reject branch
+          if (s.rejectStep) {
+            const rj  = s.rejectStep;
+            const ry  = ty - 10;
+            const rjDiv = document.createElement('div');
+            rjDiv.className = `wf2-node`;
+            rjDiv.style.cssText = `left:${RX-95}px;top:${ry}px;width:185px;`;
+            rjDiv.innerHTML = `
+              <div class="wf2-node-reject ${selCls}" data-step-idx="${i}">
+                <div class="wf2-node-reject-head">
+                  <div class="wf2-node-reject-num">${rj.code || num+'A'}</div>
+                  <div class="wf2-node-reject-title">${rj.name}</div>
+                </div>
+                <div class="wf2-node-reject-body">
+                  ${rj.assignee ? `<div class="wf2-node-reject-assignee">👤 ${rj.assignee}</div>` : ''}
+                </div>
+              </div>`;
+            nodes.appendChild(rjDiv);
+            // Left arrow: diamond center → reject
+            const dcy = ty + DW/2;
+            const pathD = `M ${MX-DW/2} ${dcy} L ${RX+90} ${dcy} L ${RX+90} ${ry+40}`;
+            drawPath(svg, pathD, '#EF4444', 'wf2ArrowRed');
+          }
+
+          // Arrow down from diamond
+          if (i+1 < steps.length) {
+            const nextExtra = extraByIdx[i+1];
+            const ny = nodeTop(i+1, nextExtra);
+            drawArrow(svg, MX, ty + DW + 2, MX, ny - 2, '#22C55E');
+          }
+
+        } else {
+          // Card node
+          const doneCount  = (s.checklist||[]).filter(c=>c.done).length;
+          const totalCheck = (s.checklist||[]).length;
+          const dots = (s.checklist||[]).map(c =>
+            `<span class="wf2-node-check-dot ${c.done?'done':''}"></span>`).join('');
+
+          const nodeDiv = document.createElement('div');
+          nodeDiv.className = 'wf2-node';
+          nodeDiv.style.cssText = `left:${MX-NW/2}px;top:${ty}px;width:${NW}px;`;
+          nodeDiv.innerHTML = `
+            <div class="wf2-node-card ${statusCls} ${selCls}" data-step-idx="${i}">
+              <div class="wf2-node-card-head">
+                <div class="wf2-node-num">${num}</div>
+                <div class="wf2-node-title">${s.name}</div>
+                <span class="wf2-node-type-icon">${TYPE_ICON[s.type]||'📋'}</span>
+                ${isDone ? '<span class="wf2-node-done-icon">✓</span>' : ''}
+              </div>
+              <div class="wf2-node-card-body">
+                ${s.assignee ? `<div class="wf2-node-assignee">👤 ${s.assignee}</div>` : ''}
+                ${s.description ? `<div class="wf2-node-desc-prev">${s.description.split('\n')[0].replace(/^-\s*/,'')}</div>` : ''}
+                ${totalCheck > 0 ? `<div class="wf2-node-check-row">${dots}</div>` : ''}
+                ${s.deadline ? `<div class="wf2-node-deadline">⏱ ${s.deadline} ngày</div>` : ''}
+              </div>
+            </div>`;
+          nodes.appendChild(nodeDiv);
+
+          if (i+1 < steps.length) {
+            const nextExtra = extraByIdx[i+1];
+            const ny = nodeTop(i+1, nextExtra);
+            drawArrow(svg, MX, ty+NH, MX, ny-2);
+          }
+        }
       });
 
-      if (steps.length === 0 || steps[steps.length-1]?.type !== 'end') {
-        html += `<div class="wf-node-wrap"><div class="wf-connector"></div><div class="wf-end-node">⬛ KẾT THÚC</div></div>`;
+      // END node
+      const endY = nodeTop(steps.length, extraAcc);
+      if (steps.length) {
+        const last = steps[steps.length-1];
+        const lastTy = nodeTop(steps.length-1, extraByIdx[steps.length-1]);
+        const lastH  = last.type === 'condition' ? DW : NH;
+        drawArrow(svg, MX, lastTy+lastH+2, MX, endY-2);
       }
+      const endDiv = document.createElement('div');
+      endDiv.className = 'wf2-node';
+      endDiv.style.cssText = `left:${MX-60}px;top:${endY}px;`;
+      endDiv.innerHTML = '<div class="wf2-node-end"><span>⏹</span> KẾT THÚC</div>';
+      nodes.appendChild(endDiv);
 
-      flow.innerHTML = html;
-
-      flow.querySelectorAll('.wf-step-node').forEach(el => {
-        el.addEventListener('click', () => openStepDetail(wf, parseInt(el.dataset.idx)));
+      // Click handlers
+      nodes.querySelectorAll('[data-step-idx]').forEach(el => {
+        el.addEventListener('click', e => {
+          e.stopPropagation();
+          openStepDetail(wf, parseInt(el.dataset.stepIdx));
+        });
       });
     };
 
-    // ── Open step detail panel ──
     const openStepDetail = (wf, idx) => {
       _activeStepIdx = idx;
-      const s = (wf.steps || [])[idx];
+      renderCanvas(wf);
+
+      const s = (wf.steps||[])[idx];
       if (!s) return;
 
-      renderFlow(wf); // re-render to show selected
+      const body = document.getElementById('wf2DetailBody');
+      const foot = document.getElementById('wf2DetailFoot');
+      if (!body) return;
 
-      const detail = document.getElementById('wfDetail');
-      if (detail) detail.style.display = 'flex';
+      body.innerHTML = `
+        <div class="wf2-detail-field">
+          <label class="wf2-detail-label">Tên bước *</label>
+          <input id="wf2DStepName" class="wf2-detail-input" type="text" value="${(s.name||'').replace(/"/g,'&quot;')}"/>
+        </div>
+        <div class="wf2-detail-field">
+          <label class="wf2-detail-label">Loại bước</label>
+          <select id="wf2DStepType" class="wf2-detail-input wf2-detail-select">
+            ${Object.entries(TYPE_LABEL).map(([v,l]) => `<option value="${v}" ${s.type===v?'selected':''}>${TYPE_ICON[v]} ${l}</option>`).join('')}
+          </select>
+        </div>
+        <div class="wf2-detail-field">
+          <label class="wf2-detail-label">Người phụ trách</label>
+          <input id="wf2DStepAssignee" class="wf2-detail-input" type="text" value="${(s.assignee||'').replace(/"/g,'&quot;')}" placeholder="Tên nhân viên phụ trách"/>
+        </div>
+        <div class="wf2-detail-field">
+          <label class="wf2-detail-label">Mô tả công việc</label>
+          <textarea id="wf2DStepDesc" class="wf2-detail-input wf2-detail-textarea">${s.description||''}</textarea>
+        </div>
+        <div class="wf2-detail-field">
+          <label class="wf2-detail-label">Thời hạn (ngày)</label>
+          <input id="wf2DStepDeadline" class="wf2-detail-input" type="number" value="${s.deadline||''}" min="1"/>
+        </div>
+        <div class="wf2-detail-field">
+          <label class="wf2-detail-label">Checklist</label>
+          <div id="wf2DChecklist" class="wf2-checklist"></div>
+          <button class="wf2-add-check" id="wf2DAddCheck">+ Thêm checklist</button>
+        </div>
+        <div class="wf2-detail-field">
+          <label class="wf2-detail-label">Trạng thái bước</label>
+          <select id="wf2DStepStatus" class="wf2-detail-input wf2-detail-select">
+            <option value="pending" ${s.status==='pending'?'selected':''}>⬜ Chưa bắt đầu</option>
+            <option value="active"  ${s.status==='active' ?'selected':''}>🔵 Đang thực hiện</option>
+            <option value="done"    ${s.status==='done'   ?'selected':''}>✅ Hoàn thành</option>
+            <option value="blocked" ${s.status==='blocked'?'selected':''}>🔴 Bị chặn</option>
+          </select>
+        </div>`;
 
-      document.getElementById('wfStepName').value     = s.name || '';
-      document.getElementById('wfStepType').value     = s.type || 'task';
-      document.getElementById('wfStepAssignee').value = s.assignee || '';
-      document.getElementById('wfStepDesc').value     = s.description || '';
-      document.getElementById('wfStepDeadline').value = s.deadline || '';
-      document.getElementById('wfStepStatus').value   = s.status || 'pending';
+      renderChecklist(s, wf);
+      document.getElementById('wf2DAddCheck')?.addEventListener('click', () => {
+        s.checklist = s.checklist || [];
+        s.checklist.push({text:'',done:false});
+        renderChecklist(s, wf);
+      });
 
-      // Render checklist
-      const cl = document.getElementById('wfChecklist');
-      if (cl) {
-        cl.innerHTML = (s.checklist || []).map((item, ci) => `
-          <div class="wf-check-item" data-ci="${ci}">
-            <input type="checkbox" ${item.done ? 'checked' : ''} data-ci="${ci}"/>
-            <input class="wf-check-text" type="text" value="${item.text}" data-ci="${ci}"/>
-            <button class="wf-check-del" data-ci="${ci}">✕</button>
-          </div>
-        `).join('');
-
-        cl.querySelectorAll('input[type="checkbox"]').forEach(cb => {
-          cb.addEventListener('change', async () => {
-            const ci = parseInt(cb.dataset.ci);
-            s.checklist[ci].done = cb.checked;
-            await saveStepToFirestore(wf);
-            renderFlow(wf);
-          });
-        });
-        cl.querySelectorAll('.wf-check-text').forEach(inp => {
-          inp.addEventListener('input', () => {
-            s.checklist[parseInt(inp.dataset.ci)].text = inp.value;
-          });
-        });
-        cl.querySelectorAll('.wf-check-del').forEach(btn => {
-          btn.addEventListener('click', async () => {
-            s.checklist.splice(parseInt(btn.dataset.ci), 1);
-            await saveStepToFirestore(wf);
-            openStepDetail(wf, idx);
-          });
-        });
-      }
+      if (foot) foot.style.display = 'flex';
     };
 
-    // ── Save step to Firestore ──
-    const saveStepToFirestore = async (wf) => {
-      await wfCol().doc(wf.id).update({
-        steps: wf.steps,
-        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    const renderChecklist = (s, wf) => {
+      const cl = document.getElementById('wf2DChecklist');
+      if (!cl) return;
+      cl.innerHTML = (s.checklist||[]).map((item,ci) => `
+        <div class="wf2-check-row">
+          <input type="checkbox" ${item.done?'checked':''} data-ci="${ci}"/>
+          <input class="wf2-check-inp" type="text" value="${(item.text||'').replace(/"/g,'&quot;')}" data-ci="${ci}" placeholder="Nội dung..."/>
+          <button class="wf2-check-del" data-ci="${ci}">✕</button>
+        </div>`).join('');
+      cl.querySelectorAll('input[type="checkbox"]').forEach(cb => {
+        cb.addEventListener('change', async () => {
+          s.checklist[+cb.dataset.ci].done = cb.checked;
+          await saveStep(wf);
+          renderCanvas(wf);
+        });
       });
+      cl.querySelectorAll('.wf2-check-inp').forEach(inp => {
+        inp.addEventListener('input', () => { s.checklist[+inp.dataset.ci].text = inp.value; });
+      });
+      cl.querySelectorAll('.wf2-check-del').forEach(btn => {
+        btn.addEventListener('click', async () => {
+          s.checklist.splice(+btn.dataset.ci, 1);
+          await saveStep(wf);
+          openStepDetail(wf, _activeStepIdx);
+        });
+      });
+    };
+
+    const saveStep = async (wf) => {
+      await WF_COL().doc(wf.id).update({ steps: wf.steps, updatedAt: firebase.firestore.FieldValue.serverTimestamp() });
       const local = _workflows.find(w => w.id === wf.id);
       if (local) local.steps = wf.steps;
     };
 
-    // ── Load workflows from Firestore (or seed) ──
     const loadWorkflows = async () => {
-      const snap = await wfCol().orderBy('createdAt', 'desc').get();
+      const snap = await WF_COL().orderBy('createdAt','desc').get();
       if (snap.empty) {
-        // Seed initial workflows
-        for (const wf of SEED_WORKFLOWS) {
-          await wfCol().add({ ...wf, createdAt: firebase.firestore.FieldValue.serverTimestamp(), updatedAt: firebase.firestore.FieldValue.serverTimestamp() });
+        for (const [name, data] of Object.entries(STEP_SEEDS)) {
+          await WF_COL().add({
+            name, description: data.desc, category: data.cat, status:'active',
+            steps: data.steps,
+            createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+          });
         }
-        const snap2 = await wfCol().orderBy('createdAt', 'desc').get();
-        _workflows = snap2.docs.map(d => ({ id: d.id, ...d.data() }));
+        const snap2 = await WF_COL().orderBy('createdAt','desc').get();
+        _workflows = snap2.docs.map(d=>({id:d.id,...d.data()}));
       } else {
-        _workflows = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+        _workflows = snap.docs.map(d=>({id:d.id,...d.data()}));
       }
-      renderList();
-      if (_workflows.length > 0) openWorkflow(_workflows[0].id);
+    };
+
+    const renderSideList = () => {
+      const search = (document.getElementById('wf2SideSearch')?.value||'').toLowerCase();
+      const cat    = document.getElementById('wf2SideCat')?.value||'';
+      const filtered = _workflows.filter(w =>
+        (!search || w.name.toLowerCase().includes(search)) && (!cat || w.category===cat));
+      const total = filtered.length;
+      const pages = Math.max(1, Math.ceil(total / PER_PAGE));
+      if (_page > pages) _page = pages;
+      const paged = filtered.slice((_page-1)*PER_PAGE, _page*PER_PAGE);
+
+      const body = document.getElementById('wf2SideListBody');
+      if (!body) return;
+      body.innerHTML = paged.map(w => {
+        const cnt = (w.steps||[]).length;
+        const upd = w.updatedAt?.toDate?.()?.toLocaleDateString('vi-VN') || '--';
+        return `<div class="wf2-side-item ${w.id===_activeId?'active':''}" data-id="${w.id}">
+          <div class="wf2-side-item-name">${w.name}</div>
+          <div class="wf2-side-item-row">
+            <span class="wf2-badge ${w.status}">${STATUS_LABEL[w.status]||w.status}</span>
+            <div class="wf2-side-item-actions">
+              <button class="wf2-side-action-btn" data-action="view" data-id="${w.id}" title="Xem">👁</button>
+              <button class="wf2-side-action-btn" data-action="edit" data-id="${w.id}" title="Sửa">✏️</button>
+              <button class="wf2-side-action-btn" data-action="del"  data-id="${w.id}" title="Xóa">🗑</button>
+            </div>
+          </div>
+          <div class="wf2-side-item-meta">${cnt} bước · ${upd}</div>
+        </div>`;
+      }).join('');
+
+      const pgEl = document.getElementById('wf2Pagination');
+      if (pgEl) {
+        let pg = `<button class="wf2-page-btn" id="wf2PgPrev">‹</button>`;
+        for(let p=1;p<=pages;p++) pg += `<button class="wf2-page-btn ${p===_page?'active':''}" data-p="${p}">${p}</button>`;
+        pg += `<button class="wf2-page-btn" id="wf2PgNext">›</button>`;
+        pgEl.innerHTML = pg;
+        pgEl.querySelectorAll('[data-p]').forEach(btn => { btn.addEventListener('click', () => { _page=+btn.dataset.p; renderSideList(); }); });
+        document.getElementById('wf2PgPrev')?.addEventListener('click', () => { if(_page>1){_page--;renderSideList();} });
+        document.getElementById('wf2PgNext')?.addEventListener('click', () => { if(_page<pages){_page++;renderSideList();} });
+      }
+
+      body.querySelectorAll('.wf2-side-item').forEach(el => {
+        el.addEventListener('click', () => openWorkflow(el.dataset.id));
+      });
+      body.querySelectorAll('[data-action]').forEach(btn => {
+        btn.addEventListener('click', e => {
+          e.stopPropagation();
+          const id = btn.dataset.id;
+          if (btn.dataset.action === 'del') { if(confirm('Xóa quy trình này?')) deleteWorkflow(id); }
+          else openWorkflow(id);
+        });
+      });
+    };
+
+    const renderListGrid = () => {
+      const search = (document.getElementById('wf2ListSearch')?.value||'').toLowerCase();
+      const cat    = document.getElementById('wf2ListCat')?.value||'';
+      const filtered = _workflows.filter(w =>
+        (!search || w.name.toLowerCase().includes(search)) && (!cat || w.category===cat));
+
+      const grid = document.getElementById('wf2ListGrid');
+      if (!grid) return;
+      grid.innerHTML = filtered.map(w => {
+        const cnt = (w.steps||[]).length;
+        const upd = w.updatedAt?.toDate?.()?.toLocaleDateString('vi-VN') || '--';
+        return `<div class="wf2-card" data-id="${w.id}">
+          <div class="wf2-card-head">
+            <div class="wf2-card-name">${w.name}</div>
+            <div class="wf2-card-actions">
+              <button class="wf2-card-action-btn" data-action="view" data-id="${w.id}" title="Xem">👁</button>
+              <button class="wf2-card-action-btn" data-action="edit" data-id="${w.id}" title="Sửa">✏️</button>
+              <button class="wf2-card-action-btn" data-action="del"  data-id="${w.id}" title="Xóa">🗑</button>
+            </div>
+          </div>
+          <div class="wf2-card-meta">
+            <span class="wf2-badge ${w.status}">${STATUS_LABEL[w.status]||w.status}</span>
+            <span>${cnt} bước</span>
+            <span>Cập nhật ${upd}</span>
+            ${w.category ? `<span class="wf2-cat-tag">${w.category}</span>` : ''}
+          </div>
+          ${w.description ? `<div class="wf2-card-desc">${w.description}</div>` : ''}
+        </div>`;
+      }).join('');
+
+      grid.querySelectorAll('[data-action]').forEach(btn => {
+        btn.addEventListener('click', e => {
+          e.stopPropagation();
+          const id = btn.dataset.id;
+          if (btn.dataset.action === 'del') { if(confirm('Xóa quy trình này?')) deleteWorkflow(id); }
+          else openWorkflow(id);
+        });
+      });
+      grid.querySelectorAll('.wf2-card').forEach(el => {
+        el.addEventListener('click', () => openWorkflow(el.dataset.id));
+      });
+    };
+
+    const openWorkflow = (id) => {
+      _activeId = id;
+      _activeStepIdx = null;
+      const wf = _workflows.find(w => w.id === id);
+      if (!wf) return;
+
+      switchTab('editor');
+
+      const setVal = (eid, v) => { const el=document.getElementById(eid); if(el) el.value=v; };
+      setVal('wf2FormName', wf.name||'');
+      setVal('wf2FormDesc', wf.description||'');
+      setVal('wf2FormCat',  wf.category||'Tuyển sinh');
+      setVal('wf2ActiveId', id);
+
+      const actEl = document.getElementById('wf2FormActive');
+      const actLbl= document.getElementById('wf2FormActiveLabel');
+      if (actEl)  actEl.checked = wf.status === 'active';
+      if (actLbl) actLbl.textContent = wf.status === 'active' ? 'Đang hoạt động' : 'Không hoạt động';
+
+      renderCanvas(wf);
+      renderSideList();
+
+      const body = document.getElementById('wf2DetailBody');
+      const foot = document.getElementById('wf2DetailFoot');
+      if (body) body.innerHTML = `<div class="wf2-empty-detail">
+        <svg viewBox="0 0 24 24" style="width:36px;height:36px;fill:#CBD5E1"><path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z"/></svg>
+        <p>Chọn một bước để xem chi tiết</p></div>`;
+      if (foot) foot.style.display = 'none';
+    };
+
+    const deleteWorkflow = async (id) => {
+      await WF_COL().doc(id).delete();
+      if (_activeId === id) {
+        _activeId = null;
+        const n = document.getElementById('wf2Nodes');
+        const s = document.getElementById('wf2Svg');
+        if (n) n.innerHTML = '';
+        if (s) { while(s.children.length>1) s.removeChild(s.lastChild); }
+      }
+      await loadWorkflows();
+      renderSideList();
+      renderListGrid();
+      if (typeof showToast === 'function') showToast('Đã xóa quy trình','info');
+    };
+
+    const switchTab = (tab) => {
+      const panelList   = document.getElementById('wf2PanelList');
+      const panelEditor = document.getElementById('wf2PanelEditor');
+      document.querySelectorAll('.wf2-tab').forEach(t => t.classList.toggle('active', t.dataset.wftab === tab));
+      if (panelList)   panelList.style.display   = tab==='list'   ? 'flex' : 'none';
+      if (panelEditor) panelEditor.style.display = tab==='editor' ? 'flex' : 'none';
+      if (tab === 'list') renderListGrid();
+    };
+
+    const saveWorkflow = async () => {
+      const name   = (document.getElementById('wf2FormName')?.value||'').trim();
+      const desc   = (document.getElementById('wf2FormDesc')?.value||'').trim();
+      const cat    = document.getElementById('wf2FormCat')?.value||'Tuyển sinh';
+      const active = document.getElementById('wf2FormActive')?.checked;
+      const id     = document.getElementById('wf2ActiveId')?.value||'';
+      if (!name) { if(typeof showToast==='function') showToast('Vui lòng nhập tên quy trình','error'); return; }
+      const data = { name, description:desc, category:cat, status: active?'active':'draft', updatedAt: firebase.firestore.FieldValue.serverTimestamp() };
+      if (id) {
+        await WF_COL().doc(id).update(data);
+        if(typeof showToast==='function') showToast('Đã cập nhật quy trình!','success');
+      } else {
+        const ref = await WF_COL().add({ ...data, steps:[], createdAt: firebase.firestore.FieldValue.serverTimestamp() });
+        const hidEl = document.getElementById('wf2ActiveId');
+        if (hidEl) hidEl.value = ref.id;
+        _activeId = ref.id;
+        if(typeof showToast==='function') showToast('Đã tạo quy trình mới!','success');
+      }
+      await loadWorkflows();
+      renderSideList();
     };
 
     return async () => {
       await loadWorkflows();
+      if (!_activeId && _workflows.length) openWorkflow(_workflows[0].id);
+      else { renderSideList(); renderListGrid(); }
+
       if (_bound) return;
       _bound = true;
 
-      // Search / filter
-      document.getElementById('wfSearch')?.addEventListener('input', renderList);
-      document.getElementById('wfCategoryFilter')?.addEventListener('change', renderList);
-
-      // Close detail
-      document.getElementById('btnCloseDetail')?.addEventListener('click', () => {
-        _activeStepIdx = null;
-        document.getElementById('wfDetail').style.display = 'none';
-        const wf = _workflows.find(w => w.id === _activeWfId);
-        if (wf) renderFlow(wf);
-      });
-
-      // Save step
-      document.getElementById('btnSaveStep')?.addEventListener('click', async () => {
-        const wf = _workflows.find(w => w.id === _activeWfId);
-        if (!wf || _activeStepIdx === null) return;
-        const s = wf.steps[_activeStepIdx];
-        s.name     = document.getElementById('wfStepName').value.trim();
-        s.type     = document.getElementById('wfStepType').value;
-        s.assignee = document.getElementById('wfStepAssignee').value.trim();
-        s.description = document.getElementById('wfStepDesc').value.trim();
-        s.deadline = parseInt(document.getElementById('wfStepDeadline').value) || null;
-        s.status   = document.getElementById('wfStepStatus').value;
-        // Update checklist texts
-        document.querySelectorAll('#wfChecklist .wf-check-text').forEach(inp => {
-          s.checklist[parseInt(inp.dataset.ci)].text = inp.value;
-        });
-        await saveStepToFirestore(wf);
-        showToast('Đã cập nhật bước!', 'success');
-        renderFlow(wf);
-      });
-
-      // Delete step
-      document.getElementById('btnDeleteStep')?.addEventListener('click', async () => {
-        if (_activeStepIdx === null) return;
-        const wf = _workflows.find(w => w.id === _activeWfId);
-        if (!wf) return;
-        wf.steps.splice(_activeStepIdx, 1);
-        _activeStepIdx = null;
-        document.getElementById('wfDetail').style.display = 'none';
-        await saveStepToFirestore(wf);
-        renderFlow(wf);
-        showToast('Đã xóa bước', 'info');
-      });
-
-      // Add checklist item
-      document.getElementById('btnAddCheckItem')?.addEventListener('click', () => {
-        const wf = _workflows.find(w => w.id === _activeWfId);
-        if (!wf || _activeStepIdx === null) return;
-        wf.steps[_activeStepIdx].checklist = wf.steps[_activeStepIdx].checklist || [];
-        wf.steps[_activeStepIdx].checklist.push({ text: '', done: false });
-        openStepDetail(wf, _activeStepIdx);
-      });
-
-      // Add step type buttons
-      document.querySelectorAll('.wf-step-type-btn').forEach(btn => {
-        btn.addEventListener('click', async () => {
-          const wf = _workflows.find(w => w.id === _activeWfId);
-          if (!wf) return;
-          wf.steps = wf.steps || [];
-          wf.steps.push({ name: `Bước ${wf.steps.length + 1}`, type: btn.dataset.type, assignee: '', description: '', deadline: null, checklist: [], status: 'pending' });
-          await saveStepToFirestore(wf);
-          renderFlow(wf);
-        });
+      // Tab switching
+      document.querySelectorAll('.wf2-tab').forEach(btn => {
+        btn.addEventListener('click', () => switchTab(btn.dataset.wftab));
       });
 
       // New workflow button
-      document.getElementById('btnNewWorkflow')?.addEventListener('click', () => {
-        document.getElementById('wfModalTitle').textContent = 'Tạo quy trình mới';
-        document.getElementById('wfModalId').value = '';
-        document.getElementById('wfModalName').value = '';
-        document.getElementById('wfModalDesc').value = '';
-        document.getElementById('wfModalCategory').value = 'Tuyển sinh';
-        document.getElementById('wfModalStatus').value = 'active';
-        document.getElementById('wfModal').style.display = 'flex';
+      document.getElementById('wf2BtnNew')?.addEventListener('click', () => {
+        _activeId = null;
+        _activeStepIdx = null;
+        switchTab('editor');
+        ['wf2FormName','wf2FormDesc'].forEach(eid => { const el=document.getElementById(eid); if(el) el.value=''; });
+        const actEl = document.getElementById('wf2FormActive');
+        if (actEl) actEl.checked = true;
+        const actLbl = document.getElementById('wf2FormActiveLabel');
+        if (actLbl) actLbl.textContent = 'Đang hoạt động';
+        const hidEl = document.getElementById('wf2ActiveId');
+        if (hidEl) hidEl.value = '';
+        const nodesEl = document.getElementById('wf2Nodes');
+        if (nodesEl) nodesEl.innerHTML = '';
+        const svgEl2  = document.getElementById('wf2Svg');
+        if (svgEl2) { while(svgEl2.children.length>1) svgEl2.removeChild(svgEl2.lastChild); }
       });
 
-      // Edit workflow button
-      document.getElementById('btnEditWorkflow')?.addEventListener('click', () => {
-        const wf = _workflows.find(w => w.id === _activeWfId);
-        if (!wf) return;
-        document.getElementById('wfModalTitle').textContent = 'Chỉnh sửa quy trình';
-        document.getElementById('wfModalId').value  = wf.id;
-        document.getElementById('wfModalName').value = wf.name;
-        document.getElementById('wfModalDesc').value = wf.description || '';
-        document.getElementById('wfModalCategory').value = wf.category || 'Tuyển sinh';
-        document.getElementById('wfModalStatus').value = wf.status || 'active';
-        document.getElementById('wfModal').style.display = 'flex';
-        // Show edit-mode add step bar
-        _editMode = true;
-        document.getElementById('wfAddStepBar').style.display = 'flex';
+      // Save buttons
+      document.getElementById('wf2BtnSaveWf')?.addEventListener('click', saveWorkflow);
+      document.getElementById('wf2BtnSaveFlow')?.addEventListener('click', saveWorkflow);
+      document.getElementById('wf2BtnCancel')?.addEventListener('click', () => switchTab('list'));
+
+      // Toggle active label
+      document.getElementById('wf2FormActive')?.addEventListener('change', e => {
+        const lbl = document.getElementById('wf2FormActiveLabel');
+        if (lbl) lbl.textContent = e.target.checked ? 'Đang hoạt động' : 'Không hoạt động';
       });
 
-      // Save workflow modal
-      document.getElementById('btnSaveWfModal')?.addEventListener('click', async () => {
-        const name = document.getElementById('wfModalName').value.trim();
-        if (!name) { showToast('Vui lòng nhập tên quy trình', 'error'); return; }
-        const id   = document.getElementById('wfModalId').value;
-        const data = {
-          name,
-          description: document.getElementById('wfModalDesc').value.trim(),
-          category:    document.getElementById('wfModalCategory').value,
-          status:      document.getElementById('wfModalStatus').value,
-          updatedAt:   firebase.firestore.FieldValue.serverTimestamp(),
-        };
-        if (id) {
-          await wfCol().doc(id).update(data);
-          showToast('Đã cập nhật quy trình!', 'success');
-        } else {
-          const ref = await wfCol().add({ ...data, steps: [], createdAt: firebase.firestore.FieldValue.serverTimestamp() });
-          _activeWfId = ref.id;
-          showToast('Đã tạo quy trình mới!', 'success');
-          _editMode = true;
-        }
-        document.getElementById('wfModal').style.display = 'none';
-        await loadWorkflows();
-        if (_activeWfId) openWorkflow(_activeWfId);
-      });
-
-      // Close / cancel modal
-      ['btnCloseWfModal','btnCancelWfModal'].forEach(id => {
-        document.getElementById(id)?.addEventListener('click', () => {
-          document.getElementById('wfModal').style.display = 'none';
+      // Palette: add step
+      document.querySelectorAll('.wf2-palette-item').forEach(item => {
+        item.addEventListener('click', async () => {
+          if (!_activeId) { if(typeof showToast==='function') showToast('Hãy chọn hoặc tạo quy trình trước','info'); return; }
+          const wf = _workflows.find(w => w.id === _activeId);
+          if (!wf) return;
+          const type = item.dataset.type;
+          const newStep = { name: TYPE_LABEL[type]||'Bước mới', type, assignee:'', description:'', deadline:null, checklist:[], status:'pending' };
+          if (type === 'condition') {
+            newStep.conditionText = 'Kiểm tra điều kiện';
+            newStep.rejectStep = { name:'Xử lý trường hợp không đạt', assignee:'', code:String(wf.steps.length+1).padStart(2,'0')+'A' };
+          }
+          wf.steps.push(newStep);
+          await saveStep(wf);
+          renderCanvas(wf);
+          renderSideList();
         });
       });
 
-      // Delete workflow
-      document.getElementById('btnDeleteWorkflow')?.addEventListener('click', async () => {
-        if (!_activeWfId) return;
-        const wf = _workflows.find(w => w.id === _activeWfId);
-        if (!confirm(`Xóa quy trình "${wf?.name}"?`)) return;
-        await wfCol().doc(_activeWfId).delete();
-        _activeWfId = null;
-        _activeStepIdx = null;
-        document.getElementById('wfCenterHead').style.display = 'none';
-        document.getElementById('wfFlowEmpty').style.display = 'flex';
-        document.getElementById('wfFlow').style.display = 'none';
-        document.getElementById('wfDetail').style.display = 'none';
-        document.getElementById('wfAddStepBar').style.display = 'none';
-        showToast('Đã xóa quy trình', 'info');
-        await loadWorkflows();
+      // Update step
+      document.getElementById('wf2BtnUpdateStep')?.addEventListener('click', async () => {
+        if (_activeStepIdx === null || !_activeId) return;
+        const wf = _workflows.find(w => w.id === _activeId);
+        if (!wf || !wf.steps[_activeStepIdx]) return;
+        const s = wf.steps[_activeStepIdx];
+        s.name        = document.getElementById('wf2DStepName')?.value.trim()     || s.name;
+        s.type        = document.getElementById('wf2DStepType')?.value             || s.type;
+        s.assignee    = document.getElementById('wf2DStepAssignee')?.value.trim()  || '';
+        s.description = document.getElementById('wf2DStepDesc')?.value.trim()     || '';
+        s.deadline    = parseInt(document.getElementById('wf2DStepDeadline')?.value) || null;
+        s.status      = document.getElementById('wf2DStepStatus')?.value           || s.status;
+        document.querySelectorAll('#wf2DChecklist .wf2-check-inp').forEach(inp => {
+          const ci = +inp.dataset.ci;
+          if (s.checklist && s.checklist[ci]) s.checklist[ci].text = inp.value;
+        });
+        await saveStep(wf);
+        if(typeof showToast==='function') showToast('Đã cập nhật bước!','success');
+        renderCanvas(wf);
       });
+
+      // Delete step
+      document.getElementById('wf2BtnDelStep')?.addEventListener('click', async () => {
+        if (_activeStepIdx === null || !_activeId) return;
+        if (!confirm('Xóa bước này?')) return;
+        const wf = _workflows.find(w => w.id === _activeId);
+        if (!wf) return;
+        wf.steps.splice(_activeStepIdx, 1);
+        _activeStepIdx = null;
+        await saveStep(wf);
+        renderCanvas(wf);
+        const foot = document.getElementById('wf2DetailFoot');
+        if (foot) foot.style.display = 'none';
+        const body = document.getElementById('wf2DetailBody');
+        if (body) body.innerHTML = `<div class="wf2-empty-detail">
+          <svg viewBox="0 0 24 24" style="width:36px;height:36px;fill:#CBD5E1"><path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z"/></svg>
+          <p>Chọn một bước để xem chi tiết</p></div>`;
+        if(typeof showToast==='function') showToast('Đã xóa bước','info');
+      });
+
+      // Zoom
+      document.getElementById('wf2BtnZoomIn')?.addEventListener('click', () => {
+        _zoom = Math.min(2, +(_zoom+0.1).toFixed(1));
+        const c = document.getElementById('wf2Canvas');
+        if (c) { c.style.transform=`scale(${_zoom})`; c.style.transformOrigin='top center'; }
+        const lbl = document.getElementById('wf2ZoomLabel');
+        if (lbl) lbl.textContent = Math.round(_zoom*100)+'%';
+      });
+      document.getElementById('wf2BtnZoomOut')?.addEventListener('click', () => {
+        _zoom = Math.max(0.4, +(_zoom-0.1).toFixed(1));
+        const c = document.getElementById('wf2Canvas');
+        if (c) { c.style.transform=`scale(${_zoom})`; c.style.transformOrigin='top center'; }
+        const lbl = document.getElementById('wf2ZoomLabel');
+        if (lbl) lbl.textContent = Math.round(_zoom*100)+'%';
+      });
+      document.getElementById('wf2BtnFit')?.addEventListener('click', () => {
+        _zoom = 1;
+        const c = document.getElementById('wf2Canvas');
+        if (c) { c.style.transform=''; }
+        const lbl = document.getElementById('wf2ZoomLabel');
+        if (lbl) lbl.textContent = '100%';
+      });
+
+      // Search/filter
+      document.getElementById('wf2SideSearch')?.addEventListener('input', renderSideList);
+      document.getElementById('wf2SideCat')?.addEventListener('change', renderSideList);
+      document.getElementById('wf2ListSearch')?.addEventListener('input', renderListGrid);
+      document.getElementById('wf2ListCat')?.addEventListener('change', renderListGrid);
     };
   })();
+
 
 });

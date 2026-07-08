@@ -2726,27 +2726,214 @@
         <!-- ==========================================
            QUY TRÌNH DASHBOARD
            ========================================== -->
-        <div id="workflow-dashboard" class="dashboard-wrapper" style="display:none;">
-          <div class="dashboard-container">
-            <div class="dashboard-topbar">
-              <div class="topbar-breadcrumb">
-                <span>Cổng thông tin</span><span class="breadcrumb-sep">/</span>
-                <span class="breadcrumb-active">Quy trình</span>
-              </div>
-              <div style="display:flex;gap:0.75rem;align-items:center;">
-                <button id="btnNewWorkflow" style="display:flex;align-items:center;gap:0.5rem;background:var(--accent);color:#fff;border:none;border-radius:8px;padding:0.55rem 1.1rem;font-size:0.83rem;font-weight:600;cursor:pointer;transition:opacity .2s;" onmouseover="this.style.opacity='.85'" onmouseout="this.style.opacity='1'">
-                  <svg viewBox="0 0 24 24" style="width:15px;height:15px;fill:currentColor"><path d="M19,13H13V19H11V13H5V11H11V5H13V11H19V13Z"/></svg>
-                  Tạo quy trình mới
-                </button>
+        <div id="workflow-dashboard" class="dashboard-wrapper wf2-root" style="display:none;">
+          <!-- PAGE HEADER -->
+          <div class="wf2-page-header">
+            <div class="wf2-header-left">
+              <h2 class="wf2-page-title">Quản lý quy trình</h2>
+              <div class="wf2-tabs">
+                <button class="wf2-tab active" data-wftab="list">Danh sách quy trình</button>
+                <button class="wf2-tab" data-wftab="editor">Tạo quy trình mới</button>
               </div>
             </div>
+            <div class="wf2-header-right">
+              <button class="wf2-btn-guide" id="wf2BtnGuide">
+                <svg viewBox="0 0 24 24" style="width:14px;height:14px;fill:currentColor"><path d="M11,18H13V16H11V18M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M12,20C7.59,20 4,16.41 4,12C4,7.59 7.59,4 12,4C16.41,4 20,7.59 20,12C20,16.41 16.41,20 12,20M12,6A4,4 0 0,0 8,10H10A2,2 0 0,1 12,8A2,2 0 0,1 14,10C14,12 11,11.75 11,15H13C13,12.75 16,12.5 16,10A4,4 0 0,0 12,6Z"/></svg>
+                Hướng dẫn
+              </button>
+              <button class="wf2-btn-primary" id="wf2BtnNew">
+                <svg viewBox="0 0 24 24" style="width:14px;height:14px;fill:currentColor"><path d="M19,13H13V19H11V13H5V11H11V5H13V11H19V13Z"/></svg>
+                Tạo quy trình mới
+              </button>
+            </div>
+          </div>
 
-            <div class="wf-layout">
-              <!-- LEFT: process list -->
-              <div class="wf-sidebar">
-                <div class="wf-sidebar-head">
-                  <input id="wfSearch" type="text" placeholder="Tìm kiếm quy trình..." class="wf-search-input"/>
-                  <select id="wfCategoryFilter" class="wf-filter-select">
+          <!-- TAB: DANH SÁCH -->
+          <div class="wf2-panel" id="wf2PanelList">
+            <div class="wf2-list-toolbar">
+              <input id="wf2ListSearch" type="text" class="wf2-list-search" placeholder="Tìm kiếm quy trình..."/>
+              <select id="wf2ListCat" class="wf2-list-cat">
+                <option value="">Tất cả danh mục</option>
+                <option value="Tuyển sinh">Tuyển sinh</option>
+                <option value="Visa">Visa</option>
+                <option value="Tài chính">Tài chính</option>
+                <option value="Xuất cảnh">Xuất cảnh</option>
+                <option value="Khác">Khác</option>
+              </select>
+            </div>
+            <div id="wf2ListGrid" class="wf2-list-grid"></div>
+          </div>
+
+          <!-- TAB: EDITOR -->
+          <div class="wf2-panel" id="wf2PanelEditor" style="display:none; flex-direction:column; height:calc(100vh - 115px);">
+            <!-- Form row -->
+            <div class="wf2-form-row">
+              <div class="wf2-form-field wf2-field-name">
+                <label class="wf2-form-label">Tên quy trình *</label>
+                <input id="wf2FormName" type="text" class="wf2-form-input" placeholder="Tuyển sinh du học Nhật Bản"/>
+              </div>
+              <div class="wf2-form-field wf2-field-desc">
+                <label class="wf2-form-label">Mô tả</label>
+                <input id="wf2FormDesc" type="text" class="wf2-form-input" placeholder="Quy trình xử lý hồ sơ tuyển sinh..."/>
+              </div>
+              <div class="wf2-form-field">
+                <label class="wf2-form-label">Danh mục</label>
+                <select id="wf2FormCat" class="wf2-form-input">
+                  <option value="Tuyển sinh">Tuyển sinh</option>
+                  <option value="Visa">Visa</option>
+                  <option value="Tài chính">Tài chính</option>
+                  <option value="Xuất cảnh">Xuất cảnh</option>
+                  <option value="Khác">Khác</option>
+                </select>
+              </div>
+              <div class="wf2-form-field">
+                <label class="wf2-form-label">Trạng thái</label>
+                <label class="wf2-toggle-wrap">
+                  <input type="checkbox" id="wf2FormActive" checked/>
+                  <span class="wf2-toggle-track"><span class="wf2-toggle-thumb"></span></span>
+                  <span class="wf2-toggle-label" id="wf2FormActiveLabel">Đang hoạt động</span>
+                </label>
+              </div>
+              <div class="wf2-form-actions">
+                <button class="wf2-btn-cancel" id="wf2BtnCancel">Hủy</button>
+                <button class="wf2-btn-save-wf" id="wf2BtnSaveWf">Lưu quy trình</button>
+              </div>
+              <input type="hidden" id="wf2ActiveId"/>
+            </div>
+
+            <!-- 4-column editor body -->
+            <div class="wf2-editor-body">
+
+              <!-- COL 1: Step palette -->
+              <div class="wf2-palette">
+                <div class="wf2-palette-title">THÊM BƯỚC</div>
+                <div class="wf2-palette-item" data-type="task">
+                  <div class="wf2-palette-icon" style="color:#3B82F6;">
+                    <svg viewBox="0 0 24 24" style="width:18px;height:18px;fill:currentColor"><path d="M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M12,4A8,8 0 0,1 20,12A8,8 0 0,1 12,20A8,8 0 0,1 4,12A8,8 0 0,1 12,4M12,6A6,6 0 0,0 6,12A6,6 0 0,0 12,18A6,6 0 0,0 18,12A6,6 0 0,0 12,6M12,8A4,4 0 0,1 16,12A4,4 0 0,1 12,16A4,4 0 0,1 8,12A4,4 0 0,1 12,8Z"/></svg>
+                  </div>
+                  <div>
+                    <div class="wf2-palette-name">Bước công việc</div>
+                    <div class="wf2-palette-desc">Người phụ trách thực hiện công việc</div>
+                  </div>
+                </div>
+                <div class="wf2-palette-item" data-type="approve">
+                  <div class="wf2-palette-icon" style="color:#10B981;">
+                    <svg viewBox="0 0 24 24" style="width:18px;height:18px;fill:currentColor"><path d="M10,17L5,12L6.41,10.58L10,14.17L17.59,6.58L19,8M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2Z"/></svg>
+                  </div>
+                  <div>
+                    <div class="wf2-palette-name">Bước phê duyệt</div>
+                    <div class="wf2-palette-desc">Phê duyệt / chuyển tiếp hồ sơ</div>
+                  </div>
+                </div>
+                <div class="wf2-palette-item" data-type="condition">
+                  <div class="wf2-palette-icon" style="color:#F59E0B;">
+                    <svg viewBox="0 0 24 24" style="width:18px;height:18px;fill:currentColor"><path d="M13,14H11V10H13M13,18H11V16H13M1,21H23L12,2L1,21Z"/></svg>
+                  </div>
+                  <div>
+                    <div class="wf2-palette-name">Bước điều kiện</div>
+                    <div class="wf2-palette-desc">Rẽ nhánh theo điều kiện</div>
+                  </div>
+                </div>
+                <div class="wf2-palette-item" data-type="notify">
+                  <div class="wf2-palette-icon" style="color:#8B5CF6;">
+                    <svg viewBox="0 0 24 24" style="width:18px;height:18px;fill:currentColor"><path d="M21,19V20H3V19L5,17V11C5,7.9 7.03,5.17 10,4.29C10,4.19 10,4.1 10,4A2,2 0 0,1 12,2A2,2 0 0,1 14,4C14,4.1 14,4.19 14,4.29C16.97,5.17 19,7.9 19,11V17L21,19M14,21A2,2 0 0,1 12,23A2,2 0 0,1 10,21"/></svg>
+                  </div>
+                  <div>
+                    <div class="wf2-palette-name">Bước thông báo</div>
+                    <div class="wf2-palette-desc">Gửi thông báo / email</div>
+                  </div>
+                </div>
+                <div class="wf2-palette-item" data-type="parallel">
+                  <div class="wf2-palette-icon" style="color:#06B6D4;">
+                    <svg viewBox="0 0 24 24" style="width:18px;height:18px;fill:currentColor"><path d="M17,12V3A1,1 0 0,0 16,2H3A1,1 0 0,0 2,3V12A1,1 0 0,0 3,13H16A1,1 0 0,0 17,12M21,2H19V13H21A1,1 0 0,0 22,12V3A1,1 0 0,0 21,2M22,22L18,17H22V22M6,22V17H10L6,22Z"/></svg>
+                  </div>
+                  <div>
+                    <div class="wf2-palette-name">Bước song song</div>
+                    <div class="wf2-palette-desc">Nhiều nhiệm vụ cùng song song</div>
+                  </div>
+                </div>
+                <div class="wf2-palette-item" data-type="end">
+                  <div class="wf2-palette-icon" style="color:#EF4444;">
+                    <svg viewBox="0 0 24 24" style="width:18px;height:18px;fill:currentColor"><path d="M18,18H6V6H18V18Z"/></svg>
+                  </div>
+                  <div>
+                    <div class="wf2-palette-name">Bước kết thúc</div>
+                    <div class="wf2-palette-desc">Kết thúc quy trình</div>
+                  </div>
+                </div>
+                <!-- Minimap -->
+                <div class="wf2-minimap-wrap">
+                  <canvas id="wf2Minimap" class="wf2-minimap" width="140" height="100"></canvas>
+                  <p class="wf2-minimap-hint">Kéo thả các bước vào vùng thiết kế để tạo quy trình</p>
+                </div>
+              </div>
+
+              <!-- COL 2: Canvas -->
+              <div class="wf2-canvas-wrap">
+                <div class="wf2-canvas-toolbar">
+                  <div class="wf2-tb-left">
+                    <button class="wf2-tb-btn" id="wf2BtnUndo" title="Hoàn tác">↩</button>
+                    <button class="wf2-tb-btn" id="wf2BtnRedo" title="Làm lại">↪</button>
+                    <button class="wf2-tb-btn" id="wf2BtnZoomOut">−</button>
+                    <span class="wf2-zoom-label" id="wf2ZoomLabel">100%</span>
+                    <button class="wf2-tb-btn" id="wf2BtnZoomIn">+</button>
+                    <button class="wf2-tb-btn" id="wf2BtnFit" title="Vừa khung">⊞</button>
+                  </div>
+                  <div class="wf2-tb-right">
+                    <button class="wf2-tb-btn" id="wf2BtnPreview">👁 Xem trước</button>
+                    <button class="wf2-tb-btn" id="wf2BtnSettings">⚙ Thiết lập chung</button>
+                    <button class="wf2-tb-btn wf2-tb-save" id="wf2BtnSaveFlow">
+                      <svg viewBox="0 0 24 24" style="width:13px;height:13px;fill:currentColor"><path d="M15,9H5V5H15M12,19A3,3 0 0,1 9,16A3,3 0 0,1 12,13A3,3 0 0,1 15,16A3,3 0 0,1 12,19M17,3H5C3.89,3 3,3.9 3,5V19A2,2 0 0,0 5,21H19A2,2 0 0,0 21,19V7L17,3Z"/></svg>
+                      Lưu
+                    </button>
+                  </div>
+                </div>
+                <div class="wf2-canvas-scroll" id="wf2CanvasScroll">
+                  <div class="wf2-canvas" id="wf2Canvas">
+                    <svg class="wf2-svg" id="wf2Svg" xmlns="http://www.w3.org/2000/svg">
+                      <defs>
+                        <marker id="wf2Arrow" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+                          <polygon points="0 0, 8 3, 0 6" fill="#94A3B8"/>
+                        </marker>
+                        <marker id="wf2ArrowGreen" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+                          <polygon points="0 0, 8 3, 0 6" fill="#10B981"/>
+                        </marker>
+                        <marker id="wf2ArrowRed" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+                          <polygon points="0 0, 8 3, 0 6" fill="#EF4444"/>
+                        </marker>
+                      </defs>
+                    </svg>
+                    <div id="wf2Nodes" class="wf2-nodes"></div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- COL 3: Step detail -->
+              <div class="wf2-detail-col" id="wf2DetailCol">
+                <div class="wf2-detail-hd">THÔNG TIN BƯỚC</div>
+                <div class="wf2-detail-body" id="wf2DetailBody">
+                  <div class="wf2-empty-detail">
+                    <svg viewBox="0 0 24 24" style="width:36px;height:36px;fill:#CBD5E1"><path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z"/></svg>
+                    <p>Chọn một bước để xem chi tiết</p>
+                  </div>
+                </div>
+                <div class="wf2-detail-foot" id="wf2DetailFoot" style="display:none;">
+                  <button class="wf2-btn-del-step" id="wf2BtnDelStep">
+                    <svg viewBox="0 0 24 24" style="width:13px;height:13px;fill:currentColor"><path d="M19,4H15.5L14.5,3H9.5L8.5,4H5V6H19M6,19A2,2 0 0,0 8,21H16A2,2 0 0,0 18,19V7H6V19Z"/></svg>
+                    Xóa bước
+                  </button>
+                  <button class="wf2-btn-update-step" id="wf2BtnUpdateStep">Cập nhật</button>
+                </div>
+              </div>
+
+              <!-- COL 4: Workflow list -->
+              <div class="wf2-side-list-col">
+                <div class="wf2-side-list-hd">DANH SÁCH QUY TRÌNH</div>
+                <div class="wf2-side-list-search">
+                  <input id="wf2SideSearch" type="text" class="wf2-side-search-inp" placeholder="Tìm kiếm quy trình..."/>
+                </div>
+                <div class="wf2-side-cat-wrap">
+                  <select id="wf2SideCat" class="wf2-side-cat-sel">
                     <option value="">Tất cả danh mục</option>
                     <option value="Tuyển sinh">Tuyển sinh</option>
                     <option value="Visa">Visa</option>
@@ -2755,145 +2942,13 @@
                     <option value="Khác">Khác</option>
                   </select>
                 </div>
-                <div id="wfList" class="wf-list"></div>
+                <div id="wf2SideListBody" class="wf2-side-list-body"></div>
+                <div class="wf2-side-pagination" id="wf2Pagination"></div>
               </div>
 
-              <!-- CENTER: flow diagram -->
-              <div class="wf-center">
-                <div class="wf-center-head" id="wfCenterHead" style="display:none;">
-                  <div>
-                    <h2 class="wf-title" id="wfTitle">—</h2>
-                    <p class="wf-desc" id="wfDesc">—</p>
-                  </div>
-                  <div style="display:flex;gap:0.6rem;align-items:center;">
-                    <span class="wf-status-badge" id="wfStatusBadge"></span>
-                    <button id="btnEditWorkflow" class="wf-btn-icon" title="Chỉnh sửa">
-                      <svg viewBox="0 0 24 24" style="width:15px;height:15px;fill:currentColor"><path d="M20.71,7.04C21.1,6.65 21.1,6 20.71,5.63L18.37,3.29C18,2.9 17.35,2.9 16.96,3.29L15.12,5.12L18.87,8.87M3,17.25V21H6.75L17.81,9.93L14.06,6.18L3,17.25Z"/></svg>
-                    </button>
-                    <button id="btnDeleteWorkflow" class="wf-btn-icon wf-btn-danger" title="Xóa quy trình">
-                      <svg viewBox="0 0 24 24" style="width:15px;height:15px;fill:currentColor"><path d="M19,4H15.5L14.5,3H9.5L8.5,4H5V6H19M6,19A2,2 0 0,0 8,21H16A2,2 0 0,0 18,19V7H6V19Z"/></svg>
-                    </button>
-                  </div>
-                </div>
-                <div id="wfFlowWrap" class="wf-flow-wrap">
-                  <div id="wfFlowEmpty" class="wf-empty-state">
-                    <svg viewBox="0 0 24 24" style="width:48px;height:48px;fill:var(--color-text-muted,#6B6A67);opacity:.35"><path d="M17,12C17,14.42 15.28,16.44 13,16.9V21H11V16.9C8.72,16.44 7,14.42 7,12C7,9.58 8.72,7.56 11,7.1V3H13V7.1C15.28,7.56 17,9.58 17,12M12,9A3,3 0 0,0 9,12A3,3 0 0,0 12,15A3,3 0 0,0 15,12A3,3 0 0,0 12,9Z"/></svg>
-                    <p>Chọn một quy trình để xem lộ trình</p>
-                  </div>
-                  <div id="wfFlow" class="wf-flow" style="display:none;"></div>
-                </div>
-                <!-- Add step bar (shown when editing) -->
-                <div id="wfAddStepBar" class="wf-add-step-bar" style="display:none;">
-                  <span style="font-size:.82rem;color:var(--color-text-muted,#6B6A67);">Thêm bước:</span>
-                  <button class="wf-step-type-btn" data-type="task">📋 Công việc</button>
-                  <button class="wf-step-type-btn" data-type="approve">✅ Phê duyệt</button>
-                  <button class="wf-step-type-btn" data-type="notify">🔔 Thông báo</button>
-                  <button class="wf-step-type-btn" data-type="condition">⬦ Điều kiện</button>
-                  <button class="wf-step-type-btn" data-type="end">🔴 Kết thúc</button>
-                </div>
-              </div>
-
-              <!-- RIGHT: step detail panel -->
-              <div class="wf-detail" id="wfDetail" style="display:none;">
-                <div class="wf-detail-head">
-                  <span class="wf-detail-title">Thông tin bước</span>
-                  <button id="btnCloseDetail" class="wf-btn-icon"><svg viewBox="0 0 24 24" style="width:14px;height:14px;fill:currentColor"><path d="M19,6.41L17.59,5L12,10.59L6.41,5L5,6.41L10.59,12L5,17.59L6.41,19L12,13.41L17.59,19L19,17.59L13.41,12L19,6.41Z"/></svg></button>
-                </div>
-                <div class="wf-detail-body">
-                  <div class="wf-field-group">
-                    <label class="wf-label">Tên bước *</label>
-                    <input id="wfStepName" type="text" class="wf-input" placeholder="VD: Kiểm tra hồ sơ"/>
-                  </div>
-                  <div class="wf-field-group">
-                    <label class="wf-label">Loại bước</label>
-                    <select id="wfStepType" class="wf-input">
-                      <option value="task">📋 Công việc</option>
-                      <option value="approve">✅ Phê duyệt</option>
-                      <option value="notify">🔔 Thông báo</option>
-                      <option value="condition">⬦ Điều kiện</option>
-                      <option value="end">🔴 Kết thúc</option>
-                    </select>
-                  </div>
-                  <div class="wf-field-group">
-                    <label class="wf-label">Người phụ trách</label>
-                    <input id="wfStepAssignee" type="text" class="wf-input" placeholder="Tên nhân viên phụ trách"/>
-                  </div>
-                  <div class="wf-field-group">
-                    <label class="wf-label">Mô tả công việc</label>
-                    <textarea id="wfStepDesc" class="wf-input wf-textarea" rows="4" placeholder="Mô tả chi tiết các công việc cần thực hiện..."></textarea>
-                  </div>
-                  <div class="wf-field-group">
-                    <label class="wf-label">Thời hạn hoàn thành (ngày)</label>
-                    <input id="wfStepDeadline" type="number" class="wf-input" min="1" placeholder="VD: 3"/>
-                  </div>
-                  <div class="wf-field-group">
-                    <label class="wf-label">Checklist</label>
-                    <div id="wfChecklist" class="wf-checklist"></div>
-                    <button id="btnAddCheckItem" class="wf-add-check-btn">+ Thêm checklist</button>
-                  </div>
-                  <div class="wf-field-group">
-                    <label class="wf-label">Trạng thái bước</label>
-                    <select id="wfStepStatus" class="wf-input">
-                      <option value="pending">⬜ Chưa bắt đầu</option>
-                      <option value="active">🔵 Đang thực hiện</option>
-                      <option value="done">✅ Hoàn thành</option>
-                      <option value="blocked">🔴 Bị chặn</option>
-                    </select>
-                  </div>
-                </div>
-                <div class="wf-detail-foot">
-                  <button id="btnDeleteStep" class="wf-btn-danger-outline">Xóa bước</button>
-                  <button id="btnSaveStep" style="background:var(--accent);color:#fff;border:none;border-radius:7px;padding:.55rem 1.2rem;font-size:.83rem;font-weight:600;cursor:pointer;">Cập nhật</button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Workflow Create/Edit Modal -->
-        <div id="wfModal" class="premium-modal" style="display:none;">
-          <div class="premium-modal-glass" style="max-width:560px;">
-            <div class="premium-modal-header">
-              <h3 id="wfModalTitle">Tạo quy trình mới</h3>
-              <button class="btn-close-modal" id="btnCloseWfModal">&times;</button>
-            </div>
-            <div class="premium-modal-body" style="display:flex;flex-direction:column;gap:1.1rem;">
-              <div class="wf-field-group">
-                <label class="wf-label">Tên quy trình *</label>
-                <input id="wfModalName" type="text" class="wf-input" placeholder="VD: Quy trình tuyển sinh du học Nhật Bản"/>
-              </div>
-              <div class="wf-field-group">
-                <label class="wf-label">Mô tả</label>
-                <textarea id="wfModalDesc" class="wf-input wf-textarea" rows="3" placeholder="Mô tả tổng quan về quy trình..."></textarea>
-              </div>
-              <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
-                <div class="wf-field-group">
-                  <label class="wf-label">Danh mục</label>
-                  <select id="wfModalCategory" class="wf-input">
-                    <option value="Tuyển sinh">Tuyển sinh</option>
-                    <option value="Visa">Visa</option>
-                    <option value="Tài chính">Tài chính</option>
-                    <option value="Xuất cảnh">Xuất cảnh</option>
-                    <option value="Khác">Khác</option>
-                  </select>
-                </div>
-                <div class="wf-field-group">
-                  <label class="wf-label">Trạng thái</label>
-                  <select id="wfModalStatus" class="wf-input">
-                    <option value="active">Đang hoạt động</option>
-                    <option value="draft">Nháp</option>
-                    <option value="archived">Lưu trữ</option>
-                  </select>
-                </div>
-              </div>
-              <input type="hidden" id="wfModalId"/>
-            </div>
-            <div class="premium-modal-footer" style="display:flex;justify-content:flex-end;gap:.75rem;padding:1rem 1.5rem;border-top:1px solid var(--color-border,#E8E5DF);">
-              <button id="btnCancelWfModal" style="background:none;border:1px solid var(--color-border,#E8E5DF);border-radius:7px;padding:.55rem 1.1rem;font-size:.83rem;cursor:pointer;">Hủy</button>
-              <button id="btnSaveWfModal" style="background:var(--accent);color:#fff;border:none;border-radius:7px;padding:.55rem 1.3rem;font-size:.83rem;font-weight:600;cursor:pointer;">Lưu quy trình</button>
-            </div>
-          </div>
-        </div>
+            </div><!-- /.wf2-editor-body -->
+          </div><!-- /#wf2PanelEditor -->
+        </div><!-- /#workflow-dashboard -->
 
         <!-- STAFF PORTAL: Personal Profile Dashboard -->
         <div id="staff-profile-dashboard" class="dashboard-wrapper" style="display:none; flex-direction:column; height:100%;">
