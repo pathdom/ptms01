@@ -4433,6 +4433,141 @@ document.addEventListener('DOMContentLoaded', () => {
     renderAdminList(currentAdminScorecardType);
   };
 
+  // ── Populate student "Thông tin cá nhân" tab ───────────────────────────
+  const populateStudentProfileTab = (p) => {
+    const set = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val || '--'; };
+    const fmtDate = (val) => {
+      if (!val) return '--';
+      const d = val.toDate ? val.toDate() : new Date(val);
+      return isNaN(d) ? '--' : d.toLocaleDateString('vi-VN');
+    };
+
+    // Avatar
+    const avatarEl = document.getElementById('stpAvatar');
+    if (avatarEl) {
+      const initials = (p.name || 'HV').split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+      avatarEl.textContent = initials;
+      avatarEl.style.backgroundColor = getAvatarBgColor(p.name || 'HV');
+    }
+
+    set('stpName',          p.name);
+    set('stpCode',          p.code);
+    set('stpEmail',         p.email);
+    set('stpPhone',         p.phone);
+    set('stpCountry',       p.country);
+    set('stpAdvisor',       p.advisor || 'Chưa phân công');
+    set('stpLearningMonth', p.learningMonth || 'Tháng 1');
+    set('stpNotes',         p.notes || 'Chưa có ghi chú tư vấn.');
+
+    // Enrollment date
+    const enrollDate = getFixedEnrollDate(p.email, p.createdAt);
+    set('stpEnrollDate', enrollDate.toLocaleDateString('vi-VN'));
+
+    // Status badge
+    const statusEl = document.getElementById('stpStatus');
+    if (statusEl) {
+      statusEl.textContent = p.status || 'Đang học';
+      const sc = p.status === 'Đang học' ? 'active-badge'
+        : p.status === 'Chờ phỏng vấn' ? 'pending-badge'
+        : p.status === 'Đã xuất cảnh'  ? 'completed-badge'
+        : 'inactive-badge';
+      statusEl.className = `profile-status-badge ${sc}`;
+    }
+
+    // ── Lịch bay ──
+    const flightEl    = document.getElementById('stpFlightDate');
+    const countdownEl = document.getElementById('stpFlightCountdown');
+    if (p.flightDate) {
+      const fd = p.flightDate.toDate ? p.flightDate.toDate() : new Date(p.flightDate);
+      if (flightEl) flightEl.textContent = fd.toLocaleDateString('vi-VN', { day:'2-digit', month:'2-digit', year:'numeric' });
+      if (countdownEl) {
+        const diff = Math.ceil((fd - new Date()) / (1000 * 60 * 60 * 24));
+        countdownEl.textContent = diff > 0 ? `Còn ${diff} ngày` : diff === 0 ? 'Hôm nay xuất cảnh!' : `Đã xuất cảnh ${Math.abs(diff)} ngày trước`;
+        countdownEl.style.background = diff <= 7 && diff >= 0 ? 'rgba(239,68,68,0.1)' : '';
+        countdownEl.style.color      = diff <= 7 && diff >= 0 ? '#EF4444' : '';
+      }
+    } else {
+      if (flightEl)    flightEl.textContent    = 'Chưa có lịch bay';
+      if (countdownEl) countdownEl.textContent  = '';
+    }
+
+    // ── Học phí ──
+    const tuitionTotal  = p.tuitionTotal  || 0;
+    const tuitionPaid   = p.tuitionPaid   || 0;
+    const tuitionRemain = Math.max(0, tuitionTotal - tuitionPaid);
+    const fmt = (n) => n > 0 ? Number(n).toLocaleString('vi-VN') + ' đ' : '--';
+    set('stpTuitionTotal',  fmt(tuitionTotal));
+    set('stpTuitionPaid',   fmt(tuitionPaid));
+    set('stpTuitionRemain', tuitionRemain > 0 ? fmt(tuitionRemain) : '0 đ');
+    const tuitionStatusEl = document.getElementById('stpTuitionStatus');
+    if (tuitionStatusEl) {
+      if (tuitionTotal === 0) {
+        tuitionStatusEl.textContent = 'Chưa cập nhật';
+        tuitionStatusEl.style.background = 'var(--color-border,#E8E5DF)';
+        tuitionStatusEl.style.color = 'var(--color-text-muted,#6B6A67)';
+      } else if (tuitionRemain <= 0) {
+        tuitionStatusEl.textContent = 'Đã đóng đủ';
+        tuitionStatusEl.style.background = 'rgba(16,185,129,0.1)';
+        tuitionStatusEl.style.color = '#10B981';
+      } else {
+        tuitionStatusEl.textContent = 'Còn nợ';
+        tuitionStatusEl.style.background = 'rgba(239,68,68,0.1)';
+        tuitionStatusEl.style.color = '#EF4444';
+      }
+    }
+    const barEl = document.getElementById('stpTuitionBar');
+    if (barEl) barEl.style.width = tuitionTotal > 0 ? Math.min(100, Math.round(tuitionPaid / tuitionTotal * 100)) + '%' : '0%';
+
+    // ── Lộ trình học tập ──
+    const ROADMAP_STEPS = [
+      { month: 'Tháng 1', label: 'Xây dựng nền tảng', sub: 'Nhập môn ngôn ngữ & văn hóa' },
+      { month: 'Tháng 2', label: 'Phát triển phản xạ', sub: 'Kỹ năng nghe – nói cơ bản' },
+      { month: 'Tháng 3', label: 'Làm quen học thuật', sub: 'Ngữ pháp & từ vựng học thuật' },
+      { month: 'Tháng 4', label: 'Tăng tốc học thuật', sub: 'Đọc hiểu & viết luận' },
+      { month: 'Tháng 5', label: 'Luyện đề chuyên sâu', sub: 'Ôn thi & mô phỏng phỏng vấn' },
+      { month: 'Tháng 6', label: 'Tổng ôn & mô phỏng', sub: 'Chuẩn bị hồ sơ & xuất cảnh' },
+    ];
+    const MONTH_ORDER = { 'Tháng 1':1,'Tháng 2':2,'Tháng 3':3,'Tháng 4':4,'Tháng 5':5,'Tháng 6':6,'Hoàn thành':7 };
+    const currentIdx = MONTH_ORDER[p.learningMonth] || 1;
+    const roadmapEl = document.getElementById('stpRoadmap');
+    if (roadmapEl) {
+      roadmapEl.innerHTML = ROADMAP_STEPS.map((s, i) => {
+        const stepNum = i + 1;
+        const done    = stepNum < currentIdx;
+        const active  = stepNum === currentIdx;
+        const dotCls  = done ? 'done' : active ? 'active' : '';
+        const tagCls  = done ? 'done' : active ? 'active' : 'upcoming';
+        const tagTxt  = done ? 'Hoàn thành' : active ? 'Đang học' : 'Chưa bắt đầu';
+        const checkSvg = done ? `<svg viewBox="0 0 24 24"><path d="M21,7L9,19L3.5,13.5L4.91,12.09L9,16.17L19.59,5.59L21,7Z"/></svg>` : '';
+        return `<div class="stp-roadmap-step">
+          <div class="stp-step-dot ${dotCls}">${checkSvg}</div>
+          <div class="stp-step-body">
+            <div class="stp-step-label">${s.month}: ${s.label}</div>
+            <div class="stp-step-sub">${s.sub}</div>
+            <span class="stp-step-tag ${tagCls}">${tagTxt}</span>
+          </div>
+        </div>`;
+      }).join('');
+    }
+
+    // ── Học kì ──
+    const sem1Status = currentIdx <= 2 ? (currentIdx === 1 || currentIdx === 2 ? 'Đang học' : 'Chưa bắt đầu') : 'Hoàn thành';
+    const sem2Status = currentIdx <= 2 ? 'Chưa bắt đầu' : currentIdx <= 4 ? 'Đang học' : 'Hoàn thành';
+    const sem3Status = currentIdx <= 4 ? 'Chưa bắt đầu' : currentIdx <= 6 ? 'Đang học' : 'Hoàn thành';
+    const applyTag = (id, txt) => {
+      const el = document.getElementById(id);
+      if (!el) return;
+      el.textContent = txt;
+      el.style.background = txt === 'Hoàn thành' ? 'rgba(16,185,129,0.1)' : txt === 'Đang học' ? 'rgba(168,139,88,0.1)' : 'var(--color-border,#E8E5DF)';
+      el.style.color = txt === 'Hoàn thành' ? '#10B981' : txt === 'Đang học' ? 'var(--color-accent,#A88B58)' : 'var(--color-text-muted,#6B6A67)';
+    };
+    applyTag('stpSem1', sem1Status);
+    applyTag('stpSem2', sem2Status);
+    applyTag('stpSem3', sem3Status);
+    const semesterNames = { 1:'KÌ I: Nhập môn & Phản xạ', 2:'KÌ I: Nhập môn & Phản xạ', 3:'KÌ II: Ngữ pháp & Học thuật', 4:'KÌ II: Ngữ pháp & Học thuật', 5:'KÌ III: Luyện đề & Phỏng vấn', 6:'KÌ III: Luyện đề & Phỏng vấn', 7:'Hoàn thành lộ trình' };
+    set('stpSemesterBadge', semesterNames[currentIdx] || '--');
+  };
+
   // Startup and Reload Session Handler
   const checkPortalSession = () => {
     // 2. Setup Auth state changed listener
@@ -4511,8 +4646,11 @@ document.addEventListener('DOMContentLoaded', () => {
               };
               
               profileQuery.forEach(pDoc => {
-                profileData = pDoc.data();
+                profileData = { id: pDoc.id, ...pDoc.data() };
               });
+
+              // ── Populate "Thông tin cá nhân" tab ──────────────────
+              populateStudentProfileTab(profileData);
 
               // Populate Dynamic UI Elements in Student Portal
               const studentNameDisplay = document.getElementById('studentNameDisplay');
@@ -4835,9 +4973,9 @@ document.addEventListener('DOMContentLoaded', () => {
             // Subscribe to real-time blogs updates
             subscribeToBlogs();
 
-            // Default to Tab 1 (Bảng Tin)
-            const newsTabBtn = document.querySelector('[data-tab="student-news-tab"]');
-            if (newsTabBtn) newsTabBtn.click();
+            // Default to Tab 1 (Thông Tin Cá Nhân)
+            const profileTabBtn = document.querySelector('[data-tab="student-profile-tab"]');
+            if (profileTabBtn) profileTabBtn.click();
 
           } else {
             // SHOW Main App Root, hide Student Portal and Login Panel

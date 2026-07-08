@@ -3548,6 +3548,94 @@ body.dark-theme-crm .profile-status-badge.inactive-badge { background: rgba(220,
 }
 
 /* ══════════════════════════════════════
+   STUDENT PROFILE TAB
+══════════════════════════════════════ */
+.stp-grid {
+  display: grid;
+  grid-template-columns: 1fr 1.2fr 1fr;
+  gap: 1.25rem;
+  align-items: start;
+}
+@media (max-width: 900px) { .stp-grid { grid-template-columns: 1fr; } }
+.stp-col { display: flex; flex-direction: column; gap: 1.25rem; }
+
+/* Hero card */
+.stp-hero-card { padding-bottom: 1.25rem; }
+.stp-avatar-wrap { display: flex; align-items: center; gap: 1rem; padding: 0.25rem 0 0.5rem; }
+.stp-avatar {
+  width: 64px; height: 64px; font-size: 1.4rem; font-weight: 700;
+  flex-shrink: 0; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center; color: #fff;
+}
+.stp-hero-info { display: flex; flex-direction: column; gap: 0.35rem; }
+.stp-name { font-size: 1.15rem; font-weight: 600; color: var(--color-text-main,#1A1A1A); margin: 0; }
+.stp-code { font-size: 0.75rem; font-family: monospace; color: var(--color-accent,#A88B58); font-weight: 700; }
+
+/* Notes */
+.stp-notes {
+  font-size: 0.83rem; color: var(--color-text-main,#1A1A1A);
+  white-space: pre-wrap; line-height: 1.6; margin: 0;
+  padding-top: 0.25rem;
+}
+
+/* Roadmap */
+.stp-roadmap { display: flex; flex-direction: column; gap: 0; padding: 0.25rem 0; }
+.stp-roadmap-step {
+  display: flex; align-items: flex-start; gap: 0.85rem;
+  padding: 0.6rem 0; position: relative;
+}
+.stp-roadmap-step:not(:last-child)::before {
+  content: ''; position: absolute; left: 10px; top: 28px;
+  width: 2px; bottom: 0; background: var(--color-border,#E8E5DF);
+}
+.stp-step-dot {
+  width: 22px; height: 22px; border-radius: 50%; flex-shrink: 0;
+  border: 3px solid var(--color-border,#E8E5DF);
+  background: var(--color-bg,#FAF8F5);
+  display: flex; align-items: center; justify-content: center;
+  margin-top: 2px; position: relative; z-index: 1;
+  transition: background 0.3s, border-color 0.3s;
+}
+.stp-step-dot.done   { background: #10B981; border-color: #10B981; }
+.stp-step-dot.active { background: var(--color-accent,#A88B58); border-color: var(--color-accent,#A88B58); }
+.stp-step-dot svg { width: 10px; height: 10px; fill: #fff; }
+.stp-step-body { flex: 1; }
+.stp-step-label { font-size: 0.82rem; font-weight: 600; color: var(--color-text-main,#1A1A1A); }
+.stp-step-sub   { font-size: 0.72rem; color: var(--color-text-muted,#6B6A67); margin-top: 1px; }
+.stp-step-tag {
+  display: inline-block; margin-top: 3px;
+  font-size: 0.65rem; font-weight: 700; text-transform: uppercase;
+  padding: 0.15rem 0.55rem; border-radius: 20px; letter-spacing: 0.04em;
+}
+.stp-step-tag.done   { background: rgba(16,185,129,0.1); color: #10B981; }
+.stp-step-tag.active { background: rgba(168,139,88,0.12); color: var(--color-accent,#A88B58); }
+.stp-step-tag.upcoming { background: var(--color-border,#E8E5DF); color: var(--color-text-muted,#6B6A67); }
+
+/* Semester badge */
+.stp-semester-badge {
+  font-size: 0.95rem; font-weight: 700;
+  color: var(--color-accent,#A88B58);
+  padding: 0.75rem 0; text-align: center;
+  letter-spacing: 0.02em;
+}
+.stp-sem-tag {
+  font-size: 0.75rem; font-weight: 700; padding: 0.2rem 0.65rem;
+  border-radius: 20px; background: rgba(168,139,88,0.09);
+  color: var(--color-accent,#A88B58);
+}
+
+/* Flight card */
+.stp-flight-card { text-align: center; }
+.stp-flight-body { padding: 1rem 0 0.5rem; display: flex; flex-direction: column; align-items: center; gap: 0.5rem; }
+.stp-flight-icon { font-size: 2.5rem; line-height: 1; }
+.stp-flight-date { font-size: 1.1rem; font-weight: 700; color: var(--color-text-main,#1A1A1A); }
+.stp-flight-countdown {
+  font-size: 0.8rem; color: var(--color-text-muted,#6B6A67);
+  background: rgba(168,139,88,0.08); padding: 0.3rem 1rem;
+  border-radius: 20px; font-weight: 600;
+}
+
+/* ══════════════════════════════════════
    SƠ ĐỒ (ORG CHART) PAGE
 ══════════════════════════════════════ */
 .orgchart-page { padding: 2rem; }
