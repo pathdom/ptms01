@@ -4111,7 +4111,7 @@
               "
             >
               <button
-                id="btnStudentChangePassword"
+                id="btnStudentProfile"
                 style="
                   border: none;
                   background: transparent;
@@ -4142,10 +4142,10 @@
                   style="width: 14px; height: 14px; fill: currentColor"
                 >
                   <path
-                    d="M12,17A2,2 0 0,0 14,15C14,13.89 13.1,13 12,13A2,2 0 0,0 10,15C10,16.1 10.9,17 12,17M18,8A2,2 0 0,1 20,10V20A2,2 0 0,1 18,22H6A2,2 0 0,1 4,20V10A2,2 0 0,1 6,8H7V6A5,5 0 0,1 12,1A5,5 0 0,1 17,6V8H18M12,3A3,3 0 0,0 9,6V8H15V6A3,3 0 0,0 12,3Z"
+                    d="M12,4A4,4 0 0,1 16,8A4,4 0 0,1 12,12A4,4 0 0,1 8,8A4,4 0 0,1 12,4M12,14C16.42,14 20,15.79 20,18V20H4V18C4,15.79 7.58,14 12,14Z"
                   />
                 </svg>
-                <span>Đổi mật khẩu</span>
+                <span>Hồ sơ</span>
               </button>
               <button
                 class="footer-btn btn-logout-app-portal"
@@ -6941,89 +6941,6 @@
     </div>
 
     <!-- Student Change Password Modal -->
-    <div
-      id="studentChangePasswordModal"
-      class="premium-modal"
-      style="display: none"
-    >
-      <div class="premium-modal-glass" style="max-width: 400px">
-        <div class="premium-modal-header">
-          <h3>🔑 Đổi mật khẩu tài khoản</h3>
-          <button class="btn-close-modal" id="btnCloseChangePasswordModal">
-            &times;
-          </button>
-        </div>
-        <div class="premium-modal-body">
-          <form id="studentChangePasswordForm">
-            <div class="form-group-login" style="margin-bottom: 1.25rem">
-              <label for="studentCurrentPasswordInput"
-                >Mật khẩu hiện tại *</label
-              >
-              <input
-                type="password"
-                id="studentCurrentPasswordInput"
-                placeholder="Nhập mật khẩu hiện tại"
-                required
-                style="
-                  padding: 0.75rem 1rem;
-                  border-radius: var(--border-radius-md);
-                  border: 1px solid var(--border);
-                  background: var(--bg-primary);
-                  color: var(--text-main);
-                  width: 100%;
-                  outline: none;
-                "
-              />
-            </div>
-            <div class="form-group-login" style="margin-bottom: 1.25rem">
-              <label for="studentNewPasswordInput">Mật khẩu mới *</label>
-              <input
-                type="password"
-                id="studentNewPasswordInput"
-                placeholder="Nhập mật khẩu mới (tối thiểu 6 ký tự)"
-                required
-                style="
-                  padding: 0.75rem 1rem;
-                  border-radius: var(--border-radius-md);
-                  border: 1px solid var(--border);
-                  background: var(--bg-primary);
-                  color: var(--text-main);
-                  width: 100%;
-                  outline: none;
-                "
-              />
-            </div>
-            <div class="form-group-login" style="margin-bottom: 1.5rem">
-              <label for="studentConfirmPasswordInput"
-                >Xác nhận mật khẩu mới *</label
-              >
-              <input
-                type="password"
-                id="studentConfirmPasswordInput"
-                placeholder="Xác nhận lại mật khẩu mới"
-                required
-                style="
-                  padding: 0.75rem 1rem;
-                  border-radius: var(--border-radius-md);
-                  border: 1px solid var(--border);
-                  background: var(--bg-primary);
-                  color: var(--text-main);
-                  width: 100%;
-                  outline: none;
-                "
-              />
-            </div>
-            <button
-              type="submit"
-              class="btn-submit-login"
-              style="width: 100%; margin-top: 0"
-            >
-              CẬP NHẬT MẬT KHẨU
-            </button>
-          </form>
-        </div>
-      </div>
-    </div>
 
     <!-- Forward Message Modal -->
     <div id="forwardMessageModal" class="premium-modal" style="display: none">

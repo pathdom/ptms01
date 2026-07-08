@@ -4904,69 +4904,16 @@ document.addEventListener('DOMContentLoaded', () => {
               newBtnStudentLogout.addEventListener('click', handlePortalLogout);
             }
 
-            // Bind Student Change Password Modal
-            const btnStudentChangePassword = document.getElementById('btnStudentChangePassword');
-            const studentChangePasswordModal = document.getElementById('studentChangePasswordModal');
-            const btnCloseChangePasswordModal = document.getElementById('btnCloseChangePasswordModal');
-            const studentChangePasswordForm = document.getElementById('studentChangePasswordForm');
-
-            if (btnStudentChangePassword && studentChangePasswordModal) {
-              btnStudentChangePassword.replaceWith(btnStudentChangePassword.cloneNode(true));
-              const newBtnStudentChangePassword = document.getElementById('btnStudentChangePassword');
-              newBtnStudentChangePassword.addEventListener('click', () => {
-                studentChangePasswordModal.style.display = 'flex';
-              });
-            }
-
-            if (btnCloseChangePasswordModal && studentChangePasswordModal) {
-              btnCloseChangePasswordModal.addEventListener('click', () => {
-                studentChangePasswordModal.style.display = 'none';
-                if (studentChangePasswordForm) studentChangePasswordForm.reset();
-              });
-            }
-
-            if (studentChangePasswordForm) {
-              studentChangePasswordForm.replaceWith(studentChangePasswordForm.cloneNode(true));
-              const newPasswordForm = document.getElementById('studentChangePasswordForm');
-              newPasswordForm.addEventListener('submit', async (e) => {
-                e.preventDefault();
-                const currentPassword = document.getElementById('studentCurrentPasswordInput').value;
-                const newPassword = document.getElementById('studentNewPasswordInput').value;
-                const confirmPassword = document.getElementById('studentConfirmPasswordInput').value;
-
-                if (newPassword.length < 6) {
-                  showToast("Mật khẩu mới phải tối thiểu 6 ký tự!", "error");
-                  return;
-                }
-
-                if (newPassword !== confirmPassword) {
-                  showToast("Mật khẩu xác nhận không trùng khớp!", "error");
-                  return;
-                }
-
-                try {
-                  showToast("Đang xác thực và cập nhật mật khẩu...", "info");
-                  const user = auth.currentUser;
-                  if (!user) {
-                    showToast("Lỗi: Học viên chưa đăng nhập!", "error");
-                    return;
-                  }
-
-                  const credential = firebase.auth.EmailAuthProvider.credential(user.email, currentPassword);
-                  await user.reauthenticateWithCredential(credential);
-                  await user.updatePassword(newPassword);
-
-                  await db.collection("users").doc(user.uid).update({
-                    passwordChanged: true
-                  });
-
-                  showToast("Cập nhật mật khẩu thành công!", "success");
-                  studentChangePasswordModal.style.display = 'none';
-                  newPasswordForm.reset();
-                } catch (err) {
-                  console.error("Change password error:", err);
-                  showToast("Lỗi xác thực hoặc cập nhật: " + err.message, "error");
-                }
+            // Bind Student Profile button → navigate to Thông tin cá nhân tab
+            const btnStudentProfile = document.getElementById('btnStudentProfile');
+            if (btnStudentProfile) {
+              btnStudentProfile.replaceWith(btnStudentProfile.cloneNode(true));
+              document.getElementById('btnStudentProfile').addEventListener('click', () => {
+                const profileTabBtn = document.querySelector('[data-tab="student-profile-tab"]');
+                if (profileTabBtn) profileTabBtn.click();
+                // Close dropdown
+                const dropdown = document.querySelector('.student-dropdown-menu');
+                if (dropdown) dropdown.style.display = 'none';
               });
             }
 
