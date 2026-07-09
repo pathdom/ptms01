@@ -3540,169 +3540,124 @@
       </div>
     </div>
 
-    <!-- Modal Chi Tiết Học Viên -->
-    <div
-      class="modal-overlay"
-      id="studentDetailModal"
-      style="
-        display: none;
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100vw;
-        height: 100vh;
-        background: rgba(0, 0, 0, 0.5);
-        z-index: 1000;
-        justify-content: center;
-        align-items: center;
-        padding: 2rem;
-        backdrop-filter: blur(4px);
-      "
-    >
-      <div
-        class="login-card"
-        style="
-          max-width: 580px;
-          width: 100%;
-          border-radius: var(--border-radius-lg);
-          box-shadow: var(--shadow-lg);
-          padding: 0;
-          display: flex;
-          flex-direction: column;
-          max-height: 88vh;
-          overflow: hidden;
-        "
-      >
-        <!-- Header (fixed) -->
-        <div
-          style="
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 1.2rem 1.5rem;
-            border-bottom: 1px solid var(--border-light);
-            flex-shrink: 0;
-          "
-        >
-          <div style="display: flex; align-items: center; gap: 0.75rem">
-            <div
-              class="avatar"
-              id="detailStudentAvatar"
-              style="
-                background: var(--accent);
-                width: 38px;
-                height: 38px;
-                border-radius: 50%;
-                color: #fff;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                font-weight: 700;
-                font-size: 0.95rem;
-                flex-shrink: 0;
-              "
-            >N</div>
-            <div>
-              <h3
-                id="detailStudentName"
-                style="
-                  font-family: var(--font-serif);
-                  font-size: 1.15rem;
-                  font-weight: 500;
-                  color: var(--text-main);
-                  margin-bottom: 0;
-                "
-              >Nguyễn Văn A</h3>
-              <span
-                id="detailStudentCode"
-                style="
-                  font-size: 0.7rem;
-                  font-family: monospace;
-                  color: var(--accent);
-                  font-weight: 600;
-                "
-              >10001</span>
-            </div>
-          </div>
-          <button
-            type="button"
-            id="btnCloseStudentDetailModal"
-            style="font-size: 1.4rem; color: var(--text-muted); cursor: pointer; line-height:1; background:none; border:none; padding:4px 8px;"
-          >&times;</button>
+    <!-- Modal Chi Tiết Học Viên (Full-page overlay) -->
+    <div id="studentDetailModal" class="adsd-overlay" style="display:none;">
+      <!-- TOPBAR -->
+      <div class="adsd-topbar">
+        <button class="adsd-back-btn" id="btnCloseStudentDetailModal">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
+          Quay lại danh sách
+        </button>
+        <div class="adsd-topbar-title">
+          <span class="adsd-topbar-name" id="adsdTopName">--</span>
+          <span class="adsd-topbar-code" id="adsdTopCode">--</span>
         </div>
-
-        <!-- Scrollable body -->
-        <div style="overflow-y: auto; flex: 1; padding: 1.2rem 1.5rem; display: flex; flex-direction: column; gap: 1rem;">
-
-          <!-- Info grid 2x2 -->
-          <div style="display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 0.5rem;">
-            <div style="background:var(--bg-primary);border:1px solid var(--border-light);border-radius:10px;padding:0.6rem 0.9rem;">
-              <span style="display:block;font-size:0.62rem;font-weight:600;text-transform:uppercase;color:var(--text-muted);letter-spacing:.8px;margin-bottom:3px;">Email</span>
-              <span id="detailStudentEmail" style="font-size:0.8rem;color:var(--text-main);font-weight:500;word-break:break-all;">email@gmail.com</span>
-            </div>
-            <div style="background:var(--bg-primary);border:1px solid var(--border-light);border-radius:10px;padding:0.6rem 0.9rem;">
-              <span style="display:block;font-size:0.62rem;font-weight:600;text-transform:uppercase;color:var(--text-muted);letter-spacing:.8px;margin-bottom:3px;">SĐT</span>
-              <span id="detailStudentPhone" style="font-size:0.8rem;color:var(--text-main);font-weight:500;">0912345678</span>
-            </div>
-            <div style="background:var(--bg-primary);border:1px solid var(--border-light);border-radius:10px;padding:0.6rem 0.9rem;">
-              <span style="display:block;font-size:0.62rem;font-weight:600;text-transform:uppercase;color:var(--text-muted);letter-spacing:.8px;margin-bottom:3px;">Quốc gia</span>
-              <span id="detailStudentCountry" style="font-size:0.8rem;color:var(--text-main);font-weight:500;">Úc</span>
-            </div>
-            <div style="background:var(--bg-primary);border:1px solid var(--border-light);border-radius:10px;padding:0.6rem 0.9rem;">
-              <span style="display:block;font-size:0.62rem;font-weight:600;text-transform:uppercase;color:var(--text-muted);letter-spacing:.8px;margin-bottom:3px;">Tháng học</span>
-              <span id="detailStudentLearningMonth" style="font-size:0.8rem;color:var(--accent);font-weight:600;">Tháng 1</span>
-            </div>
-          </div>
-
-          <!-- Status row -->
-          <div style="display:flex;align-items:center;gap:0.6rem;">
-            <span style="font-size:0.62rem;font-weight:600;text-transform:uppercase;color:var(--text-muted);letter-spacing:.8px;">Trạng thái:</span>
-            <span id="detailStudentStatus" class="crm-badge badge-danghoc">Đang học</span>
-          </div>
-
-          <!-- Notes -->
-          <div style="background:var(--bg-primary);border:1px solid var(--border-light);border-radius:10px;padding:0.8rem 1rem;">
-            <span style="display:block;font-size:0.62rem;font-weight:600;text-transform:uppercase;color:var(--text-muted);letter-spacing:.8px;margin-bottom:0.4rem;">Ghi chú tư vấn</span>
-            <p
-              id="detailStudentNotes"
-              style="font-size:0.82rem;color:var(--text-main);white-space:pre-wrap;line-height:1.55;margin:0;"
-            >Chưa có ghi chú nào.</p>
-          </div>
-
-          <!-- Scorecard -->
-          <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:10px;padding:0.9rem 1rem;">
-            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.7rem;">
-              <span style="font-size:0.68rem;font-weight:700;text-transform:uppercase;color:var(--accent);letter-spacing:.8px;">📊 Bảng điểm học tập</span>
-              <div class="scorecard-toggle-group" style="margin-bottom:0;padding:2px;transform:scale(0.85);transform-origin:right center;">
-                <button type="button" class="scorecard-toggle-btn active" id="btnAdminScorecardWeekToggle" style="padding:0.25rem 0.7rem;font-size:0.65rem;border-radius:12px;">TUẦN</button>
-                <button type="button" class="scorecard-toggle-btn" id="btnAdminScorecardMonthToggle" style="padding:0.25rem 0.7rem;font-size:0.65rem;border-radius:12px;">THÁNG</button>
-              </div>
-            </div>
-            <div
-              id="adminStudentScorecardList"
-              style="max-height:220px;overflow-y:auto;display:flex;flex-direction:column;gap:0.7rem;padding-right:0.3rem;"
-            ><!-- JS populated --></div>
-          </div>
-
-        </div>
-
-        <!-- Footer (fixed) -->
-        <div style="display:flex;gap:0.75rem;justify-content:flex-end;padding:1rem 1.5rem;border-top:1px solid var(--border-light);flex-shrink:0;">
-          <button
-            type="button"
-            class="btn-submit-login"
-            id="btnEditDetailStudent"
-            style="margin-top:0;width:auto;padding:0.55rem 1.2rem;font-size:0.8rem;background:var(--accent);border-color:var(--accent);"
-          >CHỈNH SỬA HỒ SƠ</button>
-          <button
-            type="button"
-            class="btn-submit-login"
-            id="btnCloseDetailModalAction"
-            style="margin-top:0;width:auto;padding:0.55rem 1.2rem;font-size:0.8rem;background:transparent;border-color:var(--border);color:var(--text-main);"
-          >ĐÓNG</button>
+        <div class="adsd-topbar-actions">
+          <button class="adsd-btn-edit" id="btnEditFromDetail">✏️ Chỉnh sửa</button>
         </div>
       </div>
-    </div>
+
+      <!-- BODY -->
+      <div class="adsd-body">
+
+        <!-- COL 1: Avatar + info + notes -->
+        <div class="adsd-col">
+          <!-- Hero card -->
+          <div class="adsd-card adsd-hero-card">
+            <div class="adsd-avatar-wrap">
+              <div class="adsd-avatar" id="adsdAvatar">HV</div>
+              <div>
+                <h3 class="adsd-name" id="adsdName">--</h3>
+                <span class="adsd-code" id="adsdCode">--</span>
+                <span class="profile-status-badge active-badge" id="adsdStatus">Đang học</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Thông tin cơ bản -->
+          <div class="adsd-card">
+            <div class="adsd-card-head"><h4>Thông tin cơ bản</h4></div>
+            <div class="profile-info-rows">
+              <div class="profile-info-row"><span class="info-label">Email</span><span class="info-val" id="adsdEmail">--</span></div>
+              <div class="profile-info-row"><span class="info-label">Điện thoại</span><span class="info-val" id="adsdPhone">--</span></div>
+              <div class="profile-info-row"><span class="info-label">Quốc gia đến</span><span class="info-val" id="adsdCountry">--</span></div>
+              <div class="profile-info-row"><span class="info-label">Nhân viên tư vấn</span><span class="info-val" id="adsdAdvisor">--</span></div>
+              <div class="profile-info-row"><span class="info-label">Ngày nhập học</span><span class="info-val" id="adsdEnrollDate">--</span></div>
+              <div class="profile-info-row"><span class="info-label">Tháng học hiện tại</span><span class="info-val" style="color:var(--color-accent,#A88B58);font-weight:600;" id="adsdLearningMonth">--</span></div>
+            </div>
+          </div>
+
+          <!-- Ghi chú tư vấn -->
+          <div class="adsd-card">
+            <div class="adsd-card-head"><h4>Ghi chú tư vấn</h4></div>
+            <p class="adsd-notes" id="adsdNotes">Chưa có ghi chú.</p>
+          </div>
+        </div>
+
+        <!-- COL 2: Roadmap + Học kì -->
+        <div class="adsd-col">
+          <!-- Lộ trình -->
+          <div class="adsd-card">
+            <div class="adsd-card-head"><h4>Lộ trình học tập</h4></div>
+            <div class="stp-roadmap" id="adsdRoadmap"></div>
+          </div>
+
+          <!-- Học kì -->
+          <div class="adsd-card">
+            <div class="adsd-card-head"><h4>Học kì hiện tại</h4></div>
+            <div class="stp-semester-badge" id="adsdSemesterBadge">--</div>
+            <div class="profile-info-rows" style="margin-top:0.75rem;">
+              <div class="profile-info-row"><span class="info-label">Kì I (T1–T2)</span><span class="info-val stp-sem-tag" id="adsdSem1">--</span></div>
+              <div class="profile-info-row"><span class="info-label">Kì II (T3–T4)</span><span class="info-val stp-sem-tag" id="adsdSem2">--</span></div>
+              <div class="profile-info-row"><span class="info-label">Kì III (T5–T6)</span><span class="info-val stp-sem-tag" id="adsdSem3">--</span></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- COL 3: Lịch bay + Học phí + Điểm -->
+        <div class="adsd-col">
+          <!-- Lịch bay -->
+          <div class="adsd-card adsd-flight-card">
+            <div class="adsd-card-head"><h4>Lịch bay xuất cảnh ✈</h4></div>
+            <div class="stp-flight-body" style="text-align:center;padding:1rem 0;">
+              <div class="stp-flight-icon">✈</div>
+              <div class="stp-flight-date" id="adsdFlightDate">Chưa có lịch</div>
+              <div class="stp-flight-countdown" id="adsdFlightCountdown"></div>
+            </div>
+          </div>
+
+          <!-- Học phí -->
+          <div class="adsd-card">
+            <div class="adsd-card-head">
+              <h4>Học phí</h4>
+              <span class="stp-tuition-status-badge" id="adsdTuitionStatus">Chưa cập nhật</span>
+            </div>
+            <div class="stp-tuition-bar-wrap">
+              <div class="stp-tuition-bar-track"><div class="stp-tuition-bar-fill" id="adsdTuitionBar" style="width:0%"></div></div>
+            </div>
+            <div class="profile-info-rows" style="margin-top:0.5rem;">
+              <div class="profile-info-row"><span class="info-label">Tổng học phí</span><span class="info-val" id="adsdTuitionTotal">--</span></div>
+              <div class="profile-info-row"><span class="info-label">Đã đóng</span><span class="info-val" style="color:#10B981;font-weight:600;" id="adsdTuitionPaid">--</span></div>
+              <div class="profile-info-row"><span class="info-label">Còn lại</span><span class="info-val" style="color:#EF4444;font-weight:600;" id="adsdTuitionRemain">--</span></div>
+            </div>
+          </div>
+
+          <!-- Điểm số -->
+          <div class="adsd-card">
+            <div class="adsd-card-head">
+              <h4>Điểm số</h4>
+              <div style="display:flex;gap:0.4rem;">
+                <button class="scorecard-period-btn active" data-period="week" id="btnAdminScorecardWeekToggle">TUẦN</button>
+                <button class="scorecard-period-btn" data-period="month" id="btnAdminScorecardMonthToggle">THÁNG</button>
+              </div>
+            </div>
+            <div id="adsdScorecardList" style="max-height:220px;overflow-y:auto;display:flex;flex-direction:column;gap:0.7rem;padding-right:4px;margin-top:0.5rem;"></div>
+          </div>
+        </div>
+
+      </div><!-- /adsd-body -->
+    </div><!-- /studentDetailModal --
+
 
     <!-- Modal Thêm Học Viên Nguồn -->
     <div class="modal-overlay" id="sourceStudentModal"

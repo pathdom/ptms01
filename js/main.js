@@ -3037,46 +3037,144 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Open View Details Modal
   const openStudentDetailModal = (student) => {
-    if (!studentDetailModal) return;
+    const overlay = document.getElementById('studentDetailModal');
+    if (!overlay) return;
 
-    const displayAvatarInitials = student.name.split(" ").map(n => n[0]).join("").substring(0,2).toUpperCase();
-    document.getElementById("detailStudentAvatar").textContent = displayAvatarInitials;
-    document.getElementById("detailStudentAvatar").style.backgroundColor = getAvatarBgColor(student.name);
-    document.getElementById("detailStudentName").textContent = student.name;
-    document.getElementById("detailStudentCode").textContent = student.code;
-    document.getElementById("detailStudentEmail").textContent = student.email;
-    document.getElementById("detailStudentPhone").textContent = student.phone;
-    document.getElementById("detailStudentCountry").textContent = student.country;
-    document.getElementById("detailStudentLearningMonth").textContent = student.learningMonth || "Tháng 1";
+    const set = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val || '--'; };
 
-    // Badge styling
-    const badge = document.getElementById("detailStudentStatus");
-    badge.textContent = student.status;
-    badge.className = "crm-badge";
-    let badgeClass = "badge-danghoc";
-    if (student.status === "Chờ phỏng vấn") badgeClass = "badge-waiting";
-    else if (student.status === "Đã trúng tuyển") badgeClass = "badge-selected";
-    else if (student.status === "Đang làm hồ sơ") badgeClass = "badge-processing";
-    badge.classList.add(badgeClass);
+    const initials = (student.name || 'HV').split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+    const avatarEl = document.getElementById('adsdAvatar');
+    if (avatarEl) {
+      avatarEl.textContent = initials;
+      avatarEl.style.backgroundColor = getAvatarBgColor(student.name || 'HV');
+    }
+    set('adsdTopName',       student.name);
+    set('adsdTopCode',       student.code);
+    set('adsdName',          student.name);
+    set('adsdCode',          student.code);
+    set('adsdEmail',         student.email);
+    set('adsdPhone',         student.phone);
+    set('adsdCountry',       student.country);
+    set('adsdAdvisor',       student.advisor || 'Chưa phân công');
+    set('adsdLearningMonth', student.learningMonth || 'Tháng 1');
+    set('adsdNotes',         student.notes || 'Chưa có ghi chú tư vấn.');
 
-    document.getElementById("detailStudentNotes").textContent = student.notes || "Chưa có ghi chú nào.";
+    const statusEl = document.getElementById('adsdStatus');
+    if (statusEl) {
+      statusEl.textContent = student.status || 'Đang học';
+      const sc = student.status === 'Đang học'        ? 'active-badge'
+               : student.status === 'Chờ phỏng vấn'   ? 'pending-badge'
+               : student.status === 'Đã xuất cảnh'    ? 'completed-badge'
+               : 'inactive-badge';
+      statusEl.className = 'profile-status-badge ' + sc;
+    }
 
-    // Trigger admin student scorecard list render
+    const enrollDate = student.createdAt
+      ? (student.createdAt.toDate ? student.createdAt.toDate() : new Date(student.createdAt))
+      : new Date();
+    set('adsdEnrollDate', enrollDate.toLocaleDateString('vi-VN'));
+
+    const flightEl    = document.getElementById('adsdFlightDate');
+    const countdownEl = document.getElementById('adsdFlightCountdown');
+    if (student.flightDate) {
+      const fd = student.flightDate.toDate ? student.flightDate.toDate() : new Date(student.flightDate);
+      if (flightEl) flightEl.textContent = fd.toLocaleDateString('vi-VN', { day:'2-digit', month:'2-digit', year:'numeric' });
+      if (countdownEl) {
+        const diff = Math.ceil((fd - new Date()) / (1000 * 60 * 60 * 24));
+        countdownEl.textContent = diff > 0 ? ('Còn ' + diff + ' ngày') : diff === 0 ? 'Hôm nay xuất cảnh!' : ('Đã xuất cảnh ' + Math.abs(diff) + ' ngày trước');
+        countdownEl.style.background = diff <= 7 && diff >= 0 ? 'rgba(239,68,68,0.1)' : '';
+        countdownEl.style.color      = diff <= 7 && diff >= 0 ? '#EF4444' : '';
+      }
+    } else {
+      if (flightEl)    flightEl.textContent   = 'Chưa có lịch bay';
+      if (countdownEl) countdownEl.textContent = '';
+    }
+
+    const tuitionTotal  = student.tuitionTotal  || 0;
+    const tuitionPaid   = student.tuitionPaid   || 0;
+    const tuitionRemain = Math.max(0, tuitionTotal - tuitionPaid);
+    const fmt = (n) => n > 0 ? Number(n).toLocaleString('vi-VN') + ' đ' : '--';
+    set('adsdTuitionTotal',  fmt(tuitionTotal));
+    set('adsdTuitionPaid',   fmt(tuitionPaid));
+    set('adsdTuitionRemain', tuitionRemain > 0 ? fmt(tuitionRemain) : '0 d');
+    const tuStatusEl = document.getElementById('adsdTuitionStatus');
+    if (tuStatusEl) {
+      if (!tuitionTotal) {
+        tuStatusEl.textContent = 'Chưa cập nhật'; tuStatusEl.style.background='var(--color-border,#E8E5DF)'; tuStatusEl.style.color='var(--color-text-muted,#6B6A67)';
+      } else if (tuitionRemain <= 0) {
+        tuStatusEl.textContent = 'Đã đóng đủ'; tuStatusEl.style.background='rgba(16,185,129,0.1)'; tuStatusEl.style.color='#10B981';
+      } else {
+        tuStatusEl.textContent = 'Còn nợ'; tuStatusEl.style.background='rgba(239,68,68,0.1)'; tuStatusEl.style.color='#EF4444';
+      }
+    }
+    const barEl = document.getElementById('adsdTuitionBar');
+    if (barEl) barEl.style.width = tuitionTotal > 0 ? Math.min(100, Math.round(tuitionPaid / tuitionTotal * 100)) + '%' : '0%';
+
+    const ROADMAP_STEPS = [
+      { month:'Tháng 1', label:'Xây dựng nền tảng', sub:'Nhập môn ngôn ngữ & văn hóa' },
+      { month:'Tháng 2', label:'Phát triển phản xạ', sub:'Kỹ năng nghe – nói cơ bản' },
+      { month:'Tháng 3', label:'Làm quen học thuật', sub:'Ngữ pháp & từ vựng học thuật' },
+      { month:'Tháng 4', label:'Tăng tốc học thuật', sub:'Đọc hiểu & viết luận' },
+      { month:'Tháng 5', label:'Luyện đề chuyên sâu', sub:'Ôn thi & mô phỏng phỏng vấn' },
+      { month:'Tháng 6', label:'Tổng ôn & mô phỏng', sub:'Chuẩn bị hồ sơ & xuất cảnh' },
+    ];
+    const ROADMAP_STEPS_VI = [
+      { month:'Tháng 1', label:'Xây dựng nền tảng',   sub:'Nhập môn ngôn ngữ & văn hóa' },
+      { month:'Tháng 2', label:'Phát triển phản xạ',   sub:'Kỹ năng nghe – nói cơ bản' },
+      { month:'Tháng 3', label:'Làm quen học thuật',        sub:'Ngữ pháp & từ vựng học thuật' },
+      { month:'Tháng 4', label:'Tăng tốc học thuật',   sub:'Đọc hiểu & viết luận' },
+      { month:'Tháng 5', label:'Luyện đề chuyên sâu', sub:'Ôn thi & mô phỏng phỏng vấn' },
+      { month:'Tháng 6', label:'Tổng ôn & mô phỏng',   sub:'Chuẩn bị hồ sơ & xuất cảnh' },
+    ];
+    const today = new Date();
+    const monthsComplete = Math.max(0, Math.floor((today - enrollDate) / (1000 * 60 * 60 * 24 * 30.44)));
+    const currentIdx = Math.min(monthsComplete + 1, 7);
+    const roadmapEl = document.getElementById('adsdRoadmap');
+    if (roadmapEl) {
+      roadmapEl.innerHTML = ROADMAP_STEPS_VI.map(function(s, i) {
+        const stepNum = i + 1;
+        const done   = stepNum < currentIdx;
+        const active = stepNum === currentIdx;
+        const dotCls = done ? 'done' : active ? 'active' : '';
+        const tagCls = done ? 'done' : active ? 'active' : 'upcoming';
+        const tagTxt = done ? 'Hoàn thành' : active ? 'Đang học' : 'Chưa bắt đầu';
+        const checkSvg = done ? '<svg viewBox="0 0 24 24"><path d="M21,7L9,19L3.5,13.5L4.91,12.09L9,16.17L19.59,5.59L21,7Z"/></svg>' : '';
+        return '<div class="stp-roadmap-step"><div class="stp-step-dot ' + dotCls + '">' + checkSvg + '</div>'
+          + '<div class="stp-step-body"><div class="stp-step-label">' + s.month + ': ' + s.label + '</div>'
+          + '<div class="stp-step-sub">' + s.sub + '</div>'
+          + '<span class="stp-step-tag ' + tagCls + '">' + tagTxt + '</span></div></div>';
+      }).join('');
+    }
+
+    const sem1Status = currentIdx <= 2 ? 'Đang học' : 'Hoàn thành';
+    const sem2Status = currentIdx <= 2 ? 'Chưa bắt đầu' : currentIdx <= 4 ? 'Đang học' : 'Hoàn thành';
+    const sem3Status = currentIdx <= 4 ? 'Chưa bắt đầu' : 'Đang học';
+    const applyTag = function(id, txt) {
+      const el = document.getElementById(id);
+      if (!el) return;
+      el.textContent = txt;
+      el.style.background = txt === 'Hoàn thành' ? 'rgba(16,185,129,0.1)' : txt === 'Đang học' ? 'rgba(168,139,88,0.1)' : 'var(--color-border,#E8E5DF)';
+      el.style.color      = txt === 'Hoàn thành' ? '#10B981' : txt === 'Đang học' ? 'var(--color-accent,#A88B58)' : 'var(--color-text-muted,#6B6A67)';
+    };
+    applyTag('adsdSem1', sem1Status);
+    applyTag('adsdSem2', sem2Status);
+    applyTag('adsdSem3', sem3Status);
+    const semNames = { 1:'KÌ I: Nhập môn & Phản xạ', 2:'KÌ I: Nhập môn & Phản xạ', 3:'KÌ II: Ngữ pháp & Học thuật', 4:'KÌ II: Ngữ pháp & Học thuật', 5:'KÌ III: Luyện đề & Phỏng vấn', 6:'KÌ III: Luyện đề & Phỏng vấn', 7:'Hoàn thành lộ trình' };
+    set('adsdSemesterBadge', semNames[currentIdx] || '--');
+
     initAdminStudentScorecardModule(student);
 
-    // Bind Edit button inside View details modal
-    const btnEdit = document.getElementById("btnEditDetailStudent");
-    if (btnEdit) {
-      // Re-create node to discard old event listeners safely
-      btnEdit.replaceWith(btnEdit.cloneNode(true));
-      const newBtnEdit = document.getElementById("btnEditDetailStudent");
-      newBtnEdit.addEventListener("click", () => {
+    const btnEdit2 = document.getElementById('btnEditFromDetail');
+    if (btnEdit2) {
+      const nb = btnEdit2.cloneNode(true);
+      btnEdit2.replaceWith(nb);
+      nb.addEventListener('click', function() {
         closeStudentDetailModal();
         openEditStudentModal(student);
       });
     }
 
-    studentDetailModal.style.display = "flex";
+    overlay.style.display = 'flex';
   };
 
   // Open Edit Form Modal
@@ -4346,7 +4444,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     const renderAdminList = (type) => {
-      const container = document.getElementById("adminStudentScorecardList");
+      const container = document.getElementById("adsdScorecardList") || document.getElementById("adminStudentScorecardList");
       if (!container) return;
       container.innerHTML = "";
 
