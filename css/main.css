@@ -7733,3 +7733,21 @@ body.dark-theme-crm {
   color: var(--text-main);
   max-width: 110px;
 }
+
+/* Student table inline status select */
+.stw-status-select {
+  font-size: .68rem;
+  font-weight: 700;
+  border: none;
+  border-radius: 20px;
+  padding: 3px 10px 3px 8px;
+  cursor: pointer;
+  appearance: auto;
+  -webkit-appearance: auto;
+  outline: none;
+  max-width: 130px;
+}
+.stw-status-select.badge-danghoc   { background:rgba(16,185,129,.1);  color:#10B981; }
+.stw-status-select.badge-waiting   { background:rgba(245,158,11,.1);  color:#F59E0B; }
+.stw-status-select.badge-selected  { background:rgba(99,102,241,.1);  color:#6366F1; }
+.stw-status-select.badge-processing{ background:rgba(168,139,88,.1);  color:#A88B58; }

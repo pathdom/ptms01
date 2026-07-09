@@ -2738,7 +2738,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (filteredList.length === 0) {
       tableBody.innerHTML =
-        '<tr><td colspan="14" style="text-align:center;padding:3rem;color:var(--text-muted);font-size:0.82rem;">' +
+        '<tr><td colspan="13" style="text-align:center;padding:3rem;color:var(--text-muted);font-size:0.82rem;">' +
         'Không tìm thấy hồ sơ học viên nào phù hợp.</td></tr>';
       return;
     }
@@ -2764,13 +2764,6 @@ document.addEventListener('DOMContentLoaded', () => {
       return pad2(d.getDate()) + '/' + pad2(d.getMonth() + 1) + '/' + d.getFullYear();
     };
 
-    const fmtTimestamp = (val) => {
-      if (!val) return '--';
-      const d = val.toDate ? val.toDate() : new Date(val);
-      if (isNaN(d)) return '--';
-      return pad2(d.getDate()) + '/' + pad2(d.getMonth() + 1) + '/' + d.getFullYear()
-        + ' ' + pad2(d.getHours()) + ':' + pad2(d.getMinutes()) + ':' + pad2(d.getSeconds());
-    };
 
     filteredList.forEach((student) => {
       const tr = document.createElement("tr");
@@ -2803,14 +2796,22 @@ document.addEventListener('DOMContentLoaded', () => {
       const source   = student.source   || student.advisor   || '--';
 
       tr.innerHTML =
-        '<td class="stw-ts">'      + fmtTimestamp(student.createdAt) + '</td>' +
         '<td class="stw-code"><span class="stw-code-val">' + displayCode + '</span></td>' +
         '<td class="stw-name"><div class="stw-name-main">' + (student.name || '--') + '</div></td>' +
         '<td class="stw-email"><a class="stw-link" href="mailto:' + (student.email||'') + '">' + (student.email || '--') + '</a></td>' +
         '<td class="stw-phone">' + (student.phone || '--') + '</td>' +
         '<td class="stw-home">'  + hometown + '</td>' +
         '<td class="stw-country"><span class="stw-country-val">' + (student.country || '--') + '</span></td>' +
-        '<td class="stw-status"><span class="crm-badge ' + badgeClass + '">' + (student.status || '--') + '</span></td>' +
+        '<td class="stw-status">' +
+          '<select class="stw-status-select ' + badgeClass + '" data-id="' + student.id + '">' +
+            '<option value="Đang học"'         + (student.status === 'Đang học'         ? ' selected' : '') + '>Đang học</option>' +
+            '<option value="Chờ phỏng vấn"'   + (student.status === 'Chờ phỏng vấn'   ? ' selected' : '') + '>Chờ phỏng vấn</option>' +
+            '<option value="Đã trúng tuyển"'  + (student.status === 'Đã trúng tuyển'  ? ' selected' : '') + '>Đã trúng tuyển</option>' +
+            '<option value="Đang làm hồ sơ"'  + (student.status === 'Đang làm hồ sơ'  ? ' selected' : '') + '>Đang làm hồ sơ</option>' +
+            '<option value="Đã xuất cảnh"'    + (student.status === 'Đã xuất cảnh'    ? ' selected' : '') + '>Đã xuất cảnh</option>' +
+            '<option value="Chờ xử lý"'       + (student.status === 'Chờ xử lý'       ? ' selected' : '') + '>Chờ xử lý</option>' +
+          '</select>' +
+        '</td>' +
         '<td class="stw-roadmap"><span class="stw-roadmap-tag">' + roadmapLabel + '</span></td>' +
         '<td class="stw-enroll">' + enrollDateStr + '</td>' +
         '<td class="stw-room">'  + room   + '</td>' +
@@ -2835,6 +2836,25 @@ document.addEventListener('DOMContentLoaded', () => {
       tr.querySelector(".btn-view-student").addEventListener("click",   () => openStudentDetailModal(student));
       tr.querySelector(".btn-edit-student").addEventListener("click",   () => openEditStudentModal(student));
       tr.querySelector(".btn-delete-student").addEventListener("click", () => handleDeleteStudent(student));
+
+      // Status select inline change
+      tr.querySelector('.stw-status-select').addEventListener('change', async function () {
+        const newStatus = this.value;
+        const sid = this.dataset.id;
+        // Update badge class on select
+        this.className = 'stw-status-select';
+        if (newStatus === 'Đang học')        this.classList.add('badge-danghoc');
+        else if (newStatus === 'Chờ phỏng vấn')  this.classList.add('badge-waiting');
+        else if (newStatus === 'Đã trúng tuyển') this.classList.add('badge-selected');
+        else if (newStatus === 'Đang làm hồ sơ') this.classList.add('badge-processing');
+        else if (newStatus === 'Đã xuất cảnh')   this.classList.add('badge-selected');
+        try {
+          await db.collection('students').doc(sid).update({ status: newStatus });
+          showToast('Đã cập nhật trạng thái: ' + newStatus, 'success');
+        } catch (err) {
+          showToast('Lỗi cập nhật trạng thái: ' + err.message, 'error');
+        }
+      });
 
       tr.querySelector('.flight-date-input').addEventListener('change', async function () {
         const dateStr = this.value;
