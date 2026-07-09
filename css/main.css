@@ -7751,3 +7751,32 @@ body.dark-theme-crm {
 .stw-status-select.badge-waiting   { background:rgba(245,158,11,.1);  color:#F59E0B; }
 .stw-status-select.badge-selected  { background:rgba(99,102,241,.1);  color:#6366F1; }
 .stw-status-select.badge-processing{ background:rgba(168,139,88,.1);  color:#A88B58; }
+
+/* Student table inline select (room + source) */
+.stw-inline-select {
+  font-size: .70rem;
+  font-weight: 500;
+  border: 1px solid var(--border-light, rgba(0,0,0,.09));
+  border-radius: 7px;
+  padding: 3px 6px;
+  background: var(--bg-primary, #FAF8F5);
+  color: var(--text-main);
+  cursor: pointer;
+  max-width: 140px;
+  width: 100%;
+  outline: none;
+  transition: border-color .15s, box-shadow .15s;
+}
+.stw-inline-select:hover  { border-color: var(--accent, #A88B58); }
+.stw-inline-select:focus  { border-color: var(--accent, #A88B58); box-shadow: 0 0 0 2px rgba(168,139,88,.15); }
+.stw-src-select  { max-width: 150px; }
+.stw-room-select { max-width: 120px; }
+
+/* Student add/edit modal — 2-col row helper */
+.sf-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+.sf-field { margin-bottom: 0; }

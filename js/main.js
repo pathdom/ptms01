@@ -2709,7 +2709,9 @@ document.addEventListener('DOMContentLoaded', () => {
   let studentsSubscription = null;
 
   // Staff lookup map: name (lowercase) → { name, department } — loaded once
-  let _staffNameMap = {};
+  let _staffNameMap  = {};
+  let _staffNames    = [];
+  let _staffDepts    = [];
   let _staffMapLoaded = false;
 
   const _loadStaffMap = async () => {
@@ -2721,9 +2723,19 @@ document.addEventListener('DOMContentLoaded', () => {
         ? hrmStaffCache
         : (await db.collection('hrm_staff').get()).docs.map(d => ({ id: d.id, ...d.data() }));
       _staffNameMap = {};
+      _staffNames  = [];
+      _staffDepts  = [];
+      const _deptSet = new Set();
       cached.forEach(s => {
-        if (s.name) _staffNameMap[s.name.toLowerCase().trim()] = { name: s.name, department: s.department || s.dept || '--' };
+        if (!s.name) return;
+        const dept = s.department || s.dept || '';
+        _staffNameMap[s.name.toLowerCase().trim()] = { name: s.name, department: dept || '--' };
+        _staffNames.push(s.name);
+        if (dept) _deptSet.add(dept);
       });
+      _staffNames.sort((a, b) => a.localeCompare(b, 'vi'));
+      const _BASE_DEPTS = ['Hành chính kế toán','Marketing','Đối ngoại','Hồ sơ','Đào tạo','Kinh doanh'];
+      _staffDepts = _BASE_DEPTS.concat([..._deptSet].filter(d => !_BASE_DEPTS.includes(d)));
     } catch (e) {
       console.warn('Could not load staff map:', e.message);
     }
@@ -2850,8 +2862,19 @@ document.addEventListener('DOMContentLoaded', () => {
         '</td>' +
         '<td class="stw-roadmap"><span class="stw-roadmap-tag">' + roadmapLabel + '</span></td>' +
         '<td class="stw-enroll">' + enrollDateStr + '</td>' +
-        '<td class="stw-room">'  + room   + '</td>' +
-        '<td class="stw-src">'   + source + '</td>' +
+        (() => {
+            const opts = ['<option value="">-- Chọn phòng --</option>']
+              .concat(_staffDepts.map(d => '<option value="' + d + '"' + (d === room && room !== '--' ? ' selected' : '') + '>' + d + '</option>'))
+              .join('');
+            return '<td class="stw-room"><select class="stw-inline-select stw-room-select" data-id="' + student.id + '">' + opts + '</select></td>';
+          })() +
+        (() => {
+            const curSrc = rawSource || '';
+            const opts = ['<option value="">-- Chọn nhân viên --</option>']
+              .concat(_staffNames.map(n => '<option value="' + n + '"' + (n === curSrc ? ' selected' : '') + '>' + n + '</option>'))
+              .join('');
+            return '<td class="stw-src"><select class="stw-inline-select stw-src-select" data-id="' + student.id + '">' + opts + '</select></td>';
+          })() +
         '<td class="stw-flight">' +
           '<input type="date" class="flight-date-input' + (fVal ? ' has-date' : '') + '"' +
           ' data-id="' + student.id + '" data-name="' + nameEsc + '" data-code="' + displayCode + '"' +
@@ -2890,6 +2913,43 @@ document.addEventListener('DOMContentLoaded', () => {
         } catch (err) {
           showToast('Lỗi cập nhật trạng thái: ' + err.message, 'error');
         }
+      });
+
+      // Nguồn (source) select — when changed, auto-fill Phòng + save both
+      tr.querySelector('.stw-src-select').addEventListener('change', async function () {
+        const sid    = this.dataset.id;
+        const newSrc = this.value;
+        const match  = newSrc ? _lookupStaff(newSrc) : null;
+        const newDept= match ? match.department : '';
+
+        // Auto-update Phòng select in same row
+        const roomSel = tr.querySelector('.stw-room-select');
+        if (roomSel && newDept) {
+          const exists = [...roomSel.options].some(o => o.value === newDept);
+          if (!exists) {
+            const opt = document.createElement('option');
+            opt.value = opt.textContent = newDept;
+            roomSel.insertBefore(opt, roomSel.options[1]);
+          }
+          roomSel.value = newDept;
+        }
+
+        try {
+          const upd = { source: newSrc };
+          if (newDept) upd.room = newDept;
+          await db.collection('students').doc(sid).update(upd);
+          showToast('Đã cập nhật nguồn' + (newDept ? ' & phòng: ' + newDept : ''), 'success');
+        } catch (err) { showToast('Lỗi: ' + err.message, 'error'); }
+      });
+
+      // Phòng (room) select — manual override
+      tr.querySelector('.stw-room-select').addEventListener('change', async function () {
+        const sid     = this.dataset.id;
+        const newRoom = this.value;
+        try {
+          await db.collection('students').doc(sid).update({ room: newRoom });
+          showToast('Đã cập nhật phòng: ' + (newRoom || '--'), 'success');
+        } catch (err) { showToast('Lỗi: ' + err.message, 'error'); }
       });
 
       tr.querySelector('.flight-date-input').addEventListener('change', async function () {
@@ -3063,6 +3123,18 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     sel.innerHTML = '<option value="">-- Chọn nhân viên --</option>' +
       staffList.map(s => `<option value="${s.name}"${s.name === selectedName ? ' selected' : ''}>${s.name}${s.position ? ' · ' + s.position : ''}</option>`).join('');
+    // Wire auto-fill room when advisor changes (attach once)
+    if (!sel._autofillWired) {
+      sel._autofillWired = true;
+      sel.addEventListener('change', function() {
+        const roomSel = document.getElementById('studentRoom');
+        if (!roomSel || !this.value) return;
+        const match = _lookupStaff(this.value);
+        if (match && match.department && match.department !== '--') {
+          roomSel.value = match.department;
+        }
+      });
+    }
   };
 
   // Open modal for Adding new student
@@ -3260,15 +3332,29 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!studentModal) return;
     document.getElementById("studentModalTitle").textContent = "CHỈNH SỬA HỒ SƠ HỌC VIÊN";
     document.getElementById("studentEditId").value = student.id;
-    document.getElementById("studentName").value = student.name;
-    document.getElementById("studentCode").value = student.code;
-    document.getElementById("studentEmail").value = student.email;
-    document.getElementById("studentPhone").value = student.phone;
-    document.getElementById("studentCountry").value = student.country;
-    document.getElementById("studentStatus").value = student.status;
+    document.getElementById("studentName").value = student.name || '';
+    document.getElementById("studentCode").value = student.code || '';
+    document.getElementById("studentEmail").value = student.email || '';
+    document.getElementById("studentPhone").value = student.phone || '';
+    const hometownEl = document.getElementById("studentHometown");
+    if (hometownEl) hometownEl.value = student.hometown || student.address || '';
+    document.getElementById("studentCountry").value = student.country || 'Nhật';
+    document.getElementById("studentStatus").value = student.status || 'Đang học';
     document.getElementById("studentLearningMonth").value = student.learningMonth || "Tháng 1";
     document.getElementById("studentNotes").value = student.notes || "";
-    await populateAdvisorSelect(student.advisor || '');
+    await populateAdvisorSelect(student.advisor || student.source || '');
+    const roomEl = document.getElementById("studentRoom");
+    if (roomEl) {
+      const roomVal = student.room || student.classroom || '';
+      roomEl.value = roomVal;
+      // If saved room value isn't in options, add it
+      if (roomVal && !roomEl.querySelector(`option[value="${roomVal}"]`)) {
+        const opt = document.createElement('option');
+        opt.value = opt.textContent = roomVal;
+        roomEl.appendChild(opt);
+        roomEl.value = roomVal;
+      }
+    }
 
     studentModal.style.display = "flex";
   };
@@ -3300,7 +3386,9 @@ document.addEventListener('DOMContentLoaded', () => {
       const status = document.getElementById("studentStatus").value;
       const learningMonth = document.getElementById("studentLearningMonth").value;
       const notes = document.getElementById("studentNotes").value.trim();
-      const advisor = document.getElementById("studentAdvisor")?.value || '';
+      const advisor  = document.getElementById("studentAdvisor")?.value || '';
+      const hometown = document.getElementById("studentHometown")?.value.trim() || '';
+      const room     = document.getElementById("studentRoom")?.value || '';
       const formMode = document.getElementById("studentFormMode")?.value || 'student';
 
       if (!name || !code || !email || !phone) {
@@ -3316,6 +3404,9 @@ document.addEventListener('DOMContentLoaded', () => {
         country,
         notes,
         advisor,
+        hometown,
+        room,
+        source: advisor,
         updatedAt: firebase.firestore.FieldValue.serverTimestamp()
       };
       if (formMode === 'customer') {

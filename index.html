@@ -3429,118 +3429,111 @@
             &times;
           </button>
         </div>
-        <form id="studentForm">
+        <form id="studentForm" style="overflow-y:auto;max-height:calc(90vh - 120px);padding-right:4px;">
           <input type="hidden" id="studentEditId" />
           <input type="hidden" id="studentFormMode" value="student" />
-          <div
-            style="
-              display: grid;
-              grid-template-columns: 1fr 1fr;
-              gap: 1rem;
-              margin-bottom: 1rem;
-            "
-          >
-            <div class="form-group-login" style="margin-bottom: 0">
+
+          <!-- Row 1: Tên + Mã -->
+          <div class="sf-row">
+            <div class="form-group-login sf-field">
               <label for="studentName">Họ và tên *</label>
-              <input
-                type="text"
-                id="studentName"
-                required
-                placeholder="Nguyễn Văn A"
-              />
+              <input type="text" id="studentName" required placeholder="Nguyễn Văn A"/>
             </div>
-            <div class="form-group-login" style="margin-bottom: 0">
+            <div class="form-group-login sf-field">
               <label for="studentCode">Mã học viên *</label>
-              <input
-                type="text"
-                id="studentCode"
-                required
-                placeholder="TE-2026-001"
-              />
+              <input type="text" id="studentCode" required placeholder="TE-2026-001"/>
             </div>
           </div>
-          <div
-            style="
-              display: grid;
-              grid-template-columns: 1fr 1fr;
-              gap: 1rem;
-              margin-bottom: 1rem;
-            "
-          >
-            <div class="form-group-login" style="margin-bottom: 0">
+
+          <!-- Row 2: Email + SĐT -->
+          <div class="sf-row">
+            <div class="form-group-login sf-field">
               <label for="studentEmail">Email *</label>
-              <input
-                type="email"
-                id="studentEmail"
-                required
-                placeholder="email@gmail.com"
-              />
+              <input type="email" id="studentEmail" required placeholder="email@gmail.com"/>
             </div>
-            <div class="form-group-login" style="margin-bottom: 0">
+            <div class="form-group-login sf-field">
               <label for="studentPhone">Số điện thoại *</label>
-              <input
-                type="text"
-                id="studentPhone"
-                required
-                placeholder="0912345678"
-              />
+              <input type="text" id="studentPhone" required placeholder="0912345678"/>
             </div>
           </div>
-          <div
-            style="
-              display: grid;
-              grid-template-columns: 1fr 1fr;
-              gap: 1rem;
-              margin-bottom: 1rem;
-            "
-          >
-            <div class="form-group-login" style="margin-bottom: 0">
-              <label for="studentCountry">Quốc gia *</label>
+
+          <!-- Row 3: Quê quán + Quốc gia -->
+          <div class="sf-row">
+            <div class="form-group-login sf-field">
+              <label for="studentHometown">Quê quán</label>
+              <input type="text" id="studentHometown" placeholder="Thành phố, tỉnh..."/>
+            </div>
+            <div class="form-group-login sf-field">
+              <label for="studentCountry">Quốc gia đến *</label>
               <select id="studentCountry" required>
-                <option value="Nhật">Nhật</option>
-                <option value="Đài">Đài</option>
-                <option value="Hàn">Hàn</option>
+                <option value="Nhật">Nhật Bản</option>
+                <option value="Hàn">Hàn Quốc</option>
+                <option value="Đài">Đài Loan</option>
+                <option value="Úc">Úc</option>
+                <option value="Canada">Canada</option>
+                <option value="Mỹ">Mỹ</option>
+                <option value="Anh">Anh</option>
+                <option value="Việt Nam">Việt Nam (nội địa)</option>
               </select>
             </div>
-            <div class="form-group-login" style="margin-bottom: 0">
+          </div>
+
+          <!-- Row 4: Trạng thái + Phòng -->
+          <div class="sf-row">
+            <div class="form-group-login sf-field">
               <label for="studentStatus">Trạng thái hồ sơ *</label>
               <select id="studentStatus" required>
                 <option value="Đang học">Đang học</option>
                 <option value="Chờ phỏng vấn">Chờ phỏng vấn</option>
                 <option value="Đã trúng tuyển">Đã trúng tuyển</option>
                 <option value="Đang làm hồ sơ">Đang làm hồ sơ</option>
+                <option value="Đã xuất cảnh">Đã xuất cảnh</option>
+                <option value="Chờ xử lý">Chờ xử lý</option>
+              </select>
+            </div>
+            <div class="form-group-login sf-field">
+              <label for="studentRoom">Phòng ban</label>
+              <select id="studentRoom">
+                <option value="">-- Chọn phòng --</option>
+                <option value="Hành chính kế toán">Hành chính kế toán</option>
+                <option value="Marketing">Marketing</option>
+                <option value="Đối ngoại">Đối ngoại</option>
+                <option value="Hồ sơ">Hồ sơ</option>
+                <option value="Đào tạo">Đào tạo</option>
+                <option value="Kinh doanh">Kinh doanh</option>
               </select>
             </div>
           </div>
-          <div id="studentLearningMonthRow" class="form-group-login" style="margin-bottom: 1rem">
-            <label for="studentLearningMonth">Tháng học tập hiện tại *</label>
+
+          <!-- Row 5: Nhân viên tư vấn (Nguồn) — full width -->
+          <div class="form-group-login" style="margin-bottom:1rem;">
+            <label for="studentAdvisor">Nhân viên tư vấn (Nguồn)</label>
+            <select id="studentAdvisor">
+              <option value="">-- Chọn nhân viên --</option>
+            </select>
+          </div>
+
+          <!-- Row 6: Tháng học -->
+          <div id="studentLearningMonthRow" class="form-group-login" style="margin-bottom:1rem;">
+            <label for="studentLearningMonth">Tháng học tập hiện tại</label>
             <select id="studentLearningMonth">
               <option value="Tháng 1">Tháng 1: Xây Dựng Nền Tảng</option>
               <option value="Tháng 2">Tháng 2: Phát Triển Phản Xạ</option>
               <option value="Tháng 3">Tháng 3: Làm Quen Học Thuật</option>
               <option value="Tháng 4">Tháng 4: Tăng Tốc Học Thuật</option>
               <option value="Tháng 5">Tháng 5: Luyện Đề Chuyên Sâu</option>
-              <option value="Tháng 6">Tháng 6: Tổng Ôn & Mô Phỏng</option>
+              <option value="Tháng 6">Tháng 6: Tổng Ôn &amp; Mô Phỏng</option>
               <option value="Hoàn thành">Đã hoàn thành lộ trình</option>
             </select>
           </div>
-          <div class="form-group-login" style="margin-bottom: 1rem">
-            <label for="studentAdvisor">Nhân viên tư vấn</label>
-            <select id="studentAdvisor">
-              <option value="">-- Chọn nhân viên --</option>
-            </select>
-          </div>
-          <div class="form-group-login" style="margin-bottom: 1.5rem">
+
+          <!-- Row 7: Ghi chú -->
+          <div class="form-group-login" style="margin-bottom:1.5rem;">
             <label for="studentNotes">Ghi chú / Nhật ký tư vấn</label>
-            <textarea
-              id="studentNotes"
-              placeholder="Nhập ghi chú hồ sơ tại đây..."
-              style="resize: vertical; min-height: 80px"
-            ></textarea>
+            <textarea id="studentNotes" placeholder="Nhập ghi chú hồ sơ tại đây..." style="resize:vertical;min-height:80px;"></textarea>
           </div>
-          <button type="submit" class="btn-submit-login">
-            LƯU THÔNG TIN HỒ SƠ
-          </button>
+
+          <button type="submit" class="btn-submit-login">LƯU THÔNG TIN HỒ SƠ</button>
         </form>
       </div>
     </div>
