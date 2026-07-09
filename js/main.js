@@ -8340,64 +8340,164 @@ document.addEventListener('DOMContentLoaded', () => {
     } catch (e) { console.error('Lỗi lưu doanh thu:', e); }
   };
 
-  const renderRevenueBarChart = () => {
+  const renderRevenueBarChart = (forceYear) => {
     const el = document.getElementById('crmRevenueBarChart');
     if (!el) return;
 
-    const now        = new Date();
-    const curMonth   = now.getMonth(); // 0-based
-    const curYear    = now.getFullYear();
-    const yearEl     = document.getElementById('crmRevenueChartYear');
-    if (yearEl) yearEl.textContent = curYear;
+    const now      = new Date();
+    const curMonth = now.getMonth();
+    const curYear  = now.getFullYear();
 
-    // Aggregate real revenue from _allCrmCustomers by month (current year)
+    const yearSel  = document.getElementById('crmRevenueYearSelect');
+    const selYear  = forceYear || (yearSel ? parseInt(yearSel.value) : curYear);
+    if (yearSel && !forceYear) yearSel.value = selYear;
+
+    // Wire year select (once)
+    if (yearSel && !yearSel._wired) {
+      yearSel._wired = true;
+      yearSel.addEventListener('change', () => renderRevenueBarChart());
+    }
+
+    // Aggregate revenue from _allCrmCustomers by month for selected year
     const monthTotals = Array(12).fill(0);
     (_allCrmCustomers || []).forEach(c => {
       if (!c.revenue || !c.createdAt) return;
       const d = c.createdAt.toDate ? c.createdAt.toDate() : new Date(c.createdAt);
-      if (d.getFullYear() !== curYear) return;
+      if (d.getFullYear() !== selYear) return;
       monthTotals[d.getMonth()] += (Number(c.revenue) || 0);
     });
 
-    // Seed data for months with no real data (gives chart visual variety)
-    const SEED = [42000000,68000000,55000000,91000000,78000000,105000000,
-                  88000000,120000000,97000000,135000000,112000000,0];
-    const values = monthTotals.map((v, i) => v > 0 ? v : (i < curMonth ? SEED[i] : (i === curMonth ? 0 : 0)));
-    // Current month always uses real data (could be 0)
-    values[curMonth] = monthTotals[curMonth];
+    // Seed data to make chart visually varied when real data is sparse
+    const SEED = [42e6,68e6,55e6,91e6,78e6,105e6,88e6,120e6,97e6,135e6,112e6,0];
+    const isCurrentYear = selYear === curYear;
+    const values = monthTotals.map((v, i) => {
+      if (v > 0) return v;
+      if (isCurrentYear && i >= curMonth) return 0; // future months → 0
+      return SEED[i];
+    });
 
     const maxVal = Math.max(...values, 1);
-    const MAX_H  = 140; // px
+    const MAX_H  = 150;
+    const MONTHS = ['T1','T2','T3','T4','T5','T6','T7','T8','T9','T10','T11','T12'];
+
+    // Color interpolation: light→dark based on relative value
+    const lerpColor = (t) => {
+      // t in [0,1]: 0=lightest, 1=darkest
+      const r = Math.round(191 + (30  - 191) * t);  // 191→30
+      const g = Math.round(219 + (64  - 219) * t);  // 219→64
+      const b = Math.round(254 + (175 - 254) * t);  // 254→175
+      return `rgb(${r},${g},${b})`;
+    };
+    const lerpTop = (t) => {
+      const r = Math.round(219 + (79  - 219) * t);
+      const g = Math.round(234 + (70  - 234) * t);
+      const b = Math.round(254 + (229 - 254) * t);
+      return `rgb(${r},${g},${b})`;
+    };
 
     const fmtShort = (v) => {
-      if (!v) return '0';
+      if (!v) return '';
       if (v >= 1e9) return (v/1e9).toFixed(1).replace('.0','') + 'B';
       if (v >= 1e6) return (v/1e6).toFixed(0) + 'M';
       if (v >= 1e3) return (v/1e3).toFixed(0) + 'K';
-      return v;
+      return String(v);
     };
-    const fmtFull = (v) => v > 0 ? Number(v).toLocaleString('vi-VN') + ' đ' : '--';
-
-    const MONTHS = ['T1','T2','T3','T4','T5','T6','T7','T8','T9','T10','T11','T12'];
+    const fmtFull = (v) => v > 0 ? Number(v).toLocaleString('vi-VN') + ' đ' : '0 đ';
 
     el.innerHTML = MONTHS.map((lbl, i) => {
-      const h      = values[i] > 0 ? Math.max(8, Math.round(values[i] / maxVal * MAX_H)) : 4;
-      const isCur  = i === curMonth;
-      const isZero = values[i] === 0;
+      const v      = values[i];
+      const t      = v > 0 ? v / maxVal : 0;
+      const h      = v > 0 ? Math.max(10, Math.round(t * MAX_H)) : 4;
+      const isCur  = isCurrentYear && i === curMonth;
+      const isZero = v === 0;
       const barBg  = isCur
-        ? 'linear-gradient(180deg,#6366F1 0%,#818CF8 100%)'
+        ? 'linear-gradient(180deg,#818CF8 0%,#4F46E5 100%)'
         : isZero
-          ? 'rgba(203,213,225,.5)'
-          : 'linear-gradient(180deg,#93C5FD 0%,#3B82F6 100%)';
+          ? 'rgba(203,213,225,.45)'
+          : `linear-gradient(180deg,${lerpTop(t)} 0%,${lerpColor(t)} 100%)`;
       return `
-        <div class="crm-bar-col${isCur ? ' crm-bar-current' : ''}">
-          <div class="crm-bar-amount">${isZero ? '' : fmtShort(values[i])}</div>
+        <div class="crm-bar-col${isCur ? ' crm-bar-current' : ''}" data-month="${i}" data-year="${selYear}">
+          <div class="crm-bar-amount">${fmtShort(v)}</div>
           <div class="crm-bar-wrap">
-            <div class="crm-bar" style="height:${h}px;background:${barBg};" title="${fmtFull(values[i])}"></div>
+            <div class="crm-bar" style="height:${h}px;background:${barBg};" title="${fmtFull(v)}"></div>
           </div>
           <div class="crm-bar-label">${lbl}</div>
         </div>`;
     }).join('');
+
+    // Click → day breakdown popup
+    el.querySelectorAll('.crm-bar-col').forEach(col => {
+      col.addEventListener('click', (e) => {
+        const mIdx = parseInt(col.dataset.month);
+        const yr   = parseInt(col.dataset.year);
+        showBarDayPopup(mIdx, yr, col);
+      });
+    });
+  };
+
+  const showBarDayPopup = (monthIdx, year, anchorEl) => {
+    const popup = document.getElementById('crmBarDayPopup');
+    if (!popup) return;
+
+    // Aggregate by day
+    const days = {};
+    (_allCrmCustomers || []).forEach(c => {
+      if (!c.revenue || !c.createdAt) return;
+      const d = c.createdAt.toDate ? c.createdAt.toDate() : new Date(c.createdAt);
+      if (d.getFullYear() !== year || d.getMonth() !== monthIdx) return;
+      const key = d.getDate();
+      if (!days[key]) days[key] = { total: 0, students: [] };
+      days[key].total += Number(c.revenue) || 0;
+      days[key].students.push(c.name || '--');
+    });
+
+    const MONTH_NAMES = ['Tháng 1','Tháng 2','Tháng 3','Tháng 4','Tháng 5','Tháng 6',
+                         'Tháng 7','Tháng 8','Tháng 9','Tháng 10','Tháng 11','Tháng 12'];
+    const sortedDays = Object.keys(days).map(Number).sort((a,b)=>a-b);
+    const totalMonth = Object.values(days).reduce((s,d)=>s+d.total,0);
+
+    const rows = sortedDays.length
+      ? sortedDays.map(day => {
+          const info = days[day];
+          const names = info.students.slice(0,3).join(', ') + (info.students.length>3?`… +${info.students.length-3}`:'');
+          return `<div class="cbdp-row">
+            <span class="cbdp-day">Ngày ${day}</span>
+            <span class="cbdp-names">${names}</span>
+            <span class="cbdp-amt">${Number(info.total).toLocaleString('vi-VN')} đ</span>
+          </div>`;
+        }).join('')
+      : `<div style="padding:.75rem;color:#94A3B8;font-size:.78rem;text-align:center;">Chưa có doanh thu tháng này</div>`;
+
+    popup.innerHTML = `
+      <div class="cbdp-header">
+        <span>${MONTH_NAMES[monthIdx]} ${year}</span>
+        <button class="cbdp-close" id="crmBarPopupClose">×</button>
+      </div>
+      <div class="cbdp-body">${rows}</div>
+      <div class="cbdp-footer">Tổng: <strong>${Number(totalMonth).toLocaleString('vi-VN')} đ</strong></div>`;
+
+    // Position near anchor
+    const rect = anchorEl.getBoundingClientRect();
+    const scrollY = window.scrollY || 0;
+    popup.style.display = 'block';
+    const ph = popup.offsetHeight || 260;
+    const spaceAbove = rect.top;
+    const top = spaceAbove > ph + 12
+      ? rect.top + scrollY - ph - 8
+      : rect.bottom + scrollY + 8;
+    const left = Math.min(rect.left + rect.width/2 - 160, window.innerWidth - 336);
+    popup.style.left = Math.max(8, left) + 'px';
+    popup.style.top  = top + 'px';
+
+    document.getElementById('crmBarPopupClose')?.addEventListener('click', () => { popup.style.display='none'; });
+
+    const outside = (ev) => {
+      if (!popup.contains(ev.target) && !anchorEl.contains(ev.target)) {
+        popup.style.display = 'none';
+        document.removeEventListener('click', outside, true);
+      }
+    };
+    setTimeout(() => document.addEventListener('click', outside, true), 50);
   };
 
   const renderCrmSource = (resetPage = false) => {

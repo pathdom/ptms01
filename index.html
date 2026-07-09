@@ -1937,14 +1937,21 @@
 
               <!-- ── Biểu đồ doanh thu theo tháng ─────────────────────── -->
               <div class="crm-metric-card crm-revenue-chart-card">
-                <div class="crm-card-header" style="margin-bottom:1.5rem;">
+                <div class="crm-card-header" style="margin-bottom:1.25rem;">
                   <h4>DOANH THU THEO THÁNG</h4>
-                  <span id="crmRevenueChartYear" style="font-size:.75rem;font-weight:600;color:var(--color-text-muted,#6B6A67);">2026</span>
+                  <select id="crmRevenueYearSelect" class="crm-year-select">
+                    <option value="2023">2023</option>
+                    <option value="2024">2024</option>
+                    <option value="2025">2025</option>
+                    <option value="2026" selected>2026</option>
+                    <option value="2027">2027</option>
+                  </select>
                 </div>
-                <div class="crm-bar-chart" id="crmRevenueBarChart">
-                  <!-- JS populated -->
-                </div>
+                <div class="crm-bar-chart" id="crmRevenueBarChart"></div>
               </div>
+
+              <!-- Day breakdown popup -->
+              <div id="crmBarDayPopup" class="crm-bar-popup" style="display:none;"></div>
 
               <div class="crm-metric-card crm-customers-section">
                 <div class="crm-card-header">

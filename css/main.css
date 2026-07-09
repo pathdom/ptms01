@@ -4177,53 +4177,90 @@ body.dark-theme-crm {
 
 /* ── Revenue bar chart ───────────────────────────────────── */
 .crm-revenue-chart-card { margin-bottom: 1.25rem; }
+
+.crm-year-select {
+  font-size: .78rem; font-weight: 600;
+  padding: .3rem .65rem; border-radius: 8px;
+  border: 1px solid var(--border, #E8E5DF);
+  background: var(--bg-card, #fff); color: var(--color-text-main, #1A1A1A);
+  cursor: pointer; outline: none;
+  transition: border-color .15s;
+}
+.crm-year-select:focus { border-color: #6366F1; }
+
 .crm-bar-chart {
-  display: flex;
-  align-items: flex-end;
-  gap: .5rem;
+  display: flex; align-items: flex-end; gap: .35rem;
   padding: .5rem 0 0;
   border-bottom: 2px solid var(--border, #E8E5DF);
 }
 .crm-bar-col {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0;
+  flex: 1; display: flex; flex-direction: column; align-items: center;
+  cursor: pointer; border-radius: 6px; padding: 4px 2px 0;
+  transition: background .15s;
 }
+.crm-bar-col:hover { background: rgba(99,102,241,.06); }
 .crm-bar-amount {
-  font-size: .62rem;
-  font-weight: 700;
+  font-size: .6rem; font-weight: 700;
   color: var(--color-text-muted, #6B6A67);
-  min-height: 14px;
-  text-align: center;
-  line-height: 1.2;
-  margin-bottom: 3px;
+  min-height: 14px; text-align: center; line-height: 1.2; margin-bottom: 3px;
+  white-space: nowrap;
 }
-.crm-bar-current .crm-bar-amount { color: #6366F1; }
+.crm-bar-current .crm-bar-amount { color: #4F46E5; }
 .crm-bar-wrap {
-  width: 100%;
-  display: flex;
-  align-items: flex-end;
-  justify-content: center;
+  width: 100%; display: flex; align-items: flex-end; justify-content: center;
 }
 .crm-bar {
-  width: 70%;
-  min-width: 10px;
-  border-radius: 4px 4px 0 0;
-  transition: filter .15s;
-  cursor: default;
+  width: 72%; min-width: 8px;
+  border-radius: 5px 5px 0 0;
+  transition: filter .15s, transform .15s;
 }
-.crm-bar:hover { filter: brightness(1.12); }
+.crm-bar-col:hover .crm-bar { filter: brightness(1.1); transform: scaleY(1.03); transform-origin: bottom; }
+.crm-bar-current .crm-bar { box-shadow: 0 4px 18px rgba(79,70,229,.35); }
 .crm-bar-label {
-  font-size: .68rem;
-  font-weight: 600;
+  font-size: .67rem; font-weight: 600;
   color: var(--color-text-muted, #6B6A67);
-  margin-top: 6px;
-  text-align: center;
+  margin-top: 6px; text-align: center;
 }
-.crm-bar-current .crm-bar-label { color: #6366F1; font-weight: 700; }
-.crm-bar-current .crm-bar { box-shadow: 0 4px 16px rgba(99,102,241,.3); }
+.crm-bar-current .crm-bar-label { color: #4F46E5; font-weight: 800; }
+
+/* Day breakdown popup */
+.crm-bar-popup {
+  position: absolute; z-index: 3000;
+  width: 320px; max-height: 320px;
+  background: #fff; border: 1px solid #E0E7FF;
+  border-radius: 12px; box-shadow: 0 12px 40px rgba(99,102,241,.18);
+  overflow: hidden; display: flex; flex-direction: column;
+  animation: cbdpFadeIn .18s ease;
+}
+@keyframes cbdpFadeIn { from { opacity:0; transform:translateY(6px); } to { opacity:1; transform:translateY(0); } }
+.cbdp-header {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: .65rem 1rem; background: #EEF2FF;
+  font-size: .78rem; font-weight: 700; color: #3730A3;
+  border-bottom: 1px solid #E0E7FF; flex-shrink: 0;
+}
+.cbdp-close {
+  background: none; border: none; cursor: pointer;
+  font-size: 1rem; color: #6366F1; line-height: 1; padding: 0 2px;
+}
+.cbdp-close:hover { color: #4F46E5; }
+.cbdp-body { overflow-y: auto; flex: 1; padding: .4rem 0; }
+.cbdp-row {
+  display: grid; grid-template-columns: 68px 1fr auto;
+  gap: .5rem; align-items: center;
+  padding: .45rem 1rem; font-size: .76rem;
+  border-bottom: 1px solid #F1F5F9;
+}
+.cbdp-row:last-child { border-bottom: none; }
+.cbdp-day { font-weight: 700; color: #6366F1; }
+.cbdp-names { color: #64748B; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.cbdp-amt { font-weight: 700; color: #1E293B; white-space: nowrap; }
+.cbdp-footer {
+  padding: .55rem 1rem; background: #F8FAFF;
+  font-size: .76rem; color: #475569;
+  border-top: 1px solid #E0E7FF; flex-shrink: 0;
+}
+.cbdp-footer strong { color: #4F46E5; }
 
 .crm-card-header {
   display: flex;
