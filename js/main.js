@@ -2737,82 +2737,105 @@ document.addEventListener('DOMContentLoaded', () => {
     tableBody.innerHTML = "";
 
     if (filteredList.length === 0) {
-      tableBody.innerHTML = `
-        <tr>
-          <td colspan="8" style="text-align:center; padding: 3rem; color:var(--text-muted); font-size:0.85rem;">
-            Không tìm thấy hồ sơ học viên nào phù hợp.
-          </td>
-        </tr>
-      `;
+      tableBody.innerHTML =
+        '<tr><td colspan="14" style="text-align:center;padding:3rem;color:var(--text-muted);font-size:0.82rem;">' +
+        'Không tìm thấy hồ sơ học viên nào phù hợp.</td></tr>';
       return;
     }
 
-    // Index toàn bộ students cache để mã bắt đầu từ 10001
     const globalStudentIndexMap = new Map(students.map((s, i) => [s.id, 10001 + i]));
+    const pad2 = (n) => n < 10 ? '0' + n : '' + n;
 
-    const padZero = (n) => n < 10 ? '0' + n : n;
+    const getRoadmapLabel = (createdAt) => {
+      const enroll = createdAt
+        ? (createdAt.toDate ? createdAt.toDate() : new Date(createdAt))
+        : null;
+      if (!enroll || isNaN(enroll)) return '--';
+      const months = Math.max(0, Math.floor((new Date() - enroll) / (1000 * 60 * 60 * 24 * 30.44)));
+      if (months === 0) return 'Tháng 1';
+      if (months >= 6)  return '6 THÁNG';
+      return months + ' THÁNG';
+    };
+
+    const fmtDate = (val) => {
+      if (!val) return '--';
+      const d = val.toDate ? val.toDate() : new Date(val);
+      if (isNaN(d)) return '--';
+      return pad2(d.getDate()) + '/' + pad2(d.getMonth() + 1) + '/' + d.getFullYear();
+    };
+
+    const fmtTimestamp = (val) => {
+      if (!val) return '--';
+      const d = val.toDate ? val.toDate() : new Date(val);
+      if (isNaN(d)) return '--';
+      return pad2(d.getDate()) + '/' + pad2(d.getMonth() + 1) + '/' + d.getFullYear()
+        + ' ' + pad2(d.getHours()) + ':' + pad2(d.getMinutes()) + ':' + pad2(d.getSeconds());
+    };
 
     filteredList.forEach((student) => {
       const tr = document.createElement("tr");
 
-      const globalIdx = globalStudentIndexMap.get(student.id) ?? (10001 + filteredList.indexOf(student));
+      const globalIdx   = globalStudentIndexMap.get(student.id) ?? (10001 + filteredList.indexOf(student));
       const displayCode = String(globalIdx);
 
       let badgeClass = "badge-danghoc";
-      if (student.status === "Chờ phỏng vấn") badgeClass = "badge-waiting";
+      if      (student.status === "Chờ phỏng vấn")  badgeClass = "badge-waiting";
       else if (student.status === "Đã trúng tuyển") badgeClass = "badge-selected";
-      else if (student.status === "Đang làm hồ sơ") badgeClass = "badge-processing";
+      else if (student.status === "Đang làm hồ sơ")  badgeClass = "badge-processing";
+      else if (student.status === "Đã xuất cảnh")    badgeClass = "badge-selected";
 
-      const enrollDate = getFixedEnrollDate(student.email, student.createdAt);
-      const enrollDateStr = `${padZero(enrollDate.getDate())}/${padZero(enrollDate.getMonth() + 1)}/${enrollDate.getFullYear()}`;
+      const enrollDateStr = fmtDate(student.createdAt);
+      const roadmapLabel  = getRoadmapLabel(student.createdAt);
 
-      tr.innerHTML = `
-        <td style="text-align:center;">
-          <span class="font-mono" style="font-weight:700;color:#6366F1;">${displayCode}</span>
-        </td>
-        <td>
-          <div style="font-weight:600;font-size:0.85rem;color:var(--text-main)">${student.name}</div>
-          <div style="font-size:0.72rem;color:var(--text-muted)">${student.email}</div>
-        </td>
-        <td style="font-size:0.82rem">${student.phone || '--'}</td>
-        <td style="text-align:center;font-weight:500;font-size:0.83rem">${student.country}</td>
-        <td style="text-align:center;font-size:0.82rem;font-weight:500">${enrollDateStr}</td>
-        <td style="text-align:center;"><span class="crm-badge ${badgeClass}">${student.status}</span></td>
-        <td style="text-align:center;">
-          ${(() => {
-            // flight date stored as Timestamp or ISO string
-            let fVal = '';
-            if (student.flightDate) {
-              const fd = student.flightDate.toDate ? student.flightDate.toDate() : new Date(student.flightDate);
-              const y = fd.getFullYear(), m = String(fd.getMonth()+1).padStart(2,'0'), d = String(fd.getDate()).padStart(2,'0');
-              fVal = `${y}-${m}-${d}`;
-            }
-            return `<input type="date" class="flight-date-input${fVal ? ' has-date' : ''}"
-              data-id="${student.id}" data-name="${student.name.replace(/"/g,'&quot;')}" data-code="${displayCode}"
-              value="${fVal}" title="${fVal ? '✈ Ngày bay: ' + fVal : 'Chưa có lịch bay'}" />`;
-          })()}
-        </td>
-        <td style="text-align:center;">
-          <div style="display:flex;gap:0.3rem;justify-content:center;align-items:center;">
-            <button class="action-icon-btn btn-view-student" data-id="${student.id}" title="Chi tiết" style="padding:6px;color:#6366F1;background:#EEF2FF;border:none;cursor:pointer;border-radius:7px">
-              <svg viewBox="0 0 24 24" style="width:16px;height:16px;fill:currentColor;"><path d="M12,9A3,3 0 0,0 9,12A3,3 0 0,0 12,15A3,3 0 0,0 15,12A3,3 0 0,0 12,9M12,4.5C7,4.5 2.73,7.61 1,12C2.73,16.39 7,19.5 12,19.5C17,19.5 21.27,16.39 23,12C21.27,7.61 17,4.5 12,4.5Z"/></svg>
-            </button>
-            <button class="action-icon-btn btn-edit-student" data-id="${student.id}" title="Sửa" style="padding:6px;color:var(--text-main);background:var(--bg-secondary,#F7F4EF);border:none;cursor:pointer;border-radius:7px">
-              <svg viewBox="0 0 24 24" style="width:16px;height:16px;fill:currentColor;"><path d="M20.71,7.04C21.1,6.65 21.1,6 20.71,5.63L18.37,3.29C18,2.9 17.35,2.9 16.96,3.29L15.12,5.12L18.87,8.87M3,17.25V21H6.75L17.81,9.93L14.07,6.18L3,17.25Z"/></svg>
-            </button>
-            <button class="action-icon-btn btn-delete-student" data-id="${student.id}" title="Xóa" style="padding:6px;color:#EF4444;background:#FEF2F2;border:none;cursor:pointer;border-radius:7px">
-              <svg viewBox="0 0 24 24" style="width:16px;height:16px;fill:currentColor;"><path d="M19,4H15.5L14.5,3H9.5L8.5,4H5V6H19M6,19A2,2 0 0,0 8,21H16A2,2 0 0,0 18,19V7H6V19Z"/></svg>
-            </button>
-          </div>
-        </td>
-      `;
+      let fVal = '', fDisplay = '';
+      if (student.flightDate) {
+        const fd2 = student.flightDate.toDate ? student.flightDate.toDate() : new Date(student.flightDate);
+        if (!isNaN(fd2)) {
+          const fy = fd2.getFullYear(), fm = String(fd2.getMonth()+1).padStart(2,'0'), fdd = String(fd2.getDate()).padStart(2,'0');
+          fVal     = fy + '-' + fm + '-' + fdd;
+          fDisplay = fdd + '/' + fm + '/' + fy;
+        }
+      }
 
-      // Bind Action Listeners inside row
-      tr.querySelector(".btn-view-student").addEventListener("click", () => openStudentDetailModal(student));
-      tr.querySelector(".btn-edit-student").addEventListener("click", () => openEditStudentModal(student));
+      const nameEsc = (student.name || '').replace(/"/g, '&quot;');
+      const hometown = student.hometown || student.address || '--';
+      const room     = student.room     || student.classroom || '--';
+      const source   = student.source   || student.advisor   || '--';
+
+      tr.innerHTML =
+        '<td class="stw-ts">'      + fmtTimestamp(student.createdAt) + '</td>' +
+        '<td class="stw-code"><span class="stw-code-val">' + displayCode + '</span></td>' +
+        '<td class="stw-name"><div class="stw-name-main">' + (student.name || '--') + '</div></td>' +
+        '<td class="stw-email"><a class="stw-link" href="mailto:' + (student.email||'') + '">' + (student.email || '--') + '</a></td>' +
+        '<td class="stw-phone">' + (student.phone || '--') + '</td>' +
+        '<td class="stw-home">'  + hometown + '</td>' +
+        '<td class="stw-country"><span class="stw-country-val">' + (student.country || '--') + '</span></td>' +
+        '<td class="stw-status"><span class="crm-badge ' + badgeClass + '">' + (student.status || '--') + '</span></td>' +
+        '<td class="stw-roadmap"><span class="stw-roadmap-tag">' + roadmapLabel + '</span></td>' +
+        '<td class="stw-enroll">' + enrollDateStr + '</td>' +
+        '<td class="stw-room">'  + room   + '</td>' +
+        '<td class="stw-src">'   + source + '</td>' +
+        '<td class="stw-flight">' +
+          '<input type="date" class="flight-date-input' + (fVal ? ' has-date' : '') + '"' +
+          ' data-id="' + student.id + '" data-name="' + nameEsc + '" data-code="' + displayCode + '"' +
+          ' value="' + fVal + '" title="' + (fVal ? ('Ngày bay: ' + fDisplay) : 'Chưa có lịch bay') + '" />' +
+        '</td>' +
+        '<td class="stw-action"><div class="stw-actions">' +
+          '<button class="action-icon-btn btn-view-student" data-id="' + student.id + '" title="Chi tiết" style="color:#6366F1;background:#EEF2FF;">' +
+            '<svg viewBox="0 0 24 24" style="width:14px;height:14px;fill:currentColor;"><path d="M12,9A3,3 0 0,0 9,12A3,3 0 0,0 12,15A3,3 0 0,0 15,12A3,3 0 0,0 12,9M12,4.5C7,4.5 2.73,7.61 1,12C2.73,16.39 7,19.5 12,19.5C17,19.5 21.27,16.39 23,12C21.27,7.61 17,4.5 12,4.5Z"/></svg>' +
+          '</button>' +
+          '<button class="action-icon-btn btn-edit-student" data-id="' + student.id + '" title="Sửa" style="color:var(--text-main);background:var(--bg-secondary,#F7F4EF);">' +
+            '<svg viewBox="0 0 24 24" style="width:14px;height:14px;fill:currentColor;"><path d="M20.71,7.04C21.1,6.65 21.1,6 20.71,5.63L18.37,3.29C18,2.9 17.35,2.9 16.96,3.29L15.12,5.12L18.87,8.87M3,17.25V21H6.75L17.81,9.93L14.07,6.18L3,17.25Z"/></svg>' +
+          '</button>' +
+          '<button class="action-icon-btn btn-delete-student" data-id="' + student.id + '" title="Xóa" style="color:#EF4444;background:#FEF2F2;">' +
+            '<svg viewBox="0 0 24 24" style="width:14px;height:14px;fill:currentColor;"><path d="M19,4H15.5L14.5,3H9.5L8.5,4H5V6H19M6,19A2,2 0 0,0 8,21H16A2,2 0 0,0 18,19V7H6V19Z"/></svg>' +
+          '</button>' +
+        '</div></td>';
+
+      tr.querySelector(".btn-view-student").addEventListener("click",   () => openStudentDetailModal(student));
+      tr.querySelector(".btn-edit-student").addEventListener("click",   () => openEditStudentModal(student));
       tr.querySelector(".btn-delete-student").addEventListener("click", () => handleDeleteStudent(student));
 
-      // Flight date change → save + create notifications
       tr.querySelector('.flight-date-input').addEventListener('change', async function () {
         const dateStr = this.value;
         const sid     = this.dataset.id;
@@ -2821,13 +2844,12 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
           await saveFlightDate(sid, sname, scode, dateStr);
           this.classList.toggle('has-date', !!dateStr);
-          this.title = dateStr ? `✈ Ngày bay: ${dateStr}` : 'Chưa có lịch bay';
-          const fd = dateStr ? dateStrToMidnight(dateStr) : null;
-          const daysLeft = fd ? Math.round((fd - new Date()) / 86400000) : null;
+          const fd3 = dateStr ? dateStrToMidnight(dateStr) : null;
+          const daysLeft = fd3 ? Math.round((fd3 - new Date()) / 86400000) : null;
           showToast(
             dateStr
-              ? `Đã lưu lịch bay ${sname} · ${daysLeft >= 0 ? `còn ${daysLeft} ngày` : 'đã qua'} · Thông báo sẽ gửi trước 7 ngày và 3 ngày!`
-              : `Đã xóa lịch bay của ${sname}`,
+              ? ('Đã lưu lịch bay ' + sname + ' · ' + (daysLeft >= 0 ? 'còn ' + daysLeft + ' ngày' : 'đã qua') + ' · Thông báo sẽ gửi trước 7 ngày và 3 ngày!')
+              : ('Đã xóa lịch bay của ' + sname),
             dateStr ? 'success' : 'warning'
           );
         } catch (err) {

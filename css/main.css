@@ -7634,3 +7634,102 @@ body.dark-theme-crm {
 .adsd-card .scorecard-period-btn.active {
   background: var(--accent,#A88B58); color:#fff; border-color:transparent;
 }
+
+/* ═══════════════════════════════════════
+   STUDENT WIDE TABLE  (student-wide-table)
+═══════════════════════════════════════ */
+.student-wide-table-wrap {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+.student-wide-table {
+  min-width: 1480px;
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.73rem;
+}
+.student-wide-table thead tr {
+  background: var(--bg-primary, #FAF8F5);
+}
+.student-wide-table th {
+  font-size: 0.62rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .5px;
+  color: var(--text-muted);
+  padding: 8px 8px;
+  white-space: nowrap;
+  border-bottom: 1px solid var(--border-light, rgba(0,0,0,.07));
+  position: sticky;
+  top: 0;
+  background: var(--bg-primary, #FAF8F5);
+  z-index: 1;
+}
+.student-wide-table td {
+  padding: 7px 8px;
+  vertical-align: middle;
+  border-bottom: 1px solid var(--border-light, rgba(0,0,0,.06));
+  font-size: 0.73rem;
+  color: var(--text-main);
+  white-space: nowrap;
+  max-width: 160px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.student-wide-table tr:hover td { background: rgba(99,102,241,.03); }
+
+/* Column widths */
+.stwh-ts      { min-width:130px; }
+.stwh-code    { min-width:70px; text-align:center; }
+.stwh-name    { min-width:140px; }
+.stwh-email   { min-width:160px; }
+.stwh-phone   { min-width:105px; }
+.stwh-home    { min-width:130px; }
+.stwh-country { min-width:100px; }
+.stwh-status  { min-width:120px; text-align:center; }
+.stwh-roadmap { min-width:80px;  text-align:center; }
+.stwh-enroll  { min-width:100px; text-align:center; }
+.stwh-room    { min-width:70px;  text-align:center; }
+.stwh-src     { min-width:120px; }
+.stwh-flight  { min-width:120px; text-align:center; }
+.stwh-action  { min-width:90px;  text-align:center; }
+
+/* Cell styles */
+.stw-ts   { color: var(--text-muted); font-size:.68rem; }
+.stw-code-val { font-weight:700; color:#6366F1; font-family:monospace; font-size:.75rem; }
+.stw-name-main { font-weight:600; font-size:.76rem; color:var(--text-main); }
+.stw-link { color: var(--accent,#A88B58); text-decoration:none; font-size:.7rem; }
+.stw-link:hover { text-decoration:underline; }
+.stw-country-val { font-weight:600; font-size:.72rem; }
+.stw-roadmap-tag {
+  display: inline-block;
+  font-size: .65rem; font-weight: 700;
+  padding: 2px 8px; border-radius: 10px;
+  background: rgba(99,102,241,.1); color: #6366F1;
+}
+.stw-actions {
+  display: flex;
+  gap: 3px;
+  justify-content: center;
+  align-items: center;
+}
+.stw-actions .action-icon-btn {
+  padding: 4px 5px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: opacity .15s;
+}
+.stw-actions .action-icon-btn:hover { opacity: .75; }
+.stw-flight input[type="date"] {
+  font-size: .68rem;
+  padding: 2px 4px;
+  border-radius: 6px;
+  border: 1px solid var(--border-light, rgba(0,0,0,.1));
+  background: var(--bg-primary,#FAF8F5);
+  color: var(--text-main);
+  max-width: 110px;
+}
