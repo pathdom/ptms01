@@ -12523,7 +12523,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 <div class="wf2-node-num">${num}</div>
                 <div class="wf2-node-title">${s.name}</div>
                 <span class="wf2-node-type-icon">${TYPE_ICON[s.type]||'📋'}</span>
-                ${isDone ? '<span class="wf2-node-done-icon">✓</span>' : ''}
+              </div>
+              <div class="wf2-node-corner">
+                ${isDone ? '<span class="wf2-node-done-icon">✓</span>' : '<span class="wf2-node-corner-spacer"></span>'}
                 <button class="wf2-node-del-btn" data-del-idx="${i}" title="Xóa bước này">×</button>
               </div>
               <div class="wf2-node-card-body">
