@@ -7187,17 +7187,16 @@ body.dark-theme-crm {
 .wf2-node-corner > * { pointer-events:all; }
 .wf2-node-corner-spacer { width:18px; height:18px; }
 
-/* Delete button — always visible, red rounded square */
+/* Delete button — muted by default, red on hover */
 .wf2-node-del-btn {
   width:18px; height:18px; border-radius:5px; border:none;
-  background:#FEE2E2; color:#EF4444;
+  background:rgba(0,0,0,.07); color:#C4C9D4;
   font-size:.8rem; font-weight:800; line-height:1;
   display:flex; align-items:center; justify-content:center;
   cursor:pointer; padding:0;
-  transition:background .15s, transform .1s;
-  box-shadow:0 1px 3px rgba(239,68,68,.2);
+  transition:background .15s, color .15s, transform .1s;
 }
-.wf2-node-del-btn:hover { background:#FECACA; transform:scale(1.1); }
+.wf2-node-del-btn:hover { background:#FEE2E2; color:#EF4444; transform:scale(1.1); }
 
 /* Insert-after button in arrow gap */
 .wf2-node-insert { pointer-events:none; }
