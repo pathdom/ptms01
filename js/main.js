@@ -2708,6 +2708,40 @@ document.addEventListener('DOMContentLoaded', () => {
   let students = [];
   let studentsSubscription = null;
 
+  // Staff lookup map: name (lowercase) → { name, department } — loaded once
+  let _staffNameMap = {};
+  let _staffMapLoaded = false;
+
+  const _loadStaffMap = async () => {
+    if (_staffMapLoaded) return;
+    _staffMapLoaded = true;
+    try {
+      // Prefer already-loaded hrmStaffCache to avoid extra Firestore read
+      const cached = (typeof hrmStaffCache !== 'undefined' && hrmStaffCache.length)
+        ? hrmStaffCache
+        : (await db.collection('hrm_staff').get()).docs.map(d => ({ id: d.id, ...d.data() }));
+      _staffNameMap = {};
+      cached.forEach(s => {
+        if (s.name) _staffNameMap[s.name.toLowerCase().trim()] = { name: s.name, department: s.department || s.dept || '--' };
+      });
+    } catch (e) {
+      console.warn('Could not load staff map:', e.message);
+    }
+  };
+
+  // Returns { name, department } for a staff identifier (name string)
+  const _lookupStaff = (identifier) => {
+    if (!identifier || identifier === '--') return null;
+    const key = identifier.toLowerCase().trim();
+    // Exact match first
+    if (_staffNameMap[key]) return _staffNameMap[key];
+    // Partial match fallback
+    for (const [k, v] of Object.entries(_staffNameMap)) {
+      if (k.includes(key) || key.includes(k)) return v;
+    }
+    return null;
+  };
+
   // Setup Student Database real-time observer
   let currentPage = 1;
   const itemsPerPage = 8;
@@ -2792,8 +2826,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
       const nameEsc = (student.name || '').replace(/"/g, '&quot;');
       const hometown = student.hometown || student.address || '--';
-      const room     = student.room     || student.classroom || '--';
-      const source   = student.source   || student.advisor   || '--';
+      const rawSource = student.source || student.advisor || '';
+      const staffMatch = rawSource ? _lookupStaff(rawSource) : null;
+      const source = staffMatch ? staffMatch.name : (rawSource || '--');
+      const room   = staffMatch ? staffMatch.department : (student.room || student.classroom || '--');
 
       tr.innerHTML =
         '<td class="stw-code"><span class="stw-code-val">' + displayCode + '</span></td>' +
@@ -5085,6 +5121,9 @@ document.addEventListener('DOMContentLoaded', () => {
             // Load users cache (one-time fetch)
             subscribeToUsersCache();
 
+            // Load staff name→department map for student table
+            _loadStaffMap();
+
             // Subscribe to real-time students updates
             subscribeToStudents();
 
@@ -6316,6 +6355,11 @@ document.addEventListener('DOMContentLoaded', () => {
       .onSnapshot((snap) => {
         hrmStaffCache = [];
         snap.forEach(doc => { const d = doc.data(); d.id = doc.id; hrmStaffCache.push(d); });
+        // Refresh student staff-lookup map with fresh data
+        if (typeof _staffNameMap !== 'undefined') {
+          _staffMapLoaded = false;
+          _loadStaffMap();
+        }
         renderHrmStaffList();
         renderHrmKpi();
       }, (err) => console.error('HRM staff realtime listener error:', err));
