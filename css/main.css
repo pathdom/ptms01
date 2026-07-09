@@ -7040,7 +7040,8 @@ body.dark-theme-crm {
 .wf2-badge.active   { background:rgba(16,185,129,.1); color:#059669; }
 .wf2-badge.draft    { background:rgba(245,158,11,.12); color:#D97706; }
 .wf2-badge.archived { background:rgba(107,114,128,.1); color:#4B5563; }
-.wf2-badge.expired  { background:rgba(239,68,68,.1); color:#DC2626; }
+.wf2-badge.expired    { background:rgba(239,68,68,.1); color:#DC2626; }
+.wf2-badge.completed  { background:rgba(99,102,241,.1); color:#4F46E5; }
 
 /* ── Editor form row ── */
 .wf2-form-row {

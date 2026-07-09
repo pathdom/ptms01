@@ -12244,7 +12244,7 @@ document.addEventListener('DOMContentLoaded', () => {
       },
     };
 
-    const STATUS_LABEL = {active:'Đang hoạt động', draft:'Nháp', archived:'Lưu trữ', expired:'Hết hạn'};
+    const STATUS_LABEL = {active:'Đang hoạt động', draft:'Nháp', archived:'Lưu trữ', expired:'Hết hạn', completed:'Hoàn thành'};
     const TYPE_ICON = {task:'⏱', approve:'✅', notify:'🔔', condition:'⬦', parallel:'⊞', end:'⏹'};
     const TYPE_LABEL = {task:'Bước công việc', approve:'Bước phê duyệt', notify:'Bước thông báo', condition:'Bước điều kiện', parallel:'Bước song song', end:'Bước kết thúc'};
 
@@ -12454,7 +12454,9 @@ document.addEventListener('DOMContentLoaded', () => {
         </div>
         <div class="wf2-detail-field">
           <label class="wf2-detail-label">Người phụ trách</label>
-          <input id="wf2DStepAssignee" class="wf2-detail-input" type="text" value="${(s.assignee||'').replace(/"/g,'&quot;')}" placeholder="Tên nhân viên phụ trách"/>
+          <select id="wf2DStepAssignee" class="wf2-detail-input wf2-detail-select">
+            <option value="">-- Đang tải... --</option>
+          </select>
         </div>
         <div class="wf2-detail-field">
           <label class="wf2-detail-label">Mô tả công việc</label>
@@ -12480,6 +12482,72 @@ document.addEventListener('DOMContentLoaded', () => {
         </div>`;
 
       renderChecklist(s, wf);
+
+      // Populate assignee select with role options + staff from hrm_staff
+      (async () => {
+        const sel = document.getElementById('wf2DStepAssignee');
+        if (!sel) return;
+        const ROLE_OPTIONS = [
+          'Tư vấn viên','Chuyên viên hồ sơ','Chuyên viên visa',
+          'Kế toán','Giáo viên','Giám đốc','Marketing'
+        ];
+        let staffNames = [];
+        try {
+          const list = (typeof hrmStaffCache !== 'undefined' && hrmStaffCache.length)
+            ? hrmStaffCache
+            : (await db.collection('hrm_staff').get()).docs.map(d => d.data());
+          staffNames = list.filter(x => x.name).map(x => x.name).sort((a,b) => a.localeCompare(b,'vi'));
+        } catch(_e) { /* ignore */ }
+        const curVal = s.assignee || '';
+        let html = '<option value="">-- Chọn người phụ trách --</option>';
+        html += '<optgroup label="Vai trò chung">' +
+          ROLE_OPTIONS.map(r => `<option value="${r}"${r===curVal?' selected':''}>${r}</option>`).join('') + '</optgroup>';
+        if (staffNames.length) {
+          html += '<optgroup label="Nhân viên">' +
+            staffNames.map(n => `<option value="${n}"${n===curVal?' selected':''}>${n}</option>`).join('') + '</optgroup>';
+        }
+        sel.innerHTML = html;
+      })();
+
+      // Status auto-advance: when set to "done" → tick node + move to next step + check completion
+      const _statusSel = document.getElementById('wf2DStepStatus');
+      if (_statusSel) {
+        _statusSel.addEventListener('change', async function() {
+          const wf = _workflows.find(w => w.id === _activeId);
+          if (!wf || !wf.steps[_activeStepIdx]) return;
+          const curStep = wf.steps[_activeStepIdx];
+          curStep.status = this.value;
+
+          if (this.value === 'done') {
+            // Advance next pending/active step
+            const nextIdx = wf.steps.findIndex((st, i) => i > _activeStepIdx && st.status !== 'done');
+            if (nextIdx !== -1) wf.steps[nextIdx].status = 'active';
+
+            const allDone = wf.steps.every(st => st.status === 'done');
+            if (allDone) {
+              await WF_COL().doc(wf.id).update({
+                steps: wf.steps, status: 'completed',
+                completedAt: firebase.firestore.FieldValue.serverTimestamp(),
+                updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+              });
+              const lw = _workflows.find(w2 => w2.id === wf.id);
+              if (lw) { lw.steps = wf.steps; lw.status = 'completed'; }
+              if (typeof showToast === 'function') showToast('🎉 Quy trình đã hoàn thành! Đã thêm vào danh sách.', 'success');
+              renderCanvas(wf); renderSideList(); renderListGrid();
+              return;
+            }
+
+            await saveStep(wf);
+            renderCanvas(wf); renderSideList();
+            if (typeof showToast === 'function') showToast('✓ Bước hoàn thành! Chuyển sang bước tiếp theo.', 'success');
+            if (nextIdx !== -1) openStepDetail(wf, nextIdx);
+          } else {
+            await saveStep(wf);
+            renderCanvas(wf);
+          }
+        });
+      }
+
       document.getElementById('wf2DAddCheck')?.addEventListener('click', () => {
         s.checklist = s.checklist || [];
         s.checklist.push({text:'',done:false});
@@ -12793,6 +12861,21 @@ document.addEventListener('DOMContentLoaded', () => {
         await saveStep(wf);
         if(typeof showToast==='function') showToast('Đã cập nhật bước!','success');
         renderCanvas(wf);
+        renderSideList();
+
+        // If all steps are now done, mark the workflow completed
+        const allDoneNow = wf.steps.every(st => st.status === 'done');
+        if (allDoneNow) {
+          await WF_COL().doc(wf.id).update({
+            status: 'completed',
+            completedAt: firebase.firestore.FieldValue.serverTimestamp(),
+            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+          });
+          const lw = _workflows.find(w2 => w2.id === wf.id);
+          if (lw) lw.status = 'completed';
+          if(typeof showToast==='function') showToast('🎉 Quy trình đã hoàn thành!', 'success');
+          renderSideList(); renderListGrid();
+        }
       });
 
       // Delete step
