@@ -3324,6 +3324,50 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     }
 
+    // ── Load chi tiết hồ sơ vào admin overlay ──────────────────
+    const adsdDetailToggle = document.getElementById('adsdDetailToggle');
+    const adsdDetailBody   = document.getElementById('adsdDetailBody');
+    const adsdDetailIcon   = document.getElementById('adsdDetailToggleIcon');
+    if (adsdDetailToggle && adsdDetailBody) {
+      // Re-wire toggle (cloneNode to remove old listener)
+      const nb2 = adsdDetailToggle.cloneNode(true);
+      adsdDetailToggle.replaceWith(nb2);
+      nb2.addEventListener('click', () => {
+        const open = adsdDetailBody.style.display !== 'none';
+        adsdDetailBody.style.display = open ? 'none' : 'block';
+        const ic = document.getElementById('adsdDetailToggleIcon');
+        if (ic) ic.style.transform = open ? '' : 'rotate(180deg)';
+      });
+    }
+    if (adsdDetailBody) adsdDetailBody.style.display = 'none';
+
+    if (student.id) {
+      db.collection('student_profiles').doc(student.id).get().then(snap => {
+        const d = snap.exists ? snap.data() : {};
+        const sd = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val || '--'; };
+        const fmtYr  = (name, year, job) => [name, year ? `(${year})` : '', job].filter(Boolean).join(' · ') || '--';
+        const fmtEdu = (name, from, to) => name ? `${name}${from||to ? ` (${from||''}–${to||''})` : ''}` : '--';
+        sd('adsdDCccd', d.cccd); sd('adsdDCccdDate', d.cccdDate);
+        sd('adsdDGender', d.gender); sd('adsdDDob', d.dob);
+        sd('adsdDReligion', d.religion); sd('adsdDEthnicity', d.ethnicity);
+        sd('adsdDMarital', d.marital);
+        sd('adsdDPhone', d.phone); sd('adsdDPhoneRelative', d.phoneRelative);
+        sd('adsdDPermanentAddress', d.permanentAddress); sd('adsdDTempAddress', d.tempAddress);
+        sd('adsdDSchoolPrimary', fmtEdu(d.schoolPrimary, d.schoolPrimaryFrom, d.schoolPrimaryTo));
+        sd('adsdDSchoolMiddle',  fmtEdu(d.schoolMiddle,  d.schoolMiddleFrom,  d.schoolMiddleTo));
+        sd('adsdDSchoolHigh',    fmtEdu(d.schoolHigh,    d.schoolHighFrom,    d.schoolHighTo));
+        sd('adsdDSchoolUni',     fmtEdu(d.schoolUni,     d.schoolUniFrom,     d.schoolUniTo));
+        sd('adsdDFather',        fmtYr(d.fatherName, d.fatherYear, d.fatherJob));
+        sd('adsdDMother',        fmtYr(d.motherName, d.motherYear, d.motherJob));
+        sd('adsdDSiblingOlder',  fmtYr(d.siblingOlderName, d.siblingOlderYear, d.siblingOlderJob));
+        sd('adsdDSiblingYounger',fmtYr(d.siblingYoungerName, d.siblingYoungerYear, d.siblingYoungerJob));
+        sd('adsdDOtherMember',   fmtYr(d.otherMemberName, d.otherMemberYear, d.otherMemberJob));
+        sd('adsdDStrengths', d.strengths); sd('adsdDWeaknesses', d.weaknesses);
+        sd('adsdDReason', d.reason); sd('adsdDHobbies', d.hobbies);
+        sd('adsdDWorkHistory', d.workHistory);
+      }).catch(() => {});
+    }
+
     overlay.style.display = 'flex';
   };
 
@@ -4925,6 +4969,85 @@ document.addEventListener('DOMContentLoaded', () => {
 
               // ── Populate "Thông tin cá nhân" tab ──────────────────
               populateStudentProfileTab(profileData);
+
+              // ── Load & wire Chi tiết hồ sơ ────────────────────────
+              if (profileData.id) {
+                // Toggle expand/collapse
+                const toggle = document.getElementById('stpDetailToggle');
+                const body   = document.getElementById('stpDetailBody');
+                const icon   = document.getElementById('stpDetailToggleIcon');
+                if (toggle && body) {
+                  toggle.addEventListener('click', () => {
+                    const open = body.style.display !== 'none';
+                    body.style.display = open ? 'none' : 'block';
+                    if (icon) icon.style.transform = open ? '' : 'rotate(180deg)';
+                  });
+                }
+
+                // Load from student_profiles
+                const loadDetailProfile = async () => {
+                  try {
+                    const snap = await db.collection('student_profiles').doc(profileData.id).get();
+                    if (snap.exists) {
+                      const d = snap.data();
+                      const f = (id, val) => { const el = document.getElementById(id); if (el && val !== undefined) el.value = val; };
+                      f('sdpFullName', d.fullName);
+                      f('sdpCccd', d.cccd); f('sdpCccdDate', d.cccdDate);
+                      f('sdpGender', d.gender);
+                      f('sdpDob', d.dob); f('sdpReligion', d.religion); f('sdpEthnicity', d.ethnicity);
+                      f('sdpPermanentAddress', d.permanentAddress); f('sdpTempAddress', d.tempAddress);
+                      f('sdpMarital', d.marital); f('sdpPhone', d.phone); f('sdpPhoneRelative', d.phoneRelative);
+                      f('sdpSchoolPrimary', d.schoolPrimary); f('sdpSchoolPrimaryFrom', d.schoolPrimaryFrom); f('sdpSchoolPrimaryTo', d.schoolPrimaryTo);
+                      f('sdpSchoolMiddle', d.schoolMiddle);   f('sdpSchoolMiddleFrom', d.schoolMiddleFrom);   f('sdpSchoolMiddleTo', d.schoolMiddleTo);
+                      f('sdpSchoolHigh', d.schoolHigh);       f('sdpSchoolHighFrom', d.schoolHighFrom);       f('sdpSchoolHighTo', d.schoolHighTo);
+                      f('sdpSchoolUni', d.schoolUni);         f('sdpSchoolUniFrom', d.schoolUniFrom);         f('sdpSchoolUniTo', d.schoolUniTo);
+                      f('sdpWorkHistory', d.workHistory);
+                      f('sdpFatherName', d.fatherName); f('sdpFatherYear', d.fatherYear); f('sdpFatherJob', d.fatherJob);
+                      f('sdpMotherName', d.motherName); f('sdpMotherYear', d.motherYear); f('sdpMotherJob', d.motherJob);
+                      f('sdpSiblingOlderName', d.siblingOlderName); f('sdpSiblingOlderYear', d.siblingOlderYear); f('sdpSiblingOlderJob', d.siblingOlderJob);
+                      f('sdpSiblingYoungerName', d.siblingYoungerName); f('sdpSiblingYoungerYear', d.siblingYoungerYear); f('sdpSiblingYoungerJob', d.siblingYoungerJob);
+                      f('sdpOtherMemberName', d.otherMemberName); f('sdpOtherMemberYear', d.otherMemberYear); f('sdpOtherMemberJob', d.otherMemberJob);
+                      f('sdpStrengths', d.strengths); f('sdpWeaknesses', d.weaknesses);
+                      f('sdpReason', d.reason); f('sdpHobbies', d.hobbies);
+                    }
+                  } catch(e) { console.warn('student_profiles load error:', e); }
+                };
+                loadDetailProfile();
+
+                // Save form
+                const detailForm = document.getElementById('stpDetailForm');
+                if (detailForm) {
+                  detailForm.addEventListener('submit', async (e) => {
+                    e.preventDefault();
+                    const g = (id) => document.getElementById(id)?.value.trim() || '';
+                    const payload = {
+                      fullName: g('sdpFullName'), cccd: g('sdpCccd'), cccdDate: g('sdpCccdDate'),
+                      gender: g('sdpGender'), dob: g('sdpDob'), religion: g('sdpReligion'), ethnicity: g('sdpEthnicity'),
+                      permanentAddress: g('sdpPermanentAddress'), tempAddress: g('sdpTempAddress'),
+                      marital: g('sdpMarital'), phone: g('sdpPhone'), phoneRelative: g('sdpPhoneRelative'),
+                      schoolPrimary: g('sdpSchoolPrimary'), schoolPrimaryFrom: g('sdpSchoolPrimaryFrom'), schoolPrimaryTo: g('sdpSchoolPrimaryTo'),
+                      schoolMiddle: g('sdpSchoolMiddle'), schoolMiddleFrom: g('sdpSchoolMiddleFrom'), schoolMiddleTo: g('sdpSchoolMiddleTo'),
+                      schoolHigh: g('sdpSchoolHigh'), schoolHighFrom: g('sdpSchoolHighFrom'), schoolHighTo: g('sdpSchoolHighTo'),
+                      schoolUni: g('sdpSchoolUni'), schoolUniFrom: g('sdpSchoolUniFrom'), schoolUniTo: g('sdpSchoolUniTo'),
+                      workHistory: g('sdpWorkHistory'),
+                      fatherName: g('sdpFatherName'), fatherYear: g('sdpFatherYear'), fatherJob: g('sdpFatherJob'),
+                      motherName: g('sdpMotherName'), motherYear: g('sdpMotherYear'), motherJob: g('sdpMotherJob'),
+                      siblingOlderName: g('sdpSiblingOlderName'), siblingOlderYear: g('sdpSiblingOlderYear'), siblingOlderJob: g('sdpSiblingOlderJob'),
+                      siblingYoungerName: g('sdpSiblingYoungerName'), siblingYoungerYear: g('sdpSiblingYoungerYear'), siblingYoungerJob: g('sdpSiblingYoungerJob'),
+                      otherMemberName: g('sdpOtherMemberName'), otherMemberYear: g('sdpOtherMemberYear'), otherMemberJob: g('sdpOtherMemberJob'),
+                      strengths: g('sdpStrengths'), weaknesses: g('sdpWeaknesses'),
+                      reason: g('sdpReason'), hobbies: g('sdpHobbies'),
+                      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                    };
+                    try {
+                      await db.collection('student_profiles').doc(profileData.id).set(payload, { merge: true });
+                      if (typeof showToast === 'function') showToast('Đã lưu hồ sơ chi tiết!', 'success');
+                    } catch(err) {
+                      if (typeof showToast === 'function') showToast('Lỗi lưu hồ sơ: ' + err.message, 'error');
+                    }
+                  });
+                }
+              }
 
               // Populate Dynamic UI Elements in Student Portal
               const studentNameDisplay = document.getElementById('studentNameDisplay');
@@ -12400,6 +12523,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 <div class="wf2-node-title">${s.name}</div>
                 <span class="wf2-node-type-icon">${TYPE_ICON[s.type]||'📋'}</span>
                 ${isDone ? '<span class="wf2-node-done-icon">✓</span>' : ''}
+                <button class="wf2-node-del-btn" data-del-idx="${i}" title="Xóa bước này">×</button>
               </div>
               <div class="wf2-node-card-body">
                 ${s.assignee ? `<div class="wf2-node-assignee">👤 ${s.assignee}</div>` : ''}
@@ -12415,6 +12539,14 @@ document.addEventListener('DOMContentLoaded', () => {
             const ny = nodeTop(i+1, nextExtra);
             const arrowColor = isDone ? (s.type === 'approve' ? '#F59E0B' : '#22C55E') : '';
             drawArrow(svg, MX, ty+NH, MX, ny-2, arrowColor);
+
+            // Insert-after button centered in the gap
+            const insertY = ty + NH + Math.round((ny - (ty + NH)) / 2) - 11;
+            const insDiv = document.createElement('div');
+            insDiv.className = 'wf2-node wf2-node-insert';
+            insDiv.style.cssText = `left:${MX-11}px;top:${insertY}px;`;
+            insDiv.innerHTML = `<button class="wf2-insert-btn" data-after-idx="${i}" title="Thêm bước sau">+</button>`;
+            nodes.appendChild(insDiv);
           }
         }
       });
@@ -12434,11 +12566,49 @@ document.addEventListener('DOMContentLoaded', () => {
       endDiv.innerHTML = '<div class="wf2-node-end"><span>⏹</span> KẾT THÚC</div>';
       nodes.appendChild(endDiv);
 
-      // Click handlers
+      // Click handlers — open step detail
       nodes.querySelectorAll('[data-step-idx]').forEach(el => {
         el.addEventListener('click', e => {
           e.stopPropagation();
           openStepDetail(wf, parseInt(el.dataset.stepIdx));
+        });
+      });
+
+      // Delete button on each node card
+      nodes.querySelectorAll('[data-del-idx]').forEach(btn => {
+        btn.addEventListener('click', async e => {
+          e.stopPropagation();
+          const idx = parseInt(btn.dataset.delIdx);
+          const stepName = (wf.steps[idx]?.name || 'bước này');
+          if (!confirm(`Xóa "${stepName}"?`)) return;
+          wf.steps.splice(idx, 1);
+          if (_activeStepIdx === idx) _activeStepIdx = null;
+          else if (_activeStepIdx > idx) _activeStepIdx--;
+          await saveStep(wf);
+          renderCanvas(wf);
+          renderSideList();
+          const foot = document.getElementById('wf2DetailFoot');
+          const body = document.getElementById('wf2DetailBody');
+          if (_activeStepIdx === null) {
+            if (foot) foot.style.display = 'none';
+            if (body) body.innerHTML = `<div class="wf2-empty-detail"><svg viewBox="0 0 24 24" style="width:36px;height:36px;fill:#CBD5E1"><path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z"/></svg><p>Chọn một bước để xem chi tiết</p></div>`;
+          }
+          if (typeof showToast === 'function') showToast(`Đã xóa "${stepName}"`, 'info');
+        });
+      });
+
+      // Insert-after button between nodes
+      nodes.querySelectorAll('[data-after-idx]').forEach(btn => {
+        btn.addEventListener('click', async e => {
+          e.stopPropagation();
+          const afterIdx = parseInt(btn.dataset.afterIdx);
+          const newStep = { name: 'Bước mới', type: 'task', assignee: '', description: '', deadline: null, checklist: [], status: 'pending' };
+          wf.steps.splice(afterIdx + 1, 0, newStep);
+          await saveStep(wf);
+          renderCanvas(wf);
+          renderSideList();
+          openStepDetail(wf, afterIdx + 1);
+          if (typeof showToast === 'function') showToast('Đã thêm bước mới', 'success');
         });
       });
     };

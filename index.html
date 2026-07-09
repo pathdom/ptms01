@@ -3657,6 +3657,55 @@
         </div>
 
       </div><!-- /adsd-body -->
+
+      <!-- Chi tiết hồ sơ — full-width read-only section for admin -->
+      <div class="adsd-detail-section" id="adsdDetailSection">
+        <div class="adsd-detail-toggle" id="adsdDetailToggle">
+          <span>Chi tiết hồ sơ cá nhân</span>
+          <span id="adsdDetailToggleIcon">▼</span>
+        </div>
+        <div id="adsdDetailBody" style="display:none;">
+          <div class="adsd-detail-grid">
+            <div class="adsd-dg-col">
+              <div class="adsd-dg-section">Thông tin cá nhân</div>
+              <div class="adsd-dg-row"><span>Số CCCD</span><span id="adsdDCccd">--</span></div>
+              <div class="adsd-dg-row"><span>Ngày cấp</span><span id="adsdDCccdDate">--</span></div>
+              <div class="adsd-dg-row"><span>Giới tính</span><span id="adsdDGender">--</span></div>
+              <div class="adsd-dg-row"><span>Ngày sinh</span><span id="adsdDDob">--</span></div>
+              <div class="adsd-dg-row"><span>Tôn giáo</span><span id="adsdDReligion">--</span></div>
+              <div class="adsd-dg-row"><span>Dân tộc</span><span id="adsdDEthnicity">--</span></div>
+              <div class="adsd-dg-row"><span>Tình trạng HN</span><span id="adsdDMarital">--</span></div>
+              <div class="adsd-dg-row"><span>SĐT học viên</span><span id="adsdDPhone">--</span></div>
+              <div class="adsd-dg-row"><span>SĐT người thân</span><span id="adsdDPhoneRelative">--</span></div>
+              <div class="adsd-dg-row"><span>Hộ khẩu</span><span id="adsdDPermanentAddress" style="white-space:normal;">--</span></div>
+              <div class="adsd-dg-row"><span>Tạm trú</span><span id="adsdDTempAddress" style="white-space:normal;">--</span></div>
+            </div>
+            <div class="adsd-dg-col">
+              <div class="adsd-dg-section">Học vấn</div>
+              <div class="adsd-dg-row"><span>Tiểu học</span><span id="adsdDSchoolPrimary">--</span></div>
+              <div class="adsd-dg-row"><span>Trung học CS</span><span id="adsdDSchoolMiddle">--</span></div>
+              <div class="adsd-dg-row"><span>THPT</span><span id="adsdDSchoolHigh">--</span></div>
+              <div class="adsd-dg-row"><span>CĐ / ĐH</span><span id="adsdDSchoolUni">--</span></div>
+              <div class="adsd-dg-section" style="margin-top:1rem;">Gia đình</div>
+              <div class="adsd-dg-row"><span>Bố</span><span id="adsdDFather">--</span></div>
+              <div class="adsd-dg-row"><span>Mẹ</span><span id="adsdDMother">--</span></div>
+              <div class="adsd-dg-row"><span>Anh/Chị</span><span id="adsdDSiblingOlder">--</span></div>
+              <div class="adsd-dg-row"><span>Em</span><span id="adsdDSiblingYounger">--</span></div>
+              <div class="adsd-dg-row"><span>Thành viên khác</span><span id="adsdDOtherMember">--</span></div>
+            </div>
+            <div class="adsd-dg-col">
+              <div class="adsd-dg-section">Đặc điểm cá nhân</div>
+              <div class="adsd-dg-row adsd-dg-multiline"><span>Điểm mạnh</span><span id="adsdDStrengths">--</span></div>
+              <div class="adsd-dg-row adsd-dg-multiline"><span>Điểm yếu</span><span id="adsdDWeaknesses">--</span></div>
+              <div class="adsd-dg-row adsd-dg-multiline"><span>Lý do sang Nhật</span><span id="adsdDReason">--</span></div>
+              <div class="adsd-dg-row adsd-dg-multiline"><span>Sở thích</span><span id="adsdDHobbies">--</span></div>
+              <div class="adsd-dg-section" style="margin-top:1rem;">Lịch sử làm việc</div>
+              <div class="adsd-dg-row adsd-dg-multiline"><span id="adsdDWorkHistory" style="color:#374151;font-size:.78rem;white-space:pre-wrap;grid-column:1/-1;">--</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
     </div><!-- /studentDetailModal --
 
 
@@ -4485,6 +4534,93 @@
             </div>
 
           </div>
+
+          <!-- ── CHI TIẾT HỒ SƠ (full-width below 3-col) ─────────────────── -->
+          <div class="hrm-metric-card stp-detail-card" id="stpDetailCard" style="margin-top:1.5rem;">
+            <div class="metric-card-header" style="display:flex;justify-content:space-between;align-items:center;cursor:pointer;" id="stpDetailToggle">
+              <h4 style="margin:0;">Chi tiết hồ sơ cá nhân</h4>
+              <span id="stpDetailToggleIcon" style="font-size:.85rem;color:var(--color-text-muted,#6B6A67);transition:transform .25s;">▼</span>
+            </div>
+            <div id="stpDetailBody" style="display:none;padding-top:.5rem;">
+              <form id="stpDetailForm" autocomplete="off">
+
+                <!-- §1 Thông tin cơ bản -->
+                <div class="sdp-section-title">Thông tin cá nhân</div>
+                <div class="sdp-row sdp-1col">
+                  <div class="sdp-field"><label>Họ và tên</label><input type="text" id="sdpFullName" placeholder="Họ và tên đầy đủ"/></div>
+                </div>
+                <div class="sdp-row sdp-2col">
+                  <div class="sdp-field"><label>Số CCCD / Hộ chiếu</label><input type="text" id="sdpCccd" placeholder="012345678901"/></div>
+                  <div class="sdp-field"><label>Ngày cấp</label><input type="date" id="sdpCccdDate"/></div>
+                </div>
+                <div class="sdp-row sdp-1col">
+                  <div class="sdp-field"><label>Giới tính</label>
+                    <select id="sdpGender"><option value="">-- Chọn --</option><option>Nam</option><option>Nữ</option><option>Khác</option></select>
+                  </div>
+                </div>
+                <div class="sdp-row sdp-3col">
+                  <div class="sdp-field"><label>Ngày tháng năm sinh</label><input type="date" id="sdpDob"/></div>
+                  <div class="sdp-field"><label>Tôn giáo</label><input type="text" id="sdpReligion" placeholder="Không / Phật giáo..."/></div>
+                  <div class="sdp-field"><label>Dân tộc</label><input type="text" id="sdpEthnicity" placeholder="Kinh..."/></div>
+                </div>
+                <div class="sdp-row sdp-1col">
+                  <div class="sdp-field"><label>Hộ khẩu thường trú</label><input type="text" id="sdpPermanentAddress" placeholder="Số nhà, đường, phường/xã, quận/huyện, tỉnh/thành"/></div>
+                </div>
+                <div class="sdp-row sdp-1col">
+                  <div class="sdp-field"><label>Nơi tạm trú hiện tại</label><input type="text" id="sdpTempAddress" placeholder="Số nhà, đường, phường/xã, quận/huyện, tỉnh/thành"/></div>
+                </div>
+                <div class="sdp-row sdp-3col">
+                  <div class="sdp-field"><label>Tình trạng hôn nhân</label>
+                    <select id="sdpMarital"><option value="">-- Chọn --</option><option>Độc thân</option><option>Đã kết hôn</option><option>Ly hôn</option></select>
+                  </div>
+                  <div class="sdp-field"><label>SĐT học viên</label><input type="tel" id="sdpPhone" placeholder="0912 345 678"/></div>
+                  <div class="sdp-field"><label>SĐT người thân</label><input type="tel" id="sdpPhoneRelative" placeholder="0912 000 000"/></div>
+                </div>
+
+                <!-- §2 Học vấn -->
+                <div class="sdp-section-title" style="margin-top:1.5rem;">Quá trình học vấn</div>
+                <div class="sdp-edu-header"><span>Cấp học</span><span>Tên trường</span><span>Năm bắt đầu</span><span>Năm kết thúc</span></div>
+                <div class="sdp-edu-row"><span class="sdp-edu-label">Tiểu học</span><input type="text" id="sdpSchoolPrimary" placeholder="Tên trường..."/><input type="number" id="sdpSchoolPrimaryFrom" placeholder="20xx" min="1990" max="2030"/><input type="number" id="sdpSchoolPrimaryTo" placeholder="20xx" min="1990" max="2030"/></div>
+                <div class="sdp-edu-row"><span class="sdp-edu-label">Trung học CS</span><input type="text" id="sdpSchoolMiddle" placeholder="Tên trường..."/><input type="number" id="sdpSchoolMiddleFrom" placeholder="20xx" min="1990" max="2030"/><input type="number" id="sdpSchoolMiddleTo" placeholder="20xx" min="1990" max="2030"/></div>
+                <div class="sdp-edu-row"><span class="sdp-edu-label">THPT</span><input type="text" id="sdpSchoolHigh" placeholder="Tên trường..."/><input type="number" id="sdpSchoolHighFrom" placeholder="20xx" min="1990" max="2030"/><input type="number" id="sdpSchoolHighTo" placeholder="20xx" min="1990" max="2030"/></div>
+                <div class="sdp-edu-row"><span class="sdp-edu-label">CĐ / ĐH</span><input type="text" id="sdpSchoolUni" placeholder="Tên trường..."/><input type="number" id="sdpSchoolUniFrom" placeholder="20xx" min="1990" max="2030"/><input type="number" id="sdpSchoolUniTo" placeholder="20xx" min="1990" max="2030"/></div>
+
+                <!-- §3 Lịch sử làm việc -->
+                <div class="sdp-section-title" style="margin-top:1.5rem;">Lịch sử làm việc</div>
+                <div class="sdp-row sdp-1col">
+                  <div class="sdp-field"><textarea id="sdpWorkHistory" rows="3" placeholder="Mô tả các công việc đã làm (công ty, thời gian, vị trí)..."></textarea></div>
+                </div>
+
+                <!-- §4 Thành viên gia đình -->
+                <div class="sdp-section-title" style="margin-top:1.5rem;">Thành viên gia đình</div>
+                <div class="sdp-fam-header"><span>Quan hệ</span><span>Họ và tên</span><span>Năm sinh</span><span>Nghề nghiệp</span></div>
+                <div class="sdp-fam-row"><span class="sdp-fam-label">Bố</span><input type="text" id="sdpFatherName" placeholder="Họ và tên..."/><input type="number" id="sdpFatherYear" placeholder="19xx" min="1940" max="2010"/><input type="text" id="sdpFatherJob" placeholder="Nghề nghiệp..."/></div>
+                <div class="sdp-fam-row"><span class="sdp-fam-label">Mẹ</span><input type="text" id="sdpMotherName" placeholder="Họ và tên..."/><input type="number" id="sdpMotherYear" placeholder="19xx" min="1940" max="2010"/><input type="text" id="sdpMotherJob" placeholder="Nghề nghiệp..."/></div>
+                <div class="sdp-fam-row"><span class="sdp-fam-label">Anh / Chị</span><input type="text" id="sdpSiblingOlderName" placeholder="Họ và tên..."/><input type="number" id="sdpSiblingOlderYear" placeholder="19xx" min="1940" max="2020"/><input type="text" id="sdpSiblingOlderJob" placeholder="Nghề nghiệp..."/></div>
+                <div class="sdp-fam-row"><span class="sdp-fam-label">Em</span><input type="text" id="sdpSiblingYoungerName" placeholder="Họ và tên..."/><input type="number" id="sdpSiblingYoungerYear" placeholder="20xx" min="1990" max="2020"/><input type="text" id="sdpSiblingYoungerJob" placeholder="Nghề nghiệp..."/></div>
+                <div class="sdp-fam-row"><span class="sdp-fam-label">Thành viên khác</span><input type="text" id="sdpOtherMemberName" placeholder="Họ và tên..."/><input type="number" id="sdpOtherMemberYear" placeholder="20xx" min="1940" max="2020"/><input type="text" id="sdpOtherMemberJob" placeholder="Nghề nghiệp..."/></div>
+
+                <!-- §5 Đặc điểm cá nhân -->
+                <div class="sdp-section-title" style="margin-top:1.5rem;">Đặc điểm cá nhân</div>
+                <div class="sdp-row sdp-2col">
+                  <div class="sdp-field"><label>Điểm mạnh</label><textarea id="sdpStrengths" rows="3" placeholder="Liệt kê điểm mạnh..."></textarea></div>
+                  <div class="sdp-field"><label>Điểm yếu</label><textarea id="sdpWeaknesses" rows="3" placeholder="Liệt kê điểm yếu..."></textarea></div>
+                </div>
+                <div class="sdp-row sdp-1col">
+                  <div class="sdp-field"><label>Lý do muốn sang Nhật học tập / làm việc</label><textarea id="sdpReason" rows="3" placeholder="Chia sẻ lý do và mục tiêu của bạn..."></textarea></div>
+                </div>
+                <div class="sdp-row sdp-1col">
+                  <div class="sdp-field"><label>Sở thích</label><textarea id="sdpHobbies" rows="2" placeholder="Sở thích, hoạt động yêu thích..."></textarea></div>
+                </div>
+
+                <div style="display:flex;justify-content:flex-end;margin-top:1.25rem;">
+                  <button type="submit" class="btn-submit-login" style="min-width:180px;padding:.65rem 2rem;font-size:.82rem;">💾 LƯU HỒ SƠ CHI TIẾT</button>
+                </div>
+              </form>
+            </div>
+          </div>
+
+        </div>
         </div>
 
         <!-- ==========================================

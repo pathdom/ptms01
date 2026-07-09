@@ -7165,6 +7165,33 @@ body.dark-theme-crm {
 .wf2-node-card.blocked .wf2-node-num { background:#EF4444; }
 .wf2-node-title { font-size:.8rem; font-weight:600; color:#1E293B; flex:1; line-height:1.25; }
 .wf2-node-type-icon { font-size:.85rem; opacity:.7; }
+
+/* Delete button on node card */
+.wf2-node-del-btn {
+  width:18px; height:18px; border-radius:4px; border:none;
+  background:transparent; color:#CBD5E1;
+  font-size:.85rem; font-weight:700; line-height:1;
+  display:flex; align-items:center; justify-content:center;
+  cursor:pointer; flex-shrink:0; padding:0;
+  transition:background .15s, color .15s;
+  opacity:0;
+}
+.wf2-node-card:hover .wf2-node-del-btn { opacity:1; }
+.wf2-node-del-btn:hover { background:#FEE2E2; color:#EF4444; }
+
+/* Insert-after button in arrow gap */
+.wf2-node-insert { pointer-events:none; }
+.wf2-insert-btn {
+  width:22px; height:22px; border-radius:50%;
+  background:#fff; border:2px solid #CBD5E1; color:#94A3B8;
+  font-size:1rem; font-weight:700; line-height:1;
+  display:flex; align-items:center; justify-content:center;
+  cursor:pointer; padding:0;
+  pointer-events:all;
+  opacity:.45; transition:opacity .15s, border-color .15s, color .15s, box-shadow .15s;
+  box-shadow:0 1px 4px rgba(0,0,0,.08);
+}
+.wf2-insert-btn:hover { opacity:1; border-color:#6366F1; color:#6366F1; box-shadow:0 2px 8px rgba(99,102,241,.2); }
 .wf2-node-done-icon {
   width:18px; height:18px; border-radius:5px;
   background:#10B981; color:#fff;
@@ -7788,3 +7815,112 @@ body.dark-theme-crm {
   margin-bottom: 1rem;
 }
 .sf-field { margin-bottom: 0; }
+
+/* ── Chi tiết hồ sơ (student detail profile) ─────────────── */
+.stp-detail-card { padding:1.25rem 1.5rem; }
+.sdp-section-title {
+  font-size:.68rem; font-weight:800; letter-spacing:1.1px;
+  text-transform:uppercase; color:var(--color-accent,#A88B58);
+  border-bottom:1px solid var(--color-border,#E8E5DF);
+  padding-bottom:.45rem; margin-bottom:.85rem;
+}
+.sdp-row { display:grid; gap:.75rem; margin-bottom:.75rem; }
+.sdp-1col { grid-template-columns:1fr; }
+.sdp-2col { grid-template-columns:1fr 1fr; }
+.sdp-3col { grid-template-columns:1fr 1fr 1fr; }
+.sdp-field { display:flex; flex-direction:column; gap:.3rem; }
+.sdp-field label { font-size:.7rem; font-weight:600; color:var(--color-text-muted,#6B6A67); }
+.sdp-field input, .sdp-field select, .sdp-field textarea {
+  font-size:.78rem; padding:.45rem .7rem;
+  border:1px solid var(--color-border,#E8E5DF); border-radius:6px;
+  background:var(--color-bg,#FAF8F5); color:var(--color-text-main,#1A1A1A);
+  outline:none; transition:border-color .15s;
+  font-family:inherit;
+}
+.sdp-field input:focus, .sdp-field select:focus, .sdp-field textarea:focus {
+  border-color:var(--color-accent,#A88B58);
+}
+.sdp-field textarea { resize:vertical; min-height:70px; }
+
+/* Education table */
+.sdp-edu-header, .sdp-edu-row {
+  display:grid; grid-template-columns:120px 1fr 90px 90px; gap:.5rem;
+  align-items:center; padding:.4rem 0;
+}
+.sdp-edu-header {
+  font-size:.67rem; font-weight:700; color:var(--color-text-muted,#6B6A67);
+  border-bottom:1px solid var(--color-border,#E8E5DF); margin-bottom:.25rem;
+}
+.sdp-edu-row { border-bottom:1px solid rgba(0,0,0,.04); }
+.sdp-edu-row:last-child { border-bottom:none; }
+.sdp-edu-label { font-size:.74rem; font-weight:600; color:var(--color-text-main,#1A1A1A); }
+.sdp-edu-row input {
+  font-size:.76rem; padding:.38rem .55rem;
+  border:1px solid var(--color-border,#E8E5DF); border-radius:5px;
+  background:var(--color-bg,#FAF8F5); color:var(--color-text-main,#1A1A1A);
+  outline:none; font-family:inherit; width:100%;
+}
+.sdp-edu-row input:focus { border-color:var(--color-accent,#A88B58); }
+
+/* Family table */
+.sdp-fam-header, .sdp-fam-row {
+  display:grid; grid-template-columns:120px 1fr 80px 1fr; gap:.5rem;
+  align-items:center; padding:.4rem 0;
+}
+.sdp-fam-header {
+  font-size:.67rem; font-weight:700; color:var(--color-text-muted,#6B6A67);
+  border-bottom:1px solid var(--color-border,#E8E5DF); margin-bottom:.25rem;
+}
+.sdp-fam-row { border-bottom:1px solid rgba(0,0,0,.04); }
+.sdp-fam-row:last-child { border-bottom:none; }
+.sdp-fam-label { font-size:.74rem; font-weight:600; color:var(--color-text-main,#1A1A1A); }
+.sdp-fam-row input {
+  font-size:.76rem; padding:.38rem .55rem;
+  border:1px solid var(--color-border,#E8E5DF); border-radius:5px;
+  background:var(--color-bg,#FAF8F5); color:var(--color-text-main,#1A1A1A);
+  outline:none; font-family:inherit; width:100%;
+}
+.sdp-fam-row input:focus { border-color:var(--color-accent,#A88B58); }
+
+/* Admin detail profile section */
+.adsd-detail-section {
+  border-top:1px solid var(--color-border,#E8E5DF);
+  padding:.75rem 2rem 1.5rem;
+  background:rgba(0,0,0,.015);
+}
+.adsd-detail-toggle {
+  display:flex; justify-content:space-between; align-items:center;
+  cursor:pointer; padding:.5rem 0;
+  font-size:.78rem; font-weight:700; color:var(--color-text-main,#1A1A1A);
+  letter-spacing:.3px;
+}
+.adsd-detail-toggle:hover { color:var(--color-accent,#A88B58); }
+#adsdDetailToggleIcon { transition:transform .25s; font-size:.75rem; color:var(--color-text-muted,#6B6A67); }
+.adsd-detail-grid {
+  display:grid; grid-template-columns:repeat(3,1fr); gap:1.5rem;
+  padding-top:.75rem;
+}
+.adsd-dg-section {
+  font-size:.65rem; font-weight:800; letter-spacing:1px;
+  text-transform:uppercase; color:var(--color-accent,#A88B58);
+  border-bottom:1px solid var(--color-border,#E8E5DF);
+  padding-bottom:.35rem; margin-bottom:.6rem;
+}
+.adsd-dg-row {
+  display:grid; grid-template-columns:.9fr 1.2fr; gap:.5rem;
+  font-size:.75rem; padding:.3rem 0;
+  border-bottom:1px solid rgba(0,0,0,.04);
+}
+.adsd-dg-row:last-child { border-bottom:none; }
+.adsd-dg-row > span:first-child { color:var(--color-text-muted,#6B6A67); font-weight:500; }
+.adsd-dg-row > span:last-child  { color:var(--color-text-main,#1A1A1A); font-weight:400; }
+.adsd-dg-multiline { grid-template-columns:1fr; }
+.adsd-dg-multiline > span:last-child { white-space:pre-wrap; font-size:.73rem; color:#374151; }
+
+@media (max-width:900px) {
+  .sdp-2col { grid-template-columns:1fr; }
+  .sdp-3col { grid-template-columns:1fr 1fr; }
+  .sdp-edu-header, .sdp-edu-row { grid-template-columns:100px 1fr 70px 70px; }
+  .sdp-fam-header, .sdp-fam-row { grid-template-columns:100px 1fr 65px 1fr; }
+  .adsd-detail-grid { grid-template-columns:1fr 1fr; }
+}
