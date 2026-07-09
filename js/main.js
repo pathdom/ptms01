@@ -12271,12 +12271,14 @@ document.addEventListener('DOMContentLoaded', () => {
     const drawArrow = (svg, x1,y1,x2,y2, mid) => {
       const isGreen = mid === '#22C55E';
       const isRed   = mid === '#EF4444';
+      const isGold  = mid === '#F59E0B';
       const stroke  = mid || '#94A3B8';
-      const marker  = isRed ? 'url(#wf2ArrowRed)' : isGreen ? 'url(#wf2ArrowGreen)' : 'url(#wf2Arrow)';
-      const w       = isGreen ? '2.5' : '2';
-      const line = svgEl('line', {x1, y1, x2, y2, stroke, 'stroke-width': w, 'marker-end': marker,
-        'stroke-linecap': 'round'});
-      if (isGreen) line.setAttribute('opacity', '1');
+      const marker  = isRed  ? 'url(#wf2ArrowRed)'
+                    : isGreen ? 'url(#wf2ArrowGreen)'
+                    : isGold  ? 'url(#wf2ArrowGold)'
+                    : 'url(#wf2Arrow)';
+      const w = (isGreen || isGold) ? '2.5' : '2';
+      const line = svgEl('line', {x1, y1, x2, y2, stroke, 'stroke-width': w, 'marker-end': marker, 'stroke-linecap': 'round'});
       svg.appendChild(line);
     };
     const drawPath = (svg, d, color, markerId) => {
@@ -12317,7 +12319,9 @@ document.addEventListener('DOMContentLoaded', () => {
       nodes.appendChild(startDiv);
 
       if (steps.length) {
-        drawArrow(svg, MX, SY+28, MX, nodeTop(0, extraByIdx[0]) - 2, steps[0].status==='done' ? '#22C55E' : '');
+        const first = steps[0];
+        const firstColor = first.status==='done' ? (first.type==='approve' ? '#F59E0B' : '#22C55E') : '';
+        drawArrow(svg, MX, SY+28, MX, nodeTop(0, extraByIdx[0]) - 2, firstColor);
       }
 
       steps.forEach((s, i) => {
@@ -12409,7 +12413,8 @@ document.addEventListener('DOMContentLoaded', () => {
           if (i+1 < steps.length) {
             const nextExtra = extraByIdx[i+1];
             const ny = nodeTop(i+1, nextExtra);
-            drawArrow(svg, MX, ty+NH, MX, ny-2, isDone ? '#22C55E' : '');
+            const arrowColor = isDone ? (s.type === 'approve' ? '#F59E0B' : '#22C55E') : '';
+            drawArrow(svg, MX, ty+NH, MX, ny-2, arrowColor);
           }
         }
       });
@@ -12420,7 +12425,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const last = steps[steps.length-1];
         const lastTy = nodeTop(steps.length-1, extraByIdx[steps.length-1]);
         const lastH  = last.type === 'condition' ? DW : NH;
-        drawArrow(svg, MX, lastTy+lastH+2, MX, endY-2, last.status==='done' ? '#22C55E' : '');
+        const lastColor = last.status==='done' ? (last.type==='approve' ? '#F59E0B' : '#22C55E') : '';
+        drawArrow(svg, MX, lastTy+lastH+2, MX, endY-2, lastColor);
       }
       const endDiv = document.createElement('div');
       endDiv.className = 'wf2-node';
