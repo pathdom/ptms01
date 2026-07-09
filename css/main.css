@@ -7166,6 +7166,17 @@ body.dark-theme-crm {
 .wf2-node-title { font-size:.8rem; font-weight:600; color:#1E293B; flex:1; line-height:1.25; }
 .wf2-node-type-icon { font-size:.85rem; opacity:.7; }
 
+/* Drag handle on node card */
+.wf2-drag-handle {
+  font-size:.9rem; color:#CBD5E1; cursor:grab; flex-shrink:0;
+  padding:0 2px; line-height:1; user-select:none;
+  transition:color .15s;
+}
+.wf2-drag-handle:hover { color:#94A3B8; }
+.wf2-drag-handle:active { cursor:grabbing; }
+.wf2-node-card.wf2-dragging-src { opacity:.3; pointer-events:none; }
+.wf2-drop-indicator { transition:top .08s; }
+
 /* Delete button on node card */
 .wf2-node-del-btn {
   width:18px; height:18px; border-radius:4px; border:none;

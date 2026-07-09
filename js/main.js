@@ -12519,6 +12519,7 @@ document.addEventListener('DOMContentLoaded', () => {
           nodeDiv.innerHTML = `
             <div class="wf2-node-card ${statusCls} ${selCls}" data-step-idx="${i}">
               <div class="wf2-node-card-head">
+                <span class="wf2-drag-handle" title="Kéo để sắp xếp">⠿</span>
                 <div class="wf2-node-num">${num}</div>
                 <div class="wf2-node-title">${s.name}</div>
                 <span class="wf2-node-type-icon">${TYPE_ICON[s.type]||'📋'}</span>
@@ -12609,6 +12610,103 @@ document.addEventListener('DOMContentLoaded', () => {
           renderSideList();
           openStepDetail(wf, afterIdx + 1);
           if (typeof showToast === 'function') showToast('Đã thêm bước mới', 'success');
+        });
+      });
+
+      // ── Drag-to-reorder steps ─────────────────────────────────────────
+      const canvasEl = document.getElementById('wf2Canvas');
+      const wrapEl   = document.getElementById('wf2CanvasWrap') || canvasEl?.parentElement;
+
+      nodes.querySelectorAll('.wf2-drag-handle').forEach(handle => {
+        handle.addEventListener('pointerdown', e => {
+          e.stopPropagation();
+          e.preventDefault();
+
+          const card    = handle.closest('.wf2-node-card');
+          const nodeDiv = handle.closest('.wf2-node');
+          if (!card || !nodeDiv) return;
+          const dragIdx = parseInt(card.dataset.stepIdx);
+          if (isNaN(dragIdx)) return;
+
+          // Ghost element
+          const cardRect = card.getBoundingClientRect();
+          const ghost = card.cloneNode(true);
+          ghost.style.cssText = `position:fixed;pointer-events:none;z-index:9999;
+            width:${cardRect.width}px;opacity:.82;
+            box-shadow:0 12px 40px rgba(0,0,0,.18);border-radius:10px;
+            transform:rotate(1.5deg) scale(1.03);transition:none;
+            left:${cardRect.left}px;top:${cardRect.top}px;`;
+          document.body.appendChild(ghost);
+          card.classList.add('wf2-dragging-src');
+
+          // Drop indicator line
+          const dropLine = document.createElement('div');
+          dropLine.className = 'wf2-drop-indicator';
+          dropLine.style.display = 'none';
+          nodes.appendChild(dropLine);
+
+          let dropIdx = null;
+
+          const getDropIdx = (clientY) => {
+            if (!canvasEl) return null;
+            const rect = canvasEl.getBoundingClientRect();
+            const canvasY = (clientY - rect.top) / (_zoom || 1);
+            // Find the insert slot (between 0 and steps.length)
+            let best = steps.length; // default: after last
+            for (let k = 0; k < steps.length; k++) {
+              const ky = nodeTop(k, extraByIdx[k]) + NH / 2;
+              if (canvasY < ky) { best = k; break; }
+            }
+            return best;
+          };
+
+          const showDropLine = (dIdx) => {
+            if (dIdx === null) { dropLine.style.display = 'none'; return; }
+            // Position: above step dIdx, or after last step
+            const lineY = dIdx < steps.length
+              ? nodeTop(dIdx, extraByIdx[dIdx]) - GAP / 2
+              : nodeTop(steps.length - 1, extraByIdx[steps.length - 1]) + NH + GAP / 2;
+            dropLine.style.cssText = `position:absolute;left:${MX - NW/2}px;top:${lineY - 2}px;
+              width:${NW}px;height:3px;border-radius:2px;
+              background:#6366F1;display:block;pointer-events:none;z-index:10;
+              box-shadow:0 0 0 3px rgba(99,102,241,.2);`;
+          };
+
+          const onMove = (me) => {
+            ghost.style.left = (me.clientX - cardRect.width / 2) + 'px';
+            ghost.style.top  = (me.clientY - 30) + 'px';
+            dropIdx = getDropIdx(me.clientY);
+            // Don't show indicator at same position (no-op moves)
+            const noOp = dropIdx === dragIdx || dropIdx === dragIdx + 1;
+            showDropLine(noOp ? null : dropIdx);
+          };
+
+          const onUp = async () => {
+            document.removeEventListener('pointermove', onMove);
+            document.removeEventListener('pointerup', onUp);
+            ghost.remove();
+            dropLine.remove();
+            card.classList.remove('wf2-dragging-src');
+
+            const noOp = dropIdx === null || dropIdx === dragIdx || dropIdx === dragIdx + 1;
+            if (!noOp) {
+              const moved = wf.steps.splice(dragIdx, 1)[0];
+              const insertAt = dropIdx > dragIdx ? dropIdx - 1 : dropIdx;
+              wf.steps.splice(insertAt, 0, moved);
+              if (_activeStepIdx === dragIdx) _activeStepIdx = insertAt;
+              else if (_activeStepIdx !== null) {
+                if (_activeStepIdx > dragIdx && _activeStepIdx <= insertAt) _activeStepIdx--;
+                else if (_activeStepIdx < dragIdx && _activeStepIdx >= insertAt) _activeStepIdx++;
+              }
+              await saveStep(wf);
+              renderCanvas(wf);
+              renderSideList();
+              if (typeof showToast === 'function') showToast('Đã sắp xếp lại thứ tự bước', 'success');
+            }
+          };
+
+          document.addEventListener('pointermove', onMove);
+          document.addEventListener('pointerup', onUp);
         });
       });
     };
