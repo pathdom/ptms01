@@ -8668,6 +8668,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const totalEl = document.getElementById('srcTotalAmount');
         if (paidEl)  paidEl.value  = c.paidAmount  ? fmtMoneyInput(c.paidAmount)  : '';
         if (totalEl) totalEl.value = c.totalAmount ? fmtMoneyInput(c.totalAmount) : '';
+        const flightEl = document.getElementById('srcFlightDate');
+        if (flightEl) flightEl.value = c.flightDate || '';
         await populateSrcAdvisorSelect(c.advisor || c.source || '');
         document.getElementById('sourceStudentModal').style.display = 'flex';
         document.getElementById('btnSubmitSourceStudent').dataset.editId = c.id;
@@ -8768,7 +8770,30 @@ document.addEventListener('DOMContentLoaded', () => {
     setText('srcDetailEmail', student.email);
     setText('srcDetailPhone', student.phone);
     setText('srcDetailCountry', student.country);
+    setText('srcDetailHometown', student.hometown || student.address);
+    setText('srcDetailStatus', student.status);
+    setText('srcDetailLearningMonth', student.learningMonth);
+    setText('srcDetailRoom', student.room || student.classroom);
+    setText('srcDetailAdvisor', student.advisor || student.source);
     setText('srcDetailNotes', student.notes || 'Chưa có ghi chú');
+
+    // Status badge in header
+    const badge = document.getElementById('srcDetailStatusBadge');
+    if (badge) {
+      const st = student.status || 'Đang học';
+      const stColors = {
+        'Đang học':       { bg:'rgba(16,185,129,0.12)', color:'#059669' },
+        'Đã xuất cảnh':   { bg:'rgba(99,102,241,0.12)', color:'#6366F1' },
+        'Chờ phỏng vấn':  { bg:'rgba(245,158,11,0.12)', color:'#D97706' },
+        'Đã trúng tuyển': { bg:'rgba(59,130,246,0.12)', color:'#2563EB' },
+        'Đang làm hồ sơ': { bg:'rgba(168,85,247,0.12)', color:'#7C3AED' },
+        'Chờ xử lý':      { bg:'rgba(107,114,128,0.12)', color:'#6B7280' },
+      };
+      const c = stColors[st] || stColors['Đang học'];
+      badge.textContent = st;
+      badge.style.background = c.bg;
+      badge.style.color = c.color;
+    }
 
     let dateStr = '--';
     if (student.createdAt?.toDate) {
@@ -8776,6 +8801,34 @@ document.addEventListener('DOMContentLoaded', () => {
       dateStr = `${padZ(d.getDate())}/${padZ(d.getMonth()+1)}/${d.getFullYear()}`;
     }
     setText('srcDetailDate', dateStr);
+
+    // Tuition / học phí
+    const fmtVNDShort = (n) => n > 0 ? Number(n).toLocaleString('vi-VN') + ' đ' : '--';
+    const paid   = student.paidAmount  || 0;
+    const total  = student.totalAmount || 0;
+    const remain = Math.max(0, total - paid);
+    setText('srcDetailPaid',   fmtVNDShort(paid));
+    setText('srcDetailTotal',  fmtVNDShort(total));
+    const remainEl = document.getElementById('srcDetailRemain');
+    if (remainEl) {
+      remainEl.textContent = total > 0 ? (remain > 0 ? fmtVNDShort(remain) : '0 đ') : '--';
+      remainEl.style.color = remain > 0 ? '#EF4444' : '#10B981';
+    }
+
+    // Lịch bay
+    const flightEl = document.getElementById('srcDetailFlight');
+    if (flightEl) {
+      if (student.flightDate) {
+        const fd = new Date(student.flightDate);
+        flightEl.textContent = isNaN(fd) ? student.flightDate : fd.toLocaleDateString('vi-VN');
+        flightEl.style.color = 'var(--accent,#A88B58)';
+        flightEl.style.fontWeight = '600';
+      } else {
+        flightEl.textContent = 'Chưa có lịch bay';
+        flightEl.style.color = 'var(--text-muted,#6B6A67)';
+        flightEl.style.fontWeight = '400';
+      }
+    }
 
     document.getElementById('revEntryForm').style.display = 'none';
     modal.style.display = 'flex';
@@ -8847,6 +8900,8 @@ document.addEventListener('DOMContentLoaded', () => {
       const totalEl = document.getElementById('srcTotalAmount');
       if (paidEl)  paidEl.value  = c.paidAmount  ? fmtMoneyInput(c.paidAmount)  : '';
       if (totalEl) totalEl.value = c.totalAmount ? fmtMoneyInput(c.totalAmount) : '';
+      const flightEl = document.getElementById('srcFlightDate');
+      if (flightEl) flightEl.value = c.flightDate || '';
       await populateSrcAdvisorSelect(c.advisor || c.source || '');
       document.getElementById('btnSubmitSourceStudent').dataset.editId = c.id;
       document.getElementById('sourceDetailModal').style.display = 'none';
@@ -10299,7 +10354,7 @@ document.addEventListener('DOMContentLoaded', () => {
       // Mở modal thêm học viên nguồn
       const openSourceModal = async () => {
         document.getElementById('srcModalTitle').textContent = '+ Thêm Học Viên Nguồn';
-        ['srcName','srcEmail','srcPhone','srcHometown','srcNotes','srcPaidAmount','srcTotalAmount'].forEach(id => {
+        ['srcName','srcEmail','srcPhone','srcHometown','srcNotes','srcPaidAmount','srcTotalAmount','srcFlightDate'].forEach(id => {
           const el = document.getElementById(id);
           if (el) el.value = '';
         });
@@ -10329,6 +10384,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const advisor     = document.getElementById('srcAdvisor')?.value || '';
         const paidAmount  = parseMoneyInput(document.getElementById('srcPaidAmount')?.value || '');
         const totalAmount = parseMoneyInput(document.getElementById('srcTotalAmount')?.value || '');
+        const flightDate  = document.getElementById('srcFlightDate')?.value || null;
         const payload = {
           name,
           email:         document.getElementById('srcEmail')?.value.trim()        || '',
@@ -10342,6 +10398,7 @@ document.addEventListener('DOMContentLoaded', () => {
           source:        advisor,
           paidAmount:    paidAmount  || null,
           totalAmount:   totalAmount || null,
+          flightDate:    flightDate  || null,
           notes:         document.getElementById('srcNotes')?.value.trim()         || '',
           updatedAt:     firebase.firestore.FieldValue.serverTimestamp(),
         };
