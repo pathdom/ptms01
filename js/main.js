@@ -3246,7 +3246,7 @@ document.addEventListener('DOMContentLoaded', () => {
     set('adsdEmail',         student.email);
     set('adsdPhone',         student.phone);
     set('adsdCountry',       student.country);
-    set('adsdAdvisor',       student.advisor || 'Chưa phân công');
+    set('adsdAdvisor',       student.advisor || student.source || 'Chưa phân công');
     set('adsdLearningMonth', student.learningMonth || 'Tháng 1');
     set('adsdNotes',         student.notes || 'Chưa có ghi chú tư vấn.');
 
@@ -3281,13 +3281,13 @@ document.addEventListener('DOMContentLoaded', () => {
       if (countdownEl) countdownEl.textContent = '';
     }
 
-    const tuitionTotal  = student.tuitionTotal  || 0;
-    const tuitionPaid   = student.tuitionPaid   || 0;
+    const tuitionTotal  = student.totalAmount || student.tuitionTotal  || 0;
+    const tuitionPaid   = student.paidAmount  || student.tuitionPaid   || 0;
     const tuitionRemain = Math.max(0, tuitionTotal - tuitionPaid);
-    const fmt = (n) => n > 0 ? Number(n).toLocaleString('vi-VN') + ' đ' : '--';
-    set('adsdTuitionTotal',  fmt(tuitionTotal));
-    set('adsdTuitionPaid',   fmt(tuitionPaid));
-    set('adsdTuitionRemain', tuitionRemain > 0 ? fmt(tuitionRemain) : '0 d');
+    const fmtTu = (n) => n > 0 ? Number(n).toLocaleString('vi-VN') + ' đ' : '--';
+    set('adsdTuitionTotal',  fmtTu(tuitionTotal));
+    set('adsdTuitionPaid',   fmtTu(tuitionPaid));
+    set('adsdTuitionRemain', tuitionTotal > 0 ? (tuitionRemain > 0 ? fmtTu(tuitionRemain) : '0 đ') : '--');
     const tuStatusEl = document.getElementById('adsdTuitionStatus');
     if (tuStatusEl) {
       if (!tuitionTotal) {
@@ -3301,31 +3301,24 @@ document.addEventListener('DOMContentLoaded', () => {
     const barEl = document.getElementById('adsdTuitionBar');
     if (barEl) barEl.style.width = tuitionTotal > 0 ? Math.min(100, Math.round(tuitionPaid / tuitionTotal * 100)) + '%' : '0%';
 
-    const ROADMAP_STEPS = [
-      { month:'Tháng 1', label:'Xây dựng nền tảng', sub:'Nhập môn ngôn ngữ & văn hóa' },
-      { month:'Tháng 2', label:'Phát triển phản xạ', sub:'Kỹ năng nghe – nói cơ bản' },
-      { month:'Tháng 3', label:'Làm quen học thuật', sub:'Ngữ pháp & từ vựng học thuật' },
-      { month:'Tháng 4', label:'Tăng tốc học thuật', sub:'Đọc hiểu & viết luận' },
-      { month:'Tháng 5', label:'Luyện đề chuyên sâu', sub:'Ôn thi & mô phỏng phỏng vấn' },
-      { month:'Tháng 6', label:'Tổng ôn & mô phỏng', sub:'Chuẩn bị hồ sơ & xuất cảnh' },
-    ];
     const ROADMAP_STEPS_VI = [
       { month:'Tháng 1', label:'Xây dựng nền tảng',   sub:'Nhập môn ngôn ngữ & văn hóa' },
       { month:'Tháng 2', label:'Phát triển phản xạ',   sub:'Kỹ năng nghe – nói cơ bản' },
-      { month:'Tháng 3', label:'Làm quen học thuật',        sub:'Ngữ pháp & từ vựng học thuật' },
+      { month:'Tháng 3', label:'Làm quen học thuật',   sub:'Ngữ pháp & từ vựng học thuật' },
       { month:'Tháng 4', label:'Tăng tốc học thuật',   sub:'Đọc hiểu & viết luận' },
       { month:'Tháng 5', label:'Luyện đề chuyên sâu', sub:'Ôn thi & mô phỏng phỏng vấn' },
       { month:'Tháng 6', label:'Tổng ôn & mô phỏng',   sub:'Chuẩn bị hồ sơ & xuất cảnh' },
     ];
-    const today = new Date();
-    const monthsComplete = Math.max(0, Math.floor((today - enrollDate) / (1000 * 60 * 60 * 24 * 30.44)));
-    const currentIdx = Math.min(monthsComplete + 1, 7);
+    // currentIdx = 1..6 for T1-T6, 7 for Hoàn thành — driven by learningMonth field
+    const LM_MAP = { 'Tháng 1':1, 'Tháng 2':2, 'Tháng 3':3, 'Tháng 4':4, 'Tháng 5':5, 'Tháng 6':6, 'Hoàn thành':7 };
+    const currentIdx = LM_MAP[student.learningMonth] || 1;
     const roadmapEl = document.getElementById('adsdRoadmap');
     if (roadmapEl) {
       roadmapEl.innerHTML = ROADMAP_STEPS_VI.map(function(s, i) {
         const stepNum = i + 1;
-        const done   = stepNum < currentIdx;
-        const active = stepNum === currentIdx;
+        const allDone = currentIdx >= 7;
+        const done   = allDone || stepNum < currentIdx;
+        const active = !allDone && stepNum === currentIdx;
         const dotCls = done ? 'done' : active ? 'active' : '';
         const tagCls = done ? 'done' : active ? 'active' : 'upcoming';
         const tagTxt = done ? 'Hoàn thành' : active ? 'Đang học' : 'Chưa bắt đầu';
@@ -3337,9 +3330,9 @@ document.addEventListener('DOMContentLoaded', () => {
       }).join('');
     }
 
-    const sem1Status = currentIdx <= 2 ? 'Đang học' : 'Hoàn thành';
-    const sem2Status = currentIdx <= 2 ? 'Chưa bắt đầu' : currentIdx <= 4 ? 'Đang học' : 'Hoàn thành';
-    const sem3Status = currentIdx <= 4 ? 'Chưa bắt đầu' : 'Đang học';
+    const sem1Status = currentIdx >= 3 ? 'Hoàn thành' : 'Đang học';
+    const sem2Status = currentIdx <= 2 ? 'Chưa bắt đầu' : currentIdx >= 5 ? 'Hoàn thành' : 'Đang học';
+    const sem3Status = currentIdx <= 4 ? 'Chưa bắt đầu' : currentIdx >= 7 ? 'Hoàn thành' : 'Đang học';
     const applyTag = function(id, txt) {
       const el = document.getElementById(id);
       if (!el) return;
