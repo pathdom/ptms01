@@ -2851,7 +2851,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const room   = staffMatch ? staffMatch.department : (student.room || student.classroom || '--');
 
       tr.innerHTML =
-        '<td class="stw-code"><span class="stw-code-val">' + displayCode + '</span></td>' +
+        '<td class="stw-code"><span class="stw-code-val">' + (student.code || displayCode) + '</span></td>' +
         '<td class="stw-name"><div class="stw-name-main">' + (student.name || '--') + '</div></td>' +
         '<td class="stw-email"><a class="stw-link" href="mailto:' + (student.email||'') + '">' + (student.email || '--') + '</a></td>' +
         '<td class="stw-phone">' + (student.phone || '--') + '</td>' +
@@ -4894,16 +4894,16 @@ document.addEventListener('DOMContentLoaded', () => {
       { month: 'Tháng 5', label: 'Luyện đề chuyên sâu', sub: 'Ôn thi & mô phỏng phỏng vấn' },
       { month: 'Tháng 6', label: 'Tổng ôn & mô phỏng', sub: 'Chuẩn bị hồ sơ & xuất cảnh' },
     ];
-    // Calculate current step from real enrollment date + today
-    const today = new Date();
-    const monthsComplete = Math.max(0, Math.floor((today - enrollDate) / (1000 * 60 * 60 * 24 * 30.44)));
-    const currentIdx = Math.min(monthsComplete + 1, 7); // 1–6 = active month, 7 = all done
+    // Derive current roadmap step from learningMonth field (not time-based)
+    const LM_MAP = { 'Tháng 1':1, 'Tháng 2':2, 'Tháng 3':3, 'Tháng 4':4, 'Tháng 5':5, 'Tháng 6':6, 'Hoàn thành':7 };
+    const currentIdx = LM_MAP[p.learningMonth] || 1; // 1–6 = active month, 7 = all done
+    const allDone = currentIdx >= 7;
     const roadmapEl = document.getElementById('stpRoadmap');
     if (roadmapEl) {
       roadmapEl.innerHTML = ROADMAP_STEPS.map((s, i) => {
         const stepNum = i + 1;
-        const done    = stepNum < currentIdx;
-        const active  = stepNum === currentIdx;
+        const done    = allDone || stepNum < currentIdx;
+        const active  = !allDone && stepNum === currentIdx;
         const dotCls  = done ? 'done' : active ? 'active' : '';
         const tagCls  = done ? 'done' : active ? 'active' : 'upcoming';
         const tagTxt  = done ? 'Hoàn thành' : active ? 'Đang học' : 'Chưa bắt đầu';
@@ -4921,9 +4921,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // ── Học kì ──
     // Kì I: tháng 1–2 | Kì II: tháng 3–4 | Kì III: tháng 5–6
-    const sem1Status = currentIdx <= 2 ? 'Đang học' : 'Hoàn thành';
-    const sem2Status = currentIdx <= 2 ? 'Chưa bắt đầu' : currentIdx <= 4 ? 'Đang học' : 'Hoàn thành';
-    const sem3Status = currentIdx <= 4 ? 'Chưa bắt đầu' : 'Đang học';
+    const sem1Status = currentIdx >= 3 ? 'Hoàn thành' : 'Đang học';
+    const sem2Status = currentIdx <= 2 ? 'Chưa bắt đầu' : currentIdx >= 5 ? 'Hoàn thành' : 'Đang học';
+    const sem3Status = currentIdx <= 4 ? 'Chưa bắt đầu' : currentIdx >= 7 ? 'Hoàn thành' : 'Đang học';
     const applyTag = (id, txt) => {
       const el = document.getElementById(id);
       if (!el) return;
