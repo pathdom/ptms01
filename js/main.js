@@ -3427,6 +3427,10 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById("studentStatus").value = student.status || 'Đang học';
     document.getElementById("studentLearningMonth").value = student.learningMonth || "Tháng 1";
     document.getElementById("studentNotes").value = student.notes || "";
+    const paidEl  = document.getElementById("studentPaidAmount");
+    const totalEl = document.getElementById("studentTotalAmount");
+    if (paidEl)  paidEl.value  = student.paidAmount  ? fmtMoneyInput(student.paidAmount)  : '';
+    if (totalEl) totalEl.value = student.totalAmount ? fmtMoneyInput(student.totalAmount) : '';
     await populateAdvisorSelect(student.advisor || student.source || '');
     const roomEl = document.getElementById("studentRoom");
     if (roomEl) {
@@ -3471,10 +3475,12 @@ document.addEventListener('DOMContentLoaded', () => {
       const status = document.getElementById("studentStatus").value;
       const learningMonth = document.getElementById("studentLearningMonth").value;
       const notes = document.getElementById("studentNotes").value.trim();
-      const advisor  = document.getElementById("studentAdvisor")?.value || '';
-      const hometown = document.getElementById("studentHometown")?.value.trim() || '';
-      const room     = document.getElementById("studentRoom")?.value || '';
-      const formMode = document.getElementById("studentFormMode")?.value || 'student';
+      const advisor     = document.getElementById("studentAdvisor")?.value || '';
+      const hometown    = document.getElementById("studentHometown")?.value.trim() || '';
+      const room        = document.getElementById("studentRoom")?.value || '';
+      const formMode    = document.getElementById("studentFormMode")?.value || 'student';
+      const paidAmount  = parseMoneyInput(document.getElementById("studentPaidAmount")?.value || '');
+      const totalAmount = parseMoneyInput(document.getElementById("studentTotalAmount")?.value || '');
 
       if (!name || !code || !email || !phone) {
         showToast("Vui lòng nhập đầy đủ các trường thông tin có dấu *!", "error");
@@ -3492,6 +3498,8 @@ document.addEventListener('DOMContentLoaded', () => {
         hometown,
         room,
         source: advisor,
+        paidAmount:  paidAmount  || null,
+        totalAmount: totalAmount || null,
         updatedAt: firebase.firestore.FieldValue.serverTimestamp()
       };
       if (formMode === 'customer') {
@@ -3520,6 +3528,22 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     });
   }
+
+  // Wire format-on-focus/blur for modal money inputs (once per page)
+  document.querySelectorAll('.sf-money-input').forEach(inp => {
+    inp.addEventListener('focus', function () {
+      const raw = parseMoneyInput(this.value);
+      this.value = raw > 0 ? String(raw) : '';
+      this.select();
+    });
+    inp.addEventListener('blur', function () {
+      const raw = parseMoneyInput(this.value);
+      this.value = raw > 0 ? fmtMoneyInput(raw) : '';
+    });
+    inp.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter') { e.preventDefault(); this.blur(); }
+    });
+  });
 
   // Bind change events initially
   bindFilters();
