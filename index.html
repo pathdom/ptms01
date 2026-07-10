@@ -3612,9 +3612,12 @@
           <div class="adsd-card">
             <div class="adsd-card-head"><h4>Thông tin cơ bản</h4></div>
             <div class="profile-info-rows">
+              <div class="profile-info-row"><span class="info-label">Mã học viên</span><span class="info-val" style="font-weight:700;color:#6366F1;font-family:monospace;" id="adsdCodeRow">--</span></div>
               <div class="profile-info-row"><span class="info-label">Email</span><span class="info-val" id="adsdEmail">--</span></div>
               <div class="profile-info-row"><span class="info-label">Điện thoại</span><span class="info-val" id="adsdPhone">--</span></div>
+              <div class="profile-info-row"><span class="info-label">Quê quán</span><span class="info-val" id="adsdHometown">--</span></div>
               <div class="profile-info-row"><span class="info-label">Quốc gia đến</span><span class="info-val" id="adsdCountry">--</span></div>
+              <div class="profile-info-row"><span class="info-label">Phòng ban</span><span class="info-val" id="adsdRoom">--</span></div>
               <div class="profile-info-row"><span class="info-label">Nhân viên tư vấn</span><span class="info-val" id="adsdAdvisor">--</span></div>
               <div class="profile-info-row"><span class="info-label">Ngày nhập học</span><span class="info-val" id="adsdEnrollDate">--</span></div>
               <div class="profile-info-row"><span class="info-label">Tháng học hiện tại</span><span class="info-val" style="color:var(--color-accent,#A88B58);font-weight:600;" id="adsdLearningMonth">--</span></div>
@@ -3689,120 +3692,190 @@
           </div>
         </div>
 
-      </div><!-- /adsd-body -->
-
-      <!-- Chi tiết hồ sơ — full-width read-only section for admin -->
-      <div class="adsd-detail-section" id="adsdDetailSection">
-        <div class="adsd-detail-toggle" id="adsdDetailToggle">
-          <span>Chi tiết hồ sơ cá nhân</span>
-          <span id="adsdDetailToggleIcon">▼</span>
-        </div>
-        <div id="adsdDetailBody" style="display:none;">
-          <div class="adsd-detail-grid">
-            <div class="adsd-dg-col">
-              <div class="adsd-dg-section">Thông tin cá nhân</div>
-              <div class="adsd-dg-row"><span>Số CCCD</span><span id="adsdDCccd">--</span></div>
-              <div class="adsd-dg-row"><span>Ngày cấp</span><span id="adsdDCccdDate">--</span></div>
-              <div class="adsd-dg-row"><span>Giới tính</span><span id="adsdDGender">--</span></div>
-              <div class="adsd-dg-row"><span>Ngày sinh</span><span id="adsdDDob">--</span></div>
-              <div class="adsd-dg-row"><span>Tôn giáo</span><span id="adsdDReligion">--</span></div>
-              <div class="adsd-dg-row"><span>Dân tộc</span><span id="adsdDEthnicity">--</span></div>
-              <div class="adsd-dg-row"><span>Tình trạng HN</span><span id="adsdDMarital">--</span></div>
-              <div class="adsd-dg-row"><span>SĐT học viên</span><span id="adsdDPhone">--</span></div>
-              <div class="adsd-dg-row"><span>SĐT người thân</span><span id="adsdDPhoneRelative">--</span></div>
-              <div class="adsd-dg-row"><span>Hộ khẩu</span><span id="adsdDPermanentAddress" style="white-space:normal;">--</span></div>
-              <div class="adsd-dg-row"><span>Tạm trú</span><span id="adsdDTempAddress" style="white-space:normal;">--</span></div>
-            </div>
-            <div class="adsd-dg-col">
-              <div class="adsd-dg-section">Học vấn</div>
-              <div class="adsd-dg-row"><span>Tiểu học</span><span id="adsdDSchoolPrimary">--</span></div>
-              <div class="adsd-dg-row"><span>Trung học CS</span><span id="adsdDSchoolMiddle">--</span></div>
-              <div class="adsd-dg-row"><span>THPT</span><span id="adsdDSchoolHigh">--</span></div>
-              <div class="adsd-dg-row"><span>CĐ / ĐH</span><span id="adsdDSchoolUni">--</span></div>
-              <div class="adsd-dg-section" style="margin-top:1rem;">Gia đình</div>
-              <div class="adsd-dg-row"><span>Bố</span><span id="adsdDFather">--</span></div>
-              <div class="adsd-dg-row"><span>Mẹ</span><span id="adsdDMother">--</span></div>
-              <div class="adsd-dg-row"><span>Anh/Chị</span><span id="adsdDSiblingOlder">--</span></div>
-              <div class="adsd-dg-row"><span>Em</span><span id="adsdDSiblingYounger">--</span></div>
-              <div class="adsd-dg-row"><span>Thành viên khác</span><span id="adsdDOtherMember">--</span></div>
-            </div>
-            <div class="adsd-dg-col">
-              <div class="adsd-dg-section">Đặc điểm cá nhân</div>
-              <div class="adsd-dg-row adsd-dg-multiline"><span>Điểm mạnh</span><span id="adsdDStrengths">--</span></div>
-              <div class="adsd-dg-row adsd-dg-multiline"><span>Điểm yếu</span><span id="adsdDWeaknesses">--</span></div>
-              <div class="adsd-dg-row adsd-dg-multiline"><span>Lý do sang Nhật</span><span id="adsdDReason">--</span></div>
-              <div class="adsd-dg-row adsd-dg-multiline"><span>Sở thích</span><span id="adsdDHobbies">--</span></div>
-              <div class="adsd-dg-section" style="margin-top:1rem;">Lịch sử làm việc</div>
-              <div class="adsd-dg-row adsd-dg-multiline"><span id="adsdDWorkHistory" style="color:#374151;font-size:.78rem;white-space:pre-wrap;grid-column:1/-1;">--</span></div>
+        <!-- Full-width: Chi tiết hồ sơ cá nhân -->
+        <div class="adsd-card adsd-detail-card" id="adsdDetailSection">
+          <div class="adsd-card-head"><h4>Chi tiết hồ sơ cá nhân</h4></div>
+          <div id="adsdDetailBody">
+            <div class="adsd-detail-grid">
+              <div class="adsd-dg-col">
+                <div class="adsd-dg-section">Thông tin cá nhân</div>
+                <div class="adsd-dg-row"><span>Số CCCD</span><span id="adsdDCccd">--</span></div>
+                <div class="adsd-dg-row"><span>Ngày cấp</span><span id="adsdDCccdDate">--</span></div>
+                <div class="adsd-dg-row"><span>Giới tính</span><span id="adsdDGender">--</span></div>
+                <div class="adsd-dg-row"><span>Ngày sinh</span><span id="adsdDDob">--</span></div>
+                <div class="adsd-dg-row"><span>Tôn giáo</span><span id="adsdDReligion">--</span></div>
+                <div class="adsd-dg-row"><span>Dân tộc</span><span id="adsdDEthnicity">--</span></div>
+                <div class="adsd-dg-row"><span>Tình trạng HN</span><span id="adsdDMarital">--</span></div>
+                <div class="adsd-dg-row"><span>SĐT học viên</span><span id="adsdDPhone">--</span></div>
+                <div class="adsd-dg-row"><span>SĐT người thân</span><span id="adsdDPhoneRelative">--</span></div>
+                <div class="adsd-dg-row"><span>Hộ khẩu</span><span id="adsdDPermanentAddress" style="white-space:normal;">--</span></div>
+                <div class="adsd-dg-row"><span>Tạm trú</span><span id="adsdDTempAddress" style="white-space:normal;">--</span></div>
+              </div>
+              <div class="adsd-dg-col">
+                <div class="adsd-dg-section">Học vấn</div>
+                <div class="adsd-dg-row"><span>Tiểu học</span><span id="adsdDSchoolPrimary">--</span></div>
+                <div class="adsd-dg-row"><span>Trung học CS</span><span id="adsdDSchoolMiddle">--</span></div>
+                <div class="adsd-dg-row"><span>THPT</span><span id="adsdDSchoolHigh">--</span></div>
+                <div class="adsd-dg-row"><span>CĐ / ĐH</span><span id="adsdDSchoolUni">--</span></div>
+                <div class="adsd-dg-section" style="margin-top:1rem;">Gia đình</div>
+                <div class="adsd-dg-row"><span>Bố</span><span id="adsdDFather">--</span></div>
+                <div class="adsd-dg-row"><span>Mẹ</span><span id="adsdDMother">--</span></div>
+                <div class="adsd-dg-row"><span>Anh/Chị</span><span id="adsdDSiblingOlder">--</span></div>
+                <div class="adsd-dg-row"><span>Em</span><span id="adsdDSiblingYounger">--</span></div>
+                <div class="adsd-dg-row"><span>Thành viên khác</span><span id="adsdDOtherMember">--</span></div>
+              </div>
+              <div class="adsd-dg-col">
+                <div class="adsd-dg-section">Đặc điểm cá nhân</div>
+                <div class="adsd-dg-row adsd-dg-multiline"><span>Điểm mạnh</span><span id="adsdDStrengths">--</span></div>
+                <div class="adsd-dg-row adsd-dg-multiline"><span>Điểm yếu</span><span id="adsdDWeaknesses">--</span></div>
+                <div class="adsd-dg-row adsd-dg-multiline"><span>Lý do sang Nhật</span><span id="adsdDReason">--</span></div>
+                <div class="adsd-dg-row adsd-dg-multiline"><span>Sở thích</span><span id="adsdDHobbies">--</span></div>
+                <div class="adsd-dg-section" style="margin-top:1rem;">Lịch sử làm việc</div>
+                <div class="adsd-dg-row adsd-dg-multiline"><span id="adsdDWorkHistory" style="color:#374151;font-size:.78rem;white-space:pre-wrap;grid-column:1/-1;">--</span></div>
+              </div>
             </div>
           </div>
         </div>
-      </div>
+
+      </div><!-- /adsd-body -->
 
     </div><!-- /studentDetailModal --
 
 
-    <!-- Modal Thêm Học Viên Nguồn -->
+    <!-- Modal Thêm / Sửa Học Viên Nguồn -->
     <div class="modal-overlay" id="sourceStudentModal"
       style="display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;
              background:rgba(0,0,0,0.5);z-index:1100;justify-content:center;
              align-items:center;padding:2rem;backdrop-filter:blur(4px);">
-      <div class="login-card" style="max-width:480px;width:100%;border-radius:var(--border-radius-lg);
-           box-shadow:var(--shadow-lg);padding:0;display:flex;flex-direction:column;max-height:90vh;overflow:hidden;">
+      <div class="login-card" style="max-width:600px;width:100%;border-radius:var(--border-radius-lg);
+           box-shadow:var(--shadow-lg);padding:0;display:flex;flex-direction:column;max-height:92vh;overflow:hidden;">
+
+        <!-- Header -->
         <div style="display:flex;justify-content:space-between;align-items:center;
                     padding:1.2rem 1.5rem;border-bottom:1px solid var(--border-light);flex-shrink:0;">
-          <h3 style="font-family:var(--font-serif);font-size:1.1rem;font-weight:500;color:var(--text-main);">Thêm Học Viên Nguồn</h3>
+          <h3 id="srcModalTitle" style="font-family:var(--font-serif);font-size:1.1rem;font-weight:500;color:var(--text-main);">+ Thêm Học Viên Nguồn</h3>
           <button type="button" id="btnCloseSourceModal"
             style="font-size:1.4rem;color:var(--text-muted);cursor:pointer;background:none;border:none;line-height:1;padding:4px 8px;">&times;</button>
         </div>
-        <div style="overflow-y:auto;flex:1;padding:1.2rem 1.5rem;display:flex;flex-direction:column;gap:1rem;">
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.9rem;">
-            <div style="display:flex;flex-direction:column;gap:0.35rem;">
-              <label style="font-size:0.68rem;font-weight:600;text-transform:uppercase;color:var(--text-muted);letter-spacing:.7px;">Họ và tên *</label>
-              <input type="text" id="srcName" placeholder="Nguyễn Văn A"
-                style="padding:0.55rem 0.8rem;border:1px solid var(--border);border-radius:9px;
-                       background:var(--bg-primary);font-size:0.84rem;font-family:inherit;color:var(--text-main);outline:none;" />
+
+        <!-- Body -->
+        <div style="overflow-y:auto;flex:1;padding:1.3rem 1.5rem;display:flex;flex-direction:column;gap:0.9rem;">
+
+          <!-- Row 1: Họ tên + Email -->
+          <div class="sf-row">
+            <div class="form-group-login sf-field">
+              <label for="srcName">Họ và tên *</label>
+              <input type="text" id="srcName" placeholder="Nguyễn Văn A"/>
             </div>
-            <div style="display:flex;flex-direction:column;gap:0.35rem;">
-              <label style="font-size:0.68rem;font-weight:600;text-transform:uppercase;color:var(--text-muted);letter-spacing:.7px;">Email</label>
-              <input type="email" id="srcEmail" placeholder="email@gmail.com"
-                style="padding:0.55rem 0.8rem;border:1px solid var(--border);border-radius:9px;
-                       background:var(--bg-primary);font-size:0.84rem;font-family:inherit;color:var(--text-main);outline:none;" />
+            <div class="form-group-login sf-field">
+              <label for="srcEmail">Email</label>
+              <input type="email" id="srcEmail" placeholder="email@gmail.com"/>
             </div>
-            <div style="display:flex;flex-direction:column;gap:0.35rem;">
-              <label style="font-size:0.68rem;font-weight:600;text-transform:uppercase;color:var(--text-muted);letter-spacing:.7px;">Số điện thoại</label>
-              <input type="tel" id="srcPhone" placeholder="0912345678"
-                style="padding:0.55rem 0.8rem;border:1px solid var(--border);border-radius:9px;
-                       background:var(--bg-primary);font-size:0.84rem;font-family:inherit;color:var(--text-main);outline:none;" />
+          </div>
+
+          <!-- Row 2: SĐT + Quê quán -->
+          <div class="sf-row">
+            <div class="form-group-login sf-field">
+              <label for="srcPhone">Số điện thoại</label>
+              <input type="tel" id="srcPhone" placeholder="0912345678"/>
             </div>
-            <div style="display:flex;flex-direction:column;gap:0.35rem;">
-              <label style="font-size:0.68rem;font-weight:600;text-transform:uppercase;color:var(--text-muted);letter-spacing:.7px;">Quốc gia</label>
-              <select id="srcCountry"
-                style="padding:0.55rem 0.8rem;border:1px solid var(--border);border-radius:9px;
-                       background:var(--bg-primary);font-size:0.84rem;font-family:inherit;color:var(--text-main);outline:none;">
+            <div class="form-group-login sf-field">
+              <label for="srcHometown">Quê quán</label>
+              <input type="text" id="srcHometown" placeholder="Thành phố, tỉnh..."/>
+            </div>
+          </div>
+
+          <!-- Row 3: Quốc gia + Trạng thái -->
+          <div class="sf-row">
+            <div class="form-group-login sf-field">
+              <label for="srcCountry">Quốc gia đến</label>
+              <select id="srcCountry">
                 <option value="Nhật">🇯🇵 Nhật Bản</option>
-                <option value="Đài">🇹🇼 Đài Loan</option>
                 <option value="Hàn">🇰🇷 Hàn Quốc</option>
+                <option value="Đài">🇹🇼 Đài Loan</option>
                 <option value="Úc">🇦🇺 Úc</option>
+                <option value="Canada">🇨🇦 Canada</option>
                 <option value="Mỹ">🇺🇸 Mỹ</option>
                 <option value="Anh">🇬🇧 Anh</option>
+                <option value="Việt Nam">🇻🇳 Việt Nam (nội địa)</option>
+              </select>
+            </div>
+            <div class="form-group-login sf-field">
+              <label for="srcStatus">Trạng thái hồ sơ</label>
+              <select id="srcStatus">
+                <option value="Đang học">Đang học</option>
+                <option value="Chờ phỏng vấn">Chờ phỏng vấn</option>
+                <option value="Đã trúng tuyển">Đã trúng tuyển</option>
+                <option value="Đang làm hồ sơ">Đang làm hồ sơ</option>
+                <option value="Đã xuất cảnh">Đã xuất cảnh</option>
+                <option value="Chờ xử lý">Chờ xử lý</option>
               </select>
             </div>
           </div>
-          <div style="display:flex;flex-direction:column;gap:0.35rem;">
-            <label style="font-size:0.68rem;font-weight:600;text-transform:uppercase;color:var(--text-muted);letter-spacing:.7px;">Ghi chú</label>
-            <textarea id="srcNotes" rows="3" placeholder="Ghi chú tư vấn..."
-              style="padding:0.55rem 0.8rem;border:1px solid var(--border);border-radius:9px;
-                     background:var(--bg-primary);font-size:0.84rem;font-family:inherit;color:var(--text-main);
-                     outline:none;resize:vertical;"></textarea>
+
+          <!-- Row 4: Phòng ban + Tháng học -->
+          <div class="sf-row">
+            <div class="form-group-login sf-field">
+              <label for="srcRoom">Phòng ban</label>
+              <select id="srcRoom">
+                <option value="">-- Chọn phòng --</option>
+                <option value="Hành chính kế toán">Hành chính kế toán</option>
+                <option value="Marketing">Marketing</option>
+                <option value="Đối ngoại">Đối ngoại</option>
+                <option value="Hồ sơ">Hồ sơ</option>
+                <option value="Đào tạo">Đào tạo</option>
+                <option value="Kinh doanh">Kinh doanh</option>
+              </select>
+            </div>
+            <div class="form-group-login sf-field">
+              <label for="srcLearningMonth">Tháng học hiện tại</label>
+              <select id="srcLearningMonth">
+                <option value="Tháng 1">Tháng 1: Xây Dựng Nền Tảng</option>
+                <option value="Tháng 2">Tháng 2: Phát Triển Phản Xạ</option>
+                <option value="Tháng 3">Tháng 3: Làm Quen Học Thuật</option>
+                <option value="Tháng 4">Tháng 4: Tăng Tốc Học Thuật</option>
+                <option value="Tháng 5">Tháng 5: Luyện Đề Chuyên Sâu</option>
+                <option value="Tháng 6">Tháng 6: Tổng Ôn &amp; Mô Phỏng</option>
+                <option value="Hoàn thành">Đã hoàn thành lộ trình</option>
+              </select>
+            </div>
           </div>
-        </div>
+
+          <!-- Row 5: Nhân viên tư vấn (Nguồn) — full width -->
+          <div class="form-group-login" style="margin-bottom:0;">
+            <label for="srcAdvisor">Nhân viên tư vấn (Nguồn)</label>
+            <select id="srcAdvisor">
+              <option value="">-- Chọn nhân viên --</option>
+            </select>
+          </div>
+
+          <!-- Row 6: Tiền đã đóng + Tổng tiền -->
+          <div class="sf-row">
+            <div class="form-group-login sf-field">
+              <label for="srcPaidAmount">Tiền đã đóng</label>
+              <input type="text" id="srcPaidAmount" placeholder="0" inputmode="numeric" autocomplete="off" class="sf-money-input"/>
+            </div>
+            <div class="form-group-login sf-field">
+              <label for="srcTotalAmount">Tổng tiền</label>
+              <input type="text" id="srcTotalAmount" placeholder="0" inputmode="numeric" autocomplete="off" class="sf-money-input"/>
+            </div>
+          </div>
+
+          <!-- Row 7: Ghi chú -->
+          <div class="form-group-login" style="margin-bottom:0;">
+            <label for="srcNotes">Ghi chú / Nhật ký tư vấn</label>
+            <textarea id="srcNotes" rows="3" placeholder="Nhập ghi chú hồ sơ tại đây..." style="resize:vertical;min-height:70px;"></textarea>
+          </div>
+
+        </div><!-- /body -->
+
+        <!-- Footer -->
         <div style="display:flex;gap:0.75rem;justify-content:flex-end;padding:1rem 1.5rem;
                     border-top:1px solid var(--border-light);flex-shrink:0;">
           <button type="button" id="btnSubmitSourceStudent"
             style="padding:0.55rem 1.4rem;font-size:0.82rem;font-weight:600;
                    background:#2563EB;color:#fff;border:none;border-radius:9px;cursor:pointer;">
-            Thêm học viên
+            Lưu học viên
           </button>
           <button type="button" id="btnCancelSourceModal"
             style="padding:0.55rem 1.2rem;font-size:0.82rem;background:transparent;

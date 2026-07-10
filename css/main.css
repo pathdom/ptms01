@@ -8020,19 +8020,10 @@ body.dark-theme-crm {
 .sdp-fam-row input:focus { border-color:var(--color-accent,#A88B58); }
 
 /* Admin detail profile section */
-.adsd-detail-section {
-  border-top:1px solid var(--color-border,#E8E5DF);
-  padding:.75rem 2rem 1.5rem;
-  background:rgba(0,0,0,.015);
+/* Chi tiết hồ sơ cá nhân — spans all 3 grid columns inside adsd-body */
+.adsd-detail-card {
+  grid-column: 1 / -1;
 }
-.adsd-detail-toggle {
-  display:flex; justify-content:space-between; align-items:center;
-  cursor:pointer; padding:.5rem 0;
-  font-size:.78rem; font-weight:700; color:var(--color-text-main,#1A1A1A);
-  letter-spacing:.3px;
-}
-.adsd-detail-toggle:hover { color:var(--color-accent,#A88B58); }
-#adsdDetailToggleIcon { transition:transform .25s; font-size:.75rem; color:var(--color-text-muted,#6B6A67); }
 .adsd-detail-grid {
   display:grid; grid-template-columns:repeat(3,1fr); gap:1.5rem;
   padding-top:.75rem;

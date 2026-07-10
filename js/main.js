@@ -3243,9 +3243,19 @@ document.addEventListener('DOMContentLoaded', () => {
     set('adsdTopCode',       student.code);
     set('adsdName',          student.name);
     set('adsdCode',          student.code);
+    set('adsdCodeRow',       student.code);
     set('adsdEmail',         student.email);
     set('adsdPhone',         student.phone);
+    set('adsdHometown',      student.hometown || student.address);
     set('adsdCountry',       student.country);
+    // Room: prefer stored room field, else look up from staff map via source/advisor
+    const roomFromStaff = (() => {
+      const src = student.source || student.advisor || '';
+      if (!src) return '';
+      const info = _lookupStaff(src);
+      return info ? info.department : '';
+    })();
+    set('adsdRoom',          student.room || student.classroom || roomFromStaff);
     set('adsdAdvisor',       student.advisor || student.source || 'Chưa phân công');
     set('adsdLearningMonth', student.learningMonth || 'Tháng 1');
     set('adsdNotes',         student.notes || 'Chưa có ghi chú tư vấn.');
@@ -3359,22 +3369,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // ── Load chi tiết hồ sơ vào admin overlay ──────────────────
-    const adsdDetailToggle = document.getElementById('adsdDetailToggle');
-    const adsdDetailBody   = document.getElementById('adsdDetailBody');
-    const adsdDetailIcon   = document.getElementById('adsdDetailToggleIcon');
-    if (adsdDetailToggle && adsdDetailBody) {
-      // Re-wire toggle (cloneNode to remove old listener)
-      const nb2 = adsdDetailToggle.cloneNode(true);
-      adsdDetailToggle.replaceWith(nb2);
-      nb2.addEventListener('click', () => {
-        const open = adsdDetailBody.style.display !== 'none';
-        adsdDetailBody.style.display = open ? 'none' : 'block';
-        const ic = document.getElementById('adsdDetailToggleIcon');
-        if (ic) ic.style.transform = open ? '' : 'rotate(180deg)';
-      });
-    }
-    if (adsdDetailBody) adsdDetailBody.style.display = 'none';
-
     if (student.id) {
       db.collection('student_profiles').doc(student.id).get().then(snap => {
         const d = snap.exists ? snap.data() : {};
@@ -8653,19 +8647,28 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     tbody.querySelectorAll('.src-edit-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
+      btn.addEventListener('click', async () => {
         const c = pageData[parseInt(btn.dataset.idx)];
         if (!c) return;
-        ['srcName','srcEmail','srcPhone','srcNotes'].forEach(id => {
-          const el = document.getElementById(id);
-          if (el) el.value = c[id.replace('src','').toLowerCase()] || '';
-        });
-        document.getElementById('srcName').value = c.name || '';
-        document.getElementById('srcEmail').value = c.email || '';
-        document.getElementById('srcPhone').value = c.phone || '';
-        document.getElementById('srcNotes').value = c.notes || '';
-        const sel = document.getElementById('srcCountry');
-        if (sel) sel.value = c.country || 'Nhật';
+        document.getElementById('srcModalTitle').textContent = 'Chỉnh sửa Học Viên Nguồn';
+        document.getElementById('srcName').value      = c.name     || '';
+        document.getElementById('srcEmail').value     = c.email    || '';
+        document.getElementById('srcPhone').value     = c.phone    || '';
+        document.getElementById('srcHometown').value  = c.hometown || c.address || '';
+        document.getElementById('srcNotes').value     = c.notes    || '';
+        const selC = document.getElementById('srcCountry');
+        if (selC) selC.value = c.country || 'Nhật';
+        const selS = document.getElementById('srcStatus');
+        if (selS) selS.value = c.status || 'Đang học';
+        const selR = document.getElementById('srcRoom');
+        if (selR) selR.value = c.room || c.classroom || '';
+        const selM = document.getElementById('srcLearningMonth');
+        if (selM) selM.value = c.learningMonth || 'Tháng 1';
+        const paidEl  = document.getElementById('srcPaidAmount');
+        const totalEl = document.getElementById('srcTotalAmount');
+        if (paidEl)  paidEl.value  = c.paidAmount  ? fmtMoneyInput(c.paidAmount)  : '';
+        if (totalEl) totalEl.value = c.totalAmount ? fmtMoneyInput(c.totalAmount) : '';
+        await populateSrcAdvisorSelect(c.advisor || c.source || '');
         document.getElementById('sourceStudentModal').style.display = 'flex';
         document.getElementById('btnSubmitSourceStudent').dataset.editId = c.id;
       });
@@ -8823,15 +8826,29 @@ document.addEventListener('DOMContentLoaded', () => {
       } catch(e) { showToast('Lỗi: ' + e.message, 'error'); }
     });
 
-    document.getElementById('btnEditSourceStudent')?.addEventListener('click', () => {
+    document.getElementById('btnEditSourceStudent')?.addEventListener('click', async () => {
       if (!_currentSrcStudent) return;
-      document.getElementById('srcName').value = _currentSrcStudent.name || '';
-      document.getElementById('srcEmail').value = _currentSrcStudent.email || '';
-      document.getElementById('srcPhone').value = _currentSrcStudent.phone || '';
-      document.getElementById('srcNotes').value = _currentSrcStudent.notes || '';
-      const sel = document.getElementById('srcCountry');
-      if (sel) sel.value = _currentSrcStudent.country || 'Nhật';
-      document.getElementById('btnSubmitSourceStudent').dataset.editId = _currentSrcStudent.id;
+      const c = _currentSrcStudent;
+      document.getElementById('srcModalTitle').textContent = 'Chỉnh sửa Học Viên Nguồn';
+      document.getElementById('srcName').value     = c.name     || '';
+      document.getElementById('srcEmail').value    = c.email    || '';
+      document.getElementById('srcPhone').value    = c.phone    || '';
+      document.getElementById('srcHometown').value = c.hometown || c.address || '';
+      document.getElementById('srcNotes').value    = c.notes    || '';
+      const selC = document.getElementById('srcCountry');
+      if (selC) selC.value = c.country || 'Nhật';
+      const selS = document.getElementById('srcStatus');
+      if (selS) selS.value = c.status || 'Đang học';
+      const selR = document.getElementById('srcRoom');
+      if (selR) selR.value = c.room || c.classroom || '';
+      const selM = document.getElementById('srcLearningMonth');
+      if (selM) selM.value = c.learningMonth || 'Tháng 1';
+      const paidEl  = document.getElementById('srcPaidAmount');
+      const totalEl = document.getElementById('srcTotalAmount');
+      if (paidEl)  paidEl.value  = c.paidAmount  ? fmtMoneyInput(c.paidAmount)  : '';
+      if (totalEl) totalEl.value = c.totalAmount ? fmtMoneyInput(c.totalAmount) : '';
+      await populateSrcAdvisorSelect(c.advisor || c.source || '');
+      document.getElementById('btnSubmitSourceStudent').dataset.editId = c.id;
       document.getElementById('sourceDetailModal').style.display = 'none';
       document.getElementById('sourceStudentModal').style.display = 'flex';
     });
@@ -10267,14 +10284,35 @@ document.addEventListener('DOMContentLoaded', () => {
       document.getElementById('srcSearchInput')?.addEventListener('input', () => renderCrmSource(true));
       document.getElementById('srcCountryFilter')?.addEventListener('change', () => renderCrmSource(true));
 
+      // Populate srcAdvisor select once with staff names
+      const populateSrcAdvisorSelect = async (curVal) => {
+        await _loadStaffMap();
+        const sel = document.getElementById('srcAdvisor');
+        if (!sel) return;
+        let opts = '<option value="">-- Chọn nhân viên --</option>';
+        opts += _staffNames.map(n =>
+          `<option value="${n}"${n === curVal ? ' selected' : ''}>${n}</option>`
+        ).join('');
+        sel.innerHTML = opts;
+      };
+
       // Mở modal thêm học viên nguồn
-      const openSourceModal = () => {
-        ['srcName','srcEmail','srcPhone','srcNotes'].forEach(id => {
+      const openSourceModal = async () => {
+        document.getElementById('srcModalTitle').textContent = '+ Thêm Học Viên Nguồn';
+        ['srcName','srcEmail','srcPhone','srcHometown','srcNotes','srcPaidAmount','srcTotalAmount'].forEach(id => {
           const el = document.getElementById(id);
           if (el) el.value = '';
         });
-        const sel = document.getElementById('srcCountry');
-        if (sel) sel.value = 'Nhật';
+        const selC = document.getElementById('srcCountry');
+        if (selC) selC.value = 'Nhật';
+        const selS = document.getElementById('srcStatus');
+        if (selS) selS.value = 'Đang học';
+        const selR = document.getElementById('srcRoom');
+        if (selR) selR.value = '';
+        const selM = document.getElementById('srcLearningMonth');
+        if (selM) selM.value = 'Tháng 1';
+        document.getElementById('btnSubmitSourceStudent').dataset.editId = '';
+        await populateSrcAdvisorSelect('');
         document.getElementById('sourceStudentModal').style.display = 'flex';
       };
       const closeSourceModal = () => { document.getElementById('sourceStudentModal').style.display = 'none'; };
@@ -10288,13 +10326,24 @@ document.addEventListener('DOMContentLoaded', () => {
         const editId = btn?.dataset.editId || '';
         const name = document.getElementById('srcName')?.value.trim();
         if (!name) { showToast('Vui lòng nhập họ tên', 'error'); return; }
+        const advisor     = document.getElementById('srcAdvisor')?.value || '';
+        const paidAmount  = parseMoneyInput(document.getElementById('srcPaidAmount')?.value || '');
+        const totalAmount = parseMoneyInput(document.getElementById('srcTotalAmount')?.value || '');
         const payload = {
           name,
-          email: document.getElementById('srcEmail')?.value.trim() || '',
-          phone: document.getElementById('srcPhone')?.value.trim() || '',
-          country: document.getElementById('srcCountry')?.value || 'Nhật',
-          notes: document.getElementById('srcNotes')?.value.trim() || '',
-          updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+          email:         document.getElementById('srcEmail')?.value.trim()        || '',
+          phone:         document.getElementById('srcPhone')?.value.trim()         || '',
+          hometown:      document.getElementById('srcHometown')?.value.trim()      || '',
+          country:       document.getElementById('srcCountry')?.value              || 'Nhật',
+          status:        document.getElementById('srcStatus')?.value               || 'Đang học',
+          room:          document.getElementById('srcRoom')?.value                 || '',
+          learningMonth: document.getElementById('srcLearningMonth')?.value        || 'Tháng 1',
+          advisor,
+          source:        advisor,
+          paidAmount:    paidAmount  || null,
+          totalAmount:   totalAmount || null,
+          notes:         document.getElementById('srcNotes')?.value.trim()         || '',
+          updatedAt:     firebase.firestore.FieldValue.serverTimestamp(),
         };
         try {
           if (editId) {
@@ -10304,7 +10353,6 @@ document.addEventListener('DOMContentLoaded', () => {
           } else {
             payload.code = 'HNV' + String(_allCrmCustomers.length + 1).padStart(4, '0');
             payload.isSourceStudent = true;
-            payload.status = 'Đang học';
             payload.createdAt = firebase.firestore.FieldValue.serverTimestamp();
             await db.collection('students').add(payload);
             showToast('Đã thêm học viên nguồn', 'success');
