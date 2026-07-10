@@ -2729,7 +2729,7 @@ document.addEventListener('DOMContentLoaded', () => {
       cached.forEach(s => {
         if (!s.name) return;
         const dept = s.department || s.dept || '';
-        _staffNameMap[s.name.toLowerCase().trim()] = { name: s.name, department: dept || '--' };
+        _staffNameMap[s.name.toLowerCase().trim()] = { name: s.name, department: dept || '--', email: s.email || '' };
         _staffNames.push(s.name);
         if (dept) _deptSet.add(dept);
       });
@@ -10996,6 +10996,53 @@ document.addEventListener('DOMContentLoaded', () => {
     showToast(`Đã gửi thông báo lịch bay đến ${staffEmails.length} nhân viên.`, 'success');
   };
 
+  // ---- Workflow assignee notification ----
+  // Sends a bell notification to the staff member assigned to a workflow step.
+  // Only fires when the assignee actually changed (prev !== next).
+  const sendAssigneeNotification = async ({ stepName, workflowName, workflowId, assigneeName, prevAssignee, deadline }) => {
+    if (!assigneeName || assigneeName === prevAssignee) return;
+
+    // Roles (not real names) — no email to look up
+    const GENERIC_ROLES = ['Tư vấn viên','Chuyên viên hồ sơ','Chuyên viên visa','Kế toán','Giáo viên','Giám đốc','Marketing'];
+    if (GENERIC_ROLES.includes(assigneeName)) return;
+
+    await _loadStaffMap();
+    const staffInfo = _staffNameMap[assigneeName.toLowerCase().trim()];
+    const recipientEmail = staffInfo?.email || (() => {
+      // fallback: search hrmStaffCache directly
+      if (typeof hrmStaffCache !== 'undefined') {
+        const found = hrmStaffCache.find(s => s.name === assigneeName);
+        return found?.email || '';
+      }
+      return '';
+    })();
+
+    if (!recipientEmail) return; // can't deliver without email
+
+    const adminName = (typeof currentUser !== 'undefined' && currentUser?.displayName)
+      ? currentUser.displayName
+      : 'Quản trị viên';
+
+    const deadlinePart = deadline ? ` Hạn xử lý: ${deadline} ngày.` : '';
+    const message = `${adminName} vừa phân công bạn phụ trách bước "${stepName}" trong quy trình "${workflowName}".${deadlinePart} Vui lòng kiểm tra và cập nhật tiến độ.`;
+
+    try {
+      await db.collection('notifications').add({
+        recipientEmail,
+        type:         'task_assign',
+        title:        `📋 Bạn được giao việc mới`,
+        message,
+        workflowId,
+        workflowName,
+        stepName,
+        isRead:       false,
+        createdAt:    firebase.firestore.FieldValue.serverTimestamp(),
+      });
+    } catch (e) {
+      console.warn('sendAssigneeNotification error:', e.message);
+    }
+  };
+
   // ---- Notification Bell UI ----
   let _notifList  = [];
   let _notifOpen  = false;
@@ -11113,7 +11160,7 @@ document.addEventListener('DOMContentLoaded', () => {
     list.innerHTML = sorted.map(n => {
       const dateObj = n.createdAt?.toDate?.() || n.dueDate?.toDate?.() || null;
       const timeStr = dateObj ? formatDateVN(dateObj) : '';
-      const icon    = (n.type?.startsWith('flight') || n.dueDate) ? '✈' : '🔔';
+      const icon    = (n.type?.startsWith('flight') || n.dueDate) ? '✈' : n.type === 'task_assign' ? '📋' : '🔔';
       return `<div class="notif-item${n.isRead ? '' : ' unread'}" data-nid="${n.id}">
         <div class="notif-icon">${icon}</div>
         <div class="notif-body">
@@ -13292,6 +13339,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const wf = _workflows.find(w => w.id === _activeId);
         if (!wf || !wf.steps[_activeStepIdx]) return;
         const s = wf.steps[_activeStepIdx];
+        const prevAssignee = s.assignee || '';
         s.name        = document.getElementById('wf2DStepName')?.value.trim()     || s.name;
         s.type        = document.getElementById('wf2DStepType')?.value             || s.type;
         s.assignee    = document.getElementById('wf2DStepAssignee')?.value.trim()  || '';
@@ -13306,6 +13354,18 @@ document.addEventListener('DOMContentLoaded', () => {
         if(typeof showToast==='function') showToast('Đã cập nhật bước!','success');
         renderCanvas(wf);
         renderSideList();
+
+        // Send bell notification to newly assigned staff member
+        if (s.assignee && s.assignee !== prevAssignee) {
+          sendAssigneeNotification({
+            stepName:     s.name,
+            workflowName: wf.name || wf.title || 'Quy trình',
+            workflowId:   wf.id,
+            assigneeName: s.assignee,
+            prevAssignee,
+            deadline:     s.deadline,
+          });
+        }
 
         // If all steps are now done, mark the workflow completed
         const allDoneNow = wf.steps.every(st => st.status === 'done');
