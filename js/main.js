@@ -2776,6 +2776,13 @@ document.addEventListener('DOMContentLoaded', () => {
       });
   };
 
+  // Format/parse helpers for student money inputs
+  const fmtMoneyInput  = (v) => v ? Number(v).toLocaleString('vi-VN') : '';
+  const parseMoneyInput = (s) => {
+    const n = Number(String(s).replace(/[^\d]/g, ''));
+    return isNaN(n) ? 0 : n;
+  };
+
   // Render Student Table Rows
   const renderStudentsTable = (filteredList) => {
     const tableBody = document.getElementById("studentTableBody");
@@ -2784,7 +2791,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (filteredList.length === 0) {
       tableBody.innerHTML =
-        '<tr><td colspan="13" style="text-align:center;padding:3rem;color:var(--text-muted);font-size:0.82rem;">' +
+        '<tr><td colspan="15" style="text-align:center;padding:3rem;color:var(--text-muted);font-size:0.82rem;">' +
         'Không tìm thấy hồ sơ học viên nào phù hợp.</td></tr>';
       return;
     }
@@ -2880,6 +2887,16 @@ document.addEventListener('DOMContentLoaded', () => {
           ' data-id="' + student.id + '" data-name="' + nameEsc + '" data-code="' + displayCode + '"' +
           ' value="' + fVal + '" title="' + (fVal ? ('Ngày bay: ' + fDisplay) : 'Chưa có lịch bay') + '" />' +
         '</td>' +
+        '<td class="stw-paid">' +
+          '<input type="text" class="stw-money-input stw-paid-input" data-id="' + student.id + '" data-field="paidAmount"' +
+          ' value="' + (student.paidAmount ? fmtMoneyInput(student.paidAmount) : '') + '"' +
+          ' placeholder="0" inputmode="numeric" autocomplete="off" />' +
+        '</td>' +
+        '<td class="stw-total">' +
+          '<input type="text" class="stw-money-input stw-total-input" data-id="' + student.id + '" data-field="totalAmount"' +
+          ' value="' + (student.totalAmount ? fmtMoneyInput(student.totalAmount) : '') + '"' +
+          ' placeholder="0" inputmode="numeric" autocomplete="off" />' +
+        '</td>' +
         '<td class="stw-action"><div class="stw-actions">' +
           '<button class="action-icon-btn btn-view-student" data-id="' + student.id + '" title="Chi tiết" style="color:#6366F1;background:#EEF2FF;">' +
             '<svg viewBox="0 0 24 24" style="width:14px;height:14px;fill:currentColor;"><path d="M12,9A3,3 0 0,0 9,12A3,3 0 0,0 12,15A3,3 0 0,0 15,12A3,3 0 0,0 12,9M12,4.5C7,4.5 2.73,7.61 1,12C2.73,16.39 7,19.5 12,19.5C17,19.5 21.27,16.39 23,12C21.27,7.61 17,4.5 12,4.5Z"/></svg>' +
@@ -2950,6 +2967,30 @@ document.addEventListener('DOMContentLoaded', () => {
           await db.collection('students').doc(sid).update({ room: newRoom });
           showToast('Đã cập nhật phòng: ' + (newRoom || '--'), 'success');
         } catch (err) { showToast('Lỗi: ' + err.message, 'error'); }
+      });
+
+      // Money inputs — format on focus/blur, save on blur
+      tr.querySelectorAll('.stw-money-input').forEach(inp => {
+        // On focus: strip formatting so user can type raw numbers
+        inp.addEventListener('focus', function () {
+          const raw = parseMoneyInput(this.value);
+          this.value = raw > 0 ? String(raw) : '';
+          this.select();
+        });
+        // On blur: re-format display + save to Firestore
+        inp.addEventListener('blur', async function () {
+          const raw   = parseMoneyInput(this.value);
+          const field = this.dataset.field;
+          const sid   = this.dataset.id;
+          this.value  = raw > 0 ? fmtMoneyInput(raw) : '';
+          try {
+            await db.collection('students').doc(sid).update({ [field]: raw || null });
+          } catch (err) { showToast('Lỗi lưu: ' + err.message, 'error'); }
+        });
+        // Save on Enter key
+        inp.addEventListener('keydown', function (e) {
+          if (e.key === 'Enter') { e.preventDefault(); this.blur(); }
+        });
       });
 
       tr.querySelector('.flight-date-input').addEventListener('change', async function () {

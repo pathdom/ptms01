@@ -7833,7 +7833,38 @@ body.dark-theme-crm {
 .stwh-room    { min-width:70px;  text-align:center; }
 .stwh-src     { min-width:120px; }
 .stwh-flight  { min-width:120px; text-align:center; }
+.stwh-paid    { min-width:120px; text-align:right; }
+.stwh-total   { min-width:120px; text-align:right; }
 .stwh-action  { min-width:90px;  text-align:center; }
+
+/* Money input cells */
+.stw-paid, .stw-total { text-align:right; }
+.stw-money-input {
+  width: 112px;
+  padding: 4px 8px;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  background: transparent;
+  font-size: .73rem;
+  font-weight: 600;
+  color: var(--text-main);
+  text-align: right;
+  outline: none;
+  transition: border-color .15s, background .15s, box-shadow .15s;
+  font-family: inherit;
+  cursor: text;
+}
+.stw-money-input:hover {
+  border-color: var(--color-border, #E8E5DF);
+  background: var(--bg-secondary, #F7F4EF);
+}
+.stw-money-input:focus {
+  border-color: #6366F1;
+  background: #fff;
+  box-shadow: 0 0 0 3px rgba(99,102,241,.1);
+}
+.stw-paid-input  { color: #16A34A; }
+.stw-total-input { color: var(--text-main); }
 
 /* Cell styles */
 .stw-ts   { color: var(--text-muted); font-size:.68rem; }
