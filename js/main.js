@@ -2741,6 +2741,18 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   };
 
+  // Populate #srcAdvisor select — accessible from any scope that needs it
+  const populateSrcAdvisorSelect = async (curVal) => {
+    await _loadStaffMap();
+    const sel = document.getElementById('srcAdvisor');
+    if (!sel) return;
+    let opts = '<option value="">-- Chọn nhân viên --</option>';
+    opts += _staffNames.map(n =>
+      `<option value="${n}"${n === curVal ? ' selected' : ''}>${n}</option>`
+    ).join('');
+    sel.innerHTML = opts;
+  };
+
   // Returns { name, department } for a staff identifier (name string)
   const _lookupStaff = (identifier) => {
     if (!identifier || identifier === '--') return null;
@@ -10382,18 +10394,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
       document.getElementById('srcSearchInput')?.addEventListener('input', () => renderCrmSource(true));
       document.getElementById('srcCountryFilter')?.addEventListener('change', () => renderCrmSource(true));
-
-      // Populate srcAdvisor select once with staff names
-      const populateSrcAdvisorSelect = async (curVal) => {
-        await _loadStaffMap();
-        const sel = document.getElementById('srcAdvisor');
-        if (!sel) return;
-        let opts = '<option value="">-- Chọn nhân viên --</option>';
-        opts += _staffNames.map(n =>
-          `<option value="${n}"${n === curVal ? ' selected' : ''}>${n}</option>`
-        ).join('');
-        sel.innerHTML = opts;
-      };
 
       // Mở modal thêm học viên nguồn
       const openSourceModal = async () => {
