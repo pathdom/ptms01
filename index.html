@@ -3759,19 +3759,20 @@
       style="display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;
              background:rgba(0,0,0,0.5);z-index:1100;justify-content:center;
              align-items:center;padding:2rem;backdrop-filter:blur(4px);">
-      <div class="login-card" style="max-width:600px;width:100%;border-radius:var(--border-radius-lg);
-           box-shadow:var(--shadow-lg);padding:0;display:flex;flex-direction:column;max-height:92vh;overflow:hidden;">
+      <div class="login-card" style="max-width:600px;padding:2.5rem;width:100%;
+           border-radius:var(--border-radius-lg);box-shadow:var(--shadow-lg);">
 
-        <!-- Header -->
-        <div style="display:flex;justify-content:space-between;align-items:center;
-                    padding:1.2rem 1.5rem;border-bottom:1px solid var(--border-light);flex-shrink:0;">
-          <h3 id="srcModalTitle" style="font-family:var(--font-serif);font-size:1.1rem;font-weight:500;color:var(--text-main);">+ Thêm Học Viên Nguồn</h3>
+        <!-- Header — identical to studentModal -->
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:2rem;">
+          <h3 id="srcModalTitle" style="font-family:var(--font-serif);font-size:1.3rem;font-weight:500;color:var(--text-main);">
+            + THÊM HỌC VIÊN NGUỒN
+          </h3>
           <button type="button" id="btnCloseSourceModal"
-            style="font-size:1.4rem;color:var(--text-muted);cursor:pointer;background:none;border:none;line-height:1;padding:4px 8px;">&times;</button>
+            style="font-size:1.5rem;color:var(--text-muted);cursor:pointer;background:none;border:none;">&times;</button>
         </div>
 
-        <!-- Body -->
-        <div style="overflow-y:auto;flex:1;padding:1.3rem 1.5rem;display:flex;flex-direction:column;gap:0.9rem;">
+        <!-- Scrollable body — same max-height pattern as studentForm -->
+        <div style="overflow-y:auto;max-height:calc(90vh - 160px);padding-right:4px;">
 
           <!-- Row 1: Họ tên + Email -->
           <div class="sf-row">
@@ -3854,14 +3855,26 @@
           </div>
 
           <!-- Row 5: Nhân viên tư vấn (Nguồn) — full width -->
-          <div class="form-group-login" style="margin-bottom:0;">
+          <div class="form-group-login">
             <label for="srcAdvisor">Nhân viên tư vấn (Nguồn)</label>
             <select id="srcAdvisor">
               <option value="">-- Chọn nhân viên --</option>
             </select>
           </div>
 
-          <!-- Row 6: Tiền đã đóng + Tổng tiền -->
+          <!-- Row 6: Ngày nhập học + Lịch bay -->
+          <div class="sf-row">
+            <div class="form-group-login sf-field">
+              <label for="srcEnrollDate">Ngày nhập học</label>
+              <input type="date" id="srcEnrollDate"/>
+            </div>
+            <div class="form-group-login sf-field">
+              <label for="srcFlightDate">Lịch bay ✈</label>
+              <input type="date" id="srcFlightDate"/>
+            </div>
+          </div>
+
+          <!-- Row 7: Tiền đã đóng + Tổng tiền -->
           <div class="sf-row">
             <div class="form-group-login sf-field">
               <label for="srcPaidAmount">Tiền đã đóng</label>
@@ -3873,34 +3886,24 @@
             </div>
           </div>
 
-          <!-- Row 7: Lịch bay -->
-          <div class="form-group-login" style="margin-bottom:0;">
-            <label for="srcFlightDate">Lịch bay ✈</label>
-            <input type="date" id="srcFlightDate"/>
-          </div>
-
           <!-- Row 8: Ghi chú -->
-          <div class="form-group-login" style="margin-bottom:0;">
+          <div class="form-group-login" style="margin-bottom:1.5rem;">
             <label for="srcNotes">Ghi chú / Nhật ký tư vấn</label>
-            <textarea id="srcNotes" rows="3" placeholder="Nhập ghi chú hồ sơ tại đây..." style="resize:vertical;min-height:70px;"></textarea>
+            <textarea id="srcNotes" rows="3" placeholder="Nhập ghi chú hồ sơ tại đây..." style="resize:vertical;min-height:80px;"></textarea>
           </div>
 
-        </div><!-- /body -->
+          <!-- Submit button — identical class to studentForm -->
+          <button type="button" id="btnSubmitSourceStudent" class="btn-submit-login">
+            LƯU HỌC VIÊN NGUỒN
+          </button>
+          <div style="text-align:center;margin-top:0.85rem;">
+            <button type="button" id="btnCancelSourceModal"
+              style="background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:0.8rem;letter-spacing:0.04em;">
+              HỦY
+            </button>
+          </div>
 
-        <!-- Footer -->
-        <div style="display:flex;gap:0.75rem;justify-content:flex-end;padding:1rem 1.5rem;
-                    border-top:1px solid var(--border-light);flex-shrink:0;">
-          <button type="button" id="btnSubmitSourceStudent"
-            style="padding:0.55rem 1.4rem;font-size:0.82rem;font-weight:600;
-                   background:#2563EB;color:#fff;border:none;border-radius:9px;cursor:pointer;">
-            Lưu học viên
-          </button>
-          <button type="button" id="btnCancelSourceModal"
-            style="padding:0.55rem 1.2rem;font-size:0.82rem;background:transparent;
-                   border:1px solid var(--border);border-radius:9px;cursor:pointer;color:var(--text-main);">
-            Hủy
-          </button>
-        </div>
+        </div><!-- /scrollable body -->
       </div>
     </div>
 

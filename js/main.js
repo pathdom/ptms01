@@ -8672,7 +8672,9 @@ document.addEventListener('DOMContentLoaded', () => {
       btn.addEventListener('click', async () => {
         const c = pageData[parseInt(btn.dataset.idx)];
         if (!c) return;
-        document.getElementById('srcModalTitle').textContent = 'Chỉnh sửa Học Viên Nguồn';
+        document.getElementById('srcModalTitle').textContent = 'CHỈNH SỬA HỌC VIÊN NGUỒN';
+        const submitBtn = document.getElementById('btnSubmitSourceStudent');
+        if (submitBtn) submitBtn.textContent = 'CẬP NHẬT HỌC VIÊN NGUỒN';
         document.getElementById('srcName').value      = c.name     || '';
         document.getElementById('srcEmail').value     = c.email    || '';
         document.getElementById('srcPhone').value     = c.phone    || '';
@@ -8692,9 +8694,18 @@ document.addEventListener('DOMContentLoaded', () => {
         if (totalEl) totalEl.value = c.totalAmount ? fmtMoneyInput(c.totalAmount) : '';
         const flightEl = document.getElementById('srcFlightDate');
         if (flightEl) flightEl.value = c.flightDate || '';
+        const enrollEl = document.getElementById('srcEnrollDate');
+        if (enrollEl) {
+          if (c.enrollDate) {
+            enrollEl.value = c.enrollDate;
+          } else if (c.createdAt) {
+            const d = c.createdAt.toDate ? c.createdAt.toDate() : new Date(c.createdAt);
+            enrollEl.value = isNaN(d) ? '' : d.toISOString().slice(0, 10);
+          } else { enrollEl.value = ''; }
+        }
         await populateSrcAdvisorSelect(c.advisor || c.source || '');
         document.getElementById('sourceStudentModal').style.display = 'flex';
-        document.getElementById('btnSubmitSourceStudent').dataset.editId = c.id;
+        if (submitBtn) submitBtn.dataset.editId = c.id;
       });
     });
 
@@ -8904,7 +8915,9 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('btnEditSourceStudent')?.addEventListener('click', async () => {
       if (!_currentSrcStudent) return;
       const c = _currentSrcStudent;
-      document.getElementById('srcModalTitle').textContent = 'Chỉnh sửa Học Viên Nguồn';
+      document.getElementById('srcModalTitle').textContent = 'CHỈNH SỬA HỌC VIÊN NGUỒN';
+      const submitBtn = document.getElementById('btnSubmitSourceStudent');
+      if (submitBtn) submitBtn.textContent = 'CẬP NHẬT HỌC VIÊN NGUỒN';
       document.getElementById('srcName').value     = c.name     || '';
       document.getElementById('srcEmail').value    = c.email    || '';
       document.getElementById('srcPhone').value    = c.phone    || '';
@@ -8924,8 +8937,17 @@ document.addEventListener('DOMContentLoaded', () => {
       if (totalEl) totalEl.value = c.totalAmount ? fmtMoneyInput(c.totalAmount) : '';
       const flightEl = document.getElementById('srcFlightDate');
       if (flightEl) flightEl.value = c.flightDate || '';
+      const enrollEl = document.getElementById('srcEnrollDate');
+      if (enrollEl) {
+        if (c.enrollDate) {
+          enrollEl.value = c.enrollDate;
+        } else if (c.createdAt) {
+          const d = c.createdAt.toDate ? c.createdAt.toDate() : new Date(c.createdAt);
+          enrollEl.value = isNaN(d) ? '' : d.toISOString().slice(0, 10);
+        } else { enrollEl.value = ''; }
+      }
       await populateSrcAdvisorSelect(c.advisor || c.source || '');
-      document.getElementById('btnSubmitSourceStudent').dataset.editId = c.id;
+      if (submitBtn) submitBtn.dataset.editId = c.id;
       document.getElementById('sourceDetailModal').style.display = 'none';
       document.getElementById('sourceStudentModal').style.display = 'flex';
     });
@@ -10375,8 +10397,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
       // Mở modal thêm học viên nguồn
       const openSourceModal = async () => {
-        document.getElementById('srcModalTitle').textContent = '+ Thêm Học Viên Nguồn';
-        ['srcName','srcEmail','srcPhone','srcHometown','srcNotes','srcPaidAmount','srcTotalAmount','srcFlightDate'].forEach(id => {
+        document.getElementById('srcModalTitle').textContent = '+ THÊM HỌC VIÊN NGUỒN';
+        const submitBtn = document.getElementById('btnSubmitSourceStudent');
+        if (submitBtn) submitBtn.textContent = 'LƯU HỌC VIÊN NGUỒN';
+        ['srcName','srcEmail','srcPhone','srcHometown','srcNotes','srcPaidAmount','srcTotalAmount','srcFlightDate','srcEnrollDate'].forEach(id => {
           const el = document.getElementById(id);
           if (el) el.value = '';
         });
@@ -10388,7 +10412,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (selR) selR.value = '';
         const selM = document.getElementById('srcLearningMonth');
         if (selM) selM.value = 'Tháng 1';
-        document.getElementById('btnSubmitSourceStudent').dataset.editId = '';
+        if (submitBtn) submitBtn.dataset.editId = '';
         await populateSrcAdvisorSelect('');
         document.getElementById('sourceStudentModal').style.display = 'flex';
       };
@@ -10406,7 +10430,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const advisor     = document.getElementById('srcAdvisor')?.value || '';
         const paidAmount  = parseMoneyInput(document.getElementById('srcPaidAmount')?.value || '');
         const totalAmount = parseMoneyInput(document.getElementById('srcTotalAmount')?.value || '');
-        const flightDate  = document.getElementById('srcFlightDate')?.value || null;
+        const flightDate  = document.getElementById('srcFlightDate')?.value  || null;
+        const enrollDate  = document.getElementById('srcEnrollDate')?.value  || null;
         const payload = {
           name,
           email:         document.getElementById('srcEmail')?.value.trim()        || '',
@@ -10421,6 +10446,7 @@ document.addEventListener('DOMContentLoaded', () => {
           paidAmount:    paidAmount  || null,
           totalAmount:   totalAmount || null,
           flightDate:    flightDate  || null,
+          enrollDate:    enrollDate  || null,
           notes:         document.getElementById('srcNotes')?.value.trim()         || '',
           updatedAt:     firebase.firestore.FieldValue.serverTimestamp(),
         };
