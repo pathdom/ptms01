@@ -11534,7 +11534,79 @@ document.addEventListener('DOMContentLoaded', () => {
   const initOrgChartDashboard = (() => {
     let _bound = false;
 
+    // ── Staff card grid ─────────────────────────────────────────────────────
+    const POSITION_RANK = { 'Chủ tịch': 0, 'Giám đốc': 1, 'Phó Giám đốc': 2, 'Trưởng Phòng': 3, 'Phó phòng': 4, 'Nhân viên': 5 };
+
+    const renderOrgStaff = async (activeDept = 'all') => {
+      const grid = document.getElementById('orgStaffGrid');
+      const filterBar = document.getElementById('orgDeptFilter');
+      if (!grid) return;
+
+      try {
+        const snap = await db.collection('hrm_staff').get();
+        let staff = snap.docs
+          .map(d => ({ id: d.id, ...d.data() }))
+          .filter(s => s.status !== 'Nghỉ việc');
+
+        staff.sort((a, b) =>
+          (POSITION_RANK[a.jobTitle] ?? 9) - (POSITION_RANK[b.jobTitle] ?? 9) ||
+          (a.name || '').localeCompare(b.name || '', 'vi')
+        );
+
+        // Build dept list from data
+        const depts = ['all', ...new Set(staff.map(s => s.department).filter(Boolean))];
+
+        if (filterBar) {
+          filterBar.innerHTML = depts.map(d =>
+            `<button class="oc-dept-btn${d === activeDept ? ' active' : ''}" data-dept="${d}">${d === 'all' ? 'Tất cả' : d}</button>`
+          ).join('');
+          filterBar.querySelectorAll('.oc-dept-btn').forEach(btn =>
+            btn.addEventListener('click', () => renderOrgStaff(btn.dataset.dept))
+          );
+        }
+
+        const filtered = activeDept === 'all' ? staff : staff.filter(s => s.department === activeDept);
+
+        if (!filtered.length) {
+          grid.innerHTML = '<div class="oc-empty">Chưa có nhân sự trong mục này</div>';
+          return;
+        }
+
+        grid.innerHTML = filtered.map(s => {
+          const initial = (s.name || '?').trim().split(' ').pop()[0].toUpperCase();
+          const photo = s.photoUrl
+            ? `<img src="${s.photoUrl}" class="oc-photo" alt="${s.name || ''}" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">`
+            : '';
+          const placeholder = `<div class="oc-photo-placeholder" style="${s.photoUrl ? 'display:none' : ''}">${initial}</div>`;
+          const titleText = (s.jobTitle || 'Nhân viên').toUpperCase();
+          const deptBadge = s.department
+            ? `<div class="oc-dept-badge">${s.department}</div>` : '';
+
+          return `
+            <div class="oc-staff-card">
+              <div class="oc-photo-ring">
+                <div class="oc-photo-frame">
+                  ${photo}${placeholder}
+                </div>
+              </div>
+              <div class="oc-card-body">
+                <div class="oc-staff-name">${s.name || '--'}</div>
+                <div class="oc-staff-title">${titleText}</div>
+                ${deptBadge}
+              </div>
+            </div>`;
+        }).join('');
+
+      } catch (err) {
+        console.error('Org staff load error:', err);
+        grid.innerHTML = '<div class="oc-empty">Không thể tải dữ liệu nhân sự</div>';
+      }
+    };
+
     return async () => {
+      // Run staff grid immediately (no wait on image)
+      renderOrgStaff();
+
       const fileInput     = document.getElementById('orgChartFileInput');
       const uploadZone    = document.getElementById('orgChartUploadZone');
       const previewWrap   = document.getElementById('orgChartPreviewWrap');
@@ -11552,11 +11624,9 @@ document.addEventListener('DOMContentLoaded', () => {
       const FIRESTORE_DOC = () => db.collection('siteSettings').doc('orgChart');
 
       const showImage = (base64, meta = {}) => {
-        imgEl.src = base64;
-        imgEl.style.display = 'block';
-        uploadZone.style.display = 'none';
-        previewWrap.style.display = 'block';
-        progressWrap.style.display = 'none';
+        if (imgEl) { imgEl.src = base64; imgEl.style.display = 'block'; }
+        if (previewWrap) previewWrap.style.display = 'block';
+        if (progressWrap) progressWrap.style.display = 'none';
         if (btnView) btnView.style.display = '';
         if (btnDelete) btnDelete.style.display = '';
         if (metaEl && meta.name) {
@@ -11565,10 +11635,8 @@ document.addEventListener('DOMContentLoaded', () => {
       };
 
       const clearImage = () => {
-        imgEl.src = '';
-        imgEl.style.display = 'none';
-        uploadZone.style.display = 'flex';
-        previewWrap.style.display = 'none';
+        if (imgEl) { imgEl.src = ''; imgEl.style.display = 'none'; }
+        if (previewWrap) previewWrap.style.display = 'none';
         if (btnView) btnView.style.display = 'none';
         if (btnDelete) btnDelete.style.display = 'none';
         if (metaEl) metaEl.innerHTML = '';
@@ -11599,12 +11667,11 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         // Show progress UI
-        uploadZone.style.display = 'none';
-        previewWrap.style.display = 'block';
-        imgEl.style.display = 'none';
-        progressWrap.style.display = 'flex';
-        progressBar.style.width = '0%';
-        progressLabel.textContent = 'Đang đọc file…';
+        if (previewWrap) previewWrap.style.display = 'block';
+        if (imgEl) imgEl.style.display = 'none';
+        if (progressWrap) { progressWrap.style.display = 'flex'; }
+        if (progressBar) progressBar.style.width = '0%';
+        if (progressLabel) progressLabel.textContent = 'Đang đọc file…';
 
         const reader = new FileReader();
         reader.onprogress = (ev) => {
@@ -12769,6 +12836,24 @@ document.addEventListener('DOMContentLoaded', () => {
     let _page = 1;
     const PER_PAGE = 6;
 
+    // ── Undo / Redo ────────────────────────────────────────────────────────
+    let _undoStack = [];
+    let _redoStack = [];
+
+    const syncUndoRedo = () => {
+      const u = document.getElementById('wf2BtnUndo');
+      const r = document.getElementById('wf2BtnRedo');
+      if (u) u.disabled = _undoStack.length === 0;
+      if (r) r.disabled = _redoStack.length === 0;
+    };
+
+    const pushUndo = (steps) => {
+      _undoStack.push(JSON.parse(JSON.stringify(steps)));
+      if (_undoStack.length > 30) _undoStack.shift();
+      _redoStack = [];
+      syncUndoRedo();
+    };
+
     const WF_COL = () => db.collection('workflows');
 
     const STEP_SEEDS = {
@@ -13038,6 +13123,7 @@ document.addEventListener('DOMContentLoaded', () => {
           const idx = parseInt(btn.dataset.delIdx);
           const stepName = (wf.steps[idx]?.name || 'bước này');
           if (!confirm(`Xóa "${stepName}"?`)) return;
+          pushUndo(wf.steps);
           wf.steps.splice(idx, 1);
           if (_activeStepIdx === idx) _activeStepIdx = null;
           else if (_activeStepIdx > idx) _activeStepIdx--;
@@ -13060,6 +13146,7 @@ document.addEventListener('DOMContentLoaded', () => {
           e.stopPropagation();
           const afterIdx = parseInt(btn.dataset.afterIdx);
           const newStep = { name: 'Bước mới', type: 'task', assignee: '', description: '', deadline: null, checklist: [], status: 'pending' };
+          pushUndo(wf.steps);
           wf.steps.splice(afterIdx + 1, 0, newStep);
           await saveStep(wf);
           renderCanvas(wf);
@@ -13146,6 +13233,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const noOp = dropIdx === null || dropIdx === dragIdx || dropIdx === dragIdx + 1;
             if (!noOp) {
+              pushUndo(wf.steps);
               const moved = wf.steps.splice(dragIdx, 1)[0];
               const insertAt = dropIdx > dragIdx ? dropIdx - 1 : dropIdx;
               wf.steps.splice(insertAt, 0, moved);
@@ -13216,7 +13304,28 @@ document.addEventListener('DOMContentLoaded', () => {
             <option value="done"    ${s.status==='done'   ?'selected':''}>✅ Hoàn thành</option>
             <option value="blocked" ${s.status==='blocked'?'selected':''}>🔴 Bị chặn</option>
           </select>
-        </div>`;
+        </div>
+        ${s.type === 'condition' ? `
+        <div class="wf2-detail-divider"></div>
+        <div class="wf2-detail-field">
+          <label class="wf2-detail-label">Nội dung điều kiện</label>
+          <input id="wf2DConditionText" class="wf2-detail-input" type="text"
+            value="${(s.conditionText||'').replace(/"/g,'&quot;')}"
+            placeholder="VD: Hồ sơ đạt yêu cầu"/>
+        </div>
+        <div class="wf2-detail-section-title">Nhánh KHÔNG đạt</div>
+        <div class="wf2-detail-field">
+          <label class="wf2-detail-label">Tên bước từ chối</label>
+          <input id="wf2DRejectName" class="wf2-detail-input" type="text"
+            value="${((s.rejectStep&&s.rejectStep.name)||'').replace(/"/g,'&quot;')}"
+            placeholder="VD: Yêu cầu bổ sung hồ sơ"/>
+        </div>
+        <div class="wf2-detail-field">
+          <label class="wf2-detail-label">Người phụ trách (từ chối)</label>
+          <input id="wf2DRejectAssignee" class="wf2-detail-input" type="text"
+            value="${((s.rejectStep&&s.rejectStep.assignee)||'').replace(/"/g,'&quot;')}"
+            placeholder="VD: Chuyên viên hồ sơ"/>
+        </div>` : ''}`;
 
       renderChecklist(s, wf);
 
@@ -13322,7 +13431,8 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     };
 
-    const saveStep = async (wf) => {
+    const saveStep = async (wf, { skipUndo = false } = {}) => {
+      if (!wf.id) return;
       await WF_COL().doc(wf.id).update({ steps: wf.steps, updatedAt: firebase.firestore.FieldValue.serverTimestamp() });
       const local = _workflows.find(w => w.id === wf.id);
       if (local) local.steps = wf.steps;
@@ -13512,7 +13622,11 @@ document.addEventListener('DOMContentLoaded', () => {
         const hidEl = document.getElementById('wf2ActiveId');
         if (hidEl) hidEl.value = ref.id;
         _activeId = ref.id;
-        if(typeof showToast==='function') showToast('Đã tạo quy trình mới!','success');
+        await loadWorkflows();
+        renderSideList();
+        openWorkflow(ref.id);
+        if(typeof showToast==='function') showToast('Đã tạo quy trình mới! Kéo thả bước từ bảng bên trái để bắt đầu.','success');
+        return;
       }
       await loadWorkflows();
       renderSideList();
@@ -13563,7 +13677,7 @@ document.addEventListener('DOMContentLoaded', () => {
       // Palette: add step
       document.querySelectorAll('.wf2-palette-item').forEach(item => {
         item.addEventListener('click', async () => {
-          if (!_activeId) { if(typeof showToast==='function') showToast('Hãy chọn hoặc tạo quy trình trước','info'); return; }
+          if (!_activeId) { if(typeof showToast==='function') showToast('Hãy lưu quy trình trước khi thêm bước!','info'); return; }
           const wf = _workflows.find(w => w.id === _activeId);
           if (!wf) return;
           const type = item.dataset.type;
@@ -13572,10 +13686,13 @@ document.addEventListener('DOMContentLoaded', () => {
             newStep.conditionText = 'Kiểm tra điều kiện';
             newStep.rejectStep = { name:'Xử lý trường hợp không đạt', assignee:'', code:String(wf.steps.length+1).padStart(2,'0')+'A' };
           }
+          pushUndo(wf.steps);
           wf.steps.push(newStep);
           await saveStep(wf);
           renderCanvas(wf);
           renderSideList();
+          openStepDetail(wf, wf.steps.length - 1);
+          if(typeof showToast==='function') showToast(`Đã thêm "${newStep.name}"`, 'success');
         });
       });
 
@@ -13585,6 +13702,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const wf = _workflows.find(w => w.id === _activeId);
         if (!wf || !wf.steps[_activeStepIdx]) return;
         const s = wf.steps[_activeStepIdx];
+        pushUndo(wf.steps);
         const prevAssignee = s.assignee || '';
         s.name        = document.getElementById('wf2DStepName')?.value.trim()     || s.name;
         s.type        = document.getElementById('wf2DStepType')?.value             || s.type;
@@ -13592,6 +13710,15 @@ document.addEventListener('DOMContentLoaded', () => {
         s.description = document.getElementById('wf2DStepDesc')?.value.trim()     || '';
         s.deadline    = parseInt(document.getElementById('wf2DStepDeadline')?.value) || null;
         s.status      = document.getElementById('wf2DStepStatus')?.value           || s.status;
+        if (s.type === 'condition') {
+          const ct = document.getElementById('wf2DConditionText')?.value.trim();
+          if (ct) s.conditionText = ct;
+          if (!s.rejectStep) s.rejectStep = {};
+          const rjName = document.getElementById('wf2DRejectName')?.value.trim();
+          const rjAssignee = document.getElementById('wf2DRejectAssignee')?.value.trim();
+          if (rjName) s.rejectStep.name = rjName;
+          if (rjAssignee !== undefined) s.rejectStep.assignee = rjAssignee;
+        }
         document.querySelectorAll('#wf2DChecklist .wf2-check-inp').forEach(inp => {
           const ci = +inp.dataset.ci;
           if (s.checklist && s.checklist[ci]) s.checklist[ci].text = inp.value;
@@ -13634,6 +13761,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!confirm('Xóa bước này?')) return;
         const wf = _workflows.find(w => w.id === _activeId);
         if (!wf) return;
+        pushUndo(wf.steps);
         wf.steps.splice(_activeStepIdx, 1);
         _activeStepIdx = null;
         await saveStep(wf);
@@ -13675,6 +13803,126 @@ document.addEventListener('DOMContentLoaded', () => {
       document.getElementById('wf2SideCat')?.addEventListener('change', renderSideList);
       document.getElementById('wf2ListSearch')?.addEventListener('input', renderListGrid);
       document.getElementById('wf2ListCat')?.addEventListener('change', renderListGrid);
+
+      // ── Undo / Redo ─────────────────────────────────────────────────────
+      syncUndoRedo();
+      document.getElementById('wf2BtnUndo')?.addEventListener('click', async () => {
+        if (!_activeId || _undoStack.length === 0) return;
+        const wf = _workflows.find(w => w.id === _activeId);
+        if (!wf) return;
+        _redoStack.push(JSON.parse(JSON.stringify(wf.steps)));
+        wf.steps = _undoStack.pop();
+        await saveStep(wf);
+        renderCanvas(wf);
+        renderSideList();
+        syncUndoRedo();
+        if (_activeStepIdx !== null && wf.steps[_activeStepIdx]) openStepDetail(wf, _activeStepIdx);
+        if(typeof showToast === 'function') showToast('Đã hoàn tác','info');
+      });
+      document.getElementById('wf2BtnRedo')?.addEventListener('click', async () => {
+        if (!_activeId || _redoStack.length === 0) return;
+        const wf = _workflows.find(w => w.id === _activeId);
+        if (!wf) return;
+        _undoStack.push(JSON.parse(JSON.stringify(wf.steps)));
+        wf.steps = _redoStack.pop();
+        await saveStep(wf);
+        renderCanvas(wf);
+        renderSideList();
+        syncUndoRedo();
+        if (_activeStepIdx !== null && wf.steps[_activeStepIdx]) openStepDetail(wf, _activeStepIdx);
+        if(typeof showToast === 'function') showToast('Đã làm lại','info');
+      });
+
+      // ── Preview ─────────────────────────────────────────────────────────
+      document.getElementById('wf2BtnPreview')?.addEventListener('click', () => {
+        if (!_activeId) { showToast('Chưa có quy trình nào để xem trước','info'); return; }
+        const wf = _workflows.find(w => w.id === _activeId);
+        if (!wf) return;
+        const overlay = document.getElementById('wf2PreviewOverlay');
+        if (!overlay) return;
+        document.getElementById('wf2PreviewTitle').textContent = wf.name || 'Xem trước quy trình';
+        const stepCount = (wf.steps||[]).length;
+        const doneCount = (wf.steps||[]).filter(s=>s.status==='done').length;
+        document.getElementById('wf2PreviewMeta').textContent =
+          `${stepCount} bước · ${doneCount}/${stepCount} hoàn thành · ${wf.category||''}`;
+        // Render step list preview
+        const list = document.getElementById('wf2PreviewSteps');
+        if (list) {
+          list.innerHTML = (wf.steps||[]).map((s, i) => {
+            const num = String(i+1).padStart(2,'0');
+            const icon = s.status==='done' ? '✅' : s.status==='active' ? '🔵' : s.status==='blocked' ? '🔴' : '⬜';
+            return `<div class="wf2-preview-step ${s.status||'pending'}">
+              <div class="wf2-preview-step-num">${num}</div>
+              <div class="wf2-preview-step-body">
+                <div class="wf2-preview-step-name">${s.name}</div>
+                <div class="wf2-preview-step-meta">${TYPE_LABEL[s.type]||''} ${s.assignee?'· '+s.assignee:''} ${s.deadline?'· '+s.deadline+' ngày':''}</div>
+              </div>
+              <div class="wf2-preview-step-icon">${icon}</div>
+            </div>`;
+          }).join('') || '<div style="text-align:center;padding:2rem;color:#94A3B8;">Chưa có bước nào</div>';
+        }
+        overlay.style.display = 'flex';
+      });
+      document.getElementById('wf2BtnClosePreview')?.addEventListener('click', () => {
+        const o = document.getElementById('wf2PreviewOverlay');
+        if (o) o.style.display = 'none';
+      });
+      document.getElementById('wf2PreviewOverlay')?.addEventListener('click', e => {
+        if (e.target === e.currentTarget) e.currentTarget.style.display = 'none';
+      });
+
+      // ── Settings ────────────────────────────────────────────────────────
+      document.getElementById('wf2BtnSettings')?.addEventListener('click', () => {
+        if (!_activeId) { showToast('Chưa có quy trình nào để thiết lập','info'); return; }
+        const wf = _workflows.find(w => w.id === _activeId);
+        if (!wf) return;
+        const overlay = document.getElementById('wf2SettingsOverlay');
+        if (!overlay) return;
+        const nameEl = document.getElementById('wf2SettingName');
+        const descEl = document.getElementById('wf2SettingDesc');
+        const catEl  = document.getElementById('wf2SettingCat');
+        if (nameEl) nameEl.value = wf.name || '';
+        if (descEl) descEl.value = wf.description || '';
+        if (catEl)  catEl.value  = wf.category || 'Tuyển sinh';
+        overlay.style.display = 'flex';
+      });
+      document.getElementById('wf2BtnCloseSettings')?.addEventListener('click', () => {
+        const o = document.getElementById('wf2SettingsOverlay');
+        if (o) o.style.display = 'none';
+      });
+      document.getElementById('wf2SettingsOverlay')?.addEventListener('click', e => {
+        if (e.target === e.currentTarget) e.currentTarget.style.display = 'none';
+      });
+      document.getElementById('wf2BtnSaveSettings')?.addEventListener('click', async () => {
+        if (!_activeId) return;
+        const wf = _workflows.find(w => w.id === _activeId);
+        if (!wf) return;
+        const name = document.getElementById('wf2SettingName')?.value.trim();
+        const desc = document.getElementById('wf2SettingDesc')?.value.trim();
+        const cat  = document.getElementById('wf2SettingCat')?.value;
+        if (!name) { showToast('Tên quy trình không được để trống','error'); return; }
+        await WF_COL().doc(_activeId).update({ name, description: desc, category: cat, updatedAt: firebase.firestore.FieldValue.serverTimestamp() });
+        wf.name = name; wf.description = desc; wf.category = cat;
+        document.getElementById('wf2FormName').value = name;
+        document.getElementById('wf2FormDesc').value = desc || '';
+        document.getElementById('wf2FormCat').value  = cat;
+        document.getElementById('wf2SettingsOverlay').style.display = 'none';
+        renderSideList();
+        showToast('Đã lưu thiết lập quy trình!', 'success');
+      });
+
+      // ── Guide ────────────────────────────────────────────────────────────
+      document.getElementById('wf2BtnGuide')?.addEventListener('click', () => {
+        const o = document.getElementById('wf2GuideOverlay');
+        if (o) o.style.display = 'flex';
+      });
+      document.getElementById('wf2BtnCloseGuide')?.addEventListener('click', () => {
+        const o = document.getElementById('wf2GuideOverlay');
+        if (o) o.style.display = 'none';
+      });
+      document.getElementById('wf2GuideOverlay')?.addEventListener('click', e => {
+        if (e.target === e.currentTarget) e.currentTarget.style.display = 'none';
+      });
     };
   })();
 
