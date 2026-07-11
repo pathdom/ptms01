@@ -4795,108 +4795,168 @@
         <!-- ==========================================
            STUDENT TAB 0: THÔNG TIN CÁ NHÂN
            ========================================== -->
-        <div id="student-profile-tab" class="student-tab-content" style="display:none; padding: 2rem; overflow-y: auto;">
-          <div class="stp-grid">
+        <div id="student-profile-tab" class="student-tab-content stp2-wrap" style="display:none; overflow-y:auto;">
 
-            <!-- ── CỘT TRÁI ── -->
-            <div class="stp-col">
-              <!-- Avatar + tên + badge -->
-              <div class="hrm-metric-card stp-hero-card">
-                <div class="stp-avatar-wrap">
-                  <div class="profile-avatar stp-avatar" id="stpAvatar">HV</div>
-                  <div class="stp-hero-info">
-                    <h3 class="stp-name" id="stpName">--</h3>
-                    <span class="stp-code" id="stpCode">--</span>
-                    <span class="profile-status-badge active-badge" id="stpStatus">Đang học</span>
-                  </div>
+          <!-- ══ HERO ══════════════════════════════════════════════════ -->
+          <div class="stp2-hero">
+            <div class="stp2-hero-inner">
+              <div class="stp2-avatar-ring">
+                <div class="profile-avatar stp2-avatar" id="stpAvatar">HV</div>
+              </div>
+              <div class="stp2-identity">
+                <div class="stp2-identity-top">
+                  <span class="stp2-code" id="stpCode">--</span>
+                  <span class="profile-status-badge active-badge" id="stpStatus">Đang học</span>
+                </div>
+                <h2 class="stp2-name" id="stpName">--</h2>
+                <div class="stp2-hero-chips">
+                  <span class="stp2-chip"><span class="stp2-chip-lbl">Quốc gia đến</span><span class="stp2-chip-val" id="stpCountry">--</span></span>
+                  <span class="stp2-chip-dot">·</span>
+                  <span class="stp2-chip"><span class="stp2-chip-lbl">Tư vấn viên</span><span class="stp2-chip-val" id="stpAdvisor">--</span></span>
+                  <span class="stp2-chip-dot">·</span>
+                  <span class="stp2-chip"><span class="stp2-chip-lbl">Ngày nhập học</span><span class="stp2-chip-val" id="stpEnrollDate">--</span></span>
                 </div>
               </div>
-
-              <!-- Thông tin cơ bản -->
-              <div class="hrm-metric-card">
-                <div class="metric-card-header"><h4>Thông tin cơ bản</h4></div>
-                <div class="profile-info-rows">
-                  <div class="profile-info-row"><span class="info-label">Email</span><span class="info-val" id="stpEmail">--</span></div>
-                  <div class="profile-info-row"><span class="info-label">Điện thoại</span><span class="info-val" id="stpPhone">--</span></div>
-                  <div class="profile-info-row"><span class="info-label">Quốc gia đến</span><span class="info-val" id="stpCountry">--</span></div>
-                  <div class="profile-info-row"><span class="info-label">Nhân viên tư vấn</span><span class="info-val" id="stpAdvisor">--</span></div>
-                  <div class="profile-info-row"><span class="info-label">Ngày nhập học</span><span class="info-val" id="stpEnrollDate">--</span></div>
-                  <div class="profile-info-row"><span class="info-label">Tháng học hiện tại</span><span class="info-val" style="color:var(--accent);font-weight:600;" id="stpLearningMonth">--</span></div>
-                </div>
-              </div>
-
-              <!-- Ghi chú tư vấn -->
-              <div class="hrm-metric-card">
-                <div class="metric-card-header"><h4>Ghi chú tư vấn</h4></div>
-                <p class="stp-notes" id="stpNotes">Chưa có ghi chú.</p>
+              <div class="stp2-hero-lm">
+                <span class="stp2-lm-lbl">THÁNG HỌC HIỆN TẠI</span>
+                <span class="stp2-lm-val" id="stpLearningMonth">--</span>
               </div>
             </div>
+          </div>
 
-            <!-- ── CỘT GIỮA ── -->
-            <div class="stp-col">
-              <!-- Lộ trình học tập -->
-              <div class="hrm-metric-card">
-                <div class="metric-card-header"><h4>Lộ trình học tập</h4></div>
-                <div class="stp-roadmap" id="stpRoadmap">
-                  <!-- JS populated -->
+          <!-- ══ MAIN GRID ══════════════════════════════════════════════ -->
+          <div class="stp2-main">
+
+            <!-- ── CỘT TRÁI ── -->
+            <div class="stp2-left">
+
+              <!-- Lộ trình -->
+              <div class="stp2-card">
+                <div class="stp2-ch">
+                  <span class="stp2-ey">Hành trình đào tạo</span>
+                  <h4 class="stp2-ct">Lộ trình 6 tháng</h4>
                 </div>
+                <div class="stp2-roadmap" id="stpRoadmap"><!-- JS populated --></div>
               </div>
 
-              <!-- Học kì hiện tại -->
-              <div class="hrm-metric-card">
-                <div class="metric-card-header"><h4>Học kì hiện tại</h4></div>
-                <div class="stp-semester-badge" id="stpSemesterBadge">--</div>
-                <div class="profile-info-rows" style="margin-top:0.75rem;">
-                  <div class="profile-info-row"><span class="info-label">Kì I (T1–T2)</span><span class="info-val stp-sem-tag" id="stpSem1">--</span></div>
-                  <div class="profile-info-row"><span class="info-label">Kì II (T3–T4)</span><span class="info-val stp-sem-tag" id="stpSem2">--</span></div>
-                  <div class="profile-info-row"><span class="info-label">Kì III (T5–T6)</span><span class="info-val stp-sem-tag" id="stpSem3">--</span></div>
+              <!-- Học kì -->
+              <div class="stp2-card">
+                <div class="stp2-ch">
+                  <span class="stp2-ey">Tiến độ học kì</span>
+                  <h4 class="stp2-ct" id="stpSemesterBadge">--</h4>
+                </div>
+                <div class="stp2-sem-list">
+                  <div class="stp2-sem-row">
+                    <span class="stp2-sem-lbl">Kì I <em>(Tháng 1–2)</em></span>
+                    <span class="stp-sem-tag" id="stpSem1">--</span>
+                  </div>
+                  <div class="stp2-sem-row">
+                    <span class="stp2-sem-lbl">Kì II <em>(Tháng 3–4)</em></span>
+                    <span class="stp-sem-tag" id="stpSem2">--</span>
+                  </div>
+                  <div class="stp2-sem-row">
+                    <span class="stp2-sem-lbl">Kì III <em>(Tháng 5–6)</em></span>
+                    <span class="stp-sem-tag" id="stpSem3">--</span>
+                  </div>
                 </div>
               </div>
             </div>
 
             <!-- ── CỘT PHẢI ── -->
-            <div class="stp-col">
-              <!-- Lịch bay -->
-              <div class="hrm-metric-card stp-flight-card">
-                <div class="metric-card-header"><h4>Lịch bay xuất cảnh</h4></div>
-                <div class="stp-flight-body">
-                  <div class="stp-flight-icon">✈</div>
-                  <div class="stp-flight-date" id="stpFlightDate">Chưa có lịch</div>
-                  <div class="stp-flight-countdown" id="stpFlightCountdown"></div>
+            <div class="stp2-right">
+
+              <!-- Thông tin liên hệ -->
+              <div class="stp2-card stp2-info-card">
+                <div class="stp2-info-row">
+                  <div class="stp2-info-ico">
+                    <svg viewBox="0 0 24 24"><path d="M20,8L12,13L4,8V6L12,11L20,6M20,4H4C2.89,4 2,4.89 2,6V18A2,2 0 0,0 4,20H20A2,2 0 0,0 22,18V6C22,4.89 21.1,4 20,4Z"/></svg>
+                  </div>
+                  <div><span class="stp2-il">Email</span><span class="stp2-iv" id="stpEmail">--</span></div>
+                </div>
+                <div class="stp2-info-row">
+                  <div class="stp2-info-ico">
+                    <svg viewBox="0 0 24 24"><path d="M6.62,10.79C8.06,13.62 10.38,15.94 13.21,17.38L15.41,15.18C15.69,14.9 16.08,14.82 16.43,14.93C17.55,15.3 18.75,15.5 20,15.5A1,1 0 0,1 21,16.5V20A1,1 0 0,1 20,21A17,17 0 0,1 3,4A1,1 0 0,1 4,3H7.5A1,1 0 0,1 8.5,4C8.5,5.25 8.7,6.45 9.07,7.57C9.18,7.92 9.1,8.31 8.82,8.59L6.62,10.79Z"/></svg>
+                  </div>
+                  <div><span class="stp2-il">Điện thoại</span><span class="stp2-iv" id="stpPhone">--</span></div>
+                </div>
+              </div>
+
+              <!-- Boarding pass -->
+              <div class="stp2-bp">
+                <div class="stp2-bp-left">
+                  <div class="stp2-bp-eyebrow">HÀNH TRÌNH XUẤT CẢNH</div>
+                  <div class="stp2-bp-route">
+                    <div class="stp2-bp-city">
+                      <div class="stp2-bp-iata">HAN</div>
+                      <div class="stp2-bp-cname">Hà Nội</div>
+                    </div>
+                    <div class="stp2-bp-path">
+                      <div class="stp2-bp-hline"></div>
+                      <svg class="stp2-bp-plane" viewBox="0 0 24 24"><path d="M21,16V14L13,9V3.5A1.5,1.5 0 0,0 11.5,2A1.5,1.5 0 0,0 10,3.5V9L2,14V16L10,13.5V19L8,20.5V22L11.5,21L15,22V20.5L13,19V13.5L21,16Z"/></svg>
+                      <div class="stp2-bp-hline"></div>
+                    </div>
+                    <div class="stp2-bp-city">
+                      <div class="stp2-bp-iata stp2-bp-dest">TYO</div>
+                      <div class="stp2-bp-cname">Tokyo</div>
+                    </div>
+                  </div>
+                </div>
+                <div class="stp2-bp-divider">
+                  <div class="stp2-bp-notch stp2-bp-notch-t"></div>
+                  <div class="stp2-bp-perf"></div>
+                  <div class="stp2-bp-notch stp2-bp-notch-b"></div>
+                </div>
+                <div class="stp2-bp-right">
+                  <div>
+                    <div class="stp2-bp-fl">NGÀY XUẤT CẢNH</div>
+                    <div class="stp2-bp-fv" id="stpFlightDate">Chưa có lịch</div>
+                  </div>
+                  <div class="stp2-bp-countdown" id="stpFlightCountdown"></div>
                 </div>
               </div>
 
               <!-- Học phí -->
-              <div class="hrm-metric-card">
-                <div class="metric-card-header"><h4>Học phí</h4></div>
-                <div class="profile-info-rows">
-                  <div class="profile-info-row">
-                    <span class="info-label">Tổng học phí</span>
-                    <span class="info-val" style="font-weight:700;font-size:1rem;" id="stpTuitionTotal">--</span>
+              <div class="stp2-card stp2-tuition-card">
+                <div class="stp2-ch" style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:1rem;">
+                  <div><span class="stp2-ey">Tình hình tài chính</span><h4 class="stp2-ct">Học phí</h4></div>
+                  <span id="stpTuitionStatus" class="stp-sem-tag" style="margin-top:.2rem;">--</span>
+                </div>
+                <div class="stp2-tuition-body">
+                  <div class="stp2-donut-wrap">
+                    <svg class="stp2-donut-svg" viewBox="0 0 120 120">
+                      <circle class="stp2-donut-bg" cx="60" cy="60" r="48"/>
+                      <circle class="stp2-donut-fill" id="stpTuitionRingFill" cx="60" cy="60" r="48"/>
+                    </svg>
+                    <div class="stp2-donut-inner">
+                      <div class="stp2-donut-pct" id="stpTuitionPct">0%</div>
+                      <div class="stp2-donut-sub">đã đóng</div>
+                    </div>
                   </div>
-                  <div class="profile-info-row">
-                    <span class="info-label">Đã đóng</span>
-                    <span class="info-val" style="color:#10B981;font-weight:600;" id="stpTuitionPaid">--</span>
-                  </div>
-                  <div class="profile-info-row">
-                    <span class="info-label">Còn lại</span>
-                    <span class="info-val" style="color:#EF4444;font-weight:600;" id="stpTuitionRemain">--</span>
-                  </div>
-                  <div class="profile-info-row">
-                    <span class="info-label">Trạng thái</span>
-                    <span class="info-val stp-sem-tag" id="stpTuitionStatus">--</span>
+                  <div class="stp2-tuition-rows">
+                    <div class="stp2-tr"><span class="stp2-tl">Tổng học phí</span><strong class="stp2-tv" id="stpTuitionTotal">--</strong></div>
+                    <div class="stp2-tr"><span class="stp2-tl">Đã đóng</span><strong class="stp2-tv" style="color:#10B981;" id="stpTuitionPaid">--</strong></div>
+                    <div class="stp2-tr"><span class="stp2-tl">Còn nợ</span><strong class="stp2-tv" style="color:#EF4444;" id="stpTuitionRemain">--</strong></div>
                   </div>
                 </div>
-                <div class="hr-bar-track" style="margin-top:0.75rem;">
-                  <div class="hr-bar-fill" id="stpTuitionBar" style="width:0%;background:#10B981;transition:width 1s ease;"></div>
-                </div>
+                <div class="hr-bar-track" style="display:none;"><div class="hr-bar-fill" id="stpTuitionBar"></div></div>
               </div>
-            </div>
 
+            </div>
           </div>
 
-          <!-- ── CHI TIẾT HỒ SƠ (full-width below 3-col) ─────────────────── -->
-          <div class="hrm-metric-card stp-detail-card" id="stpDetailCard" style="margin-top:1.5rem;">
+          <!-- ══ GHI CHÚ ═════════════════════════════════════════════ -->
+          <div class="stp2-notes-outer">
+            <div class="stp2-notes-card">
+              <div class="stp2-notes-hd">
+                <svg viewBox="0 0 24 24" class="stp2-notes-ico"><path d="M20,2H4A2,2 0 0,0 2,4V22L6,18H20A2,2 0 0,0 22,16V4A2,2 0 0,0 20,2M6,9H18V11H6V9M14,14H6V12H14V14Z"/></svg>
+                <span class="stp2-notes-ey">Ghi chú từ tư vấn viên</span>
+              </div>
+              <p class="stp2-notes-text" id="stpNotes">Chưa có ghi chú.</p>
+            </div>
+          </div>
+
+          <!-- ══ CHI TIẾT HỒ SƠ ════════════════════════════════════ -->
+          <div class="hrm-metric-card stp-detail-card" id="stpDetailCard" style="margin:0 1.5rem 1.5rem;">
             <div class="metric-card-header" style="display:flex;justify-content:space-between;align-items:center;cursor:pointer;" id="stpDetailToggle">
               <h4 style="margin:0;">Chi tiết hồ sơ cá nhân</h4>
               <span id="stpDetailToggleIcon" style="font-size:.85rem;color:var(--color-text-muted,#6B6A67);transition:transform .25s;">▼</span>
@@ -4904,7 +4964,7 @@
             <div id="stpDetailBody" style="display:none;padding-top:.5rem;">
               <form id="stpDetailForm" autocomplete="off">
 
-                <!-- §1 Thông tin cơ bản -->
+                <!-- §1 Thông tin cá nhân -->
                 <div class="sdp-section-title">Thông tin cá nhân</div>
                 <div class="sdp-row sdp-1col">
                   <div class="sdp-field"><label>Họ và tên</label><input type="text" id="sdpFullName" placeholder="Họ và tên đầy đủ"/></div>

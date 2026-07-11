@@ -4928,8 +4928,18 @@ document.addEventListener('DOMContentLoaded', () => {
         tuitionStatusEl.style.color = '#EF4444';
       }
     }
+    const tuitionPct = tuitionTotal > 0 ? Math.min(100, Math.round(tuitionPaid / tuitionTotal * 100)) : 0;
     const barEl = document.getElementById('stpTuitionBar');
-    if (barEl) barEl.style.width = tuitionTotal > 0 ? Math.min(100, Math.round(tuitionPaid / tuitionTotal * 100)) + '%' : '0%';
+    if (barEl) barEl.style.width = tuitionPct + '%';
+    // Donut ring
+    const ringFill = document.getElementById('stpTuitionRingFill');
+    const pctLabel = document.getElementById('stpTuitionPct');
+    if (pctLabel) pctLabel.textContent = tuitionPct + '%';
+    if (ringFill) {
+      const circ = 2 * Math.PI * 48;
+      ringFill.style.strokeDasharray  = circ;
+      ringFill.style.strokeDashoffset = circ * (1 - tuitionPct / 100);
+    }
 
     // ── Lộ trình học tập ──
     const ROADMAP_STEPS = [
@@ -4948,18 +4958,28 @@ document.addEventListener('DOMContentLoaded', () => {
     if (roadmapEl) {
       roadmapEl.innerHTML = ROADMAP_STEPS.map((s, i) => {
         const stepNum = i + 1;
+        const isLast  = stepNum === ROADMAP_STEPS.length;
         const done    = allDone || stepNum < currentIdx;
         const active  = !allDone && stepNum === currentIdx;
-        const dotCls  = done ? 'done' : active ? 'active' : '';
-        const tagCls  = done ? 'done' : active ? 'active' : 'upcoming';
-        const tagTxt  = done ? 'Hoàn thành' : active ? 'Đang học' : 'Chưa bắt đầu';
-        const checkSvg = done ? `<svg viewBox="0 0 24 24"><path d="M21,7L9,19L3.5,13.5L4.91,12.09L9,16.17L19.59,5.59L21,7Z"/></svg>` : '';
-        return `<div class="stp-roadmap-step">
-          <div class="stp-step-dot ${dotCls}">${checkSvg}</div>
-          <div class="stp-step-body">
-            <div class="stp-step-label">${s.month}: ${s.label}</div>
-            <div class="stp-step-sub">${s.sub}</div>
-            <span class="stp-step-tag ${tagCls}">${tagTxt}</span>
+        const numCls  = done ? 'done' : active ? 'active' : '';
+        const lineCls = done ? 'done' : active ? 'active' : '';
+        const badgeCls= done ? 'done' : active ? 'active' : 'upcoming';
+        const badgeTxt= done ? 'Hoàn thành' : active ? 'Đang học' : 'Chưa bắt đầu';
+        const numInner= done
+          ? `<svg viewBox="0 0 24 24" style="width:14px;height:14px;fill:#fff"><path d="M21,7L9,19L3.5,13.5L4.91,12.09L9,16.17L19.59,5.59L21,7Z"/></svg>`
+          : stepNum;
+        return `<div class="stp2-rm-step">
+          <div class="stp2-rm-track">
+            <div class="stp2-rm-num ${numCls}">${numInner}</div>
+            ${!isLast ? `<div class="stp2-rm-line ${lineCls}"></div>` : ''}
+          </div>
+          <div class="stp2-rm-content">
+            <div class="stp2-rm-head">
+              <span class="stp2-rm-month">${s.month}</span>
+              <span class="stp2-rm-name">${s.label}</span>
+            </div>
+            <div class="stp2-rm-desc">${s.sub}</div>
+            <span class="stp2-rm-badge ${badgeCls}">${badgeTxt}</span>
           </div>
         </div>`;
       }).join('');
