@@ -1097,6 +1097,9 @@ button {
 #sourceStudentModal input,
 #sourceStudentModal select,
 #sourceStudentModal textarea,
+#crmCustomerModal input,
+#crmCustomerModal select,
+#crmCustomerModal textarea,
 #profileForm input {
   width: 100%;
   padding: 0.8rem 1.2rem;
@@ -1116,6 +1119,9 @@ button {
 #sourceStudentModal input:focus,
 #sourceStudentModal select:focus,
 #sourceStudentModal textarea:focus,
+#crmCustomerModal input:focus,
+#crmCustomerModal select:focus,
+#crmCustomerModal textarea:focus,
 #profileForm input:focus {
   border-color: var(--accent);
   background: var(--bg-card);
@@ -1123,7 +1129,8 @@ button {
 }
 
 #studentForm select,
-#sourceStudentModal select {
+#sourceStudentModal select,
+#crmCustomerModal select {
   height: 44px;
   cursor: pointer;
   appearance: none;
