@@ -2830,7 +2830,9 @@ document.addEventListener('DOMContentLoaded', () => {
       else if (student.status === "Đang làm hồ sơ")  badgeClass = "badge-processing";
       else if (student.status === "Đã xuất cảnh")    badgeClass = "badge-selected";
 
-      const enrollDateStr = fmtDate(student.createdAt);
+      const enrollDateStr = student.enrollDate
+        ? new Date(student.enrollDate).toLocaleDateString('vi-VN')
+        : fmtDate(student.createdAt);
       const roadmapLabel  = getRoadmapLabel(student.createdAt);
 
       let fVal = '', fDisplay = '';
@@ -3270,9 +3272,11 @@ document.addEventListener('DOMContentLoaded', () => {
       statusEl.className = 'profile-status-badge ' + sc;
     }
 
-    const enrollDate = student.createdAt
-      ? (student.createdAt.toDate ? student.createdAt.toDate() : new Date(student.createdAt))
-      : new Date();
+    const enrollDate = student.enrollDate
+      ? new Date(student.enrollDate)
+      : student.createdAt
+        ? (student.createdAt.toDate ? student.createdAt.toDate() : new Date(student.createdAt))
+        : new Date();
     set('adsdEnrollDate', enrollDate.toLocaleDateString('vi-VN'));
 
     const flightEl    = document.getElementById('adsdFlightDate');
@@ -3418,6 +3422,20 @@ document.addEventListener('DOMContentLoaded', () => {
     const totalEl = document.getElementById("studentTotalAmount");
     if (paidEl)  paidEl.value  = student.paidAmount  ? fmtMoneyInput(student.paidAmount)  : '';
     if (totalEl) totalEl.value = student.totalAmount ? fmtMoneyInput(student.totalAmount) : '';
+    // Ngày nhập học — prefer stored enrollDate, fall back to createdAt timestamp
+    const enrollEl = document.getElementById("studentEnrollDate");
+    if (enrollEl) {
+      if (student.enrollDate) {
+        enrollEl.value = student.enrollDate;
+      } else if (student.createdAt) {
+        const d = student.createdAt.toDate ? student.createdAt.toDate() : new Date(student.createdAt);
+        if (!isNaN(d)) enrollEl.value = d.toISOString().slice(0, 10);
+      } else {
+        enrollEl.value = '';
+      }
+    }
+    const flightEl = document.getElementById("studentFlightDate");
+    if (flightEl) flightEl.value = student.flightDate || '';
     await populateAdvisorSelect(student.advisor || student.source || '');
     const roomEl = document.getElementById("studentRoom");
     if (roomEl) {
@@ -3468,6 +3486,8 @@ document.addEventListener('DOMContentLoaded', () => {
       const formMode    = document.getElementById("studentFormMode")?.value || 'student';
       const paidAmount  = parseMoneyInput(document.getElementById("studentPaidAmount")?.value || '');
       const totalAmount = parseMoneyInput(document.getElementById("studentTotalAmount")?.value || '');
+      const enrollDate  = document.getElementById("studentEnrollDate")?.value  || null;
+      const flightDate  = document.getElementById("studentFlightDate")?.value  || null;
 
       if (!name || !code || !email || !phone) {
         showToast("Vui lòng nhập đầy đủ các trường thông tin có dấu *!", "error");
@@ -3484,9 +3504,11 @@ document.addEventListener('DOMContentLoaded', () => {
         advisor,
         hometown,
         room,
-        source: advisor,
+        source:      advisor,
         paidAmount:  paidAmount  || null,
         totalAmount: totalAmount || null,
+        enrollDate:  enrollDate  || null,
+        flightDate:  flightDate  || null,
         updatedAt: firebase.firestore.FieldValue.serverTimestamp()
       };
       if (formMode === 'customer') {
