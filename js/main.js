@@ -13276,9 +13276,11 @@ document.addEventListener('DOMContentLoaded', () => {
           // Reject branch
           if (s.rejectStep) {
             const rj  = s.rejectStep;
+            const arrowY = ty + DW/2;
             const rjDiv = document.createElement('div');
             rjDiv.className = `wf2-node`;
-            rjDiv.style.cssText = `left:5px;top:-9999px;width:185px;`;
+            // Use transform to vertically center the box on arrowY without needing offsetHeight
+            rjDiv.style.cssText = `left:5px;top:${arrowY}px;width:185px;transform:translateY(-50%);`;
             rjDiv.innerHTML = `
               <div class="wf2-node-reject ${selCls}" data-step-idx="${i}">
                 <div class="wf2-node-reject-head">
@@ -13290,9 +13292,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 </div>
               </div>`;
             nodes.appendChild(rjDiv);
-            const rjH   = rjDiv.offsetHeight || 42;
-            const arrowY = ty + DW/2;
-            rjDiv.style.top = (arrowY - Math.round(rjH / 2)) + 'px';
             // Horizontal arrow snapped to diamond left-vertex → reject box right-center
             drawArrow(svg, MX - DW/2, arrowY, 190, arrowY, '#EF4444');
           }
