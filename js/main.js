@@ -3361,9 +3361,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const tagCls = done ? 'done' : active ? 'active' : 'upcoming';
         const tagTxt = done ? 'Hoàn thành' : active ? 'Đang học' : 'Chưa bắt đầu';
         const checkSvg = done ? '<svg viewBox="0 0 24 24"><path d="M21,7L9,19L3.5,13.5L4.91,12.09L9,16.17L19.59,5.59L21,7Z"/></svg>' : '';
-        return '<div class="stp-roadmap-step"><div class="stp-step-dot ' + dotCls + '">' + checkSvg + '</div>'
-          + '<div class="stp-step-body"><div class="stp-step-label">' + s.month + ': ' + s.label + '</div>'
-          + '<div class="stp-step-sub">' + s.sub + '</div>'
+        return '<div class="stp-roadmap-step"><div class="stp-step-dot ' + dotCls + '" data-month="' + s.month + '">' + checkSvg + '</div>'
+          + '<div class="stp-step-body"><div class="stp-step-label">' + s.label + '</div>'
           + '<span class="stp-step-tag ' + tagCls + '">' + tagTxt + '</span></div></div>';
       }).join('');
     }
@@ -3423,6 +3422,38 @@ document.addEventListener('DOMContentLoaded', () => {
         sd('adsdDWorkHistory', d.workHistory);
       }).catch(() => {});
     }
+
+    // ── Bottom detail tabs wiring (once per open)
+    const dtabContainer = overlay.querySelector('.adsd-detail-tabs');
+    if (dtabContainer && !dtabContainer.dataset.bound) {
+      dtabContainer.dataset.bound = '1';
+      dtabContainer.addEventListener('click', e => {
+        const btn = e.target.closest('.adsd-dtab');
+        if (!btn) return;
+        overlay.querySelectorAll('.adsd-dtab').forEach(t => t.classList.remove('active'));
+        overlay.querySelectorAll('.adsd-dpanel').forEach(p => p.classList.remove('active'));
+        btn.classList.add('active');
+        const panel = overlay.querySelector('#' + btn.dataset.dtab);
+        if (panel) panel.classList.add('active');
+      });
+    }
+
+    // ── Semester progress bars
+    const semBarData = [
+      { barId: 'adsdSemBar1', tagId: 'adsdSem1' },
+      { barId: 'adsdSemBar2', tagId: 'adsdSem2' },
+      { barId: 'adsdSemBar3', tagId: 'adsdSem3' },
+    ];
+    requestAnimationFrame(() => {
+      semBarData.forEach(({ barId, tagId }) => {
+        const bar = document.getElementById(barId);
+        const tag = document.getElementById(tagId);
+        if (!bar || !tag) return;
+        const txt = tag.textContent || '';
+        bar.style.width = txt === 'Hoàn thành' ? '100%' : txt === 'Đang học' ? '50%' : '0%';
+        bar.style.background = txt === 'Hoàn thành' ? '#10B981' : txt === 'Đang học' ? 'var(--accent,#A88B58)' : '#E5E7EB';
+      });
+    });
 
     overlay.style.display = 'flex';
   };
@@ -5953,6 +5984,55 @@ document.addEventListener('DOMContentLoaded', () => {
       };
     }
 
+    // ── Resume photo (admin view)
+    const adminPhotoFrame = document.getElementById('adminResumePhotoFrame');
+    if (adminPhotoFrame) {
+      adminPhotoFrame.innerHTML = s.photoUrl
+        ? `<img src="${s.photoUrl}" alt="${esc(s.name)}">`
+        : `<span class="resume-photo-placeholder">👤</span>`;
+    }
+    const adminPhotoInput = document.getElementById('adminResumePhotoInput');
+    if (adminPhotoInput) {
+      adminPhotoInput.onchange = async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+          const img = new Image();
+          img.onload = async () => {
+            const maxDim = 800;
+            let w = img.width, h = img.height;
+            if (w > maxDim || h > maxDim) {
+              if (w > h) { h = Math.round(h * maxDim / w); w = maxDim; }
+              else { w = Math.round(w * maxDim / h); h = maxDim; }
+            }
+            const canvas = document.createElement('canvas');
+            canvas.width = w; canvas.height = h;
+            const ctx = canvas.getContext('2d');
+            ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = 'high';
+            ctx.drawImage(img, 0, 0, w, h);
+            const dataUrl = canvas.toDataURL('image/jpeg', 0.92);
+            try {
+              await db.collection('hrm_staff').doc(s.id).update({ photoUrl: dataUrl });
+              s.photoUrl = dataUrl;
+              if (adminPhotoFrame) adminPhotoFrame.innerHTML = `<img src="${dataUrl}" alt="${esc(s.name)}">`;
+              showToast('Đã cập nhật ảnh hồ sơ!', 'success');
+            } catch (err) { showToast('Lỗi lưu ảnh: ' + err.message, 'error'); }
+          };
+          img.src = ev.target.result;
+        };
+        reader.readAsDataURL(file);
+        adminPhotoInput.value = '';
+      };
+    }
+
+    // ── Resume documents (admin view)
+    loadHrmResumeDocs(s.id, 'admin');
+    const adminDocInput = document.getElementById('adminResumeDocInput');
+    if (adminDocInput) {
+      adminDocInput.onchange = () => uploadHrmResumeDocs(s.id, adminDocInput, 'admin');
+    }
+
     // ── Populate detail tabs
     setText('profileIdNumber', s.idNumber);
     setText('profileIdDate', fmtDate(s.idDate));
@@ -6150,6 +6230,127 @@ document.addEventListener('DOMContentLoaded', () => {
     } catch (e) {
       logEl.innerHTML = '<div class="activity-item-empty">Không thể tải nhật ký</div>';
     }
+  };
+
+  // ── HRM Resume: document helpers ─────────────────────────────────────────
+  const _hrmStorage = (() => { try { return firebase.storage(); } catch(e) { return null; } })();
+
+  const _fmtBytes = (b) => {
+    if (b < 1024) return b + ' B';
+    if (b < 1048576) return (b / 1024).toFixed(1) + ' KB';
+    return (b / 1048576).toFixed(1) + ' MB';
+  };
+
+  const _docIcon = (ext) => {
+    const m = { pdf: '📄', doc: '📝', docx: '📝', xls: '📊', xlsx: '📊', zip: '🗜️', jpg: '🖼️', jpeg: '🖼️', png: '🖼️' };
+    return m[ext] || '📁';
+  };
+
+  const loadHrmResumeDocs = async (staffId, prefix) => {
+    const tbody = document.getElementById(prefix === 'admin' ? 'adminResumeDocsTbody' : 'spResumeDocsTbody');
+    if (!tbody) return;
+    tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:1.5rem;color:var(--text-muted);font-size:0.8rem;">Đang tải...</td></tr>`;
+    try {
+      const snap = await db.collection('hrm_staff').doc(staffId).collection('documents')
+        .orderBy('uploadedAt', 'desc').get();
+      if (snap.empty) {
+        const emptyId = prefix === 'admin' ? 'adminResumeDocsEmpty' : 'spResumeDocsEmpty';
+        tbody.innerHTML = `<tr id="${emptyId}"><td colspan="6" class="docs-empty-cell">
+          <svg viewBox="0 0 24 24"><path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z"/></svg>
+          Chưa có tài liệu nào</td></tr>`;
+        return;
+      }
+      renderHrmResumeDocRows(snap.docs.map(d => ({ id: d.id, ...d.data() })), staffId, prefix);
+    } catch (e) {
+      tbody.innerHTML = `<tr><td colspan="6" class="docs-empty-cell">Không thể tải tài liệu</td></tr>`;
+    }
+  };
+
+  const renderHrmResumeDocRows = (docs, staffId, prefix) => {
+    const tbody = document.getElementById(prefix === 'admin' ? 'adminResumeDocsTbody' : 'spResumeDocsTbody');
+    if (!tbody) return;
+    tbody.innerHTML = docs.map((doc, i) => {
+      const ext = (doc.name || '').split('.').pop().toLowerCase();
+      const icon = _docIcon(ext);
+      let dateStr = '--';
+      if (doc.uploadedAt) {
+        const d = doc.uploadedAt.toDate ? doc.uploadedAt.toDate() : new Date(doc.uploadedAt);
+        dateStr = d.toLocaleDateString('vi-VN');
+      }
+      const downloadBtn = doc.url
+        ? `<a href="${doc.url}" target="_blank" download="${doc.name || 'file'}" class="crm-icon-btn" title="Tải về" style="color:#2563EB;">
+            <svg viewBox="0 0 24 24" style="width:14px;height:14px;fill:currentColor;"><path d="M5,20H19V18H5M19,9H15V3H9V9H5L12,16L19,9Z"/></svg>
+           </a>`
+        : '';
+      return `<tr>
+        <td style="font-size:.8rem;color:var(--text-muted);">${i + 1}</td>
+        <td style="font-size:.8rem;">${icon} ${esc(doc.name || 'file')}</td>
+        <td style="font-size:.78rem;color:var(--text-muted);">${ext.toUpperCase()}</td>
+        <td style="font-size:.78rem;color:var(--text-muted);">${_fmtBytes(doc.size || 0)}</td>
+        <td style="font-size:.78rem;color:var(--text-muted);">${dateStr}</td>
+        <td style="text-align:center;">
+          <div style="display:flex;align-items:center;justify-content:center;gap:4px;">
+            ${downloadBtn}
+            <button class="crm-icon-btn btn-del-hrm-doc" data-docid="${doc.id}" data-path="${doc.storagePath || ''}" title="Xóa" style="color:#EF4444;">
+              <svg viewBox="0 0 24 24" style="width:14px;height:14px;fill:currentColor;"><path d="M19,4H15.5L14.5,3H9.5L8.5,4H5V6H19M6,19A2,2 0 0,0 8,21H16A2,2 0 0,0 18,19V7H6V19Z"/></svg>
+            </button>
+          </div>
+        </td>
+      </tr>`;
+    }).join('');
+
+    tbody.querySelectorAll('.btn-del-hrm-doc').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        if (!confirm('Xóa tài liệu này?')) return;
+        const docId = btn.dataset.docid;
+        const path  = btn.dataset.path;
+        try {
+          if (_hrmStorage && path) await _hrmStorage.ref(path).delete().catch(() => {});
+          await db.collection('hrm_staff').doc(staffId).collection('documents').doc(docId).delete();
+          loadHrmResumeDocs(staffId, prefix);
+          showToast('Đã xóa tài liệu', 'success');
+        } catch (e) { showToast('Lỗi xóa: ' + e.message, 'error'); }
+      });
+    });
+  };
+
+  const uploadHrmResumeDocs = async (staffId, input, prefix) => {
+    if (!input.files.length) return;
+    const progressEl = document.getElementById(prefix === 'admin' ? 'adminResumeDocProgress' : 'spResumeDocProgress');
+    const msgEl = document.getElementById(prefix === 'admin' ? 'adminResumeDocMsg' : 'spResumeDocMsg');
+    if (progressEl) progressEl.style.display = 'flex';
+    const files = Array.from(input.files);
+    let done = 0;
+    for (const file of files) {
+      if (msgEl) msgEl.textContent = `Đang lưu: ${file.name} (${done + 1}/${files.length})`;
+      try {
+        let url = '', storagePath = '';
+        if (_hrmStorage) {
+          try {
+            storagePath = `hrm_staff/${staffId}/documents/${Date.now()}_${file.name}`;
+            const ref = _hrmStorage.ref(storagePath);
+            await Promise.race([
+              ref.put(file).then(() => ref.getDownloadURL()).then(u => { url = u; }),
+              new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), 12000))
+            ]);
+          } catch (e) { storagePath = ''; url = ''; }
+        }
+        let dataUrl = url;
+        if (!dataUrl && file.type.startsWith('image/') && file.size < 2 * 1024 * 1024) {
+          dataUrl = await new Promise(res => { const r = new FileReader(); r.onload = e => res(e.target.result); r.readAsDataURL(file); });
+        }
+        const nowTs = firebase.firestore.Timestamp.fromDate(new Date());
+        await db.collection('hrm_staff').doc(staffId).collection('documents').add({
+          name: file.name, size: file.size, type: file.type,
+          url: dataUrl || '', storagePath, uploadedAt: nowTs
+        });
+        done++;
+      } catch (e) { showToast('Lỗi lưu ' + file.name + ': ' + e.message, 'error'); }
+    }
+    input.value = '';
+    if (progressEl) progressEl.style.display = 'none';
+    loadHrmResumeDocs(staffId, prefix);
+    if (done > 0) showToast(`Đã lưu ${done} tài liệu`, 'success');
   };
 
   let hrmInitialized = false;
@@ -10825,6 +11026,57 @@ document.addEventListener('DOMContentLoaded', () => {
     setInput('spInputBankName',        s.bankName);
     setInput('spInputBankAccountName', s.bankAccountName);
     setInput('spInputTaxCode',         s.taxCode);
+
+    // ── Resume photo (self-service)
+    const spPhotoFrame = document.getElementById('spResumePhotoFrame');
+    if (spPhotoFrame) {
+      spPhotoFrame.innerHTML = s.photoUrl
+        ? `<img src="${s.photoUrl}" alt="${esc(s.name || '')}">`
+        : `<span class="resume-photo-placeholder">👤</span>`;
+    }
+    const spPhotoInput = document.getElementById('spResumePhotoInput');
+    if (spPhotoInput && !spPhotoInput.dataset.bound) {
+      spPhotoInput.dataset.bound = '1';
+      spPhotoInput.addEventListener('change', async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+          const img = new Image();
+          img.onload = async () => {
+            const maxDim = 800;
+            let w = img.width, h = img.height;
+            if (w > maxDim || h > maxDim) {
+              if (w > h) { h = Math.round(h * maxDim / w); w = maxDim; }
+              else { w = Math.round(w * maxDim / h); h = maxDim; }
+            }
+            const canvas = document.createElement('canvas');
+            canvas.width = w; canvas.height = h;
+            const ctx = canvas.getContext('2d');
+            ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = 'high';
+            ctx.drawImage(img, 0, 0, w, h);
+            const dataUrl = canvas.toDataURL('image/jpeg', 0.92);
+            try {
+              await db.collection('hrm_staff').doc(s.id).update({ photoUrl: dataUrl });
+              s.photoUrl = dataUrl;
+              if (spPhotoFrame) spPhotoFrame.innerHTML = `<img src="${dataUrl}" alt="${esc(s.name || '')}">`;
+              showToast('Đã cập nhật ảnh hồ sơ!', 'success');
+            } catch (err) { showToast('Lỗi lưu ảnh: ' + err.message, 'error'); }
+          };
+          img.src = ev.target.result;
+        };
+        reader.readAsDataURL(file);
+        spPhotoInput.value = '';
+      });
+    }
+
+    // ── Resume documents (self-service)
+    loadHrmResumeDocs(s.id, 'sp');
+    const spDocInput = document.getElementById('spResumeDocInput');
+    if (spDocInput && !spDocInput.dataset.bound) {
+      spDocInput.dataset.bound = '1';
+      spDocInput.addEventListener('change', () => uploadHrmResumeDocs(s.id, spDocInput, 'sp'));
+    }
 
   };
 

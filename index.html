@@ -1672,6 +1672,54 @@
                     </div>
                   </div>
                 </div>
+
+                <!-- Ảnh hồ sơ + Tài liệu đính kèm -->
+                <div class="resume-extras-row">
+                  <!-- Ảnh hồ sơ -->
+                  <div class="hrm-metric-card resume-photo-card">
+                    <div class="metric-card-header"><h4>ẢNH HỒ SƠ</h4></div>
+                    <div class="resume-photo-body">
+                      <div class="resume-photo-frame" id="adminResumePhotoFrame">
+                        <span class="resume-photo-placeholder">👤</span>
+                      </div>
+                      <div class="resume-photo-meta">
+                        <label class="resume-upload-btn" for="adminResumePhotoInput">
+                          <svg viewBox="0 0 24 24"><path d="M9,16V10H5L12,3L19,10H15V16H9M5,20V18H19V20H5Z"/></svg>
+                          Chọn ảnh
+                        </label>
+                        <input type="file" id="adminResumePhotoInput" accept="image/*" style="display:none">
+                        <p class="resume-photo-hint">JPG, PNG, WEBP · Tối đa 10MB</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Tài liệu đính kèm -->
+                  <div class="hrm-metric-card resume-docs-card">
+                    <div class="metric-card-header">
+                      <h4>TÀI LIỆU ĐÍNH KÈM</h4>
+                      <label class="resume-doc-upload-btn" for="adminResumeDocInput">
+                        <svg viewBox="0 0 24 24"><path d="M9,16V10H5L12,3L19,10H15V16H9M5,20V18H19V20H5Z"/></svg>
+                        Tải lên
+                        <input type="file" id="adminResumeDocInput" multiple accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.xlsx,.xls,.zip" style="display:none">
+                      </label>
+                    </div>
+                    <div id="adminResumeDocProgress" class="doc-upload-progress" style="display:none;">
+                      <svg viewBox="0 0 24 24" class="spin"><path d="M12,4V2A10,10 0 0,0 2,12H4A8,8 0 0,1 12,4Z"/></svg>
+                      <span id="adminResumeDocMsg">Đang tải lên...</span>
+                    </div>
+                    <div class="mini-table-container">
+                      <table class="crm-table" style="margin:0;">
+                        <thead><tr><th>#</th><th>Tên tài liệu</th><th>Loại</th><th>Kích thước</th><th>Ngày tải</th><th style="text-align:center;">Thao tác</th></tr></thead>
+                        <tbody id="adminResumeDocsTbody">
+                          <tr id="adminResumeDocsEmpty"><td colspan="6" class="docs-empty-cell">
+                            <svg viewBox="0 0 24 24"><path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z"/></svg>
+                            Chưa có tài liệu nào
+                          </td></tr>
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                </div>
               </div>
 
               <!-- Tab: Công việc & Hợp đồng -->
@@ -3272,6 +3320,54 @@
 
             </div>
 
+            <!-- Ảnh hồ sơ + Tài liệu đính kèm (self-service) -->
+            <div class="resume-extras-row" style="margin-top:1.25rem;">
+              <!-- Ảnh hồ sơ -->
+              <div class="hrm-metric-card resume-photo-card">
+                <div class="metric-card-header"><h4>ẢNH HỒ SƠ</h4></div>
+                <div class="resume-photo-body">
+                  <div class="resume-photo-frame" id="spResumePhotoFrame">
+                    <span class="resume-photo-placeholder">👤</span>
+                  </div>
+                  <div class="resume-photo-meta">
+                    <label class="resume-upload-btn" for="spResumePhotoInput">
+                      <svg viewBox="0 0 24 24"><path d="M9,16V10H5L12,3L19,10H15V16H9M5,20V18H19V20H5Z"/></svg>
+                      Chọn ảnh
+                    </label>
+                    <input type="file" id="spResumePhotoInput" accept="image/*" style="display:none">
+                    <p class="resume-photo-hint">JPG, PNG, WEBP · Tối đa 10MB</p>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Tài liệu đính kèm -->
+              <div class="hrm-metric-card resume-docs-card">
+                <div class="metric-card-header">
+                  <h4>TÀI LIỆU ĐÍNH KÈM</h4>
+                  <label class="resume-doc-upload-btn" for="spResumeDocInput">
+                    <svg viewBox="0 0 24 24"><path d="M9,16V10H5L12,3L19,10H15V16H9M5,20V18H19V20H5Z"/></svg>
+                    Tải lên
+                    <input type="file" id="spResumeDocInput" multiple accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.xlsx,.xls,.zip" style="display:none">
+                  </label>
+                </div>
+                <div id="spResumeDocProgress" class="doc-upload-progress" style="display:none;">
+                  <svg viewBox="0 0 24 24" class="spin"><path d="M12,4V2A10,10 0 0,0 2,12H4A8,8 0 0,1 12,4Z"/></svg>
+                  <span id="spResumeDocMsg">Đang tải lên...</span>
+                </div>
+                <div class="mini-table-container">
+                  <table class="crm-table" style="margin:0;">
+                    <thead><tr><th>#</th><th>Tên tài liệu</th><th>Loại</th><th>Kích thước</th><th>Ngày tải</th><th style="text-align:center;">Thao tác</th></tr></thead>
+                    <tbody id="spResumeDocsTbody">
+                      <tr id="spResumeDocsEmpty"><td colspan="6" class="docs-empty-cell">
+                        <svg viewBox="0 0 24 24"><path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z"/></svg>
+                        Chưa có tài liệu nào
+                      </td></tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+
             <!-- Nút lưu -->
             <div style="display:flex;justify-content:flex-end;margin-top:1.5rem;">
               <button type="button" id="btnSaveResume" class="hrm-btn-primary" style="display:flex;align-items:center;gap:0.5rem;padding:0.65rem 1.5rem;">
@@ -3280,7 +3376,7 @@
               </button>
             </div>
           </div>
-    
+
           <!-- Tab: Công việc & Hợp đồng -->
           <div id="sptab-contract" class="crmsp-panel">
             <div class="hrm-profile-tab-grid">
@@ -3685,157 +3781,225 @@
           <span class="adsd-topbar-code" id="adsdTopCode">--</span>
         </div>
         <div class="adsd-topbar-actions">
-          <button class="adsd-btn-edit" id="btnEditFromDetail">✏️ Chỉnh sửa</button>
+          <button class="adsd-btn-edit" id="btnEditFromDetail">✏ Đánh giá</button>
         </div>
       </div>
 
-      <!-- BODY -->
-      <div class="adsd-body">
+      <!-- MAIN LAYOUT: sidebar + content -->
+      <div class="adsd-layout">
 
-        <!-- COL 1: Avatar + info + notes -->
-        <div class="adsd-col">
-          <!-- Hero card -->
-          <div class="adsd-card adsd-hero-card">
-            <div class="adsd-avatar-wrap">
-              <div class="adsd-avatar" id="adsdAvatar">HV</div>
-              <div>
-                <h3 class="adsd-name" id="adsdName">--</h3>
-                <span class="adsd-code" id="adsdCode">--</span>
-                <span class="profile-status-badge active-badge" id="adsdStatus">Đang học</span>
-              </div>
-            </div>
+        <!-- SIDEBAR -->
+        <aside class="adsd-sidebar">
+          <!-- Avatar hero -->
+          <div class="adsd-sb-hero">
+            <div class="adsd-avatar" id="adsdAvatar">HV</div>
+            <h3 class="adsd-name" id="adsdName">--</h3>
+            <span class="adsd-code" id="adsdCode">--</span>
+            <span class="profile-status-badge active-badge" id="adsdStatus">Đang học</span>
           </div>
 
           <!-- Thông tin cơ bản -->
-          <div class="adsd-card">
-            <div class="adsd-card-head"><h4>Thông tin cơ bản</h4></div>
-            <div class="profile-info-rows">
-              <div class="profile-info-row"><span class="info-label">Mã học viên</span><span class="info-val" style="font-weight:700;color:#6366F1;font-family:monospace;" id="adsdCodeRow">--</span></div>
-              <div class="profile-info-row"><span class="info-label">Email</span><span class="info-val" id="adsdEmail">--</span></div>
-              <div class="profile-info-row"><span class="info-label">Điện thoại</span><span class="info-val" id="adsdPhone">--</span></div>
-              <div class="profile-info-row"><span class="info-label">Quê quán</span><span class="info-val" id="adsdHometown">--</span></div>
-              <div class="profile-info-row"><span class="info-label">Quốc gia đến</span><span class="info-val" id="adsdCountry">--</span></div>
-              <div class="profile-info-row"><span class="info-label">Phòng ban</span><span class="info-val" id="adsdRoom">--</span></div>
-              <div class="profile-info-row"><span class="info-label">Nhân viên tư vấn</span><span class="info-val" id="adsdAdvisor">--</span></div>
-              <div class="profile-info-row"><span class="info-label">Ngày nhập học</span><span class="info-val" id="adsdEnrollDate">--</span></div>
-              <div class="profile-info-row"><span class="info-label">Tháng học hiện tại</span><span class="info-val" style="color:var(--color-accent,#A88B58);font-weight:600;" id="adsdLearningMonth">--</span></div>
+          <div class="adsd-sb-section">
+            <div class="adsd-sb-section-label">THÔNG TIN CƠ BẢN</div>
+            <div class="adsd-sb-rows">
+              <div class="adsd-sb-row"><span>Mã học sinh</span><span id="adsdCodeRow">--</span></div>
+              <div class="adsd-sb-row"><span>Email</span><span id="adsdEmail">--</span></div>
+              <div class="adsd-sb-row"><span>Điện thoại</span><span id="adsdPhone">--</span></div>
+              <div class="adsd-sb-row"><span>Quê quán</span><span id="adsdHometown">--</span></div>
+              <div class="adsd-sb-row"><span>Quốc gia đến</span><span id="adsdCountry">--</span></div>
+              <div class="adsd-sb-row"><span>Phòng ban</span><span id="adsdRoom">--</span></div>
+              <div class="adsd-sb-row"><span>NV tư vấn</span><span id="adsdAdvisor">--</span></div>
+              <div class="adsd-sb-row"><span>Ngày nhập học</span><span id="adsdEnrollDate">--</span></div>
+              <div class="adsd-sb-row"><span>Tháng học tập</span><span class="adsd-sb-accent" id="adsdLearningMonth">--</span></div>
             </div>
           </div>
 
           <!-- Ghi chú tư vấn -->
-          <div class="adsd-card">
-            <div class="adsd-card-head"><h4>Ghi chú tư vấn</h4></div>
+          <div class="adsd-sb-section adsd-sb-notes-section">
+            <div class="adsd-sb-section-label">CHI CHÚ TƯ VẤN</div>
             <p class="adsd-notes" id="adsdNotes">Chưa có ghi chú.</p>
           </div>
-        </div>
+        </aside>
 
-        <!-- COL 2: Roadmap + Học kì -->
-        <div class="adsd-col">
-          <!-- Lộ trình -->
-          <div class="adsd-card">
-            <div class="adsd-card-head"><h4>Lộ trình học tập</h4></div>
-            <div class="stp-roadmap" id="adsdRoadmap"></div>
-          </div>
+        <!-- MAIN CONTENT -->
+        <div class="adsd-main">
 
-          <!-- Học kì -->
-          <div class="adsd-card">
-            <div class="adsd-card-head"><h4>Học kì hiện tại</h4></div>
-            <div class="stp-semester-badge" id="adsdSemesterBadge">--</div>
-            <div class="profile-info-rows" style="margin-top:0.75rem;">
-              <div class="profile-info-row"><span class="info-label">Kì I (T1–T2)</span><span class="info-val stp-sem-tag" id="adsdSem1">--</span></div>
-              <div class="profile-info-row"><span class="info-label">Kì II (T3–T4)</span><span class="info-val stp-sem-tag" id="adsdSem2">--</span></div>
-              <div class="profile-info-row"><span class="info-label">Kì III (T5–T6)</span><span class="info-val stp-sem-tag" id="adsdSem3">--</span></div>
-            </div>
-          </div>
-        </div>
-
-        <!-- COL 3: Lịch bay + Học phí + Điểm -->
-        <div class="adsd-col">
-          <!-- Lịch bay -->
-          <div class="adsd-card adsd-flight-card">
-            <div class="adsd-card-head"><h4>Lịch bay xuất cảnh ✈</h4></div>
-            <div class="stp-flight-body" style="text-align:center;padding:1rem 0;">
-              <div class="stp-flight-icon">✈</div>
-              <div class="stp-flight-date" id="adsdFlightDate">Chưa có lịch</div>
-              <div class="stp-flight-countdown" id="adsdFlightCountdown"></div>
+          <!-- LỘ TRÌNH HỌC TẬP -->
+          <div class="adsd-section-block">
+            <div class="adsd-section-hd">LỘ TRÌNH HỌC TẬP</div>
+            <div class="adsd-roadmap-scroll">
+              <div id="adsdRoadmap" class="adsd-roadmap-track"></div>
             </div>
           </div>
 
-          <!-- Học phí -->
-          <div class="adsd-card">
-            <div class="adsd-card-head">
-              <h4>Học phí</h4>
-              <span class="stp-tuition-status-badge" id="adsdTuitionStatus">Chưa cập nhật</span>
-            </div>
-            <div class="stp-tuition-bar-wrap">
-              <div class="stp-tuition-bar-track"><div class="stp-tuition-bar-fill" id="adsdTuitionBar" style="width:0%"></div></div>
-            </div>
-            <div class="profile-info-rows" style="margin-top:0.5rem;">
-              <div class="profile-info-row"><span class="info-label">Tổng học phí</span><span class="info-val" id="adsdTuitionTotal">--</span></div>
-              <div class="profile-info-row"><span class="info-label">Đã đóng</span><span class="info-val" style="color:#10B981;font-weight:600;" id="adsdTuitionPaid">--</span></div>
-              <div class="profile-info-row"><span class="info-label">Còn lại</span><span class="info-val" style="color:#EF4444;font-weight:600;" id="adsdTuitionRemain">--</span></div>
-            </div>
-          </div>
+          <!-- MIDDLE ROW: Học kì + Điểm số + (Học phí + Lịch bay) -->
+          <div class="adsd-mid-row">
 
-          <!-- Điểm số -->
-          <div class="adsd-card">
-            <div class="adsd-card-head">
-              <h4>Điểm số</h4>
-              <div style="display:flex;gap:0.4rem;">
-                <button class="scorecard-period-btn active" data-period="week" id="btnAdminScorecardWeekToggle">TUẦN</button>
-                <button class="scorecard-period-btn" data-period="month" id="btnAdminScorecardMonthToggle">THÁNG</button>
+            <!-- Học kì hiện tại -->
+            <div class="adsd-card adsd-sem-card">
+              <div class="adsd-card-head"><h4>HỌC KÌ HIỆN TẠI</h4></div>
+              <div class="adsd-sem-badge" id="adsdSemesterBadge">--</div>
+              <div class="adsd-sem-rows">
+                <div class="adsd-sem-row">
+                  <div class="adsd-sem-row-top">
+                    <span class="adsd-sem-label">Kì I (T1–T2)</span>
+                    <span class="stp-sem-tag" id="adsdSem1">--</span>
+                  </div>
+                  <div class="adsd-sem-bar-track"><div class="adsd-sem-bar-fill" id="adsdSemBar1"></div></div>
+                </div>
+                <div class="adsd-sem-row">
+                  <div class="adsd-sem-row-top">
+                    <span class="adsd-sem-label">Kì II (T3–T4)</span>
+                    <span class="stp-sem-tag" id="adsdSem2">--</span>
+                  </div>
+                  <div class="adsd-sem-bar-track"><div class="adsd-sem-bar-fill" id="adsdSemBar2"></div></div>
+                </div>
+                <div class="adsd-sem-row">
+                  <div class="adsd-sem-row-top">
+                    <span class="adsd-sem-label">Kì III (T5–T6)</span>
+                    <span class="stp-sem-tag" id="adsdSem3">--</span>
+                  </div>
+                  <div class="adsd-sem-bar-track"><div class="adsd-sem-bar-fill" id="adsdSemBar3"></div></div>
+                </div>
               </div>
             </div>
-            <div id="adsdScorecardList" style="max-height:220px;overflow-y:auto;display:flex;flex-direction:column;gap:0.7rem;padding-right:4px;margin-top:0.5rem;"></div>
-          </div>
-        </div>
 
-        <!-- Full-width: Chi tiết hồ sơ cá nhân -->
-        <div class="adsd-card adsd-detail-card" id="adsdDetailSection">
-          <div class="adsd-card-head"><h4>Chi tiết hồ sơ cá nhân</h4></div>
-          <div id="adsdDetailBody">
-            <div class="adsd-detail-grid">
-              <div class="adsd-dg-col">
-                <div class="adsd-dg-section">Thông tin cá nhân</div>
-                <div class="adsd-dg-row"><span>Số CCCD</span><span id="adsdDCccd">--</span></div>
-                <div class="adsd-dg-row"><span>Ngày cấp</span><span id="adsdDCccdDate">--</span></div>
-                <div class="adsd-dg-row"><span>Giới tính</span><span id="adsdDGender">--</span></div>
-                <div class="adsd-dg-row"><span>Ngày sinh</span><span id="adsdDDob">--</span></div>
-                <div class="adsd-dg-row"><span>Tôn giáo</span><span id="adsdDReligion">--</span></div>
-                <div class="adsd-dg-row"><span>Dân tộc</span><span id="adsdDEthnicity">--</span></div>
-                <div class="adsd-dg-row"><span>Tình trạng HN</span><span id="adsdDMarital">--</span></div>
-                <div class="adsd-dg-row"><span>SĐT học viên</span><span id="adsdDPhone">--</span></div>
-                <div class="adsd-dg-row"><span>SĐT người thân</span><span id="adsdDPhoneRelative">--</span></div>
-                <div class="adsd-dg-row"><span>Hộ khẩu</span><span id="adsdDPermanentAddress" style="white-space:normal;">--</span></div>
-                <div class="adsd-dg-row"><span>Tạm trú</span><span id="adsdDTempAddress" style="white-space:normal;">--</span></div>
+            <!-- Điểm số -->
+            <div class="adsd-card adsd-score-card">
+              <div class="adsd-card-head">
+                <h4>ĐIỂM SỐ</h4>
+                <div style="display:flex;gap:.35rem;">
+                  <button class="scorecard-period-btn active" data-period="week" id="btnAdminScorecardWeekToggle">Tiếng</button>
+                  <button class="scorecard-period-btn" data-period="month" id="btnAdminScorecardMonthToggle">Tháng</button>
+                </div>
               </div>
-              <div class="adsd-dg-col">
-                <div class="adsd-dg-section">Học vấn</div>
-                <div class="adsd-dg-row"><span>Tiểu học</span><span id="adsdDSchoolPrimary">--</span></div>
-                <div class="adsd-dg-row"><span>Trung học CS</span><span id="adsdDSchoolMiddle">--</span></div>
-                <div class="adsd-dg-row"><span>THPT</span><span id="adsdDSchoolHigh">--</span></div>
-                <div class="adsd-dg-row"><span>CĐ / ĐH</span><span id="adsdDSchoolUni">--</span></div>
-                <div class="adsd-dg-section" style="margin-top:1rem;">Gia đình</div>
-                <div class="adsd-dg-row"><span>Bố</span><span id="adsdDFather">--</span></div>
-                <div class="adsd-dg-row"><span>Mẹ</span><span id="adsdDMother">--</span></div>
-                <div class="adsd-dg-row"><span>Anh/Chị</span><span id="adsdDSiblingOlder">--</span></div>
-                <div class="adsd-dg-row"><span>Em</span><span id="adsdDSiblingYounger">--</span></div>
-                <div class="adsd-dg-row"><span>Thành viên khác</span><span id="adsdDOtherMember">--</span></div>
+              <div id="adsdScorecardList" class="adsd-scorecard-list"></div>
+            </div>
+
+            <!-- Học phí + Lịch bay (stacked) -->
+            <div class="adsd-right-stack">
+              <!-- Học phí -->
+              <div class="adsd-card adsd-tuition-card">
+                <div class="adsd-card-head">
+                  <h4>HỌC PHÍ</h4>
+                  <span class="stp-tuition-status-badge" id="adsdTuitionStatus">Chưa cập nhật</span>
+                </div>
+                <div class="stp-tuition-bar-wrap">
+                  <div class="stp-tuition-bar-track"><div class="stp-tuition-bar-fill" id="adsdTuitionBar" style="width:0%"></div></div>
+                </div>
+                <div class="adsd-tuition-rows">
+                  <div class="adsd-tuition-row"><span>Học phí</span><span id="adsdTuitionTotal">--</span></div>
+                  <div class="adsd-tuition-row adsd-paid"><span>Đã đóng</span><span id="adsdTuitionPaid">--</span></div>
+                  <div class="adsd-tuition-row adsd-remain"><span>Tổ thí</span><span id="adsdTuitionRemain">--</span></div>
+                </div>
               </div>
-              <div class="adsd-dg-col">
-                <div class="adsd-dg-section">Đặc điểm cá nhân</div>
-                <div class="adsd-dg-row adsd-dg-multiline"><span>Điểm mạnh</span><span id="adsdDStrengths">--</span></div>
-                <div class="adsd-dg-row adsd-dg-multiline"><span>Điểm yếu</span><span id="adsdDWeaknesses">--</span></div>
-                <div class="adsd-dg-row adsd-dg-multiline"><span>Lý do sang Nhật</span><span id="adsdDReason">--</span></div>
-                <div class="adsd-dg-row adsd-dg-multiline"><span>Sở thích</span><span id="adsdDHobbies">--</span></div>
-                <div class="adsd-dg-section" style="margin-top:1rem;">Lịch sử làm việc</div>
-                <div class="adsd-dg-row adsd-dg-multiline"><span id="adsdDWorkHistory" style="color:#374151;font-size:.78rem;white-space:pre-wrap;grid-column:1/-1;">--</span></div>
+
+              <!-- Lịch bay -->
+              <div class="adsd-card adsd-flight-card2">
+                <div class="adsd-card-head">
+                  <h4>LỊCH BAY XUẤT CẢNH</h4>
+                  <button class="adsd-add-btn">+</button>
+                </div>
+                <div class="adsd-flight-body2">
+                  <div class="adsd-flight-icon2">✈</div>
+                  <div class="stp-flight-date" id="adsdFlightDate">Chưa có lịch bay</div>
+                  <div class="stp-flight-countdown" id="adsdFlightCountdown"></div>
+                </div>
               </div>
             </div>
           </div>
-        </div>
 
-      </div><!-- /adsd-body -->
+          <!-- BOTTOM: Tabs chi tiết hồ sơ -->
+          <div class="adsd-detail-card2">
+            <div class="adsd-detail-tabs">
+              <button class="adsd-dtab active" data-dtab="dtab-personal">THÔNG TIN CÁ NHÂN</button>
+              <button class="adsd-dtab" data-dtab="dtab-education">HỌC VẤN</button>
+              <button class="adsd-dtab" data-dtab="dtab-family">GIA ĐÌNH</button>
+            </div>
+
+            <!-- Panel: Thông tin cá nhân -->
+            <div id="dtab-personal" class="adsd-dpanel active">
+              <div class="adsd-detail-3col">
+                <div class="adsd-detail-col">
+                  <div class="adsd-detail-col-hd">THÔNG TIN CÁ NHÂN</div>
+                  <div class="adsd-dg-row"><span>Số CMND</span><span id="adsdDCccd">--</span></div>
+                  <div class="adsd-dg-row"><span>Ngày cấp</span><span id="adsdDCccdDate">--</span></div>
+                  <div class="adsd-dg-row"><span>Giới tính</span><span id="adsdDGender">--</span></div>
+                  <div class="adsd-dg-row"><span>Ngày sinh</span><span id="adsdDDob">--</span></div>
+                  <div class="adsd-dg-row"><span>Tôn giáo</span><span id="adsdDReligion">--</span></div>
+                  <div class="adsd-dg-row"><span>Dân tộc</span><span id="adsdDEthnicity">--</span></div>
+                  <div class="adsd-dg-row"><span>Tình trạng HN</span><span id="adsdDMarital">--</span></div>
+                  <div class="adsd-dg-row"><span>SĐT học viên</span><span id="adsdDPhone">--</span></div>
+                  <div class="adsd-dg-row"><span>SĐT người thân</span><span id="adsdDPhoneRelative">--</span></div>
+                  <div class="adsd-dg-row"><span>Hộ khẩu</span><span id="adsdDPermanentAddress" style="white-space:normal;">--</span></div>
+                  <div class="adsd-dg-row"><span>Tạm trú</span><span id="adsdDTempAddress" style="white-space:normal;">--</span></div>
+                </div>
+                <div class="adsd-detail-col">
+                  <div class="adsd-detail-col-hd">HỌC VẤN</div>
+                  <div class="adsd-dg-row"><span>Tiểu học</span><span id="adsdDSchoolPrimary">--</span></div>
+                  <div class="adsd-dg-row"><span>Trung học CS</span><span id="adsdDSchoolMiddle">--</span></div>
+                  <div class="adsd-dg-row"><span>THPT</span><span id="adsdDSchoolHigh">--</span></div>
+                  <div class="adsd-dg-row"><span>Đại học</span><span id="adsdDSchoolUni">--</span></div>
+                </div>
+                <div class="adsd-detail-col">
+                  <div class="adsd-detail-col-hd">ĐẶC ĐIỂM CÁ NHÂN</div>
+                  <div class="adsd-dg-row adsd-dg-multiline"><span>Điểm mạnh</span><span id="adsdDStrengths">--</span></div>
+                  <div class="adsd-dg-row adsd-dg-multiline"><span>Điểm yếu</span><span id="adsdDWeaknesses">--</span></div>
+                  <div class="adsd-dg-row adsd-dg-multiline"><span>Lý do du học</span><span id="adsdDReason">--</span></div>
+                  <div class="adsd-dg-row adsd-dg-multiline"><span>Sở thích</span><span id="adsdDHobbies">--</span></div>
+                  <div class="adsd-dg-row adsd-dg-multiline"><span>Lịch sử làm việc</span><span id="adsdDWorkHistory" style="white-space:pre-wrap;">--</span></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Panel: Học vấn (detailed) -->
+            <div id="dtab-education" class="adsd-dpanel">
+              <div class="adsd-detail-3col">
+                <div class="adsd-detail-col">
+                  <div class="adsd-detail-col-hd">TRÌNH ĐỘ HỌC VẤN</div>
+                  <div class="adsd-dg-row"><span>Tiểu học</span><span id="adsdDSchoolPrimary2">--</span></div>
+                  <div class="adsd-dg-row"><span>Trung học CS</span><span id="adsdDSchoolMiddle2">--</span></div>
+                  <div class="adsd-dg-row"><span>THPT</span><span id="adsdDSchoolHigh2">--</span></div>
+                  <div class="adsd-dg-row"><span>CĐ / ĐH</span><span id="adsdDSchoolUni2">--</span></div>
+                </div>
+                <div class="adsd-detail-col">
+                  <div class="adsd-detail-col-hd">LỊCH SỬ LÀM VIỆC</div>
+                  <div class="adsd-dg-row adsd-dg-multiline" style="display:block;"><span id="adsdDWorkHistory2" style="font-size:.8rem;color:var(--text-main);white-space:pre-wrap;line-height:1.7;">--</span></div>
+                </div>
+                <div class="adsd-detail-col">
+                  <div class="adsd-detail-col-hd">SỞ THÍCH &amp; NĂNG KHIẾU</div>
+                  <div class="adsd-dg-row adsd-dg-multiline"><span>Sở thích</span><span id="adsdDHobbies2">--</span></div>
+                  <div class="adsd-dg-row adsd-dg-multiline"><span>Điểm mạnh</span><span id="adsdDStrengths2">--</span></div>
+                  <div class="adsd-dg-row adsd-dg-multiline"><span>Điểm yếu</span><span id="adsdDWeaknesses2">--</span></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Panel: Gia đình -->
+            <div id="dtab-family" class="adsd-dpanel">
+              <div class="adsd-detail-3col">
+                <div class="adsd-detail-col">
+                  <div class="adsd-detail-col-hd">BỐ MẸ</div>
+                  <div class="adsd-dg-row"><span>Bố</span><span id="adsdDFather">--</span></div>
+                  <div class="adsd-dg-row"><span>Mẹ</span><span id="adsdDMother">--</span></div>
+                </div>
+                <div class="adsd-detail-col">
+                  <div class="adsd-detail-col-hd">ANH CHỊ EM</div>
+                  <div class="adsd-dg-row"><span>Anh/Chị</span><span id="adsdDSiblingOlder">--</span></div>
+                  <div class="adsd-dg-row"><span>Em</span><span id="adsdDSiblingYounger">--</span></div>
+                  <div class="adsd-dg-row"><span>Thành viên khác</span><span id="adsdDOtherMember">--</span></div>
+                </div>
+                <div class="adsd-detail-col">
+                  <div class="adsd-detail-col-hd">ĐỊA CHỈ GIA ĐÌNH</div>
+                  <div class="adsd-dg-row"><span>Lý do du học</span><span id="adsdDReason2">--</span></div>
+                  <div class="adsd-dg-row"><span>Hộ khẩu</span><span id="adsdDPermanentAddress2" style="white-space:normal;">--</span></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div><!-- /adsd-main -->
+      </div><!-- /adsd-layout -->
 
     </div><!-- /studentDetailModal --
 
