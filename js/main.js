@@ -12915,7 +12915,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const RX = 90;
     const NW = 240;
     const NH = 90;
-    const DW = 80;
+    const DW = 114;
     const SY = 40;
     const GAP = 48;
     const ROW = NH + GAP;
@@ -13019,7 +13019,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const rj  = s.rejectStep;
             const rjDiv = document.createElement('div');
             rjDiv.className = `wf2-node`;
-            rjDiv.style.cssText = `left:5px;top:${ty}px;width:185px;`;
+            rjDiv.style.cssText = `left:5px;top:-9999px;width:185px;`;
             rjDiv.innerHTML = `
               <div class="wf2-node-reject ${selCls}" data-step-idx="${i}">
                 <div class="wf2-node-reject-head">
@@ -13031,8 +13031,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 </div>
               </div>`;
             nodes.appendChild(rjDiv);
-            // Horizontal arrow: diamond left-vertex → reject box right edge (5+185=190)
-            drawArrow(svg, MX - DW/2, ty + DW/2, 190, ty + DW/2, '#EF4444');
+            const rjH   = rjDiv.offsetHeight;
+            const arrowY = ty + DW/2;
+            rjDiv.style.top = (arrowY - Math.round(rjH / 2)) + 'px';
+            // Horizontal arrow snapped to diamond left-vertex and reject box right-center
+            drawArrow(svg, MX - DW/2, arrowY, 190, arrowY, '#EF4444');
           }
 
           // Arrow down from diamond
@@ -13096,7 +13099,8 @@ document.addEventListener('DOMContentLoaded', () => {
       if (steps.length) {
         const last = steps[steps.length-1];
         const lastTy = nodeTop(steps.length-1, extraByIdx[steps.length-1]);
-        const lastH  = last.type === 'condition' ? DW : NH;
+        const lastCardEl = nodes.querySelector(`[data-step-idx="${steps.length-1}"]`);
+        const lastH = last.type === 'condition' ? DW : (lastCardEl?.offsetHeight ?? NH);
         const lastColor = last.status==='done' ? (last.type==='approve' ? '#F59E0B' : '#22C55E') : '';
         drawArrow(svg, MX, lastTy+lastH+2, MX, endY-2, lastColor);
       }

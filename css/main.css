@@ -7502,7 +7502,7 @@ body.dark-theme-crm {
 .wf2-node-deadline { font-size:.68rem; color:#F59E0B; font-weight:600; }
 
 /* Condition diamond */
-.wf2-node-diamond-wrap { position:relative; }
+.wf2-node-diamond-wrap { position:relative; display:flex; align-items:center; justify-content:center; }
 .wf2-node-diamond {
   width:80px; height:80px; background:#FEF3C7; border:2px solid #F59E0B;
   transform:rotate(45deg); border-radius:6px;
