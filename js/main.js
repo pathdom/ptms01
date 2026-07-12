@@ -2823,16 +2823,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const globalStudentIndexMap = new Map(students.map((s, i) => [s.id, 10001 + i]));
     const pad2 = (n) => n < 10 ? '0' + n : '' + n;
 
-    const getRoadmapLabel = (createdAt) => {
-      const enroll = createdAt
-        ? (createdAt.toDate ? createdAt.toDate() : new Date(createdAt))
-        : null;
-      if (!enroll || isNaN(enroll)) return '--';
-      const months = Math.max(0, Math.floor((new Date() - enroll) / (1000 * 60 * 60 * 24 * 30.44)));
-      if (months === 0) return 'Tháng 1';
-      if (months >= 6)  return '6 THÁNG';
-      return months + ' THÁNG';
-    };
+    const getRoadmapLabel = () => '6 THÁNG';
 
     const fmtDate = (val) => {
       if (!val) return '--';
