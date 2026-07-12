@@ -1727,7 +1727,13 @@
                 <div class="hrm-profile-tab-grid">
                   <!-- Card 1: Hợp đồng lao động -->
                   <div class="hrm-metric-card" style="margin-bottom: 0;">
-                    <div class="metric-card-header"><h4>HỢP ĐỒNG LAO ĐỘNG</h4></div>
+                    <div class="metric-card-header">
+                      <h4>HỢP ĐỒNG LAO ĐỘNG</h4>
+                      <button class="metric-action-btn" id="btnViewContractDetail">
+                        <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M16,18H8V16H16V18M16,14H8V12H16V14M13,9V3.5L18.5,9H13Z"/></svg>
+                        Chi tiết hợp đồng
+                      </button>
+                    </div>
                     <div class="profile-info-rows">
                       <div class="profile-info-row"><span class="info-label">Loại hợp đồng</span><span class="info-val" id="profileContractType">--</span></div>
                       <div class="profile-info-row"><span class="info-label">Ngày bắt đầu</span><span class="info-val" id="profileContractStartDate">--</span></div>
@@ -1744,6 +1750,32 @@
                       <div class="profile-info-row"><span class="info-label">Người quản lý</span><span class="info-val" id="profileManager">--</span></div>
                       <div class="profile-info-row"><span class="info-label">Ngày nhận việc</span><span class="info-val" id="profileJoinDate2">--</span></div>
                     </div>
+                  </div>
+                </div>
+                <!-- TÀI LIỆU HỢP ĐỒNG -->
+                <div class="hrm-metric-card" style="margin-top:.75rem;margin-bottom:0;">
+                  <div class="metric-card-header">
+                    <h4>TÀI LIỆU HỢP ĐỒNG</h4>
+                    <label class="resume-doc-upload-btn" for="adminContractDocInput">
+                      <svg viewBox="0 0 24 24"><path d="M9,16V10H5L12,3L19,10H15V16H9M5,20V18H19V20H5Z"/></svg>
+                      Tải lên
+                      <input type="file" id="adminContractDocInput" multiple accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.xlsx,.xls,.zip" style="display:none">
+                    </label>
+                  </div>
+                  <div id="adminContractDocProgress" class="doc-upload-progress" style="display:none;">
+                    <svg viewBox="0 0 24 24" class="spin"><path d="M12,4V2A10,10 0 0,0 2,12H4A8,8 0 0,1 12,4Z"/></svg>
+                    <span id="adminContractDocMsg">Đang tải lên...</span>
+                  </div>
+                  <div class="mini-table-container">
+                    <table class="crm-table" style="margin:0;">
+                      <thead><tr><th>#</th><th>Tên tài liệu</th><th>Loại</th><th>Kích thước</th><th>Ngày tải</th><th style="text-align:center;">Thao tác</th></tr></thead>
+                      <tbody id="adminContractDocsTbody">
+                        <tr id="adminContractDocsEmpty"><td colspan="6" class="docs-empty-cell">
+                          <svg viewBox="0 0 24 24"><path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z"/></svg>
+                          Chưa có tài liệu nào
+                        </td></tr>
+                      </tbody>
+                    </table>
                   </div>
                 </div>
               </div>
@@ -3381,7 +3413,13 @@
           <div id="sptab-contract" class="crmsp-panel">
             <div class="hrm-profile-tab-grid">
               <div class="hrm-metric-card" style="margin-bottom: 0;">
-                <div class="metric-card-header"><h4>HỢP ĐỒNG LAO ĐỘNG</h4></div>
+                <div class="metric-card-header">
+                  <h4>HỢP ĐỒNG LAO ĐỘNG</h4>
+                  <button class="metric-action-btn" id="spBtnViewContractDetail">
+                    <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M16,18H8V16H16V18M16,14H8V12H16V14M13,9V3.5L18.5,9H13Z"/></svg>
+                    Chi tiết hợp đồng
+                  </button>
+                </div>
                 <div class="profile-info-rows">
                   <div class="profile-info-row"><span class="info-label">Loại hợp đồng</span><span class="info-val" id="spProfileContractType">--</span></div>
                   <div class="profile-info-row"><span class="info-label">Ngày bắt đầu</span><span class="info-val" id="spProfileContractStartDate">--</span></div>
@@ -3397,6 +3435,32 @@
                   <div class="profile-info-row"><span class="info-label">Người quản lý</span><span class="info-val" id="spProfileManager">--</span></div>
                   <div class="profile-info-row"><span class="info-label">Ngày nhận việc</span><span class="info-val" id="spProfileJoinDate2">--</span></div>
                 </div>
+              </div>
+            </div>
+            <!-- TÀI LIỆU HỢP ĐỒNG (self-service) -->
+            <div class="hrm-metric-card" style="margin-top:.75rem;margin-bottom:0;">
+              <div class="metric-card-header">
+                <h4>TÀI LIỆU HỢP ĐỒNG</h4>
+                <label class="resume-doc-upload-btn" for="spContractDocInput">
+                  <svg viewBox="0 0 24 24"><path d="M9,16V10H5L12,3L19,10H15V16H9M5,20V18H19V20H5Z"/></svg>
+                  Tải lên
+                  <input type="file" id="spContractDocInput" multiple accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.xlsx,.xls,.zip" style="display:none">
+                </label>
+              </div>
+              <div id="spContractDocProgress" class="doc-upload-progress" style="display:none;">
+                <svg viewBox="0 0 24 24" class="spin"><path d="M12,4V2A10,10 0 0,0 2,12H4A8,8 0 0,1 12,4Z"/></svg>
+                <span id="spContractDocMsg">Đang tải lên...</span>
+              </div>
+              <div class="mini-table-container">
+                <table class="crm-table" style="margin:0;">
+                  <thead><tr><th>#</th><th>Tên tài liệu</th><th>Loại</th><th>Kích thước</th><th>Ngày tải</th><th style="text-align:center;">Thao tác</th></tr></thead>
+                  <tbody id="spContractDocsTbody">
+                    <tr id="spContractDocsEmpty"><td colspan="6" class="docs-empty-cell">
+                      <svg viewBox="0 0 24 24"><path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z"/></svg>
+                      Chưa có tài liệu nào
+                    </td></tr>
+                  </tbody>
+                </table>
               </div>
             </div>
           </div>
@@ -7855,6 +7919,50 @@
           >
             <!-- Kết quả tìm kiếm hiển thị động qua JS -->
           </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Contract Detail Modal -->
+    <div class="modal-overlay" id="contractDetailModal" style="display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,.5);z-index:1050;justify-content:center;align-items:center;padding:2rem;backdrop-filter:blur(4px);">
+      <div class="login-card" style="max-width:520px;width:100%;border-radius:var(--border-radius-lg);box-shadow:var(--shadow-lg);padding:0;overflow:hidden;max-height:90vh;display:flex;flex-direction:column;">
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:1.25rem 1.5rem;border-bottom:1px solid var(--border-light,rgba(0,0,0,.08));flex-shrink:0;">
+          <div>
+            <h3 style="font-family:var(--font-serif);font-size:1.15rem;font-weight:500;color:var(--text-main);margin:0;">Chi tiết hợp đồng lao động</h3>
+            <p id="cdStaffNameSub" style="font-size:.75rem;color:var(--text-muted);margin:.2rem 0 0;"></p>
+          </div>
+          <button type="button" id="btnCloseContractDetail" style="font-size:1.5rem;color:var(--text-muted);cursor:pointer;background:none;border:none;line-height:1;">&times;</button>
+        </div>
+        <div style="overflow-y:auto;flex:1;padding:1.5rem;">
+          <div id="cdStatusBadge" style="display:inline-flex;align-items:center;gap:.4rem;padding:.3rem .8rem;border-radius:20px;font-size:.72rem;font-weight:600;letter-spacing:.3px;margin-bottom:1.25rem;"></div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1rem;">
+            <div style="background:var(--bg-section,#f8f7f4);border-radius:10px;padding:1rem;">
+              <p style="font-size:.65rem;font-weight:600;letter-spacing:.8px;text-transform:uppercase;color:var(--text-muted);margin:0 0 .75rem;">HỢP ĐỒNG</p>
+              <div class="profile-info-rows">
+                <div class="profile-info-row"><span class="info-label">Loại HĐ</span><span class="info-val" id="cdContractType">--</span></div>
+                <div class="profile-info-row"><span class="info-label">Ngày bắt đầu</span><span class="info-val" id="cdStartDate">--</span></div>
+                <div class="profile-info-row"><span class="info-label">Ngày kết thúc</span><span class="info-val" id="cdEndDate">--</span></div>
+              </div>
+            </div>
+            <div style="background:var(--bg-section,#f8f7f4);border-radius:10px;padding:1rem;">
+              <p style="font-size:.65rem;font-weight:600;letter-spacing:.8px;text-transform:uppercase;color:var(--text-muted);margin:0 0 .75rem;">VỊ TRÍ</p>
+              <div class="profile-info-rows">
+                <div class="profile-info-row"><span class="info-label">Phòng ban</span><span class="info-val" id="cdDept">--</span></div>
+                <div class="profile-info-row"><span class="info-label">Chức danh</span><span class="info-val" id="cdPos">--</span></div>
+                <div class="profile-info-row"><span class="info-label">Quản lý</span><span class="info-val" id="cdManager">--</span></div>
+              </div>
+            </div>
+          </div>
+          <div style="background:var(--bg-section,#f8f7f4);border-radius:10px;padding:1rem;">
+            <p style="font-size:.65rem;font-weight:600;letter-spacing:.8px;text-transform:uppercase;color:var(--text-muted);margin:0 0 .75rem;">THÔNG TIN NHẬN VIỆC</p>
+            <div class="profile-info-rows">
+              <div class="profile-info-row"><span class="info-label">Ngày nhận việc</span><span class="info-val" id="cdJoinDate">--</span></div>
+              <div class="profile-info-row"><span class="info-label">Thâm niên</span><span class="info-val" id="cdSeniority">--</span></div>
+            </div>
+          </div>
+        </div>
+        <div style="padding:1rem 1.5rem;border-top:1px solid var(--border-light,rgba(0,0,0,.08));display:flex;justify-content:flex-end;flex-shrink:0;">
+          <button type="button" id="btnCloseContractDetailFooter" class="metric-action-btn" style="padding:.5rem 1.25rem;font-size:.8rem;">Đóng</button>
         </div>
       </div>
     </div>

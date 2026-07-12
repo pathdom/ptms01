@@ -6037,6 +6037,15 @@ document.addEventListener('DOMContentLoaded', () => {
       adminDocInput.onchange = () => uploadHrmResumeDocs(s.id, adminDocInput, 'admin');
     }
 
+    // ── Contract documents (admin view)
+    loadHrmContractDocs(s.id, 'admin');
+    const adminCDocInput = document.getElementById('adminContractDocInput');
+    if (adminCDocInput) {
+      adminCDocInput.onchange = () => uploadHrmContractDocs(s.id, adminCDocInput, 'admin');
+    }
+    const btnCD = document.getElementById('btnViewContractDetail');
+    if (btnCD) btnCD.onclick = () => openContractDetailModal(s);
+
     // ── Populate detail tabs
     setText('profileIdNumber', s.idNumber);
     setText('profileIdDate', fmtDate(s.idDate));
@@ -6356,6 +6365,177 @@ document.addEventListener('DOMContentLoaded', () => {
     loadHrmResumeDocs(staffId, prefix);
     if (done > 0) showToast(`Đã lưu ${done} tài liệu`, 'success');
   };
+
+  // ── Contract documents ──────────────────────────────────────────────────────
+  const _contractDocIds = (prefix) => ({
+    tbody:    prefix === 'admin' ? 'adminContractDocsTbody' : 'spContractDocsTbody',
+    progress: prefix === 'admin' ? 'adminContractDocProgress' : 'spContractDocProgress',
+    msg:      prefix === 'admin' ? 'adminContractDocMsg' : 'spContractDocMsg',
+    empty:    prefix === 'admin' ? 'adminContractDocsEmpty' : 'spContractDocsEmpty',
+  });
+
+  const loadHrmContractDocs = async (staffId, prefix) => {
+    const ids = _contractDocIds(prefix);
+    const tbody = document.getElementById(ids.tbody);
+    if (!tbody) return;
+    tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:1.5rem;color:var(--text-muted);font-size:0.8rem;">Đang tải...</td></tr>`;
+    try {
+      const snap = await db.collection('hrm_staff').doc(staffId).collection('contractDocs')
+        .orderBy('uploadedAt', 'desc').get();
+      if (snap.empty) {
+        tbody.innerHTML = `<tr id="${ids.empty}"><td colspan="6" class="docs-empty-cell">
+          <svg viewBox="0 0 24 24"><path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z"/></svg>
+          Chưa có tài liệu nào</td></tr>`;
+        return;
+      }
+      renderHrmContractDocRows(snap.docs.map(d => ({ id: d.id, ...d.data() })), staffId, prefix);
+    } catch (e) {
+      tbody.innerHTML = `<tr><td colspan="6" class="docs-empty-cell">Không thể tải tài liệu</td></tr>`;
+    }
+  };
+
+  const renderHrmContractDocRows = (docs, staffId, prefix) => {
+    const ids = _contractDocIds(prefix);
+    const tbody = document.getElementById(ids.tbody);
+    if (!tbody) return;
+    tbody.innerHTML = docs.map((doc, i) => {
+      const ext = (doc.name || '').split('.').pop().toLowerCase();
+      const icon = _docIcon(ext);
+      let dateStr = '--';
+      if (doc.uploadedAt) {
+        const d = doc.uploadedAt.toDate ? doc.uploadedAt.toDate() : new Date(doc.uploadedAt);
+        dateStr = d.toLocaleDateString('vi-VN');
+      }
+      const downloadBtn = doc.url
+        ? `<a href="${doc.url}" target="_blank" download="${doc.name || 'file'}" class="crm-icon-btn" title="Tải về" style="color:#2563EB;">
+            <svg viewBox="0 0 24 24" style="width:14px;height:14px;fill:currentColor;"><path d="M5,20H19V18H5M19,9H15V3H9V9H5L12,16L19,9Z"/></svg>
+           </a>`
+        : '';
+      return `<tr>
+        <td style="font-size:.8rem;color:var(--text-muted);">${i + 1}</td>
+        <td style="font-size:.8rem;">${icon} ${esc(doc.name || 'file')}</td>
+        <td style="font-size:.78rem;color:var(--text-muted);">${ext.toUpperCase()}</td>
+        <td style="font-size:.78rem;color:var(--text-muted);">${_fmtBytes(doc.size || 0)}</td>
+        <td style="font-size:.78rem;color:var(--text-muted);">${dateStr}</td>
+        <td style="text-align:center;">
+          <div style="display:flex;align-items:center;justify-content:center;gap:4px;">
+            ${downloadBtn}
+            <button class="crm-icon-btn btn-del-hrm-cdoc" data-docid="${doc.id}" data-path="${doc.storagePath || ''}" title="Xóa" style="color:#EF4444;">
+              <svg viewBox="0 0 24 24" style="width:14px;height:14px;fill:currentColor;"><path d="M19,4H15.5L14.5,3H9.5L8.5,4H5V6H19M6,19A2,2 0 0,0 8,21H16A2,2 0 0,0 18,19V7H6V19Z"/></svg>
+            </button>
+          </div>
+        </td>
+      </tr>`;
+    }).join('');
+
+    tbody.querySelectorAll('.btn-del-hrm-cdoc').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        if (!confirm('Xóa tài liệu này?')) return;
+        const docId = btn.dataset.docid;
+        const path  = btn.dataset.path;
+        try {
+          if (_hrmStorage && path) await _hrmStorage.ref(path).delete().catch(() => {});
+          await db.collection('hrm_staff').doc(staffId).collection('contractDocs').doc(docId).delete();
+          loadHrmContractDocs(staffId, prefix);
+          showToast('Đã xóa tài liệu', 'success');
+        } catch (e) { showToast('Lỗi xóa: ' + e.message, 'error'); }
+      });
+    });
+  };
+
+  const uploadHrmContractDocs = async (staffId, input, prefix) => {
+    if (!input.files.length) return;
+    const ids = _contractDocIds(prefix);
+    const progressEl = document.getElementById(ids.progress);
+    const msgEl = document.getElementById(ids.msg);
+    if (progressEl) progressEl.style.display = 'flex';
+    const files = Array.from(input.files);
+    let done = 0;
+    for (const file of files) {
+      if (msgEl) msgEl.textContent = `Đang lưu: ${file.name} (${done + 1}/${files.length})`;
+      try {
+        let url = '', storagePath = '';
+        if (_hrmStorage) {
+          try {
+            storagePath = `hrm_staff/${staffId}/contractDocs/${Date.now()}_${file.name}`;
+            const ref = _hrmStorage.ref(storagePath);
+            await Promise.race([
+              ref.put(file).then(() => ref.getDownloadURL()).then(u => { url = u; }),
+              new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), 12000))
+            ]);
+          } catch (e) { storagePath = ''; url = ''; }
+        }
+        let dataUrl = url;
+        if (!dataUrl && file.type.startsWith('image/') && file.size < 2 * 1024 * 1024) {
+          dataUrl = await new Promise(res => { const r = new FileReader(); r.onload = e => res(e.target.result); r.readAsDataURL(file); });
+        }
+        const nowTs = firebase.firestore.Timestamp.fromDate(new Date());
+        await db.collection('hrm_staff').doc(staffId).collection('contractDocs').add({
+          name: file.name, size: file.size, type: file.type,
+          url: dataUrl || '', storagePath, uploadedAt: nowTs
+        });
+        done++;
+      } catch (e) { showToast('Lỗi lưu ' + file.name + ': ' + e.message, 'error'); }
+    }
+    input.value = '';
+    if (progressEl) progressEl.style.display = 'none';
+    loadHrmContractDocs(staffId, prefix);
+    if (done > 0) showToast(`Đã lưu ${done} tài liệu`, 'success');
+  };
+
+  const openContractDetailModal = (s) => {
+    const modal = document.getElementById('contractDetailModal');
+    if (!modal) return;
+    const fmtD = (val) => {
+      if (!val) return '--';
+      if (val.toDate) return val.toDate().toLocaleDateString('vi-VN');
+      const d = new Date(val);
+      return isNaN(d) ? String(val) : d.toLocaleDateString('vi-VN');
+    };
+    const seniority = (joinVal) => {
+      if (!joinVal) return '--';
+      const joinDate = joinVal.toDate ? joinVal.toDate() : new Date(joinVal);
+      if (isNaN(joinDate)) return '--';
+      const now = new Date();
+      const months = (now.getFullYear() - joinDate.getFullYear()) * 12 + (now.getMonth() - joinDate.getMonth());
+      if (months < 1) return 'Dưới 1 tháng';
+      if (months < 12) return `${months} tháng`;
+      const y = Math.floor(months / 12), m = months % 12;
+      return m > 0 ? `${y} năm ${m} tháng` : `${y} năm`;
+    };
+    const isActive = s.status !== 'Đã nghỉ việc';
+    const badge = document.getElementById('cdStatusBadge');
+    if (badge) {
+      badge.textContent = isActive ? 'Đang hiệu lực' : 'Hết hiệu lực';
+      badge.style.background = isActive ? '#D1FAE5' : '#FEE2E2';
+      badge.style.color = isActive ? '#059669' : '#DC2626';
+    }
+    const sub = document.getElementById('cdStaffNameSub');
+    if (sub) sub.textContent = (s.name || '--') + (s.employeeCode ? ` · Mã ${s.employeeCode}` : '');
+    const set2 = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val || '--'; };
+    set2('cdContractType', s.contractType);
+    set2('cdStartDate', fmtD(s.contractStartDate || s.joinDate));
+    set2('cdEndDate', s.contractEndDate ? fmtD(s.contractEndDate) : 'Vô thời hạn');
+    set2('cdDept', s.department);
+    set2('cdPos', s.position);
+    set2('cdManager', s.manager || 'Ban Giám đốc');
+    set2('cdJoinDate', fmtD(s.joinDate));
+    set2('cdSeniority', seniority(s.joinDate));
+    modal.style.display = 'flex';
+  };
+
+  // Contract detail modal close handlers (run once)
+  (() => {
+    const closeCD = () => {
+      const m = document.getElementById('contractDetailModal');
+      if (m) m.style.display = 'none';
+    };
+    document.getElementById('btnCloseContractDetail')?.addEventListener('click', closeCD);
+    document.getElementById('btnCloseContractDetailFooter')?.addEventListener('click', closeCD);
+    document.getElementById('contractDetailModal')?.addEventListener('click', e => {
+      if (e.target === e.currentTarget) closeCD();
+    });
+  })();
 
   let hrmInitialized = false;
 
@@ -11080,6 +11260,19 @@ document.addEventListener('DOMContentLoaded', () => {
     if (spDocInput && !spDocInput.dataset.bound) {
       spDocInput.dataset.bound = '1';
       spDocInput.addEventListener('change', () => uploadHrmResumeDocs(s.id, spDocInput, 'sp'));
+    }
+
+    // ── Contract documents (self-service)
+    loadHrmContractDocs(s.id, 'sp');
+    const spCDocInput = document.getElementById('spContractDocInput');
+    if (spCDocInput && !spCDocInput.dataset.bound) {
+      spCDocInput.dataset.bound = '1';
+      spCDocInput.addEventListener('change', () => uploadHrmContractDocs(s.id, spCDocInput, 'sp'));
+    }
+    const spBtnCD = document.getElementById('spBtnViewContractDetail');
+    if (spBtnCD && !spBtnCD.dataset.bound) {
+      spBtnCD.dataset.bound = '1';
+      spBtnCD.addEventListener('click', () => openContractDetailModal(s));
     }
 
   };
