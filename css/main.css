@@ -8046,6 +8046,8 @@ body.dark-theme-crm {
   display: flex;
   flex: 1;
   overflow: hidden;
+  padding: .65rem .75rem .75rem;
+  gap: .75rem;
 }
 
 /* Sidebar */
@@ -8053,7 +8055,8 @@ body.dark-theme-crm {
   width: 220px;
   flex-shrink: 0;
   background: var(--bg-card,#fff);
-  border-right: 1px solid var(--border-light,rgba(0,0,0,.07));
+  border: 1px solid var(--border-light,rgba(0,0,0,.08));
+  border-radius: 14px;
   overflow-y: auto;
   display: flex;
   flex-direction: column;
