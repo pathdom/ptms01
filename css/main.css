@@ -8195,6 +8195,8 @@ body.dark-theme-crm {
   padding: 1rem 1.1rem;
   display: flex;
   flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
 }
 .adsd-card-head {
   display: flex; align-items: center; justify-content: space-between; margin-bottom:.75rem;
@@ -8215,6 +8217,7 @@ body.dark-theme-crm {
   grid-template-columns: 1fr 1.4fr 0.9fr;
   gap: 1rem;
   align-items: stretch;
+  height: 360px;
 }
 
 /* Semester card */
@@ -8248,8 +8251,8 @@ body.dark-theme-crm {
 .adsd-card .scorecard-period-btn.active { background:var(--accent,#A88B58); color:#fff; border-color:transparent; }
 
 /* Right stack: Tuition + Flight */
-.adsd-right-stack { display:flex; flex-direction:column; gap:1rem; height:100%; }
-.adsd-right-stack .adsd-flight-card2 { flex:1; }
+.adsd-right-stack { display:flex; flex-direction:column; gap:1rem; height:100%; min-height:0; }
+.adsd-right-stack .adsd-flight-card2 { flex:1; min-height:0; }
 .adsd-tuition-rows { display:flex; flex-direction:column; gap:.15rem; margin-top:.5rem; }
 .adsd-tuition-row { display:flex; justify-content:space-between; font-size:.75rem; padding:.18rem 0; }
 .adsd-tuition-row span:first-child { color:var(--text-muted); }
@@ -8325,11 +8328,13 @@ body.dark-theme-crm {
 ═══════════════════════════════════════ */
 .student-wide-table-wrap {
   overflow-x: auto;
+  overflow-y: auto;
+  max-height: 680px;
   -webkit-overflow-scrolling: touch;
 }
 .student-wide-table {
-  min-width: 1480px;
   width: 100%;
+  table-layout: fixed;
   border-collapse: collapse;
   font-size: 0.73rem;
 }
@@ -8342,44 +8347,32 @@ body.dark-theme-crm {
   text-transform: uppercase;
   letter-spacing: .5px;
   color: var(--text-muted);
-  padding: 8px 8px;
+  padding: 8px 10px;
   white-space: nowrap;
   border-bottom: 1px solid var(--border-light, rgba(0,0,0,.07));
   position: sticky;
   top: 0;
   background: var(--bg-primary, #FAF8F5);
   z-index: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 .student-wide-table td {
-  padding: 7px 8px;
+  padding: 8px 10px;
   vertical-align: middle;
   border-bottom: 1px solid var(--border-light, rgba(0,0,0,.06));
   font-size: 0.73rem;
   color: var(--text-main);
   white-space: nowrap;
-  max-width: 160px;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 .student-wide-table tr:hover td { background: rgba(99,102,241,.03); }
 
-/* Column widths */
-.stwh-ts      { min-width:130px; }
-.stwh-code    { min-width:70px; text-align:center; }
-.stwh-name    { min-width:140px; }
-.stwh-email   { min-width:160px; }
-.stwh-phone   { min-width:105px; }
-.stwh-home    { min-width:130px; }
-.stwh-country { min-width:100px; }
-.stwh-status  { min-width:120px; text-align:center; }
-.stwh-roadmap { min-width:80px;  text-align:center; }
-.stwh-enroll  { min-width:100px; text-align:center; }
-.stwh-room    { min-width:70px;  text-align:center; }
-.stwh-src     { min-width:120px; }
-.stwh-flight  { min-width:120px; text-align:center; }
-.stwh-paid    { min-width:120px; text-align:right; }
-.stwh-total   { min-width:120px; text-align:right; }
-.stwh-action  { min-width:90px;  text-align:center; }
+/* Column text-align overrides (equal widths via table-layout:fixed) */
+.stwh-code, .stwh-status, .stwh-roadmap,
+.stwh-enroll, .stwh-room, .stwh-flight, .stwh-action { text-align:center; }
+.stwh-paid, .stwh-total { text-align:right; }
 
 /* Money input cells */
 .stw-paid, .stw-total { text-align:right; }
