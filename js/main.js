@@ -2780,7 +2780,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Setup Student Database real-time observer
   let currentPage = 1;
-  const itemsPerPage = 8;
+  const itemsPerPage = 20;
 
   const subscribeToStudents = () => {
     if (studentsSubscription) studentsSubscription();
