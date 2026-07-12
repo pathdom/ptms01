@@ -5995,11 +5995,11 @@ document.addEventListener('DOMContentLoaded', () => {
         reader.onload = (ev) => {
           const img = new Image();
           img.onload = async () => {
-            const maxDim = 800;
+            const maxW = 1920, maxH = 1080;
             let w = img.width, h = img.height;
-            if (w > maxDim || h > maxDim) {
-              if (w > h) { h = Math.round(h * maxDim / w); w = maxDim; }
-              else { w = Math.round(w * maxDim / h); h = maxDim; }
+            if (w > maxW || h > maxH) {
+              const ratio = Math.min(maxW / w, maxH / h);
+              w = Math.round(w * ratio); h = Math.round(h * ratio);
             }
             const canvas = document.createElement('canvas');
             canvas.width = w; canvas.height = h;
@@ -6007,10 +6007,19 @@ document.addEventListener('DOMContentLoaded', () => {
             ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = 'high';
             ctx.drawImage(img, 0, 0, w, h);
             const dataUrl = canvas.toDataURL('image/jpeg', 0.92);
+            let photoUrl = dataUrl;
+            if (_hrmStorage) {
+              try {
+                const blob = await (await fetch(dataUrl)).blob();
+                const ref = _hrmStorage.ref(`hrm_staff/${s.id}/photo/profile.jpg`);
+                await ref.put(blob, { contentType: 'image/jpeg' });
+                photoUrl = await ref.getDownloadURL();
+              } catch (_) { photoUrl = dataUrl; }
+            }
             try {
-              await db.collection('hrm_staff').doc(s.id).update({ photoUrl: dataUrl });
-              s.photoUrl = dataUrl;
-              if (adminPhotoFrame) adminPhotoFrame.innerHTML = `<img src="${dataUrl}" alt="${esc(s.name)}">`;
+              await db.collection('hrm_staff').doc(s.id).update({ photoUrl });
+              s.photoUrl = photoUrl;
+              if (adminPhotoFrame) adminPhotoFrame.innerHTML = `<img src="${photoUrl}" alt="${esc(s.name)}">`;
               showToast('Đã cập nhật ảnh hồ sơ!', 'success');
             } catch (err) { showToast('Lỗi lưu ảnh: ' + err.message, 'error'); }
           };
@@ -11219,11 +11228,11 @@ document.addEventListener('DOMContentLoaded', () => {
         reader.onload = (ev) => {
           const img = new Image();
           img.onload = async () => {
-            const maxDim = 800;
+            const maxW = 1920, maxH = 1080;
             let w = img.width, h = img.height;
-            if (w > maxDim || h > maxDim) {
-              if (w > h) { h = Math.round(h * maxDim / w); w = maxDim; }
-              else { w = Math.round(w * maxDim / h); h = maxDim; }
+            if (w > maxW || h > maxH) {
+              const ratio = Math.min(maxW / w, maxH / h);
+              w = Math.round(w * ratio); h = Math.round(h * ratio);
             }
             const canvas = document.createElement('canvas');
             canvas.width = w; canvas.height = h;
@@ -11231,10 +11240,19 @@ document.addEventListener('DOMContentLoaded', () => {
             ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = 'high';
             ctx.drawImage(img, 0, 0, w, h);
             const dataUrl = canvas.toDataURL('image/jpeg', 0.92);
+            let photoUrl = dataUrl;
+            if (_hrmStorage) {
+              try {
+                const blob = await (await fetch(dataUrl)).blob();
+                const ref = _hrmStorage.ref(`hrm_staff/${s.id}/photo/profile.jpg`);
+                await ref.put(blob, { contentType: 'image/jpeg' });
+                photoUrl = await ref.getDownloadURL();
+              } catch (_) { photoUrl = dataUrl; }
+            }
             try {
-              await db.collection('hrm_staff').doc(s.id).update({ photoUrl: dataUrl });
-              s.photoUrl = dataUrl;
-              if (spPhotoFrame) spPhotoFrame.innerHTML = `<img src="${dataUrl}" alt="${esc(s.name || '')}">`;
+              await db.collection('hrm_staff').doc(s.id).update({ photoUrl });
+              s.photoUrl = photoUrl;
+              if (spPhotoFrame) spPhotoFrame.innerHTML = `<img src="${photoUrl}" alt="${esc(s.name || '')}">`;
               showToast('Đã cập nhật ảnh hồ sơ!', 'success');
             } catch (err) { showToast('Lỗi lưu ảnh: ' + err.message, 'error'); }
           };
