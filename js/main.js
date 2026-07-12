@@ -5991,17 +5991,27 @@ document.addEventListener('DOMContentLoaded', () => {
       adminPhotoInput.onchange = (e) => {
         const file = e.target.files[0];
         if (!file) return;
-        adminPhotoInput.value = '';
         const reader = new FileReader();
+        reader.onerror = () => showToast('Không đọc được file ảnh', 'error');
         reader.onload = (ev) => {
           const img = new Image();
+          img.onerror = () => showToast('File ảnh không hợp lệ', 'error');
           img.onload = () => {
-            // Full-HD canvas
+            // 1. Pre-build thumbnail (720px, ~60–120KB base64) — safe for Firestore
+            const TH = 720;
+            const tw = Math.min(img.width,  img.width  >= img.height ? TH : Math.round(img.width  * TH / img.height));
+            const th = Math.min(img.height, img.height >= img.width  ? TH : Math.round(img.height * TH / img.width));
+            const tc = document.createElement('canvas');
+            tc.width = tw; tc.height = th;
+            tc.getContext('2d').drawImage(img, 0, 0, tw, th);
+            const thumbUrl = tc.toDataURL('image/jpeg', 0.88);
+
+            // 2. Full-HD canvas for Storage upload
             const maxW = 1920, maxH = 1080;
             let w = img.width, h = img.height;
             if (w > maxW || h > maxH) {
-              const ratio = Math.min(maxW / w, maxH / h);
-              w = Math.round(w * ratio); h = Math.round(h * ratio);
+              const r = Math.min(maxW / w, maxH / h);
+              w = Math.round(w * r); h = Math.round(h * r);
             }
             const canvas = document.createElement('canvas');
             canvas.width = w; canvas.height = h;
@@ -6009,42 +6019,35 @@ document.addEventListener('DOMContentLoaded', () => {
             ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = 'high';
             ctx.drawImage(img, 0, 0, w, h);
 
-            // Use canvas.toBlob (native, reliable) for Storage upload
+            showToast('Đang lưu ảnh...', 'info');
+
             canvas.toBlob(async (blob) => {
-              let photoUrl = null;
-
-              // 1. Try Firebase Storage (full HD)
-              if (_hrmStorage && blob) {
-                try {
-                  const ref = _hrmStorage.ref(`hrm_staff/${s.id}/photo/profile.jpg`);
-                  await ref.put(blob, { contentType: 'image/jpeg' });
-                  photoUrl = await ref.getDownloadURL();
-                } catch (_) { photoUrl = null; }
-              }
-
-              // 2. Fallback: thumbnail base64 (400px) safe for Firestore 1MB limit
-              if (!photoUrl) {
-                const thumbW = Math.min(w, 400);
-                const thumbH = Math.round(h * thumbW / w);
-                const tc = document.createElement('canvas');
-                tc.width = thumbW; tc.height = thumbH;
-                const tx = tc.getContext('2d');
-                tx.imageSmoothingEnabled = true; tx.imageSmoothingQuality = 'high';
-                tx.drawImage(img, 0, 0, thumbW, thumbH);
-                photoUrl = tc.toDataURL('image/jpeg', 0.88);
-              }
-
               try {
+                let photoUrl = thumbUrl; // safe default
+
+                // 3. Try Firebase Storage for full HD
+                if (_hrmStorage && blob) {
+                  try {
+                    const ref = _hrmStorage.ref(`hrm_staff/${s.id}/photo/profile.jpg`);
+                    await ref.put(blob, { contentType: 'image/jpeg' });
+                    photoUrl = await ref.getDownloadURL();
+                  } catch (_) { /* fallback to thumbUrl */ }
+                }
+
+                // 4. Save to Firestore
                 await db.collection('hrm_staff').doc(s.id).update({ photoUrl });
                 s.photoUrl = photoUrl;
                 if (adminPhotoFrame) adminPhotoFrame.innerHTML = `<img src="${photoUrl}" alt="${esc(s.name)}">`;
                 showToast('Đã cập nhật ảnh hồ sơ!', 'success');
-              } catch (err) { showToast('Lỗi lưu ảnh: ' + err.message, 'error'); }
+              } catch (err) {
+                showToast('Lỗi lưu ảnh: ' + err.message, 'error');
+              }
             }, 'image/jpeg', 0.92);
           };
           img.src = ev.target.result;
         };
         reader.readAsDataURL(file);
+        adminPhotoInput.value = '';
       };
     }
 
@@ -11242,16 +11245,26 @@ document.addEventListener('DOMContentLoaded', () => {
       spPhotoInput.addEventListener('change', (e) => {
         const file = e.target.files[0];
         if (!file) return;
-        spPhotoInput.value = '';
         const reader = new FileReader();
+        reader.onerror = () => showToast('Không đọc được file ảnh', 'error');
         reader.onload = (ev) => {
           const img = new Image();
+          img.onerror = () => showToast('File ảnh không hợp lệ', 'error');
           img.onload = () => {
+            // Pre-build thumbnail (720px) while img is live — safe for Firestore
+            const TH = 720;
+            const tw = Math.min(img.width,  img.width  >= img.height ? TH : Math.round(img.width  * TH / img.height));
+            const th = Math.min(img.height, img.height >= img.width  ? TH : Math.round(img.height * TH / img.width));
+            const tc = document.createElement('canvas');
+            tc.width = tw; tc.height = th;
+            tc.getContext('2d').drawImage(img, 0, 0, tw, th);
+            const thumbUrl = tc.toDataURL('image/jpeg', 0.88);
+
             const maxW = 1920, maxH = 1080;
             let w = img.width, h = img.height;
             if (w > maxW || h > maxH) {
-              const ratio = Math.min(maxW / w, maxH / h);
-              w = Math.round(w * ratio); h = Math.round(h * ratio);
+              const r = Math.min(maxW / w, maxH / h);
+              w = Math.round(w * r); h = Math.round(h * r);
             }
             const canvas = document.createElement('canvas');
             canvas.width = w; canvas.height = h;
@@ -11259,39 +11272,33 @@ document.addEventListener('DOMContentLoaded', () => {
             ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = 'high';
             ctx.drawImage(img, 0, 0, w, h);
 
+            showToast('Đang lưu ảnh...', 'info');
+
             canvas.toBlob(async (blob) => {
-              let photoUrl = null;
-
-              if (_hrmStorage && blob) {
-                try {
-                  const ref = _hrmStorage.ref(`hrm_staff/${s.id}/photo/profile.jpg`);
-                  await ref.put(blob, { contentType: 'image/jpeg' });
-                  photoUrl = await ref.getDownloadURL();
-                } catch (_) { photoUrl = null; }
-              }
-
-              if (!photoUrl) {
-                const thumbW = Math.min(w, 400);
-                const thumbH = Math.round(h * thumbW / w);
-                const tc = document.createElement('canvas');
-                tc.width = thumbW; tc.height = thumbH;
-                const tx = tc.getContext('2d');
-                tx.imageSmoothingEnabled = true; tx.imageSmoothingQuality = 'high';
-                tx.drawImage(img, 0, 0, thumbW, thumbH);
-                photoUrl = tc.toDataURL('image/jpeg', 0.88);
-              }
-
               try {
+                let photoUrl = thumbUrl;
+
+                if (_hrmStorage && blob) {
+                  try {
+                    const ref = _hrmStorage.ref(`hrm_staff/${s.id}/photo/profile.jpg`);
+                    await ref.put(blob, { contentType: 'image/jpeg' });
+                    photoUrl = await ref.getDownloadURL();
+                  } catch (_) { /* fallback to thumbUrl */ }
+                }
+
                 await db.collection('hrm_staff').doc(s.id).update({ photoUrl });
                 s.photoUrl = photoUrl;
                 if (spPhotoFrame) spPhotoFrame.innerHTML = `<img src="${photoUrl}" alt="${esc(s.name || '')}">`;
                 showToast('Đã cập nhật ảnh hồ sơ!', 'success');
-              } catch (err) { showToast('Lỗi lưu ảnh: ' + err.message, 'error'); }
+              } catch (err) {
+                showToast('Lỗi lưu ảnh: ' + err.message, 'error');
+              }
             }, 'image/jpeg', 0.92);
           };
           img.src = ev.target.result;
         };
         reader.readAsDataURL(file);
+        spPhotoInput.value = '';
       });
     }
 
