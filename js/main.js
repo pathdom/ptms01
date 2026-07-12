@@ -13031,10 +13031,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 </div>
               </div>`;
             nodes.appendChild(rjDiv);
-            const rjH   = rjDiv.offsetHeight;
+            const rjH   = rjDiv.offsetHeight || 42;
             const arrowY = ty + DW/2;
             rjDiv.style.top = (arrowY - Math.round(rjH / 2)) + 'px';
-            // Horizontal arrow snapped to diamond left-vertex and reject box right-center
+            // Horizontal arrow snapped to diamond left-vertex → reject box right-center
             drawArrow(svg, MX - DW/2, arrowY, 190, arrowY, '#EF4444');
           }
 
