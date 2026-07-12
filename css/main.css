@@ -8193,8 +8193,6 @@ body.dark-theme-crm {
   border: 1px solid var(--border-light, rgba(0,0,0,.07));
   border-radius: 12px;
   padding: 1rem 1.1rem;
-  display: flex;
-  flex-direction: column;
 }
 .adsd-card-head {
   display: flex; align-items: center; justify-content: space-between; margin-bottom:.75rem;
@@ -8214,7 +8212,7 @@ body.dark-theme-crm {
   display: grid;
   grid-template-columns: 1fr 1.4fr 0.9fr;
   gap: 1rem;
-  align-items: stretch;
+  align-items: start;
 }
 
 /* Semester card */
@@ -8223,7 +8221,7 @@ body.dark-theme-crm {
   padding:.25rem .6rem; background:rgba(168,139,88,.1); border-radius:6px;
   margin-bottom:.75rem; display:inline-block;
 }
-.adsd-sem-rows { display:flex; flex-direction:column; gap:.6rem; flex:1; justify-content:space-evenly; }
+.adsd-sem-rows { display:flex; flex-direction:column; gap:.6rem; }
 .adsd-sem-row-top { display:flex; justify-content:space-between; align-items:center; margin-bottom:.2rem; }
 .adsd-sem-label { font-size:.72rem; color:var(--text-muted); font-weight:500; }
 .adsd-sem-bar-track {
@@ -8236,7 +8234,7 @@ body.dark-theme-crm {
 
 /* Score card */
 .adsd-scorecard-list {
-  flex: 1; overflow-y:auto; display:flex; flex-direction:column; gap:.6rem;
+  max-height: 240px; overflow-y:auto; display:flex; flex-direction:column; gap:.6rem;
   padding-right:2px; margin-top:.25rem;
 }
 .adsd-card .scorecard-period-btn {
@@ -8248,8 +8246,7 @@ body.dark-theme-crm {
 .adsd-card .scorecard-period-btn.active { background:var(--accent,#A88B58); color:#fff; border-color:transparent; }
 
 /* Right stack: Tuition + Flight */
-.adsd-right-stack { display:flex; flex-direction:column; gap:1rem; height:100%; }
-.adsd-right-stack .adsd-flight-card2 { flex:1; }
+.adsd-right-stack { display:flex; flex-direction:column; gap:1rem; }
 .adsd-tuition-rows { display:flex; flex-direction:column; gap:.15rem; margin-top:.5rem; }
 .adsd-tuition-row { display:flex; justify-content:space-between; font-size:.75rem; padding:.18rem 0; }
 .adsd-tuition-row span:first-child { color:var(--text-muted); }
@@ -8258,7 +8255,7 @@ body.dark-theme-crm {
 .adsd-remain span:last-child { color:#EF4444; }
 .adsd-flight-body2 {
   display:flex; flex-direction:column; align-items:center; justify-content:center;
-  flex:1; gap:.3rem; text-align:center;
+  padding:.8rem 0; gap:.3rem; text-align:center;
 }
 .adsd-flight-icon2 { font-size:1.6rem; opacity:.5; }
 
