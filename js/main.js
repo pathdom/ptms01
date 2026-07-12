@@ -3357,11 +3357,15 @@ document.addEventListener('DOMContentLoaded', () => {
         const allDone = currentIdx >= 7;
         const done   = allDone || stepNum < currentIdx;
         const active = !allDone && stepNum === currentIdx;
-        const dotCls = done ? 'done' : active ? 'active' : '';
-        const tagCls = done ? 'done' : active ? 'active' : 'upcoming';
-        const tagTxt = done ? 'Hoàn thành' : active ? 'Đang học' : 'Chưa bắt đầu';
-        const checkSvg = done ? '<svg viewBox="0 0 24 24"><path d="M21,7L9,19L3.5,13.5L4.91,12.09L9,16.17L19.59,5.59L21,7Z"/></svg>' : '';
-        return '<div class="stp-roadmap-step"><div class="stp-step-dot ' + dotCls + '" data-month="' + s.month + '">' + checkSvg + '</div>'
+        const dotCls  = done ? 'done' : active ? 'active' : '';
+        const cardCls = done ? 'done-card' : active ? 'active-card' : '';
+        const tagCls  = done ? 'done' : active ? 'active' : 'upcoming';
+        const tagTxt  = done ? 'Hoàn thành' : active ? 'Đang học' : 'Chưa bắt đầu';
+        const statusIcon = done
+          ? '<svg viewBox="0 0 24 24"><path d="M21,7L9,19L3.5,13.5L4.91,12.09L9,16.17L19.59,5.59L21,7Z"/></svg>'
+          : active ? '<span class="stp-active-dot"></span>' : '';
+        return '<div class="stp-roadmap-step ' + cardCls + '">'
+          + '<div class="stp-step-dot ' + dotCls + '" data-month="' + s.month + '">' + statusIcon + '</div>'
           + '<div class="stp-step-body"><div class="stp-step-label">' + s.label + '</div>'
           + '<span class="stp-step-tag ' + tagCls + '">' + tagTxt + '</span></div></div>';
       }).join('');
