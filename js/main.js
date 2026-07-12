@@ -12915,7 +12915,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const RX = 90;
     const NW = 240;
     const NH = 90;
-    const DW = 90;
+    const DW = 80;
     const SY = 40;
     const GAP = 48;
     const ROW = NH + GAP;
@@ -12983,7 +12983,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (steps.length) {
         const first = steps[0];
         const firstColor = first.status==='done' ? (first.type==='approve' ? '#F59E0B' : '#22C55E') : '';
-        drawArrow(svg, MX, SY+28, MX, nodeTop(0, extraByIdx[0]) - 2, firstColor);
+        drawArrow(svg, MX, SY + startDiv.offsetHeight, MX, nodeTop(0, extraByIdx[0]) - 2, firstColor);
       }
 
       steps.forEach((s, i) => {
@@ -13017,10 +13017,9 @@ document.addEventListener('DOMContentLoaded', () => {
           // Reject branch
           if (s.rejectStep) {
             const rj  = s.rejectStep;
-            const ry  = ty - 10;
             const rjDiv = document.createElement('div');
             rjDiv.className = `wf2-node`;
-            rjDiv.style.cssText = `left:${RX-95}px;top:${ry}px;width:185px;`;
+            rjDiv.style.cssText = `left:5px;top:${ty}px;width:185px;`;
             rjDiv.innerHTML = `
               <div class="wf2-node-reject ${selCls}" data-step-idx="${i}">
                 <div class="wf2-node-reject-head">
@@ -13032,10 +13031,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 </div>
               </div>`;
             nodes.appendChild(rjDiv);
-            // Left arrow: diamond center → reject
-            const dcy = ty + DW/2;
-            const pathD = `M ${MX-DW/2} ${dcy} L ${RX+90} ${dcy} L ${RX+90} ${ry+40}`;
-            drawPath(svg, pathD, '#EF4444', 'wf2ArrowRed');
+            // Horizontal arrow: diamond left-vertex → reject box right edge (5+185=190)
+            drawArrow(svg, MX - DW/2, ty + DW/2, 190, ty + DW/2, '#EF4444');
           }
 
           // Arrow down from diamond
@@ -13080,10 +13077,11 @@ document.addEventListener('DOMContentLoaded', () => {
             const nextExtra = extraByIdx[i+1];
             const ny = nodeTop(i+1, nextExtra);
             const arrowColor = isDone ? (s.type === 'approve' ? '#F59E0B' : '#22C55E') : '';
-            drawArrow(svg, MX, ty+NH, MX, ny-2, arrowColor);
+            const cardH = nodeDiv.firstElementChild.offsetHeight;
+            drawArrow(svg, MX, ty + cardH, MX, ny-2, arrowColor);
 
             // Insert-after button centered in the gap
-            const insertY = ty + NH + Math.round((ny - (ty + NH)) / 2) - 11;
+            const insertY = ty + cardH + Math.round((ny - ty - cardH) / 2) - 11;
             const insDiv = document.createElement('div');
             insDiv.className = 'wf2-node wf2-node-insert';
             insDiv.style.cssText = `left:${MX-11}px;top:${insertY}px;`;
