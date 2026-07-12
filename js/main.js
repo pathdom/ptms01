@@ -5988,13 +5988,15 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     const adminPhotoInput = document.getElementById('adminResumePhotoInput');
     if (adminPhotoInput) {
-      adminPhotoInput.onchange = async (e) => {
+      adminPhotoInput.onchange = (e) => {
         const file = e.target.files[0];
         if (!file) return;
+        adminPhotoInput.value = '';
         const reader = new FileReader();
         reader.onload = (ev) => {
           const img = new Image();
-          img.onload = async () => {
+          img.onload = () => {
+            // Full-HD canvas
             const maxW = 1920, maxH = 1080;
             let w = img.width, h = img.height;
             if (w > maxW || h > maxH) {
@@ -6006,27 +6008,43 @@ document.addEventListener('DOMContentLoaded', () => {
             const ctx = canvas.getContext('2d');
             ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = 'high';
             ctx.drawImage(img, 0, 0, w, h);
-            const dataUrl = canvas.toDataURL('image/jpeg', 0.92);
-            let photoUrl = dataUrl;
-            if (_hrmStorage) {
+
+            // Use canvas.toBlob (native, reliable) for Storage upload
+            canvas.toBlob(async (blob) => {
+              let photoUrl = null;
+
+              // 1. Try Firebase Storage (full HD)
+              if (_hrmStorage && blob) {
+                try {
+                  const ref = _hrmStorage.ref(`hrm_staff/${s.id}/photo/profile.jpg`);
+                  await ref.put(blob, { contentType: 'image/jpeg' });
+                  photoUrl = await ref.getDownloadURL();
+                } catch (_) { photoUrl = null; }
+              }
+
+              // 2. Fallback: thumbnail base64 (400px) safe for Firestore 1MB limit
+              if (!photoUrl) {
+                const thumbW = Math.min(w, 400);
+                const thumbH = Math.round(h * thumbW / w);
+                const tc = document.createElement('canvas');
+                tc.width = thumbW; tc.height = thumbH;
+                const tx = tc.getContext('2d');
+                tx.imageSmoothingEnabled = true; tx.imageSmoothingQuality = 'high';
+                tx.drawImage(img, 0, 0, thumbW, thumbH);
+                photoUrl = tc.toDataURL('image/jpeg', 0.88);
+              }
+
               try {
-                const blob = await (await fetch(dataUrl)).blob();
-                const ref = _hrmStorage.ref(`hrm_staff/${s.id}/photo/profile.jpg`);
-                await ref.put(blob, { contentType: 'image/jpeg' });
-                photoUrl = await ref.getDownloadURL();
-              } catch (_) { photoUrl = dataUrl; }
-            }
-            try {
-              await db.collection('hrm_staff').doc(s.id).update({ photoUrl });
-              s.photoUrl = photoUrl;
-              if (adminPhotoFrame) adminPhotoFrame.innerHTML = `<img src="${photoUrl}" alt="${esc(s.name)}">`;
-              showToast('Đã cập nhật ảnh hồ sơ!', 'success');
-            } catch (err) { showToast('Lỗi lưu ảnh: ' + err.message, 'error'); }
+                await db.collection('hrm_staff').doc(s.id).update({ photoUrl });
+                s.photoUrl = photoUrl;
+                if (adminPhotoFrame) adminPhotoFrame.innerHTML = `<img src="${photoUrl}" alt="${esc(s.name)}">`;
+                showToast('Đã cập nhật ảnh hồ sơ!', 'success');
+              } catch (err) { showToast('Lỗi lưu ảnh: ' + err.message, 'error'); }
+            }, 'image/jpeg', 0.92);
           };
           img.src = ev.target.result;
         };
         reader.readAsDataURL(file);
-        adminPhotoInput.value = '';
       };
     }
 
@@ -11221,13 +11239,14 @@ document.addEventListener('DOMContentLoaded', () => {
     const spPhotoInput = document.getElementById('spResumePhotoInput');
     if (spPhotoInput && !spPhotoInput.dataset.bound) {
       spPhotoInput.dataset.bound = '1';
-      spPhotoInput.addEventListener('change', async (e) => {
+      spPhotoInput.addEventListener('change', (e) => {
         const file = e.target.files[0];
         if (!file) return;
+        spPhotoInput.value = '';
         const reader = new FileReader();
         reader.onload = (ev) => {
           const img = new Image();
-          img.onload = async () => {
+          img.onload = () => {
             const maxW = 1920, maxH = 1080;
             let w = img.width, h = img.height;
             if (w > maxW || h > maxH) {
@@ -11239,27 +11258,40 @@ document.addEventListener('DOMContentLoaded', () => {
             const ctx = canvas.getContext('2d');
             ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = 'high';
             ctx.drawImage(img, 0, 0, w, h);
-            const dataUrl = canvas.toDataURL('image/jpeg', 0.92);
-            let photoUrl = dataUrl;
-            if (_hrmStorage) {
+
+            canvas.toBlob(async (blob) => {
+              let photoUrl = null;
+
+              if (_hrmStorage && blob) {
+                try {
+                  const ref = _hrmStorage.ref(`hrm_staff/${s.id}/photo/profile.jpg`);
+                  await ref.put(blob, { contentType: 'image/jpeg' });
+                  photoUrl = await ref.getDownloadURL();
+                } catch (_) { photoUrl = null; }
+              }
+
+              if (!photoUrl) {
+                const thumbW = Math.min(w, 400);
+                const thumbH = Math.round(h * thumbW / w);
+                const tc = document.createElement('canvas');
+                tc.width = thumbW; tc.height = thumbH;
+                const tx = tc.getContext('2d');
+                tx.imageSmoothingEnabled = true; tx.imageSmoothingQuality = 'high';
+                tx.drawImage(img, 0, 0, thumbW, thumbH);
+                photoUrl = tc.toDataURL('image/jpeg', 0.88);
+              }
+
               try {
-                const blob = await (await fetch(dataUrl)).blob();
-                const ref = _hrmStorage.ref(`hrm_staff/${s.id}/photo/profile.jpg`);
-                await ref.put(blob, { contentType: 'image/jpeg' });
-                photoUrl = await ref.getDownloadURL();
-              } catch (_) { photoUrl = dataUrl; }
-            }
-            try {
-              await db.collection('hrm_staff').doc(s.id).update({ photoUrl });
-              s.photoUrl = photoUrl;
-              if (spPhotoFrame) spPhotoFrame.innerHTML = `<img src="${photoUrl}" alt="${esc(s.name || '')}">`;
-              showToast('Đã cập nhật ảnh hồ sơ!', 'success');
-            } catch (err) { showToast('Lỗi lưu ảnh: ' + err.message, 'error'); }
+                await db.collection('hrm_staff').doc(s.id).update({ photoUrl });
+                s.photoUrl = photoUrl;
+                if (spPhotoFrame) spPhotoFrame.innerHTML = `<img src="${photoUrl}" alt="${esc(s.name || '')}">`;
+                showToast('Đã cập nhật ảnh hồ sơ!', 'success');
+              } catch (err) { showToast('Lỗi lưu ảnh: ' + err.message, 'error'); }
+            }, 'image/jpeg', 0.92);
           };
           img.src = ev.target.result;
         };
         reader.readAsDataURL(file);
-        spPhotoInput.value = '';
       });
     }
 
