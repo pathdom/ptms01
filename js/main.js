@@ -3415,6 +3415,18 @@ document.addEventListener('DOMContentLoaded', () => {
         sd('adsdDStrengths', d.strengths); sd('adsdDWeaknesses', d.weaknesses);
         sd('adsdDReason', d.reason); sd('adsdDHobbies', d.hobbies);
         sd('adsdDWorkHistory', d.workHistory);
+        // Tab HỌC VẤN (dtab-education) — duplicate IDs suffixed with 2
+        sd('adsdDSchoolPrimary2', fmtEdu(d.schoolPrimary, d.schoolPrimaryFrom, d.schoolPrimaryTo));
+        sd('adsdDSchoolMiddle2',  fmtEdu(d.schoolMiddle,  d.schoolMiddleFrom,  d.schoolMiddleTo));
+        sd('adsdDSchoolHigh2',    fmtEdu(d.schoolHigh,    d.schoolHighFrom,    d.schoolHighTo));
+        sd('adsdDSchoolUni2',     fmtEdu(d.schoolUni,     d.schoolUniFrom,     d.schoolUniTo));
+        sd('adsdDWorkHistory2',   d.workHistory);
+        sd('adsdDHobbies2',       d.hobbies);
+        sd('adsdDStrengths2',     d.strengths);
+        sd('adsdDWeaknesses2',    d.weaknesses);
+        // Tab GIA ĐÌNH (dtab-family) — extra fields
+        sd('adsdDReason2',           d.reason);
+        sd('adsdDPermanentAddress2', d.permanentAddress);
       }).catch(() => {});
     }
 
@@ -8971,18 +8983,23 @@ document.addEventListener('DOMContentLoaded', () => {
       <div class="cbdp-body">${rows}</div>
       <div class="cbdp-footer">Tổng: <strong>${Number(totalMonth).toLocaleString('vi-VN')} đ</strong></div>`;
 
-    // Position near anchor
-    const rect = anchorEl.getBoundingClientRect();
-    const scrollY = window.scrollY || 0;
+    // Position near anchor (position:fixed → viewport coordinates, no scrollY)
     popup.style.display = 'block';
+    const rect = anchorEl.getBoundingClientRect();
+    const pw = popup.offsetWidth  || 320;
     const ph = popup.offsetHeight || 260;
-    const spaceAbove = rect.top;
-    const top = spaceAbove > ph + 12
-      ? rect.top + scrollY - ph - 8
-      : rect.bottom + scrollY + 8;
-    const left = Math.min(rect.left + rect.width/2 - 160, window.innerWidth - 336);
-    popup.style.left = Math.max(8, left) + 'px';
-    popup.style.top  = top + 'px';
+
+    // Horizontal: center on bar, clamp within viewport
+    let left = rect.left + rect.width / 2 - pw / 2;
+    left = Math.max(8, Math.min(left, window.innerWidth - pw - 8));
+
+    // Vertical: prefer above, fallback below
+    const top = rect.top > ph + 12
+      ? rect.top - ph - 8
+      : rect.bottom + 8;
+
+    popup.style.left = left + 'px';
+    popup.style.top  = Math.max(8, top) + 'px';
 
     document.getElementById('crmBarPopupClose')?.addEventListener('click', () => { popup.style.display='none'; });
 

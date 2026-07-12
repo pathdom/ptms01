@@ -4410,7 +4410,7 @@ body.dark-theme-crm {
 
 /* Day breakdown popup */
 .crm-bar-popup {
-  position: absolute; z-index: 3000;
+  position: fixed; z-index: 3000;
   width: 320px; max-height: 320px;
   background: #fff; border: 1px solid #E0E7FF;
   border-radius: 12px; box-shadow: 0 12px 40px rgba(99,102,241,.18);
