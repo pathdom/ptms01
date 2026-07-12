@@ -8605,3 +8605,188 @@ body.dark-theme-crm {
   .sdp-fam-header, .sdp-fam-row { grid-template-columns:100px 1fr 65px 1fr; }
   .adsd-detail-grid { grid-template-columns:1fr 1fr; }
 }
+
+/* ================================================================
+   MOBILE — Comprehensive pass  768 · 640 · 480
+   ================================================================ */
+
+/* ── 768 px ──────────────────────────────────────────────────── */
+@media (max-width: 768px) {
+
+  /* ▸ Student detail overlay — tighter chrome */
+  .adsd-topbar      { padding: .55rem .9rem; gap: .6rem; }
+  .adsd-topbar-name { font-size: .86rem; }
+  .adsd-topbar-code { font-size: .65rem; }
+  .adsd-btn-edit    { padding: .38rem .8rem; font-size: .73rem; }
+  .adsd-layout      { padding: .4rem .5rem .5rem; gap: .5rem; }
+
+  /* mid-row: drop fixed height so cards breathe when stacked */
+  .adsd-mid-row     { height: auto; gap: .6rem; }
+
+  /* ▸ Student table height */
+  .student-wide-table-wrap { max-height: calc(100svh - 190px); }
+
+  /* ▸ Tab bars — horizontally scrollable */
+  .adsd-detail-tabs,
+  .hrm-profile-nav-tabs,
+  .hrm-subtabs,
+  .sp-tabs {
+    overflow-x: auto;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+  }
+  .adsd-detail-tabs::-webkit-scrollbar,
+  .hrm-profile-nav-tabs::-webkit-scrollbar,
+  .hrm-subtabs::-webkit-scrollbar,
+  .sp-tabs::-webkit-scrollbar { display: none; }
+
+  .sp-tab       { padding: .85rem .9rem; font-size: .78rem; }
+  .hrm-subtabs  { padding: 0 .75rem; }
+
+  /* ▸ HRM profile */
+  .hrm-ptab-panel     { padding: .85rem 1rem; }
+  .hrm-profile-tab-grid { grid-template-columns: 1fr; }
+
+  /* ▸ Mini tables in cards — always horizontally scrollable */
+  .mini-table-container { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+
+  /* ▸ Leave KPI row — wrap into 2-column grid on tablet */
+  .leave-kpi-row  { flex-wrap: wrap; }
+  .leave-kpi-card { flex: 0 0 calc(50% - 1px); }
+
+  /* ▸ CRM filter bar — stack */
+  .crm-filter-bar         { flex-direction: column; gap: .5rem; }
+  .crm-filter-bar select,
+  .crm-search-wrap        { width: 100%; }
+
+  /* ▸ Dashboard topbar compact */
+  .dashboard-topbar { height: 56px; padding: 0 1rem; }
+
+  /* ▸ Modals — bottom sheet */
+  .modal-overlay {
+    padding: 0 !important;
+    align-items: flex-end !important;
+  }
+  .modal-overlay > .login-card {
+    width: 100%    !important;
+    max-width: 100% !important;
+    border-radius: 20px 20px 0 0 !important;
+    margin: 0      !important;
+    max-height: 94dvh;
+    overflow-y: auto;
+  }
+}
+
+/* ── 640 px ──────────────────────────────────────────────────── */
+@media (max-width: 640px) {
+
+  /* ▸ Mid-row: when 1-column the fixed 360 px crushes cards — reset */
+  .adsd-mid-row { height: auto !important; }
+  .adsd-card    { min-height: 140px; }
+
+  /* ▸ Detail bottom panel */
+  .adsd-dpanel { padding: .75rem; }
+  .adsd-dtab   { font-size: .7rem; padding: .6rem .75rem; letter-spacing: .3px; }
+
+  /* ▸ Detail grid: 3→2 col */
+  .adsd-detail-grid { grid-template-columns: 1fr 1fr; }
+
+  /* ▸ HRM profile topbar compact */
+  .hrm-profile-topbar { padding: 0 .75rem; }
+  .hrm-ptab           { padding: .85rem .8rem; font-size: .75rem; }
+
+  /* ▸ HRM metric cards */
+  .hrm-metric-card    { padding: 1rem; }
+  .metric-card-header { padding-bottom: .55rem; margin-bottom: .6rem; }
+
+  /* ▸ CRM bar chart labels */
+  .crm-bar-label  { font-size: .64rem; }
+  .crm-bar-amount { font-size: .64rem; }
+
+  /* ▸ HRM/CRM tables compact */
+  .hrm-staff-container { padding: .75rem; }
+  .crm-table th,
+  .crm-table td { font-size: .72rem; padding: .5rem .6rem; }
+}
+
+/* ── 480 px ──────────────────────────────────────────────────── */
+@media (max-width: 480px) {
+
+  /* ▸ Student detail overlay */
+  .adsd-layout          { padding: .3rem; gap: .3rem; }
+  .adsd-topbar          { padding: .45rem .6rem; }
+  .adsd-topbar-name     { font-size: .8rem; }
+  .adsd-topbar-actions  { gap: .3rem; }
+  .adsd-btn-edit        { padding: .32rem .6rem; font-size: .7rem; }
+
+  /* ▸ Detail panels */
+  .adsd-dpanel          { padding: .6rem; }
+  .adsd-detail-grid     { grid-template-columns: 1fr; }
+
+  /* ▸ DG rows — label stacked above value */
+  .adsd-dg-row {
+    grid-template-columns: 1fr;
+    gap: .08rem;
+    padding: .42rem 0;
+  }
+  .adsd-dg-row > span:first-child {
+    font-size: .63rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .35px;
+    color: var(--text-muted);
+  }
+  .adsd-dg-row > span:last-child { text-align: left; font-size: .78rem; }
+
+  /* ▸ Education / family form rows */
+  .sdp-edu-header, .sdp-edu-row {
+    grid-template-columns: 72px 1fr 50px 50px;
+    gap: .3rem;
+    font-size: .7rem;
+  }
+  .sdp-fam-header, .sdp-fam-row {
+    grid-template-columns: 72px 1fr 50px 1fr;
+    gap: .3rem;
+    font-size: .7rem;
+  }
+
+  /* ▸ HRM KPI */
+  .hrm-kpi-card  { padding: .75rem .85rem; }
+  .hrm-kpi-value { font-size: 1.2rem; }
+  .hrm-kpi-label { font-size: .64rem; }
+
+  /* ▸ HRM metric card */
+  .hrm-metric-card       { padding: .85rem; }
+  .metric-card-header h4 { font-size: .72rem; }
+
+  /* ▸ Leave KPI — full column */
+  .leave-kpi-row  { flex-direction: column; gap: 0; }
+  .leave-kpi-card { width: 100%; }
+  .leave-kpi-sep  { width: 100%; height: 1px; align-self: auto; }
+  .leave-kpi-num  { font-size: 1.6rem; }
+
+  /* ▸ CRM bar chart */
+  .crm-bar-col    { min-width: 24px; }
+  .crm-bar-label  { font-size: .58rem; }
+  .crm-bar-amount { font-size: .58rem; }
+
+  /* ▸ CRM/HRM tables */
+  .crm-table th,
+  .crm-table td        { font-size: .68rem; padding: .42rem .5rem; }
+
+  /* ▸ HRM profile topbar */
+  .hrm-ptab     { padding: .75rem .65rem; font-size: .72rem; }
+  .hrm-back-btn { padding: .65rem .7rem; font-size: .72rem; }
+
+  /* ▸ Modal: full screen on very small phones */
+  .modal-overlay > .login-card {
+    max-height: 100dvh !important;
+    border-radius: 0 !important;
+  }
+
+  /* ▸ Dashboard topbar */
+  .dashboard-topbar { height: 50px; padding: 0 .75rem; }
+
+  /* ▸ Upload buttons compact */
+  .resume-doc-upload-btn { padding: .33rem .6rem; font-size: .7rem; }
+}
