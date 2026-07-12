@@ -8330,49 +8330,65 @@ body.dark-theme-crm {
   overflow-x: auto;
   overflow-y: auto;
   max-height: 680px;
+  scroll-behavior: smooth;
   -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(0,0,0,.15) transparent;
 }
+.student-wide-table-wrap::-webkit-scrollbar { width: 6px; height: 6px; }
+.student-wide-table-wrap::-webkit-scrollbar-track { background: transparent; }
+.student-wide-table-wrap::-webkit-scrollbar-thumb { background: rgba(0,0,0,.15); border-radius: 3px; }
+.student-wide-table-wrap::-webkit-scrollbar-thumb:hover { background: rgba(0,0,0,.28); }
+
 .student-wide-table {
-  width: 100%;
-  table-layout: fixed;
+  width: max-content;
+  min-width: 100%;
   border-collapse: collapse;
-  font-size: 0.73rem;
+  font-size: 0.74rem;
 }
 .student-wide-table thead tr {
   background: var(--bg-primary, #FAF8F5);
 }
 .student-wide-table th {
-  font-size: 0.62rem;
+  font-size: 0.63rem;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: .5px;
   color: var(--text-muted);
-  padding: 8px 10px;
+  padding: 9px 14px;
   white-space: nowrap;
   border-bottom: 1px solid var(--border-light, rgba(0,0,0,.07));
   position: sticky;
   top: 0;
   background: var(--bg-primary, #FAF8F5);
   z-index: 1;
-  overflow: hidden;
-  text-overflow: ellipsis;
 }
 .student-wide-table td {
-  padding: 8px 10px;
+  padding: 9px 14px;
   vertical-align: middle;
   border-bottom: 1px solid var(--border-light, rgba(0,0,0,.06));
-  font-size: 0.73rem;
+  font-size: 0.74rem;
   color: var(--text-main);
   white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
 }
 .student-wide-table tr:hover td { background: rgba(99,102,241,.03); }
 
-/* Column text-align overrides (equal widths via table-layout:fixed) */
-.stwh-code, .stwh-status, .stwh-roadmap,
-.stwh-enroll, .stwh-room, .stwh-flight, .stwh-action { text-align:center; }
-.stwh-paid, .stwh-total { text-align:right; }
+/* Column widths — sized to content, not crammed */
+.stwh-code    { min-width: 110px; text-align: center; }
+.stwh-name    { min-width: 160px; }
+.stwh-email   { min-width: 190px; }
+.stwh-phone   { min-width: 120px; }
+.stwh-home    { min-width: 100px; }
+.stwh-country { min-width: 110px; }
+.stwh-status  { min-width: 150px; text-align: center; }
+.stwh-roadmap { min-width: 100px; text-align: center; }
+.stwh-enroll  { min-width: 120px; text-align: center; }
+.stwh-room    { min-width: 110px; text-align: center; }
+.stwh-src     { min-width: 130px; }
+.stwh-flight  { min-width: 120px; text-align: center; }
+.stwh-paid    { min-width: 130px; text-align: right; }
+.stwh-total   { min-width: 130px; text-align: right; }
+.stwh-action  { min-width: 100px; text-align: center; }
 
 /* Money input cells */
 .stw-paid, .stw-total { text-align:right; }
