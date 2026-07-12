@@ -4286,16 +4286,23 @@ document.addEventListener('DOMContentLoaded', () => {
       reader.onload = function(event) {
         const img = new Image();
         img.onload = function() {
-          // Downscale to exactly 80x80 pixels for ultra-light Base64 footprint
-          const dim = 80;
+          // Store at high resolution so org chart photos are sharp (maintains aspect ratio)
+          const maxDim = 800;
+          let w = img.width, h = img.height;
+          if (w > maxDim || h > maxDim) {
+            if (w > h) { h = Math.round(h * maxDim / w); w = maxDim; }
+            else { w = Math.round(w * maxDim / h); h = maxDim; }
+          }
           const canvas = document.createElement('canvas');
-          canvas.width = dim;
-          canvas.height = dim;
+          canvas.width = w;
+          canvas.height = h;
           const ctx = canvas.getContext('2d');
-          ctx.drawImage(img, 0, 0, dim, dim);
+          ctx.imageSmoothingEnabled = true;
+          ctx.imageSmoothingQuality = 'high';
+          ctx.drawImage(img, 0, 0, w, h);
 
-          // Compress to JPEG with 0.8 quality
-          const compressedAvatar = canvas.toDataURL('image/jpeg', 0.8);
+          // High quality JPEG for clear display in org chart
+          const compressedAvatar = canvas.toDataURL('image/jpeg', 0.92);
           selectedProfileAvatarBase64 = compressedAvatar;
 
           // Render preview
