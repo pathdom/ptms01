@@ -6843,6 +6843,14 @@ document.addEventListener('DOMContentLoaded', () => {
         birthday:   document.getElementById('hrmStaffBirthday')?.value || null,
         status:     document.getElementById('hrmStaffStatus').value,
         joinDate:   document.getElementById('hrmStaffJoinDate')?.value || null,
+        username:                 document.getElementById('hrmStaffUsername')?.value.trim() || '',
+        hometown:                 document.getElementById('hrmStaffHometown')?.value.trim() || '',
+        gender:                   document.getElementById('hrmStaffGender')?.value || '',
+        maritalStatus:            document.getElementById('hrmStaffMarital')?.value || '',
+        education:                document.getElementById('hrmStaffEducation')?.value.trim() || '',
+        emergencyContactName:     document.getElementById('hrmStaffEmergencyName')?.value.trim() || '',
+        emergencyContactPhone:    document.getElementById('hrmStaffEmergencyPhone')?.value.trim() || '',
+        emergencyContactRelation: document.getElementById('hrmStaffEmergencyRelation')?.value.trim() || '',
         updatedAt:  firebase.firestore.FieldValue.serverTimestamp()
       };
 
@@ -7101,6 +7109,15 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         renderHrmStaffList();
         renderHrmKpi();
+
+        // Refresh detailed profile view if currently open
+        if (_currentProfileStaff) {
+          const updated = hrmStaffCache.find(x => x.id === _currentProfileStaff.id);
+          if (updated) {
+            _currentProfileStaff = updated;
+            populateHrmProfile(updated);
+          }
+        }
       }, (err) => console.error('HRM staff realtime listener error:', err));
   };
 
@@ -7708,6 +7725,23 @@ document.addEventListener('DOMContentLoaded', () => {
     if (bdEl) bdEl.value = s.birthday || '';
     if (wtEl) wtEl.value = s.workType || 'Full-time';
     if (jdEl) jdEl.value = s.joinDate || '';
+
+    const unEl = document.getElementById('hrmStaffUsername');
+    const htEl = document.getElementById('hrmStaffHometown');
+    const gdEl = document.getElementById('hrmStaffGender');
+    const msEl = document.getElementById('hrmStaffMarital');
+    const edEl = document.getElementById('hrmStaffEducation');
+    const enEl = document.getElementById('hrmStaffEmergencyName');
+    const epEl = document.getElementById('hrmStaffEmergencyPhone');
+    const erEl = document.getElementById('hrmStaffEmergencyRelation');
+    if (unEl) unEl.value = s.username || '';
+    if (htEl) htEl.value = s.hometown || '';
+    if (gdEl) gdEl.value = s.gender || '';
+    if (msEl) msEl.value = s.maritalStatus || '';
+    if (edEl) edEl.value = s.education || '';
+    if (enEl) enEl.value = s.emergencyContactName || '';
+    if (epEl) epEl.value = s.emergencyContactPhone || '';
+    if (erEl) erEl.value = s.emergencyContactRelation || '';
 
     document.getElementById('hrmStaffModalTitle').textContent = '✏️ SỬA THÔNG TIN NHÂN SỰ';
     const pwSection = document.getElementById('hrmStaffPasswordSection');

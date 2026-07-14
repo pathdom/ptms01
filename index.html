@@ -8030,6 +8030,39 @@
             </div>
             <div class="form-group-login"><label for="hrmStaffJoinDate">Ngày vào làm</label><input type="date" id="hrmStaffJoinDate" /></div>
           </div>
+          <div class="hrm-form-row">
+            <div class="form-group-login"><label for="hrmStaffUsername">Tên tài khoản</label><input type="text" id="hrmStaffUsername" placeholder="VD: huyen.tran" /></div>
+            <div class="form-group-login"><label for="hrmStaffHometown">Nguyên quán</label><input type="text" id="hrmStaffHometown" placeholder="Hà Nội" /></div>
+          </div>
+          <div class="hrm-form-row">
+            <div class="form-group-login"><label for="hrmStaffGender">Giới tính</label>
+              <select id="hrmStaffGender">
+                <option value="">-- Chọn giới tính --</option>
+                <option value="Nam">Nam</option>
+                <option value="Nữ">Nữ</option>
+                <option value="Khác">Khác</option>
+              </select>
+            </div>
+            <div class="form-group-login"><label for="hrmStaffMarital">Tình trạng hôn nhân</label>
+              <select id="hrmStaffMarital">
+                <option value="">-- Chọn tình trạng --</option>
+                <option value="Độc thân">Độc thân</option>
+                <option value="Đã kết hôn">Đã kết hôn</option>
+                <option value="Khác">Khác</option>
+              </select>
+            </div>
+          </div>
+          <div class="hrm-form-row">
+            <div class="form-group-login"><label for="hrmStaffEducation">Trình độ học vấn</label><input type="text" id="hrmStaffEducation" placeholder="VD: Đại học, Thạc sĩ..." /></div>
+          </div>
+          <div style="margin: 1.25rem 0 0.5rem; font-size: 0.75rem; letter-spacing: 0.05em; font-weight: 600; color: var(--text-muted); border-bottom: 1px solid var(--border); padding-bottom: 0.25rem;">LIÊN HỆ KHẨN CẤP</div>
+          <div class="hrm-form-row">
+            <div class="form-group-login"><label for="hrmStaffEmergencyName">Tên người liên hệ</label><input type="text" id="hrmStaffEmergencyName" placeholder="Tên người thân" /></div>
+            <div class="form-group-login"><label for="hrmStaffEmergencyPhone">Số điện thoại liên hệ</label><input type="text" id="hrmStaffEmergencyPhone" placeholder="SĐT người thân" /></div>
+          </div>
+          <div class="hrm-form-row">
+            <div class="form-group-login"><label for="hrmStaffEmergencyRelation">Mối quan hệ</label><input type="text" id="hrmStaffEmergencyRelation" placeholder="Bố/Mẹ, Vợ/Chồng..." /></div>
+          </div>
 
           <button type="submit" class="btn-submit-login" style="width: 100%; margin-top: 1.25rem; flex-shrink: 0;">LƯU THÔNG TIN NHÂN SỰ</button>
         </form>
