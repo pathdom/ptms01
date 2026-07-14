@@ -10754,14 +10754,19 @@ document.addEventListener('DOMContentLoaded', () => {
           showToast(`Đã cập nhật khách hàng ${name}!`, 'success');
         } else {
           payload.createdAt = firebase.firestore.FieldValue.serverTimestamp();
-          // Auto-generate code: CRM30001+
           const snap = await db.collection('students')
-            .where('isCrmCustomer', '==', true)
-            .orderBy('createdAt', 'desc').limit(1).get();
+            .where('isCrmCustomer', '==', true).get();
           let nextCode = 30001;
           if (!snap.empty) {
-            const lastCode = parseInt((snap.docs[0].data().code || '').replace(/\D/g,'')) || 30000;
-            nextCode = lastCode + 1;
+            let maxCode = 30000;
+            snap.forEach(doc => {
+              const codeStr = doc.data().code || '';
+              const codeNum = parseInt(codeStr.replace(/\D/g, '')) || 0;
+              if (codeNum > maxCode) {
+                maxCode = codeNum;
+              }
+            });
+            nextCode = maxCode + 1;
           }
           payload.code = String(nextCode);
           await db.collection('students').add(payload);
