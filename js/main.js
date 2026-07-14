@@ -10773,8 +10773,7 @@ document.addEventListener('DOMContentLoaded', () => {
           showToast(`Đã thêm khách hàng ${name}!`, 'success');
         }
         closeModal();
-        renderCrmCustomers(true);
-        renderCrmOverview();
+        initCrmModule();
       } catch (err) {
         console.error('Save CRM customer error:', err);
         showToast('Lỗi lưu khách hàng: ' + err.message, 'error');
@@ -10935,6 +10934,7 @@ document.addEventListener('DOMContentLoaded', () => {
             showToast('Đã thêm học viên nguồn', 'success');
           }
           closeSourceModal();
+          initCrmModule();
         } catch (e) { showToast('Lỗi: ' + e.message, 'error'); }
       });
 
