@@ -6637,9 +6637,9 @@ body.dark-theme-crm {
   margin-bottom: 1.5rem;
 }
 .competency-test-header h3 {
-  font-family: 'Cormorant Garamond', serif;
+  font-family: var(--font-serif);
   font-size: 1.4rem;
-  font-weight: 400;
+  font-weight: 500;
   color: var(--color-text-main);
   margin-bottom: 0.25rem;
 }
