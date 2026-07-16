@@ -11,17 +11,12 @@ const auth = getAuth();
 const PASSWORD = '123456';
 
 async function createAccounts() {
-  // Fetch all students from Firestore
+  // 1. Fetch all students from Firestore
   const snap = await db.collection('students').get();
-  if (snap.empty) {
-    console.log('Không có học viên nào trong Firestore.');
-    process.exit(0);
-  }
+  const students = snap.empty ? [] : snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  console.log(`Tìm thấy ${students.length} học viên từ hồ sơ.`);
 
-  const students = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-  console.log(`Tìm thấy ${students.length} học viên. Bắt đầu tạo tài khoản...\n`);
-
-  let created = 0, skipped = 0, failed = 0;
+  let created = 0, reset = 0, skipped = 0, failed = 0;
 
   for (const s of students) {
     const email = (s.email || '').trim();
@@ -34,24 +29,33 @@ async function createAccounts() {
     }
 
     try {
-      // 1. Create Firebase Auth user (skip if already exists)
       let uid;
       try {
         const existing = await auth.getUserByEmail(email);
         uid = existing.uid;
-        console.log(`⚠️  Đã tồn tại Auth: ${email}`);
-      } catch {
-        const userRecord = await auth.createUser({
-          email,
+        // Reset password for existing Auth user
+        await auth.updateUser(uid, {
           password: PASSWORD,
           displayName: name,
         });
-        uid = userRecord.uid;
-        console.log(`✅ Tạo Auth: ${email}`);
-        created++;
+        console.log(`🔄 Reset mật khẩu Auth: ${email}`);
+        reset++;
+      } catch (err) {
+        if (err.code === 'auth/user-not-found') {
+          const userRecord = await auth.createUser({
+            email,
+            password: PASSWORD,
+            displayName: name,
+          });
+          uid = userRecord.uid;
+          console.log(`✅ Tạo mới Auth: ${email}`);
+          created++;
+        } else {
+          throw err;
+        }
       }
 
-      // 2. Create / update users document in Firestore
+      // Create / update users document in Firestore
       await db.collection('users').doc(uid).set({
         name,
         email,
@@ -68,10 +72,49 @@ async function createAccounts() {
     }
   }
 
+  // 2. Fetch all users from Firestore with role === 'student' to catch any other student accounts
+  console.log(`\nQuét tiếp các tài khoản trong collection 'users' có role = 'student'...`);
+  const usersSnap = await db.collection('users').where('role', '==', 'student').get();
+  let extraReset = 0;
+
+  for (const doc of usersSnap.docs) {
+    const uData = doc.data();
+    const uUid = doc.id;
+    const uEmail = (uData.email || '').trim();
+    const uName = uData.name || 'Học viên';
+
+    if (!uEmail) continue;
+
+    // Check if already processed from students collection
+    const alreadyProcessed = students.some(s => (s.email || '').trim().toLowerCase() === uEmail.toLowerCase());
+    if (alreadyProcessed) continue;
+
+    try {
+      // Reset Auth password
+      await auth.updateUser(uUid, {
+        password: PASSWORD,
+        displayName: uName,
+      });
+
+      // Update users collection document
+      await db.collection('users').doc(uUid).set({
+        defaultPassword: PASSWORD,
+        passwordChanged: false,
+      }, { merge: true });
+
+      console.log(`🔄 Reset tài khoản học viên bổ sung (ngoài hồ sơ): ${uEmail}`);
+      extraReset++;
+    } catch (err) {
+      console.error(`❌ Lỗi reset tài khoản bổ sung ${uEmail}:`, err.message);
+      failed++;
+    }
+  }
+
   console.log(`\n=============================`);
-  console.log(`Tổng: ${students.length} học viên`);
-  console.log(`✅ Tạo mới: ${created}`);
-  console.log(`⚠️  Đã tồn tại (cập nhật): ${students.length - created - skipped - failed}`);
+  console.log(`Hoàn tất đồng bộ db học viên:`);
+  console.log(`✅ Tạo mới Auth & Firestore: ${created}`);
+  console.log(`🔄 Reset mật khẩu (trong hồ sơ): ${reset}`);
+  console.log(`🔄 Reset mật khẩu (ngoài hồ sơ): ${extraReset}`);
   console.log(`⏭  Bỏ qua (không email): ${skipped}`);
   console.log(`❌ Lỗi: ${failed}`);
   console.log(`=============================`);

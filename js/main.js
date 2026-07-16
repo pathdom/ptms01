@@ -3581,6 +3581,50 @@ document.addEventListener('DOMContentLoaded', () => {
         payload.learningMonth = learningMonth;
       }
 
+      // Helper function to create student user account on-the-fly
+      const createStudentUserAccount = async (email, name) => {
+        const secondaryAppName = "secondary_student_" + Math.random().toString(36).substring(7);
+        const secondaryApp = firebase.initializeApp(firebaseConfig, secondaryAppName);
+        const secondaryAuth = secondaryApp.auth();
+        try {
+          // 1. Try to create user in Firebase Authentication
+          const userCredential = await secondaryAuth.createUserWithEmailAndPassword(email, "123456");
+          const newUid = userCredential.user.uid;
+
+          // 2. Write role and data to Firestore users collection
+          await db.collection("users").doc(newUid).set({
+            name: name,
+            email: email,
+            role: "student",
+            defaultPassword: "123456",
+            passwordChanged: false,
+            createdAt: firebase.firestore.FieldValue.serverTimestamp()
+          });
+          console.log("Successfully created Auth & users collection entry for new student:", email);
+        } catch (authErr) {
+          console.warn("Failed or skipped creating Auth user:", authErr.message);
+          // If already exists, check and update role and password settings in users collection
+          try {
+            const userQuery = await db.collection("users").where("email", "==", email).get();
+            if (!userQuery.empty) {
+              const userDoc = userQuery.docs[0];
+              await db.collection("users").doc(userDoc.id).update({
+                role: "student",
+                defaultPassword: "123456",
+                passwordChanged: false
+              });
+            }
+          } catch (dbErr) {
+            console.error("Error updating users collection for existing email:", dbErr);
+          }
+        } finally {
+          try {
+            await secondaryAuth.signOut();
+            await secondaryApp.delete();
+          } catch (e) {}
+        }
+      };
+
       try {
         if (editId) {
           // Update
@@ -3590,6 +3634,14 @@ document.addEventListener('DOMContentLoaded', () => {
           // Add
           payload.createdAt = firebase.firestore.FieldValue.serverTimestamp();
           await db.collection("students").add(payload);
+          
+          // Auto-create student user account with password 123456
+          try {
+            await createStudentUserAccount(email, name);
+          } catch (accErr) {
+            console.error("Failed to auto-create account for new student:", accErr);
+          }
+          
           showToast(`Đã thêm mới hồ sơ học viên ${name} thành công!`, "success");
         }
         closeStudentModal();
@@ -5723,9 +5775,12 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     setText('profileFullName', s.name);
-    document.getElementById('profileEmpCode').textContent = s.employeeCode ? `Mã ${s.employeeCode}` : 'Mã --';
-    document.getElementById('profilePositions').textContent = s.position
-      ? `${s.position} • ${s.department || ''}` : '--';
+    const globalIdx = hrmStaffCache.findIndex(x => x.id === s.id) + 1;
+    const empCodeVal = globalIdx > 0 ? String(globalIdx).padStart(5, '0') : '--';
+    document.getElementById('profileEmpCode').textContent = `Mã ${empCodeVal}`;
+    const positionText = s.jobTitle || s.position || '';
+    document.getElementById('profilePositions').textContent = positionText
+      ? `${positionText} • ${s.department || ''}` : '--';
     setText('profileUsername', s.username);
     setText('profileJoinDate', fmtDate(s.joinDate));
     setText('profileBirthday', fmtDate(s.birthday));
@@ -9552,10 +9607,17 @@ document.addEventListener('DOMContentLoaded', () => {
     setText('crmProfileFullName', s.name);
 
     const empCode = document.getElementById('crmProfileEmpCode');
-    if (empCode) empCode.textContent = s.employeeCode ? `Mã ${s.employeeCode}` : 'Mã --';
+    if (empCode) {
+      const globalIdx = _allCrmStaff.findIndex(x => x.id === s.id) + 1;
+      const empCodeVal = globalIdx > 0 ? String(globalIdx).padStart(5, '0') : '--';
+      empCode.textContent = `Mã ${empCodeVal}`;
+    }
 
     const positions = document.getElementById('crmProfilePositions');
-    if (positions) positions.textContent = s.position ? `${s.position} • ${s.department || ''}` : '--';
+    if (positions) {
+      const positionText = s.jobTitle || s.position || '';
+      positions.textContent = positionText ? `${positionText} • ${s.department || ''}` : '--';
+    }
 
     setText('crmPUsername', s.username);
     setText('crmPJoinDate', fmtDate(s.joinDate));
@@ -11091,9 +11153,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
     setText('spProfileFullName', s.name);
     const empCode = document.getElementById('spProfileEmpCode');
-    if (empCode) empCode.textContent = s.employeeCode ? `Mã ${s.employeeCode}` : 'Mã --';
+    if (empCode) {
+      const globalIdx = hrmStaffCache.findIndex(x => x.id === s.id) + 1;
+      const empCodeVal = globalIdx > 0 ? String(globalIdx).padStart(5, '0') : '--';
+      empCode.textContent = `Mã ${empCodeVal}`;
+    }
     const positions = document.getElementById('spProfilePositions');
-    if (positions) positions.textContent = s.position ? `${s.position} • ${s.department || ''}` : '--';
+    if (positions) {
+      const positionText = s.jobTitle || s.position || '';
+      positions.textContent = positionText ? `${positionText} • ${s.department || ''}` : '--';
+    }
 
     setText('spPUsername', s.username);
     setText('spPJoinDate', fmtDate(s.joinDate));
