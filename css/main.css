@@ -8790,3 +8790,10 @@ body.dark-theme-crm {
   /* ▸ Upload buttons compact */
   .resume-doc-upload-btn { padding: .33rem .6rem; font-size: .7rem; }
 }
+
+/* Fix: Override reveal classes in student portal tabs to ensure content is fully visible */
+.student-tab-content.reveal {
+  opacity: 1 !important;
+  transform: none !important;
+  transition: none !important;
+}
