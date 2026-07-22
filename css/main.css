@@ -8889,3 +8889,25 @@ body.dark-theme-crm {
   box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2);
 }
 
+/* Date inputs styling in Source Students table */
+.src-table input[type="date"] {
+  border: 1px solid #D1D5DB;
+  border-radius: 6px;
+  background-color: #FFFFFF;
+  padding: 0.2rem 0.3rem;
+  font-size: 0.78rem;
+  color: #1A1A1A;
+  font-family: inherit;
+  box-sizing: border-box;
+  text-align: center;
+  outline: none;
+  cursor: pointer;
+  transition: border-color 0.15s ease;
+}
+
+.src-table input[type="date"]:focus {
+  border-color: #6366F1;
+  box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2);
+}
+
+

@@ -9248,24 +9248,24 @@ document.addEventListener('DOMContentLoaded', () => {
           </td>
           <td>${getDienSelectHtml(c.id, c.dien || 'TTS')}</td>
           <td>
-            <input type="text" class="src-inline-input" data-id="${c.id}" data-field="enrollDate" value="${c.enrollDate || ''}" placeholder="d/m" style="width: 50px;" />
+            <input type="date" class="src-inline-input" data-id="${c.id}" data-field="enrollDate" value="${c.enrollDate || ''}" style="width: 125px;" />
           </td>
           <td>${getAdvisorSelectHtml(c.id, c.advisor || c.source || '')}</td>
           <td>${getTinhTrangSelectHtml(c.id, c.status || 'Chưa đi thi/chờ đơn')}</td>
           <td>
-            <input type="text" class="src-inline-input" data-id="${c.id}" data-field="ngay_thi_1" value="${c.ngay_thi_1 || ''}" placeholder="d/m" style="width: 50px;" />
+            <input type="date" class="src-inline-input" data-id="${c.id}" data-field="ngay_thi_1" value="${c.ngay_thi_1 || ''}" style="width: 125px;" />
           </td>
           <td>${getKetQuaSelectHtml(c.id, 'ket_qua_1', c.ket_qua_1 || '')}</td>
           <td>
-            <input type="text" class="src-inline-input" data-id="${c.id}" data-field="ngay_thi_2" value="${c.ngay_thi_2 || ''}" placeholder="d/m" style="width: 50px;" />
+            <input type="date" class="src-inline-input" data-id="${c.id}" data-field="ngay_thi_2" value="${c.ngay_thi_2 || ''}" style="width: 125px;" />
           </td>
           <td>${getKetQuaSelectHtml(c.id, 'ket_qua_2', c.ket_qua_2 || '')}</td>
           <td>
-            <input type="text" class="src-inline-input" data-id="${c.id}" data-field="ngay_thi_3" value="${c.ngay_thi_3 || ''}" placeholder="d/m" style="width: 50px;" />
+            <input type="date" class="src-inline-input" data-id="${c.id}" data-field="ngay_thi_3" value="${c.ngay_thi_3 || ''}" style="width: 125px;" />
           </td>
           <td>${getKetQuaSelectHtml(c.id, 'ket_qua_3', c.ket_qua_3 || '')}</td>
           <td>
-            <input type="text" class="src-inline-input" data-id="${c.id}" data-field="ngay_thi_cuoi" value="${c.ngay_thi_cuoi || ''}" placeholder="d/m" style="width: 50px;" />
+            <input type="date" class="src-inline-input" data-id="${c.id}" data-field="ngay_thi_cuoi" value="${c.ngay_thi_cuoi || ''}" style="width: 125px;" />
           </td>
           <td>${getKetQuaSelectHtml(c.id, 'ket_qua_cuoi', c.ket_qua_cuoi || '')}</td>
           <td style="text-align:center;">
@@ -9306,8 +9306,12 @@ document.addEventListener('DOMContentLoaded', () => {
           showToast('Lỗi lưu: ' + e.message, 'error');
         }
       };
-      inp.addEventListener('blur', save);
-      inp.addEventListener('keydown', e => { if (e.key === 'Enter') { save(); inp.blur(); } });
+      if (inp.type === 'date') {
+        inp.addEventListener('change', save);
+      } else {
+        inp.addEventListener('blur', save);
+        inp.addEventListener('keydown', e => { if (e.key === 'Enter') { save(); inp.blur(); } });
+      }
     });
 
     // Attach listeners for Diện selects
