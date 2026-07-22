@@ -13028,9 +13028,9 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!qs || !Array.isArray(qs) || qs.length === 0) {
       showToast('Không tìm thấy câu hỏi trong file!', 'error'); return;
     }
-    const validCounts = [10, 20, 30, 40];
+    const validCounts = [10, 20, 30, 40, 100];
     if (!validCounts.includes(qs.length)) {
-      showToast(`File có ${qs.length} câu — cần đúng 10, 20, 30 hoặc 40 câu!`, 'error'); return;
+      showToast(`File có ${qs.length} câu — cần đúng 10, 20, 30, 40 hoặc 100 câu!`, 'error'); return;
     }
     // Validate each question
     for (let i = 0; i < qs.length; i++) {
