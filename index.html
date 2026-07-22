@@ -4097,47 +4097,41 @@
         <!-- Scrollable body — same max-height pattern as studentForm -->
         <div style="overflow-y:auto;max-height:calc(90vh - 160px);padding-right:4px;">
 
-          <!-- Row 1: Họ tên + Email -->
+          <!-- Row 1: Họ tên + Diện -->
           <div class="sf-row">
             <div class="form-group-login sf-field">
               <label for="srcName">Họ và tên *</label>
               <input type="text" id="srcName" placeholder="Nguyễn Văn A"/>
             </div>
             <div class="form-group-login sf-field">
-              <label for="srcEmail">Email</label>
-              <input type="email" id="srcEmail" placeholder="email@gmail.com"/>
-            </div>
-          </div>
-
-          <!-- Row 2: SĐT + Quê quán -->
-          <div class="sf-row">
-            <div class="form-group-login sf-field">
-              <label for="srcPhone">Số điện thoại</label>
-              <input type="tel" id="srcPhone" placeholder="0912345678"/>
-            </div>
-            <div class="form-group-login sf-field">
-              <label for="srcHometown">Quê quán</label>
-              <input type="text" id="srcHometown" placeholder="Thành phố, tỉnh..."/>
-            </div>
-          </div>
-
-          <!-- Row 3: Quốc gia + Trạng thái -->
-          <div class="sf-row">
-            <div class="form-group-login sf-field">
-              <label for="srcCountry">Quốc gia đến</label>
-              <select id="srcCountry">
-                <option value="Nhật">🇯🇵 Nhật Bản</option>
-                <option value="Hàn">🇰🇷 Hàn Quốc</option>
-                <option value="Đài">🇹🇼 Đài Loan</option>
-                <option value="Úc">🇦🇺 Úc</option>
-                <option value="Canada">🇨🇦 Canada</option>
-                <option value="Mỹ">🇺🇸 Mỹ</option>
-                <option value="Anh">🇬🇧 Anh</option>
-                <option value="Việt Nam">🇻🇳 Việt Nam (nội địa)</option>
+              <label for="srcDien">Diện</label>
+              <select id="srcDien">
+                <option value="TTS">TTS</option>
+                <option value="Kỹ sư">Kỹ sư</option>
+                <option value="Du học">Du học</option>
+                <option value="Tokutei">Tokutei</option>
               </select>
             </div>
+          </div>
+
+          <!-- Row 2: Ngày nhập học + Cán bộ chăm sóc -->
+          <div class="sf-row">
             <div class="form-group-login sf-field">
-              <label for="srcStatus">Trạng thái hồ sơ</label>
+              <label for="srcEnrollDate">Ngày nhập học</label>
+              <input type="date" id="srcEnrollDate"/>
+            </div>
+            <div class="form-group-login sf-field">
+              <label for="srcAdvisor">Cán bộ chăm sóc</label>
+              <select id="srcAdvisor">
+                <option value="">-- Chọn cán bộ --</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Row 3: Tình trạng -->
+          <div class="sf-row">
+            <div class="form-group-login sf-field">
+              <label for="srcStatus">Tình trạng</label>
               <select id="srcStatus">
                 <option value="Chưa đi thi/chờ đơn">Chưa đi thi/chờ đơn</option>
                 <option value="Đã đi tập trung">Đã đi tập trung</option>
@@ -4148,68 +4142,7 @@
                 <option value="Đã bỏ/Dừng học">Đã bỏ/Dừng học</option>
               </select>
             </div>
-          </div>
-
-          <!-- Row 3.5: Diện -->
-          <div class="sf-row">
-            <div class="form-group-login sf-field">
-              <label for="srcDien">Diện</label>
-              <select id="srcDien">
-                <option value="TTS">TTS</option>
-                <option value="Kỹ sư">Kỹ sư</option>
-                <option value="Du học">Du học</option>
-                <option value="Tokutei">Tokutei</option>
-              </select>
-            </div>
             <div class="sf-field"></div>
-          </div>
-
-          <!-- Row 4: Phòng ban + Tháng học -->
-          <div class="sf-row">
-            <div class="form-group-login sf-field">
-              <label for="srcRoom">Phòng ban</label>
-              <select id="srcRoom">
-                <option value="">-- Chọn phòng --</option>
-                <option value="Hành chính kế toán">Hành chính kế toán</option>
-                <option value="Marketing">Marketing</option>
-                <option value="Đối ngoại">Đối ngoại</option>
-                <option value="Hồ sơ">Hồ sơ</option>
-                <option value="Đào tạo">Đào tạo</option>
-                <option value="Kinh doanh">Kinh doanh</option>
-              </select>
-            </div>
-            <div class="form-group-login sf-field">
-              <label for="srcLearningMonth">Tháng học hiện tại</label>
-              <select id="srcLearningMonth">
-                <option value="Tháng 1">Tháng 1: Xây Dựng Nền Tảng</option>
-                <option value="Tháng 2">Tháng 2: Phát Triển Phản Xạ</option>
-                <option value="Tháng 3">Tháng 3: Làm Quen Học Thuật</option>
-                <option value="Tháng 4">Tháng 4: Tăng Tốc Học Thuật</option>
-                <option value="Tháng 5">Tháng 5: Luyện Đề Chuyên Sâu</option>
-                <option value="Tháng 6">Tháng 6: Tổng Ôn &amp; Mô Phỏng</option>
-                <option value="Hoàn thành">Đã hoàn thành lộ trình</option>
-              </select>
-            </div>
-          </div>
-
-          <!-- Row 5: Nhân viên tư vấn (Nguồn) — full width -->
-          <div class="form-group-login">
-            <label for="srcAdvisor">Nhân viên tư vấn (Nguồn)</label>
-            <select id="srcAdvisor">
-              <option value="">-- Chọn nhân viên --</option>
-            </select>
-          </div>
-
-          <!-- Row 6: Ngày nhập học + Lịch bay -->
-          <div class="sf-row">
-            <div class="form-group-login sf-field">
-              <label for="srcEnrollDate">Ngày nhập học</label>
-              <input type="date" id="srcEnrollDate"/>
-            </div>
-            <div class="form-group-login sf-field">
-              <label for="srcFlightDate">Lịch bay ✈</label>
-              <input type="date" id="srcFlightDate"/>
-            </div>
           </div>
 
           <!-- Exam Dates and Results -->
@@ -4258,7 +4191,7 @@
             </div>
           </div>
 
-          <div class="sf-row">
+          <div class="sf-row" style="margin-bottom: 1.5rem;">
             <div class="form-group-login sf-field">
               <label for="srcNgayThiCuoi">Ngày đi thi lần cuối</label>
               <input type="date" id="srcNgayThiCuoi"/>
@@ -4271,24 +4204,6 @@
                 <option value="TRƯỢT">TRƯỢT</option>
               </select>
             </div>
-          </div>
-
-          <!-- Row 7: Tiền đã đóng + Tổng tiền -->
-          <div class="sf-row">
-            <div class="form-group-login sf-field">
-              <label for="srcPaidAmount">Tiền đã đóng</label>
-              <input type="text" id="srcPaidAmount" placeholder="0" inputmode="numeric" autocomplete="off" class="sf-money-input"/>
-            </div>
-            <div class="form-group-login sf-field">
-              <label for="srcTotalAmount">Tổng tiền</label>
-              <input type="text" id="srcTotalAmount" placeholder="0" inputmode="numeric" autocomplete="off" class="sf-money-input"/>
-            </div>
-          </div>
-
-          <!-- Row 8: Ghi chú -->
-          <div class="form-group-login" style="margin-bottom:1.5rem;">
-            <label for="srcNotes">Ghi chú / Nhật ký tư vấn</label>
-            <textarea id="srcNotes" rows="3" placeholder="Nhập ghi chú hồ sơ tại đây..." style="resize:vertical;min-height:80px;"></textarea>
           </div>
 
           <!-- Submit button — identical class to studentForm -->

@@ -9418,26 +9418,10 @@ document.addEventListener('DOMContentLoaded', () => {
         const submitBtn = document.getElementById('btnSubmitSourceStudent');
         if (submitBtn) submitBtn.textContent = 'CẬP NHẬT HỌC VIÊN NGUỒN';
         document.getElementById('srcName').value      = c.name     || '';
-        document.getElementById('srcEmail').value     = c.email    || '';
-        document.getElementById('srcPhone').value     = c.phone    || '';
-        document.getElementById('srcHometown').value  = c.hometown || c.address || '';
-        document.getElementById('srcNotes').value     = c.notes    || '';
-        const selC = document.getElementById('srcCountry');
-        if (selC) selC.value = c.country || 'Nhật';
         const selS = document.getElementById('srcStatus');
-        if (selS) selS.value = c.status || 'Chờ xử lý';
+        if (selS) selS.value = c.status || 'Chưa đi thi/chờ đơn';
         const selDien = document.getElementById('srcDien');
         if (selDien) selDien.value = c.dien || 'TTS';
-        const selR = document.getElementById('srcRoom');
-        if (selR) selR.value = c.room || c.classroom || '';
-        const selM = document.getElementById('srcLearningMonth');
-        if (selM) selM.value = c.learningMonth || 'Tháng 1';
-        const paidEl  = document.getElementById('srcPaidAmount');
-        const totalEl = document.getElementById('srcTotalAmount');
-        if (paidEl)  paidEl.value  = c.paidAmount  ? fmtMoneyInput(c.paidAmount)  : '';
-        if (totalEl) totalEl.value = c.totalAmount ? fmtMoneyInput(c.totalAmount) : '';
-        const flightEl = document.getElementById('srcFlightDate');
-        if (flightEl) flightEl.value = c.flightDate || '';
         const enrollEl = document.getElementById('srcEnrollDate');
         if (enrollEl) {
           if (c.enrollDate) {
@@ -11192,7 +11176,7 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('srcModalTitle').textContent = '+ THÊM HỌC VIÊN NGUỒN';
         const submitBtn = document.getElementById('btnSubmitSourceStudent');
         if (submitBtn) submitBtn.textContent = 'LƯU HỌC VIÊN NGUỒN';
-        ['srcName','srcEmail','srcPhone','srcHometown','srcNotes','srcPaidAmount','srcTotalAmount','srcFlightDate','srcEnrollDate','srcNgayThi1','srcNgayThi2','srcNgayThi3','srcNgayThiCuoi'].forEach(id => {
+        ['srcName','srcEnrollDate','srcNgayThi1','srcNgayThi2','srcNgayThi3','srcNgayThiCuoi'].forEach(id => {
           const el = document.getElementById(id);
           if (el) el.value = '';
         });
@@ -11200,16 +11184,10 @@ document.addEventListener('DOMContentLoaded', () => {
           const el = document.getElementById(id);
           if (el) el.value = '';
         });
-        const selC = document.getElementById('srcCountry');
-        if (selC) selC.value = 'Nhật';
         const selS = document.getElementById('srcStatus');
-        if (selS) selS.value = 'Chờ xử lý';
+        if (selS) selS.value = 'Chưa đi thi/chờ đơn';
         const selD = document.getElementById('srcDien');
         if (selD) selD.value = 'TTS';
-        const selR = document.getElementById('srcRoom');
-        if (selR) selR.value = '';
-        const selM = document.getElementById('srcLearningMonth');
-        if (selM) selM.value = 'Tháng 1';
         if (submitBtn) submitBtn.dataset.editId = '';
         await populateSrcAdvisorSelect('');
         document.getElementById('sourceStudentModal').style.display = 'flex';
@@ -11226,25 +11204,13 @@ document.addEventListener('DOMContentLoaded', () => {
         const name = document.getElementById('srcName')?.value.trim();
         if (!name) { showToast('Vui lòng nhập họ tên', 'error'); return; }
         const advisor     = document.getElementById('srcAdvisor')?.value || '';
-        const paidAmount  = parseMoneyInput(document.getElementById('srcPaidAmount')?.value || '');
-        const totalAmount = parseMoneyInput(document.getElementById('srcTotalAmount')?.value || '');
-        const flightDate  = document.getElementById('srcFlightDate')?.value  || null;
         const enrollDate  = document.getElementById('srcEnrollDate')?.value  || null;
         const payload = {
           name,
-          email:         document.getElementById('srcEmail')?.value.trim()        || '',
-          phone:         document.getElementById('srcPhone')?.value.trim()         || '',
-          hometown:      document.getElementById('srcHometown')?.value.trim()      || '',
-          country:       document.getElementById('srcCountry')?.value              || 'Nhật',
-          status:        document.getElementById('srcStatus')?.value               || 'Chờ xử lý',
+          status:        document.getElementById('srcStatus')?.value               || 'Chưa đi thi/chờ đơn',
           dien:          document.getElementById('srcDien')?.value                 || 'TTS',
-          room:          document.getElementById('srcRoom')?.value                 || '',
-          learningMonth: document.getElementById('srcLearningMonth')?.value        || 'Tháng 1',
           advisor,
           source:        advisor,
-          paidAmount:    paidAmount  || null,
-          totalAmount:   totalAmount || null,
-          flightDate:    flightDate  || null,
           enrollDate:    enrollDate  || null,
           ngay_thi_1:    document.getElementById('srcNgayThi1')?.value             || null,
           ket_qua_1:     document.getElementById('srcKetQua1')?.value              || null,
@@ -11254,9 +11220,20 @@ document.addEventListener('DOMContentLoaded', () => {
           ket_qua_3:     document.getElementById('srcKetQua3')?.value              || null,
           ngay_thi_cuoi: document.getElementById('srcNgayThiCuoi')?.value          || null,
           ket_qua_cuoi:  document.getElementById('srcKetQuaCuoi')?.value           || null,
-          notes:         document.getElementById('srcNotes')?.value.trim()         || '',
           updatedAt:     firebase.firestore.FieldValue.serverTimestamp(),
         };
+        if (!editId) {
+          payload.email = '';
+          payload.phone = '';
+          payload.hometown = '';
+          payload.country = 'Nhật';
+          payload.room = '';
+          payload.learningMonth = 'Tháng 1';
+          payload.notes = '';
+          payload.paidAmount = null;
+          payload.totalAmount = null;
+          payload.flightDate = null;
+        }
         try {
           if (editId) {
             await db.collection('students').doc(editId).update(payload);
