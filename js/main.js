@@ -9145,11 +9145,15 @@ document.addEventListener('DOMContentLoaded', () => {
       `;
     };
 
-    const getTinhTrangSelectHtml = (studentId, val) => {
+    const getTinhTrangStyle = (val) => {
       let bg = '#E5E7EB';
       let color = '#374151';
       let border = '1px solid #D1D5DB';
-      if (val === 'Đã thi 1 đơn') {
+      if (val === 'Đã đi tập trung') {
+        bg = '#FEF9C3';
+        color = '#854D0E';
+        border = '1px solid #FDE047';
+      } else if (['Đã thi 1 đơn', 'Đã thi 2 đơn', 'Đã thi 3 đơn', 'Đã thi hơn 3 đơn'].includes(val)) {
         bg = '#DEF7EC';
         color = '#03543F';
         border = '1px solid #A7F3D0';
@@ -9158,10 +9162,19 @@ document.addEventListener('DOMContentLoaded', () => {
         color = '#9B1C1C';
         border = '1px solid #FECDCA';
       }
+      return { bg, color, border };
+    };
+
+    const getTinhTrangSelectHtml = (studentId, val) => {
+      const style = getTinhTrangStyle(val || 'Chưa đi thi/chờ đơn');
       return `
-        <select class="src-inline-select src-tinhtrang-select" data-id="${studentId}" style="background-color: ${bg}; color: ${color}; border: ${border}; min-width: 140px;">
+        <select class="src-inline-select src-tinhtrang-select" data-id="${studentId}" style="background-color: ${style.bg}; color: ${style.color}; border: ${style.border}; min-width: 145px;">
           <option value="Chưa đi thi/chờ đơn" ${val === 'Chưa đi thi/chờ đơn' || !val ? 'selected' : ''}>Chưa đi thi/chờ đơn</option>
+          <option value="Đã đi tập trung" ${val === 'Đã đi tập trung' ? 'selected' : ''}>Đã đi tập trung</option>
           <option value="Đã thi 1 đơn" ${val === 'Đã thi 1 đơn' ? 'selected' : ''}>Đã thi 1 đơn</option>
+          <option value="Đã thi 2 đơn" ${val === 'Đã thi 2 đơn' ? 'selected' : ''}>Đã thi 2 đơn</option>
+          <option value="Đã thi 3 đơn" ${val === 'Đã thi 3 đơn' ? 'selected' : ''}>Đã thi 3 đơn</option>
+          <option value="Đã thi hơn 3 đơn" ${val === 'Đã thi hơn 3 đơn' ? 'selected' : ''}>Đã thi hơn 3 đơn</option>
           <option value="Đã bỏ/Dừng học" ${val === 'Đã bỏ/Dừng học' ? 'selected' : ''}>Đã bỏ/Dừng học</option>
         </select>
       `;
@@ -9297,19 +9310,10 @@ document.addEventListener('DOMContentLoaded', () => {
       sel.addEventListener('change', async () => {
         const id = sel.dataset.id;
         const val = sel.value;
-        if (val === 'Đã thi 1 đơn') {
-          sel.style.backgroundColor = '#DEF7EC';
-          sel.style.color = '#03543F';
-          sel.style.border = '1px solid #A7F3D0';
-        } else if (val === 'Đã bỏ/Dừng học') {
-          sel.style.backgroundColor = '#FDE8E8';
-          sel.style.color = '#9B1C1C';
-          sel.style.border = '1px solid #FECDCA';
-        } else {
-          sel.style.backgroundColor = '#E5E7EB';
-          sel.style.color = '#374151';
-          sel.style.border = '1px solid #D1D5DB';
-        }
+        const style = getTinhTrangStyle(val);
+        sel.style.backgroundColor = style.bg;
+        sel.style.color = style.color;
+        sel.style.border = style.border;
         try {
           await db.collection('students').doc(id).update({ status: val });
           const idx = _allCrmCustomers.findIndex(x => x.id === id);
