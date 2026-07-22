@@ -9447,6 +9447,14 @@ document.addEventListener('DOMContentLoaded', () => {
             enrollEl.value = isNaN(d) ? '' : d.toISOString().slice(0, 10);
           } else { enrollEl.value = ''; }
         }
+        ['1','2','3','Cuoi'].forEach(suffix => {
+          const keyField = suffix === 'Cuoi' ? 'ngay_thi_cuoi' : `ngay_thi_${suffix.toLowerCase()}`;
+          const resField = suffix === 'Cuoi' ? 'ket_qua_cuoi' : `ket_qua_${suffix.toLowerCase()}`;
+          const dateEl = document.getElementById(`srcNgayThi${suffix}`);
+          const resEl = document.getElementById(`srcKetQua${suffix}`);
+          if (dateEl) dateEl.value = c[keyField] || '';
+          if (resEl) resEl.value = c[resField] || '';
+        });
         await populateSrcAdvisorSelect(c.advisor || c.source || '');
         document.getElementById('sourceStudentModal').style.display = 'flex';
         if (submitBtn) submitBtn.dataset.editId = c.id;
@@ -11184,7 +11192,11 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('srcModalTitle').textContent = '+ THÊM HỌC VIÊN NGUỒN';
         const submitBtn = document.getElementById('btnSubmitSourceStudent');
         if (submitBtn) submitBtn.textContent = 'LƯU HỌC VIÊN NGUỒN';
-        ['srcName','srcEmail','srcPhone','srcHometown','srcNotes','srcPaidAmount','srcTotalAmount','srcFlightDate','srcEnrollDate'].forEach(id => {
+        ['srcName','srcEmail','srcPhone','srcHometown','srcNotes','srcPaidAmount','srcTotalAmount','srcFlightDate','srcEnrollDate','srcNgayThi1','srcNgayThi2','srcNgayThi3','srcNgayThiCuoi'].forEach(id => {
+          const el = document.getElementById(id);
+          if (el) el.value = '';
+        });
+        ['srcKetQua1','srcKetQua2','srcKetQua3','srcKetQuaCuoi'].forEach(id => {
           const el = document.getElementById(id);
           if (el) el.value = '';
         });
@@ -11234,6 +11246,14 @@ document.addEventListener('DOMContentLoaded', () => {
           totalAmount:   totalAmount || null,
           flightDate:    flightDate  || null,
           enrollDate:    enrollDate  || null,
+          ngay_thi_1:    document.getElementById('srcNgayThi1')?.value             || null,
+          ket_qua_1:     document.getElementById('srcKetQua1')?.value              || null,
+          ngay_thi_2:    document.getElementById('srcNgayThi2')?.value             || null,
+          ket_qua_2:     document.getElementById('srcKetQua2')?.value              || null,
+          ngay_thi_3:    document.getElementById('srcNgayThi3')?.value             || null,
+          ket_qua_3:     document.getElementById('srcKetQua3')?.value              || null,
+          ngay_thi_cuoi: document.getElementById('srcNgayThiCuoi')?.value          || null,
+          ket_qua_cuoi:  document.getElementById('srcKetQuaCuoi')?.value           || null,
           notes:         document.getElementById('srcNotes')?.value.trim()         || '',
           updatedAt:     firebase.firestore.FieldValue.serverTimestamp(),
         };
