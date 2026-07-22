@@ -9127,20 +9127,34 @@ document.addEventListener('DOMContentLoaded', () => {
     const pageData = filtered.slice((crmSourcePage - 1) * PAGE_SIZE, crmSourcePage * PAGE_SIZE);
     const globalOffset = (crmSourcePage - 1) * PAGE_SIZE;
 
-    // Helpers to build colored select elements
-    const getDienSelectHtml = (studentId, val) => {
+    const getDienStyle = (val) => {
       let bg = '#FDE8E8';
       let color = '#9B1C1C';
       let border = '1px solid #FCA5A5';
-      if (val === 'Du học') {
+      if (val === 'Kỹ sư') {
+        bg = '#DBEAFE';
+        color = '#1D4ED8';
+        border = '1px solid #93C5FD';
+      } else if (val === 'Du học') {
         bg = '#15803D';
         color = '#FFFFFF';
         border = '1px solid #166534';
+      } else if (val === 'Tokutei') {
+        bg = '#374151';
+        color = '#FFFFFF';
+        border = '1px solid #1F2937';
       }
+      return { bg, color, border };
+    };
+
+    const getDienSelectHtml = (studentId, val) => {
+      const style = getDienStyle(val || 'TTS');
       return `
-        <select class="src-inline-select src-dien-select" data-id="${studentId}" style="background-color: ${bg}; color: ${color}; border: ${border}; font-weight: bold; width: auto; min-width: 80px;">
+        <select class="src-inline-select src-dien-select" data-id="${studentId}" style="background-color: ${style.bg}; color: ${style.color}; border: ${style.border}; font-weight: bold; width: auto; min-width: 85px;">
           <option value="TTS" ${val === 'TTS' || !val ? 'selected' : ''}>TTS</option>
+          <option value="Kỹ sư" ${val === 'Kỹ sư' ? 'selected' : ''}>Kỹ sư</option>
           <option value="Du học" ${val === 'Du học' ? 'selected' : ''}>Du học</option>
+          <option value="Tokutei" ${val === 'Tokutei' ? 'selected' : ''}>Tokutei</option>
         </select>
       `;
     };
@@ -9202,6 +9216,24 @@ document.addEventListener('DOMContentLoaded', () => {
       `;
     };
 
+    const getAdvisorSelectHtml = (studentId, val) => {
+      const options = _allCrmStaff.map(s => {
+        return `<option value="${s.name}" ${val === s.name ? 'selected' : ''}>${s.name}</option>`;
+      });
+      // If val is not empty and not in the list, add it as a custom option
+      const hasValInStaff = _allCrmStaff.some(s => s.name === val);
+      if (val && !hasValInStaff) {
+        options.unshift(`<option value="${val}" selected>${val}</option>`);
+      }
+      options.unshift(`<option value="" ${!val ? 'selected' : ''}></option>`);
+
+      return `
+        <select class="src-inline-select src-advisor-select" data-id="${studentId}" style="min-width: 100px; padding: 0.2rem 0.3rem;">
+          ${options.join('')}
+        </select>
+      `;
+    };
+
     tbody.innerHTML = pageData.map((c, i) => {
       const gi = globalOffset + i;
       const stt = gi + 1;
@@ -9218,9 +9250,7 @@ document.addEventListener('DOMContentLoaded', () => {
           <td>
             <input type="text" class="src-inline-input" data-id="${c.id}" data-field="enrollDate" value="${c.enrollDate || ''}" placeholder="d/m" style="width: 50px;" />
           </td>
-          <td>
-            <input type="text" class="src-inline-input" data-id="${c.id}" data-field="advisor" value="${c.advisor || c.source || ''}" placeholder="..." style="width: 80px;" />
-          </td>
+          <td>${getAdvisorSelectHtml(c.id, c.advisor || c.source || '')}</td>
           <td>${getTinhTrangSelectHtml(c.id, c.status || 'Chưa đi thi/chờ đơn')}</td>
           <td>
             <input type="text" class="src-inline-input" data-id="${c.id}" data-field="ngay_thi_1" value="${c.ngay_thi_1 || ''}" placeholder="d/m" style="width: 50px;" />
@@ -9285,15 +9315,10 @@ document.addEventListener('DOMContentLoaded', () => {
       sel.addEventListener('change', async () => {
         const id = sel.dataset.id;
         const val = sel.value;
-        if (val === 'Du học') {
-          sel.style.backgroundColor = '#15803D';
-          sel.style.color = '#FFFFFF';
-          sel.style.border = '1px solid #166534';
-        } else {
-          sel.style.backgroundColor = '#FDE8E8';
-          sel.style.color = '#9B1C1C';
-          sel.style.border = '1px solid #FCA5A5';
-        }
+        const style = getDienStyle(val);
+        sel.style.backgroundColor = style.bg;
+        sel.style.color = style.color;
+        sel.style.border = style.border;
         try {
           await db.collection('students').doc(id).update({ dien: val });
           const idx = _allCrmCustomers.findIndex(x => x.id === id);
@@ -9352,6 +9377,25 @@ document.addEventListener('DOMContentLoaded', () => {
           const idx = _allCrmCustomers.findIndex(x => x.id === id);
           if (idx > -1) _allCrmCustomers[idx][field] = val;
           showToast('Đã lưu Kết quả', 'success');
+        } catch (e) {
+          showToast('Lỗi: ' + e.message, 'error');
+        }
+      });
+    });
+
+    // Attach listeners for Cán bộ chăm sóc selects
+    tbody.querySelectorAll('.src-advisor-select').forEach(sel => {
+      sel.addEventListener('change', async () => {
+        const id = sel.dataset.id;
+        const val = sel.value;
+        try {
+          await db.collection('students').doc(id).update({ advisor: val, source: val });
+          const idx = _allCrmCustomers.findIndex(x => x.id === id);
+          if (idx > -1) {
+            _allCrmCustomers[idx].advisor = val;
+            _allCrmCustomers[idx].source = val;
+          }
+          showToast('Đã lưu Cán bộ chăm sóc', 'success');
         } catch (e) {
           showToast('Lỗi: ' + e.message, 'error');
         }
@@ -11299,6 +11343,7 @@ document.addEventListener('DOMContentLoaded', () => {
         snap.forEach(doc => { const d = doc.data(); d.id = doc.id; _allCrmStaff.push(d); });
         renderCrmStaff();
         renderCrmCustomers(); // populate advisor selects after staff loaded
+        if (document.getElementById('crm-source-tab')?.style.display !== 'none') renderCrmSource();
       })
       .catch(err => console.error('CRM staff load error:', err));
   };
