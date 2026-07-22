@@ -8797,3 +8797,95 @@ body.dark-theme-crm {
   transform: none !important;
   transition: none !important;
 }
+
+/* ==========================================================================
+   Học Viên Nguồn (Source Student) Table Styling
+   ========================================================================== */
+.src-table {
+  border-collapse: collapse !important;
+  width: 100%;
+  border: 1px dashed #E5D5B8;
+  margin-top: 1rem;
+}
+
+.src-table th {
+  background-color: #DCE6F1 !important;
+  color: #8C6D39 !important;
+  font-weight: 700 !important;
+  font-family: inherit;
+  font-size: 0.78rem !important;
+  text-transform: none !important;
+  letter-spacing: 0.5px;
+  border: 1px dashed #E5D5B8 !important;
+  padding: 0.6rem 0.5rem !important;
+  text-align: center !important;
+  vertical-align: middle;
+  white-space: nowrap;
+}
+
+.src-table td {
+  background-color: #ffffff;
+  color: #1A1A1A;
+  border: 1px dashed #E5D5B8 !important;
+  padding: 0.4rem 0.5rem !important;
+  font-size: 0.78rem !important;
+  text-align: center !important;
+  vertical-align: middle;
+}
+
+/* Thicker solid separators for logical groups */
+.src-table th:nth-child(6), .src-table td:nth-child(6),
+.src-table th:nth-child(8), .src-table td:nth-child(8),
+.src-table th:nth-child(10), .src-table td:nth-child(10),
+.src-table th:nth-child(12), .src-table td:nth-child(12) {
+  border-right: 2px solid #888888 !important;
+}
+
+/* Inline input boxes */
+.src-inline-input {
+  width: 100%;
+  border: none;
+  background: transparent;
+  text-align: center;
+  font-family: inherit;
+  font-size: 0.78rem;
+  padding: 0.2rem;
+  outline: none;
+  color: #1A1A1A;
+  box-sizing: border-box;
+}
+
+.src-inline-input:focus {
+  background: #FFFBEB;
+  box-shadow: 0 0 2px rgba(168, 139, 88, 0.5);
+  border-radius: 4px;
+}
+
+/* Inline select boxes */
+.src-inline-select {
+  padding: 0.25rem 0.5rem;
+  border-radius: 12px;
+  border: 1px solid #D1D5DB;
+  font-size: 0.75rem;
+  font-weight: 500;
+  text-align: center;
+  text-align-last: center;
+  outline: none;
+  cursor: pointer;
+  box-sizing: border-box;
+  font-family: inherit;
+  transition: all 0.15s ease;
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23374151' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+  background-repeat: no-repeat;
+  background-position: right 6px center;
+  background-size: 10px;
+  padding-right: 18px;
+}
+
+.src-inline-select:focus {
+  box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2);
+}
+

@@ -2066,16 +2066,24 @@
 
                 <!-- Table -->
                 <div class="mini-table-container">
-                  <table class="crm-table">
+                  <table class="crm-table src-table">
                     <thead>
                       <tr>
-                        <th>MÃ</th>
-                        <th>HỌC VIÊN</th>
-                        <th>LIÊN HỆ</th>
-                        <th>QUỐC GIA</th>
-                        <th>NGÀY ĐĂNG KÝ</th>
-                        <th style="min-width:150px;">DOANH THU (đ)</th>
-                        <th style="text-align:center;">HÀNH ĐỘNG</th>
+                        <th>STT</th>
+                        <th>Họ tên HV</th>
+                        <th>Diện</th>
+                        <th>Ngày nhập học</th>
+                        <th>Cán bộ chăm sóc</th>
+                        <th>Tình trạng</th>
+                        <th>Ngày đi thi lần 1</th>
+                        <th>Kết quả lần 1</th>
+                        <th>Ngày đi thi lần 2</th>
+                        <th>Kết quả lần 2</th>
+                        <th>Ngày đi thi lần 3</th>
+                        <th>Kết quả lần 3</th>
+                        <th>Ngày đi thi lần cuối</th>
+                        <th>Kết quả lần cuối</th>
+                        <th style="text-align:center;">Hành động</th>
                       </tr>
                     </thead>
                     <tbody id="crmSourceTableBody">
@@ -4131,6 +4139,9 @@
             <div class="form-group-login sf-field">
               <label for="srcStatus">Trạng thái hồ sơ</label>
               <select id="srcStatus">
+                <option value="Chưa đi thi/chờ đơn">Chưa đi thi/chờ đơn</option>
+                <option value="Đã thi 1 đơn">Đã thi 1 đơn</option>
+                <option value="Đã bỏ/Dừng học">Đã bỏ/Dừng học</option>
                 <option value="Đang học">Đang học</option>
                 <option value="Chờ phỏng vấn">Chờ phỏng vấn</option>
                 <option value="Đã trúng tuyển">Đã trúng tuyển</option>
@@ -4139,6 +4150,18 @@
                 <option value="Chờ xử lý">Chờ xử lý</option>
               </select>
             </div>
+          </div>
+
+          <!-- Row 3.5: Diện -->
+          <div class="sf-row">
+            <div class="form-group-login sf-field">
+              <label for="srcDien">Diện</label>
+              <select id="srcDien">
+                <option value="TTS">TTS</option>
+                <option value="Du học">Du học</option>
+              </select>
+            </div>
+            <div class="sf-field"></div>
           </div>
 
           <!-- Row 4: Phòng ban + Tháng học -->

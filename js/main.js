@@ -9117,7 +9117,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     if (filtered.length === 0) {
-      tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:2.5rem;color:var(--text-muted);font-size:0.82rem">Không tìm thấy học viên.</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="15" style="text-align:center;padding:2.5rem;color:var(--text-muted);font-size:0.82rem">Không tìm thấy học viên.</td></tr>`;
       renderPagination('crmSourcePagination', 1, 0, () => {});
       return;
     }
@@ -9127,68 +9127,231 @@ document.addEventListener('DOMContentLoaded', () => {
     const pageData = filtered.slice((crmSourcePage - 1) * PAGE_SIZE, crmSourcePage * PAGE_SIZE);
     const globalOffset = (crmSourcePage - 1) * PAGE_SIZE;
 
-    const srcGlobalIndexMap = new Map(_allCrmCustomers.map((c, i) => [c.id, i + 1]));
-    const avColors = ['#2563EB', '#7C3AED', '#059669', '#D97706', '#DC2626', '#0891B2'];
+    // Helpers to build colored select elements
+    const getDienSelectHtml = (studentId, val) => {
+      let bg = '#FDE8E8';
+      let color = '#9B1C1C';
+      let border = '1px solid #FCA5A5';
+      if (val === 'Du học') {
+        bg = '#15803D';
+        color = '#FFFFFF';
+        border = '1px solid #166534';
+      }
+      return `
+        <select class="src-inline-select src-dien-select" data-id="${studentId}" style="background-color: ${bg}; color: ${color}; border: ${border}; font-weight: bold; width: auto; min-width: 80px;">
+          <option value="TTS" ${val === 'TTS' || !val ? 'selected' : ''}>TTS</option>
+          <option value="Du học" ${val === 'Du học' ? 'selected' : ''}>Du học</option>
+        </select>
+      `;
+    };
+
+    const getTinhTrangSelectHtml = (studentId, val) => {
+      let bg = '#E5E7EB';
+      let color = '#374151';
+      let border = '1px solid #D1D5DB';
+      if (val === 'Đã thi 1 đơn') {
+        bg = '#DEF7EC';
+        color = '#03543F';
+        border = '1px solid #A7F3D0';
+      } else if (val === 'Đã bỏ/Dừng học') {
+        bg = '#FDE8E8';
+        color = '#9B1C1C';
+        border = '1px solid #FECDCA';
+      }
+      return `
+        <select class="src-inline-select src-tinhtrang-select" data-id="${studentId}" style="background-color: ${bg}; color: ${color}; border: ${border}; min-width: 140px;">
+          <option value="Chưa đi thi/chờ đơn" ${val === 'Chưa đi thi/chờ đơn' || !val ? 'selected' : ''}>Chưa đi thi/chờ đơn</option>
+          <option value="Đã thi 1 đơn" ${val === 'Đã thi 1 đơn' ? 'selected' : ''}>Đã thi 1 đơn</option>
+          <option value="Đã bỏ/Dừng học" ${val === 'Đã bỏ/Dừng học' ? 'selected' : ''}>Đã bỏ/Dừng học</option>
+        </select>
+      `;
+    };
+
+    const getKetQuaSelectHtml = (studentId, fieldName, val) => {
+      let bg = '#E5E7EB';
+      let color = '#374151';
+      let border = '1px solid #D1D5DB';
+      if (val === 'ĐỖ') {
+        bg = '#15803D';
+        color = '#FFFFFF';
+        border = '1px solid #166534';
+      } else if (val === 'TRƯỢT') {
+        bg = '#B91C1C';
+        color = '#FFFFFF';
+        border = '1px solid #991B1B';
+      }
+      return `
+        <select class="src-inline-select src-ketqua-select" data-id="${studentId}" data-field="${fieldName}" style="background-color: ${bg}; color: ${color}; border: ${border}; font-weight: ${val ? 'bold' : 'normal'}; min-width: 80px;">
+          <option value="" ${!val ? 'selected' : ''}></option>
+          <option value="ĐỖ" ${val === 'ĐỖ' ? 'selected' : ''}>ĐỖ</option>
+          <option value="TRƯỢT" ${val === 'TRƯỢT' ? 'selected' : ''}>TRƯỢT</option>
+        </select>
+      `;
+    };
 
     tbody.innerHTML = pageData.map((c, i) => {
-      const gi   = globalOffset + i;
-      const globalIdx = srcGlobalIndexMap.get(c.id) ?? (gi + 1);
-      const hnvCode = 'HNV' + String(globalIdx).padStart(4, '0');
-      const ini  = (c.name || 'KH').split(' ').map(w => w[0]).filter(Boolean).slice(-2).join('').toUpperCase();
-      let dateStr = '--';
-      if (c.createdAt?.toDate) {
-        const d = c.createdAt.toDate();
-        dateStr = `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}/${d.getFullYear()}`;
-      }
-      const rev = c.revenue != null ? c.revenue : '';
+      const gi = globalOffset + i;
+      const stt = gi + 1;
+      
       return `
         <tr>
-          <td><span style="font-family:monospace;font-size:0.78rem;font-weight:700;color:#6366F1;">${hnvCode}</span></td>
+          <td>${stt}</td>
           <td>
-            <div style="display:flex;align-items:center;gap:0.65rem">
-              <div style="width:32px;height:32px;border-radius:50%;background:${avColors[gi % avColors.length]};color:#fff;display:flex;align-items:center;justify-content:center;font-size:0.7rem;font-weight:700;flex-shrink:0">${ini}</div>
+            <div style="display:flex;align-items:center;justify-content:center;gap:0.4rem">
               <span style="font-weight:600;font-size:0.83rem">${c.name || '--'}</span>
             </div>
           </td>
+          <td>${getDienSelectHtml(c.id, c.dien || 'TTS')}</td>
           <td>
-            <div style="font-size:0.79rem">${c.email || '--'}</div>
-            <div style="font-size:0.73rem;color:var(--text-muted)">${c.phone || ''}</div>
+            <input type="text" class="src-inline-input" data-id="${c.id}" data-field="enrollDate" value="${c.enrollDate || ''}" placeholder="d/m" style="width: 50px;" />
           </td>
-          <td><span class="crm-country-flag">${c.country || '--'}</span></td>
-          <td style="font-size:0.79rem">${dateStr}</td>
           <td>
-            <div style="display:flex;align-items:center;gap:0.4rem;">
-              <input type="number" class="src-revenue-input" data-id="${c.id}"
-                value="${rev}" min="0" step="1000" placeholder="Nhập doanh thu..."
-                style="width:120px;padding:0.35rem 0.6rem;border:1px solid var(--border);border-radius:8px;
-                       background:var(--bg-primary);color:var(--text-main);font-size:0.82rem;
-                       font-family:inherit;text-align:right;" />
-              <span style="font-size:0.72rem;color:var(--text-muted);white-space:nowrap;">đ</span>
-            </div>
+            <input type="text" class="src-inline-input" data-id="${c.id}" data-field="advisor" value="${c.advisor || c.source || ''}" placeholder="..." style="width: 80px;" />
           </td>
+          <td>${getTinhTrangSelectHtml(c.id, c.status || 'Chưa đi thi/chờ đơn')}</td>
+          <td>
+            <input type="text" class="src-inline-input" data-id="${c.id}" data-field="ngay_thi_1" value="${c.ngay_thi_1 || ''}" placeholder="d/m" style="width: 50px;" />
+          </td>
+          <td>${getKetQuaSelectHtml(c.id, 'ket_qua_1', c.ket_qua_1 || '')}</td>
+          <td>
+            <input type="text" class="src-inline-input" data-id="${c.id}" data-field="ngay_thi_2" value="${c.ngay_thi_2 || ''}" placeholder="d/m" style="width: 50px;" />
+          </td>
+          <td>${getKetQuaSelectHtml(c.id, 'ket_qua_2', c.ket_qua_2 || '')}</td>
+          <td>
+            <input type="text" class="src-inline-input" data-id="${c.id}" data-field="ngay_thi_3" value="${c.ngay_thi_3 || ''}" placeholder="d/m" style="width: 50px;" />
+          </td>
+          <td>${getKetQuaSelectHtml(c.id, 'ket_qua_3', c.ket_qua_3 || '')}</td>
+          <td>
+            <input type="text" class="src-inline-input" data-id="${c.id}" data-field="ngay_thi_cuoi" value="${c.ngay_thi_cuoi || ''}" placeholder="d/m" style="width: 50px;" />
+          </td>
+          <td>${getKetQuaSelectHtml(c.id, 'ket_qua_cuoi', c.ket_qua_cuoi || '')}</td>
           <td style="text-align:center;">
             <div style="display:flex;gap:0.3rem;justify-content:center;">
               <button class="src-view-detail-btn" data-idx="${i}"
-                style="padding:5px 7px;background:#EEF2FF;color:#6366F1;border:none;border-radius:7px;cursor:pointer;" title="Chi tiết">
-                <svg viewBox="0 0 24 24" style="width:14px;height:14px;fill:currentColor;"><path d="M12,9A3,3 0 0,0 9,12A3,3 0 0,0 12,15A3,3 0 0,0 15,12A3,3 0 0,0 12,9M12,4.5C7,4.5 2.73,7.61 1,12C2.73,16.39 7,19.5 12,19.5C17,19.5 21.27,16.39 23,12C21.27,7.61 17,4.5 12,4.5Z"/></svg>
+                style="padding:3px 5px;background:#EEF2FF;color:#6366F1;border:none;border-radius:4px;cursor:pointer;" title="Chi tiết">
+                <svg viewBox="0 0 24 24" style="width:12px;height:12px;fill:currentColor;"><path d="M12,9A3,3 0 0,0 9,12A3,3 0 0,0 12,15A3,3 0 0,0 15,12A3,3 0 0,0 12,9M12,4.5C7,4.5 2.73,7.61 1,12C2.73,16.39 7,19.5 12,19.5C17,19.5 21.27,16.39 23,12C21.27,7.61 17,4.5 12,4.5Z"/></svg>
               </button>
               <button class="src-edit-btn" data-idx="${i}"
-                style="padding:5px 7px;background:#F3F4F6;color:var(--text-main);border:none;border-radius:7px;cursor:pointer;" title="Sửa">
-                <svg viewBox="0 0 24 24" style="width:14px;height:14px;fill:currentColor;"><path d="M20.71,7.04C21.1,6.65 21.1,6 20.71,5.63L18.37,3.29C18,2.9 17.35,2.9 16.96,3.29L15.12,5.12L18.87,8.87M3,17.25V21H6.75L17.81,9.93L14.07,6.18L3,17.25Z"/></svg>
+                style="padding:3px 5px;background:#F3F4F6;color:var(--text-main);border:none;border-radius:4px;cursor:pointer;" title="Sửa">
+                <svg viewBox="0 0 24 24" style="width:12px;height:12px;fill:currentColor;"><path d="M20.71,7.04C21.1,6.65 21.1,6 20.71,5.63L18.37,3.29C18,2.9 17.35,2.9 16.96,3.29L15.12,5.12L18.87,8.87M3,17.25V21H6.75L17.81,9.93L14.07,6.18L3,17.25Z"/></svg>
               </button>
               <button class="src-delete-btn" data-id="${c.id}"
-                style="padding:5px 7px;background:#FEF2F2;color:#EF4444;border:none;border-radius:7px;cursor:pointer;" title="Xóa">
-                <svg viewBox="0 0 24 24" style="width:14px;height:14px;fill:currentColor;"><path d="M19,4H15.5L14.5,3H9.5L8.5,4H5V6H19M6,19A2,2 0 0,0 8,21H16A2,2 0 0,0 18,19V7H6V19Z"/></svg>
+                style="padding:3px 5px;background:#FEF2F2;color:#EF4444;border:none;border-radius:4px;cursor:pointer;" title="Xóa">
+                <svg viewBox="0 0 24 24" style="width:12px;height:12px;fill:currentColor;"><path d="M19,4H15.5L14.5,3H9.5L8.5,4H5V6H19M6,19A2,2 0 0,0 8,21H16A2,2 0 0,0 18,19V7H6V19Z"/></svg>
               </button>
             </div>
           </td>
         </tr>`;
     }).join('');
 
-    tbody.querySelectorAll('.src-revenue-input').forEach(inp => {
-      const save = () => saveSourceRevenue(inp.dataset.id, inp.value);
+    // Attach listeners for inline text/date inputs
+    tbody.querySelectorAll('.src-inline-input').forEach(inp => {
+      const save = async () => {
+        const id = inp.dataset.id;
+        const field = inp.dataset.field;
+        const newVal = inp.value.trim();
+        
+        try {
+          await db.collection('students').doc(id).update({ [field]: newVal });
+          const idx = _allCrmCustomers.findIndex(x => x.id === id);
+          if (idx > -1) {
+            _allCrmCustomers[idx][field] = newVal;
+            if (field === 'advisor') _allCrmCustomers[idx].source = newVal;
+          }
+          showToast('Đã tự động lưu', 'success');
+        } catch (e) {
+          showToast('Lỗi lưu: ' + e.message, 'error');
+        }
+      };
       inp.addEventListener('blur', save);
       inp.addEventListener('keydown', e => { if (e.key === 'Enter') { save(); inp.blur(); } });
+    });
+
+    // Attach listeners for Diện selects
+    tbody.querySelectorAll('.src-dien-select').forEach(sel => {
+      sel.addEventListener('change', async () => {
+        const id = sel.dataset.id;
+        const val = sel.value;
+        if (val === 'Du học') {
+          sel.style.backgroundColor = '#15803D';
+          sel.style.color = '#FFFFFF';
+          sel.style.border = '1px solid #166534';
+        } else {
+          sel.style.backgroundColor = '#FDE8E8';
+          sel.style.color = '#9B1C1C';
+          sel.style.border = '1px solid #FCA5A5';
+        }
+        try {
+          await db.collection('students').doc(id).update({ dien: val });
+          const idx = _allCrmCustomers.findIndex(x => x.id === id);
+          if (idx > -1) _allCrmCustomers[idx].dien = val;
+          showToast('Đã lưu Diện', 'success');
+        } catch (e) {
+          showToast('Lỗi: ' + e.message, 'error');
+        }
+      });
+    });
+
+    // Attach listeners for Tình trạng selects
+    tbody.querySelectorAll('.src-tinhtrang-select').forEach(sel => {
+      sel.addEventListener('change', async () => {
+        const id = sel.dataset.id;
+        const val = sel.value;
+        if (val === 'Đã thi 1 đơn') {
+          sel.style.backgroundColor = '#DEF7EC';
+          sel.style.color = '#03543F';
+          sel.style.border = '1px solid #A7F3D0';
+        } else if (val === 'Đã bỏ/Dừng học') {
+          sel.style.backgroundColor = '#FDE8E8';
+          sel.style.color = '#9B1C1C';
+          sel.style.border = '1px solid #FECDCA';
+        } else {
+          sel.style.backgroundColor = '#E5E7EB';
+          sel.style.color = '#374151';
+          sel.style.border = '1px solid #D1D5DB';
+        }
+        try {
+          await db.collection('students').doc(id).update({ status: val });
+          const idx = _allCrmCustomers.findIndex(x => x.id === id);
+          if (idx > -1) _allCrmCustomers[idx].status = val;
+          showToast('Đã lưu Tình trạng', 'success');
+        } catch (e) {
+          showToast('Lỗi: ' + e.message, 'error');
+        }
+      });
+    });
+
+    // Attach listeners for Kết quả selects
+    tbody.querySelectorAll('.src-ketqua-select').forEach(sel => {
+      sel.addEventListener('change', async () => {
+        const id = sel.dataset.id;
+        const field = sel.dataset.field;
+        const val = sel.value;
+        if (val === 'ĐỖ') {
+          sel.style.backgroundColor = '#15803D';
+          sel.style.color = '#FFFFFF';
+          sel.style.border = '1px solid #166534';
+          sel.style.fontWeight = 'bold';
+        } else if (val === 'TRƯỢT') {
+          sel.style.backgroundColor = '#B91C1C';
+          sel.style.color = '#FFFFFF';
+          sel.style.border = '1px solid #991B1B';
+          sel.style.fontWeight = 'bold';
+        } else {
+          sel.style.backgroundColor = '#E5E7EB';
+          sel.style.color = '#374151';
+          sel.style.border = '1px solid #D1D5DB';
+          sel.style.fontWeight = 'normal';
+        }
+        try {
+          await db.collection('students').doc(id).update({ [field]: val });
+          const idx = _allCrmCustomers.findIndex(x => x.id === id);
+          if (idx > -1) _allCrmCustomers[idx][field] = val;
+          showToast('Đã lưu Kết quả', 'success');
+        } catch (e) {
+          showToast('Lỗi: ' + e.message, 'error');
+        }
+      });
     });
 
     tbody.querySelectorAll('.src-view-detail-btn').forEach(btn => {
@@ -9210,7 +9373,9 @@ document.addEventListener('DOMContentLoaded', () => {
         const selC = document.getElementById('srcCountry');
         if (selC) selC.value = c.country || 'Nhật';
         const selS = document.getElementById('srcStatus');
-        if (selS) selS.value = c.status || 'Đang học';
+        if (selS) selS.value = c.status || 'Chờ xử lý';
+        const selDien = document.getElementById('srcDien');
+        if (selDien) selDien.value = c.dien || 'TTS';
         const selR = document.getElementById('srcRoom');
         if (selR) selR.value = c.room || c.classroom || '';
         const selM = document.getElementById('srcLearningMonth');
@@ -10974,7 +11139,9 @@ document.addEventListener('DOMContentLoaded', () => {
         const selC = document.getElementById('srcCountry');
         if (selC) selC.value = 'Nhật';
         const selS = document.getElementById('srcStatus');
-        if (selS) selS.value = 'Đang học';
+        if (selS) selS.value = 'Chờ xử lý';
+        const selD = document.getElementById('srcDien');
+        if (selD) selD.value = 'TTS';
         const selR = document.getElementById('srcRoom');
         if (selR) selR.value = '';
         const selM = document.getElementById('srcLearningMonth');
@@ -11005,7 +11172,8 @@ document.addEventListener('DOMContentLoaded', () => {
           phone:         document.getElementById('srcPhone')?.value.trim()         || '',
           hometown:      document.getElementById('srcHometown')?.value.trim()      || '',
           country:       document.getElementById('srcCountry')?.value              || 'Nhật',
-          status:        document.getElementById('srcStatus')?.value               || 'Đang học',
+          status:        document.getElementById('srcStatus')?.value               || 'Chờ xử lý',
+          dien:          document.getElementById('srcDien')?.value                 || 'TTS',
           room:          document.getElementById('srcRoom')?.value                 || '',
           learningMonth: document.getElementById('srcLearningMonth')?.value        || 'Tháng 1',
           advisor,
@@ -11040,13 +11208,20 @@ document.addEventListener('DOMContentLoaded', () => {
       document.getElementById('btnExportSourceExcel')?.addEventListener('click', () => {
         if (!window.XLSX) { showToast('Thư viện Excel chưa tải', 'error'); return; }
         const rows = _allCrmCustomers.map((c, i) => ({
-          'Mã': 'HNV' + String(i + 1).padStart(4, '0'),
-          'Họ và tên': c.name || '',
-          'Email': c.email || '',
-          'SĐT': c.phone || '',
-          'Quốc gia': c.country || '',
-          'Doanh thu (đ)': c.revenue ?? 0,
-          'Ghi chú': c.notes || '',
+          'STT': i + 1,
+          'Họ tên HV': c.name || '',
+          'Diện': c.dien || 'TTS',
+          'Ngày nhập học': c.enrollDate || '',
+          'Cán bộ chăm sóc': c.advisor || c.source || '',
+          'Tình trạng': c.status || 'Chờ xử lý',
+          'Ngày đi thi lần 1': c.ngay_thi_1 || '',
+          'Kết quả lần 1': c.ket_qua_1 || '',
+          'Ngày đi thi lần 2': c.ngay_thi_2 || '',
+          'Kết quả lần 2': c.ket_qua_2 || '',
+          'Ngày đi thi lần 3': c.ngay_thi_3 || '',
+          'Kết quả lần 3': c.ket_qua_3 || '',
+          'Ngày đi thi lần cuối': c.ngay_thi_cuoi || '',
+          'Kết quả lần cuối': c.ket_qua_cuoi || '',
         }));
         const ws = window.XLSX.utils.json_to_sheet(rows);
         const wb = window.XLSX.utils.book_new();
