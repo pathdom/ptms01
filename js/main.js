@@ -9536,67 +9536,59 @@ document.addEventListener('DOMContentLoaded', () => {
     const setText = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val || '--'; };
     setText('srcDetailName', student.name);
     setText('srcDetailCode', student.hnvCode || 'HNV----');
-    setText('srcDetailEmail', student.email);
-    setText('srcDetailPhone', student.phone);
-    setText('srcDetailCountry', student.country);
-    setText('srcDetailHometown', student.hometown || student.address);
-    setText('srcDetailStatus', student.status);
-    setText('srcDetailLearningMonth', student.learningMonth);
-    setText('srcDetailRoom', student.room || student.classroom);
+    setText('srcDetailDien', student.dien || 'TTS');
+    setText('srcDetailEnrollDate', student.enrollDate);
     setText('srcDetailAdvisor', student.advisor || student.source);
-    setText('srcDetailNotes', student.notes || 'Chưa có ghi chú');
+    setText('srcDetailStatus', student.status || 'Chưa đi thi/chờ đơn');
+
+    const setKetQuaBadge = (id, val) => {
+      const el = document.getElementById(id);
+      if (!el) return;
+      el.textContent = val || '--';
+      if (val === 'ĐỖ') {
+        el.style.backgroundColor = '#DEF7EC';
+        el.style.color = '#03543F';
+        el.style.border = '1px solid #A7F3D0';
+      } else if (val === 'TRƯỢT') {
+        el.style.backgroundColor = '#FDE8E8';
+        el.style.color = '#9B1C1C';
+        el.style.border = '1px solid #FCA5A5';
+      } else {
+        el.style.backgroundColor = 'var(--bg-primary)';
+        el.style.color = 'var(--text-muted)';
+        el.style.border = '1px solid var(--border-light)';
+      }
+    };
+
+    setText('srcDetailNgayThi1', student.ngay_thi_1);
+    setKetQuaBadge('srcDetailKetQua1', student.ket_qua_1);
+
+    setText('srcDetailNgayThi2', student.ngay_thi_2);
+    setKetQuaBadge('srcDetailKetQua2', student.ket_qua_2);
+
+    setText('srcDetailNgayThi3', student.ngay_thi_3);
+    setKetQuaBadge('srcDetailKetQua3', student.ket_qua_3);
+
+    setText('srcDetailNgayThiCuoi', student.ngay_thi_cuoi);
+    setKetQuaBadge('srcDetailKetQuaCuoi', student.ket_qua_cuoi);
 
     // Status badge in header
     const badge = document.getElementById('srcDetailStatusBadge');
     if (badge) {
-      const st = student.status || 'Đang học';
+      const st = student.status || 'Chưa đi thi/chờ đơn';
       const stColors = {
-        'Đang học':       { bg:'rgba(16,185,129,0.12)', color:'#059669' },
-        'Đã xuất cảnh':   { bg:'rgba(99,102,241,0.12)', color:'#6366F1' },
-        'Chờ phỏng vấn':  { bg:'rgba(245,158,11,0.12)', color:'#D97706' },
-        'Đã trúng tuyển': { bg:'rgba(59,130,246,0.12)', color:'#2563EB' },
-        'Đang làm hồ sơ': { bg:'rgba(168,85,247,0.12)', color:'#7C3AED' },
-        'Chờ xử lý':      { bg:'rgba(107,114,128,0.12)', color:'#6B7280' },
+        'Chưa đi thi/chờ đơn': { bg: 'rgba(107,114,128,0.12)', color: '#6B7280' },
+        'Đã đi tập trung':     { bg: 'rgba(245,158,11,0.12)',  color: '#D97706' },
+        'Đã thi 1 đơn':        { bg: 'rgba(16,185,129,0.12)',  color: '#059669' },
+        'Đã thi 2 đơn':        { bg: 'rgba(16,185,129,0.12)',  color: '#059669' },
+        'Đã thi 3 đơn':        { bg: 'rgba(16,185,129,0.12)',  color: '#059669' },
+        'Đã thi hơn 3 đơn':    { bg: 'rgba(16,185,129,0.12)',  color: '#059669' },
+        'Đã bỏ/Dừng học':      { bg: 'rgba(239,68,68,0.12)',   color: '#EF4444' }
       };
-      const c = stColors[st] || stColors['Đang học'];
+      const c = stColors[st] || stColors['Chưa đi thi/chờ đơn'];
       badge.textContent = st;
       badge.style.background = c.bg;
       badge.style.color = c.color;
-    }
-
-    let dateStr = '--';
-    if (student.createdAt?.toDate) {
-      const d = student.createdAt.toDate();
-      dateStr = `${padZ(d.getDate())}/${padZ(d.getMonth()+1)}/${d.getFullYear()}`;
-    }
-    setText('srcDetailDate', dateStr);
-
-    // Tuition / học phí
-    const fmtVNDShort = (n) => n > 0 ? Number(n).toLocaleString('vi-VN') + ' đ' : '--';
-    const paid   = student.paidAmount  || 0;
-    const total  = student.totalAmount || 0;
-    const remain = Math.max(0, total - paid);
-    setText('srcDetailPaid',   fmtVNDShort(paid));
-    setText('srcDetailTotal',  fmtVNDShort(total));
-    const remainEl = document.getElementById('srcDetailRemain');
-    if (remainEl) {
-      remainEl.textContent = total > 0 ? (remain > 0 ? fmtVNDShort(remain) : '0 đ') : '--';
-      remainEl.style.color = remain > 0 ? '#EF4444' : '#10B981';
-    }
-
-    // Lịch bay
-    const flightEl = document.getElementById('srcDetailFlight');
-    if (flightEl) {
-      if (student.flightDate) {
-        const fd = new Date(student.flightDate);
-        flightEl.textContent = isNaN(fd) ? student.flightDate : fd.toLocaleDateString('vi-VN');
-        flightEl.style.color = 'var(--accent,#A88B58)';
-        flightEl.style.fontWeight = '600';
-      } else {
-        flightEl.textContent = 'Chưa có lịch bay';
-        flightEl.style.color = 'var(--text-muted,#6B6A67)';
-        flightEl.style.fontWeight = '400';
-      }
     }
 
     document.getElementById('revEntryForm').style.display = 'none';
@@ -9655,24 +9647,10 @@ document.addEventListener('DOMContentLoaded', () => {
       const submitBtn = document.getElementById('btnSubmitSourceStudent');
       if (submitBtn) submitBtn.textContent = 'CẬP NHẬT HỌC VIÊN NGUỒN';
       document.getElementById('srcName').value     = c.name     || '';
-      document.getElementById('srcEmail').value    = c.email    || '';
-      document.getElementById('srcPhone').value    = c.phone    || '';
-      document.getElementById('srcHometown').value = c.hometown || c.address || '';
-      document.getElementById('srcNotes').value    = c.notes    || '';
-      const selC = document.getElementById('srcCountry');
-      if (selC) selC.value = c.country || 'Nhật';
       const selS = document.getElementById('srcStatus');
-      if (selS) selS.value = c.status || 'Đang học';
-      const selR = document.getElementById('srcRoom');
-      if (selR) selR.value = c.room || c.classroom || '';
-      const selM = document.getElementById('srcLearningMonth');
-      if (selM) selM.value = c.learningMonth || 'Tháng 1';
-      const paidEl  = document.getElementById('srcPaidAmount');
-      const totalEl = document.getElementById('srcTotalAmount');
-      if (paidEl)  paidEl.value  = c.paidAmount  ? fmtMoneyInput(c.paidAmount)  : '';
-      if (totalEl) totalEl.value = c.totalAmount ? fmtMoneyInput(c.totalAmount) : '';
-      const flightEl = document.getElementById('srcFlightDate');
-      if (flightEl) flightEl.value = c.flightDate || '';
+      if (selS) selS.value = c.status || 'Chưa đi thi/chờ đơn';
+      const selDien = document.getElementById('srcDien');
+      if (selDien) selDien.value = c.dien || 'TTS';
       const enrollEl = document.getElementById('srcEnrollDate');
       if (enrollEl) {
         if (c.enrollDate) {
@@ -9682,6 +9660,14 @@ document.addEventListener('DOMContentLoaded', () => {
           enrollEl.value = isNaN(d) ? '' : d.toISOString().slice(0, 10);
         } else { enrollEl.value = ''; }
       }
+      ['1','2','3','Cuoi'].forEach(suffix => {
+        const keyField = suffix === 'Cuoi' ? 'ngay_thi_cuoi' : `ngay_thi_${suffix.toLowerCase()}`;
+        const resField = suffix === 'Cuoi' ? 'ket_qua_cuoi' : `ket_qua_${suffix.toLowerCase()}`;
+        const dateEl = document.getElementById(`srcNgayThi${suffix}`);
+        const resEl = document.getElementById(`srcKetQua${suffix}`);
+        if (dateEl) dateEl.value = c[keyField] || '';
+        if (resEl) resEl.value = c[resField] || '';
+      });
       await populateSrcAdvisorSelect(c.advisor || c.source || '');
       if (submitBtn) submitBtn.dataset.editId = c.id;
       document.getElementById('sourceDetailModal').style.display = 'none';

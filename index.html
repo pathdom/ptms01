@@ -4440,78 +4440,71 @@
         <div style="display:grid;grid-template-columns:1fr 1.35fr;gap:0;flex:1;overflow:hidden;">
 
           <!-- Cột trái: Thông tin đầy đủ -->
-          <div style="padding:1.1rem 1.2rem;border-right:1px solid var(--border-light);overflow-y:auto;display:flex;flex-direction:column;gap:0.6rem;">
-            <div style="font-size:0.62rem;font-weight:700;text-transform:uppercase;color:var(--text-muted);letter-spacing:.9px;">Thông tin cá nhân</div>
+          <div style="padding:1.1rem 1.2rem;border-right:1px solid var(--border-light);overflow-y:auto;display:flex;flex-direction:column;gap:0.75rem;">
+            
+            <div style="font-size:0.62rem;font-weight:700;text-transform:uppercase;color:var(--text-muted);letter-spacing:.9px;">Thông tin hồ sơ</div>
 
-            <!-- Grid 2 cột: 8 field cards -->
+            <!-- Grid 2 cột: 4 main fields -->
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.45rem;">
               <div style="background:var(--bg-primary);border:1px solid var(--border-light);border-radius:9px;padding:0.5rem 0.75rem;">
-                <div style="font-size:0.58rem;font-weight:600;text-transform:uppercase;color:var(--text-muted);letter-spacing:.7px;margin-bottom:3px;">Email</div>
-                <div id="srcDetailEmail" style="font-size:0.76rem;font-weight:500;color:var(--text-main);word-break:break-all;">--</div>
+                <div style="font-size:0.58rem;font-weight:600;text-transform:uppercase;color:var(--text-muted);letter-spacing:.7px;margin-bottom:3px;">Diện</div>
+                <div id="srcDetailDien" style="font-size:0.76rem;font-weight:700;color:var(--text-main);">--</div>
               </div>
               <div style="background:var(--bg-primary);border:1px solid var(--border-light);border-radius:9px;padding:0.5rem 0.75rem;">
-                <div style="font-size:0.58rem;font-weight:600;text-transform:uppercase;color:var(--text-muted);letter-spacing:.7px;margin-bottom:3px;">SĐT</div>
-                <div id="srcDetailPhone" style="font-size:0.76rem;font-weight:500;color:var(--text-main);">--</div>
+                <div style="font-size:0.58rem;font-weight:600;text-transform:uppercase;color:var(--text-muted);letter-spacing:.7px;margin-bottom:3px;">Ngày nhập học</div>
+                <div id="srcDetailEnrollDate" style="font-size:0.76rem;font-weight:500;color:var(--text-main);">--</div>
               </div>
-              <div style="background:var(--bg-primary);border:1px solid var(--border-light);border-radius:9px;padding:0.5rem 0.75rem;">
-                <div style="font-size:0.58rem;font-weight:600;text-transform:uppercase;color:var(--text-muted);letter-spacing:.7px;margin-bottom:3px;">Quốc gia</div>
-                <div id="srcDetailCountry" style="font-size:0.76rem;font-weight:500;color:var(--text-main);">--</div>
+              <div style="background:var(--bg-primary);border:1px solid var(--border-light);border-radius:9px;padding:0.5rem 0.75rem;grid-column: span 2;">
+                <div style="font-size:0.58rem;font-weight:600;text-transform:uppercase;color:var(--text-muted);letter-spacing:.7px;margin-bottom:3px;">Cán bộ chăm sóc</div>
+                <div id="srcDetailAdvisor" style="font-size:0.76rem;font-weight:600;color:var(--text-main);">--</div>
               </div>
-              <div style="background:var(--bg-primary);border:1px solid var(--border-light);border-radius:9px;padding:0.5rem 0.75rem;">
-                <div style="font-size:0.58rem;font-weight:600;text-transform:uppercase;color:var(--text-muted);letter-spacing:.7px;margin-bottom:3px;">Ngày đăng ký</div>
-                <div id="srcDetailDate" style="font-size:0.76rem;font-weight:500;color:var(--text-main);">--</div>
-              </div>
-              <div style="background:var(--bg-primary);border:1px solid var(--border-light);border-radius:9px;padding:0.5rem 0.75rem;">
-                <div style="font-size:0.58rem;font-weight:600;text-transform:uppercase;color:var(--text-muted);letter-spacing:.7px;margin-bottom:3px;">Quê quán</div>
-                <div id="srcDetailHometown" style="font-size:0.76rem;font-weight:500;color:var(--text-main);">--</div>
-              </div>
-              <div style="background:var(--bg-primary);border:1px solid var(--border-light);border-radius:9px;padding:0.5rem 0.75rem;">
-                <div style="font-size:0.58rem;font-weight:600;text-transform:uppercase;color:var(--text-muted);letter-spacing:.7px;margin-bottom:3px;">Trạng thái</div>
-                <div id="srcDetailStatus" style="font-size:0.76rem;font-weight:500;color:var(--text-main);">--</div>
-              </div>
-              <div style="background:var(--bg-primary);border:1px solid var(--border-light);border-radius:9px;padding:0.5rem 0.75rem;">
-                <div style="font-size:0.58rem;font-weight:600;text-transform:uppercase;color:var(--text-muted);letter-spacing:.7px;margin-bottom:3px;">Tháng học</div>
-                <div id="srcDetailLearningMonth" style="font-size:0.76rem;font-weight:500;color:var(--text-main);">--</div>
-              </div>
-              <div style="background:var(--bg-primary);border:1px solid var(--border-light);border-radius:9px;padding:0.5rem 0.75rem;">
-                <div style="font-size:0.58rem;font-weight:600;text-transform:uppercase;color:var(--text-muted);letter-spacing:.7px;margin-bottom:3px;">Phòng ban</div>
-                <div id="srcDetailRoom" style="font-size:0.76rem;font-weight:500;color:var(--text-main);">--</div>
+              <div style="background:var(--bg-primary);border:1px solid var(--border-light);border-radius:9px;padding:0.5rem 0.75rem;grid-column: span 2;">
+                <div style="font-size:0.58rem;font-weight:600;text-transform:uppercase;color:var(--text-muted);letter-spacing:.7px;margin-bottom:3px;">Tình trạng</div>
+                <div id="srcDetailStatus" style="font-size:0.76rem;font-weight:600;color:var(--text-main);">--</div>
               </div>
             </div>
 
-            <!-- Tư vấn viên – full width -->
-            <div style="background:var(--bg-primary);border:1px solid var(--border-light);border-radius:9px;padding:0.5rem 0.75rem;">
-              <div style="font-size:0.58rem;font-weight:600;text-transform:uppercase;color:var(--text-muted);letter-spacing:.7px;margin-bottom:3px;">Tư vấn viên</div>
-              <div id="srcDetailAdvisor" style="font-size:0.76rem;font-weight:500;color:var(--text-main);">--</div>
-            </div>
+            <div style="font-size:0.62rem;font-weight:700;text-transform:uppercase;color:var(--text-muted);letter-spacing:.9px;margin-top:0.4rem;">Lịch sử thi tuyển</div>
 
-            <!-- Ghi chú -->
-            <div style="background:var(--bg-primary);border:1px solid var(--border-light);border-radius:9px;padding:0.5rem 0.75rem;">
-              <div style="font-size:0.58rem;font-weight:600;text-transform:uppercase;color:var(--text-muted);letter-spacing:.7px;margin-bottom:4px;">Ghi chú</div>
-              <div id="srcDetailNotes" style="font-size:0.77rem;color:var(--text-main);line-height:1.5;white-space:pre-wrap;">--</div>
-            </div>
+            <!-- Grid 2 cột cho các lần thi -->
+            <div style="display:grid;grid-template-columns:1fr;gap:0.45rem;">
+              
+              <!-- Thi lần 1 -->
+              <div style="background:var(--bg-primary);border:1px solid var(--border-light);border-radius:9px;padding:0.5rem 0.75rem;display:flex;justify-content:space-between;align-items:center;">
+                <div>
+                  <div style="font-size:0.58rem;font-weight:600;text-transform:uppercase;color:var(--text-muted);letter-spacing:.7px;margin-bottom:2px;">Thi tuyển lần 1</div>
+                  <div id="srcDetailNgayThi1" style="font-size:0.75rem;color:var(--text-main);">--</div>
+                </div>
+                <div id="srcDetailKetQua1" style="font-size:0.72rem;font-weight:700;padding:0.2rem 0.5rem;border-radius:6px;">--</div>
+              </div>
 
-            <!-- Học phí card -->
-            <div style="background:var(--bg-primary);border:1px solid var(--border-light);border-radius:10px;padding:0.65rem 0.8rem;">
-              <div style="font-size:0.6rem;font-weight:700;text-transform:uppercase;color:var(--text-muted);letter-spacing:.8px;margin-bottom:0.5rem;">Học phí & Lịch bay</div>
-              <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:0.4rem;margin-bottom:0.5rem;">
+              <!-- Thi lần 2 -->
+              <div style="background:var(--bg-primary);border:1px solid var(--border-light);border-radius:9px;padding:0.5rem 0.75rem;display:flex;justify-content:space-between;align-items:center;">
                 <div>
-                  <div style="font-size:0.58rem;color:var(--text-muted);margin-bottom:2px;">Đã đóng</div>
-                  <div id="srcDetailPaid" style="font-size:0.8rem;font-weight:700;color:#16A34A;">--</div>
+                  <div style="font-size:0.58rem;font-weight:600;text-transform:uppercase;color:var(--text-muted);letter-spacing:.7px;margin-bottom:2px;">Thi tuyển lần 2</div>
+                  <div id="srcDetailNgayThi2" style="font-size:0.75rem;color:var(--text-main);">--</div>
                 </div>
-                <div>
-                  <div style="font-size:0.58rem;color:var(--text-muted);margin-bottom:2px;">Tổng tiền</div>
-                  <div id="srcDetailTotal" style="font-size:0.8rem;font-weight:700;color:var(--text-main);">--</div>
-                </div>
-                <div>
-                  <div style="font-size:0.58rem;color:var(--text-muted);margin-bottom:2px;">Còn lại</div>
-                  <div id="srcDetailRemain" style="font-size:0.8rem;font-weight:700;color:#EF4444;">--</div>
-                </div>
+                <div id="srcDetailKetQua2" style="font-size:0.72rem;font-weight:700;padding:0.2rem 0.5rem;border-radius:6px;">--</div>
               </div>
-              <div style="display:flex;align-items:center;gap:0.4rem;padding-top:0.45rem;border-top:1px solid var(--border-light);">
-                <svg viewBox="0 0 24 24" style="width:13px;height:13px;fill:var(--text-muted);flex-shrink:0;"><path d="M21,16V14L13,9V3.5A1.5,1.5 0 0,0 11.5,2A1.5,1.5 0 0,0 10,3.5V9L2,14V16L10,13.5V19L8,20.5V22L11.5,21L15,22V20.5L13,19V13.5L21,16Z"/></svg>
-                <div id="srcDetailFlight" style="font-size:0.76rem;font-weight:500;color:var(--text-main);">Chưa có lịch bay</div>
+
+              <!-- Thi lần 3 -->
+              <div style="background:var(--bg-primary);border:1px solid var(--border-light);border-radius:9px;padding:0.5rem 0.75rem;display:flex;justify-content:space-between;align-items:center;">
+                <div>
+                  <div style="font-size:0.58rem;font-weight:600;text-transform:uppercase;color:var(--text-muted);letter-spacing:.7px;margin-bottom:2px;">Thi tuyển lần 3</div>
+                  <div id="srcDetailNgayThi3" style="font-size:0.75rem;color:var(--text-main);">--</div>
+                </div>
+                <div id="srcDetailKetQua3" style="font-size:0.72rem;font-weight:700;padding:0.2rem 0.5rem;border-radius:6px;">--</div>
               </div>
+
+              <!-- Thi lần cuối -->
+              <div style="background:var(--bg-primary);border:1px solid var(--border-light);border-radius:9px;padding:0.5rem 0.75rem;display:flex;justify-content:space-between;align-items:center;">
+                <div>
+                  <div style="font-size:0.58rem;font-weight:600;text-transform:uppercase;color:var(--text-muted);letter-spacing:.7px;margin-bottom:2px;">Thi tuyển lần cuối</div>
+                  <div id="srcDetailNgayThiCuoi" style="font-size:0.75rem;color:var(--text-main);">--</div>
+                </div>
+                <div id="srcDetailKetQuaCuoi" style="font-size:0.72rem;font-weight:700;padding:0.2rem 0.5rem;border-radius:6px;">--</div>
+              </div>
+
             </div>
 
             <!-- Tổng doanh thu -->
