@@ -2765,6 +2765,18 @@ document.addEventListener('DOMContentLoaded', () => {
     sel.innerHTML = opts;
   };
 
+  // Populate #crmOldAdvisor select inside crmOldCustomerModal
+  const populateCrmOldAdvisorSelect = async (curVal) => {
+    await _loadStaffMap();
+    const sel = document.getElementById('crmOldAdvisor');
+    if (!sel) return;
+    let opts = '<option value="">-- Chọn nhân viên --</option>';
+    opts += _staffNames.map(n =>
+      `<option value="${n}"${n === curVal ? ' selected' : ''}>${n}</option>`
+    ).join('');
+    sel.innerHTML = opts;
+  };
+
   // Returns { name, department } for a staff identifier (name string)
   const _lookupStaff = (identifier) => {
     if (!identifier || identifier === '--') return null;
@@ -8746,6 +8758,373 @@ document.addEventListener('DOMContentLoaded', () => {
       `<button class="crm-page-btn${active ? ' active' : ''}" data-page="${page}" ${disabled ? 'disabled' : ''}>${label}</button>`;
     let pages = '';
     const delta = 2;
+    const left = currentPage - delta;
+    const right = currentPage + delta + 1;
+    const range = [];
+    const rangeWithDots = [];
+    let l;
+
+    for (let i = 1; i <= totalPages; i++) {
+      if (i === 1 || i === totalPages || (i >= left && i < right)) {
+        range.push(i);
+      }
+    }
+
+    for (const i of range) {
+      if (l) {
+        if (i - l === 2) {
+          rangeWithDots.push(l + 1);
+        } else if (i - l > 2) {
+          rangeWithDots.push('...');
+        }
+      }
+      rangeWithDots.push(i);
+      l = i;
+    }
+
+    pages += pageBtn('&laquo;', currentPage - 1, currentPage === 1);
+    rangeWithDots.forEach(p => {
+      if (p === '...') {
+        pages += `<span style="padding:0.25rem 0.5rem;color:var(--text-muted)">...</span>`;
+      } else {
+        pages += pageBtn(p, p, false, p === currentPage);
+      }
+    });
+    pages += pageBtn('&raquo;', currentPage + 1, currentPage === totalPages);
+
+    el.innerHTML = `
+      <span class="crm-pagination-info">Hiển thị ${from}-${to} trên ${total}</span>
+      <div style="display:flex;gap:0.25rem;align-items:center">${pages}</div>
+    `;
+
+    el.querySelectorAll('.crm-page-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const page = parseInt(btn.dataset.page);
+        if (page >= 1 && page <= totalPages && page !== currentPage) {
+          onGo(page);
+        }
+      });
+    });
+  };
+
+  // ── Customer table ─────────────────────────────────────────────────────────
+  let crmCustomerPage = 1;
+
+  const renderCrmCustomers = (resetPage = false) => {
+    if (resetPage) crmCustomerPage = 1;
+    const tbody = document.getElementById('crmCustomerTableBody');
+    if (!tbody) return;
+
+    const search = (document.getElementById('crmSearchInput')?.value || '').toLowerCase().trim();
+    const countryF = document.getElementById('crmCountryFilter')?.value || 'All';
+    const statusF = document.getElementById('crmStatusFilter')?.value || 'All';
+
+    const filtered = _allCrmCustomers.filter(c => {
+      if (c.status === "Đã xuất cảnh") return false; // Lọc bỏ khách hàng cũ đã bay
+      if (countryF !== 'All' && c.country !== countryF) return false;
+      const cs = c.crmStatus || 'Khách Hàng Mới';
+      if (statusF !== 'All' && cs !== statusF) return false;
+      if (search && !`${c.name} ${c.email} ${c.code}`.toLowerCase().includes(search)) return false;
+      return true;
+    });
+
+    if (filtered.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;padding:2.5rem;color:var(--text-muted);font-size:0.82rem">Không tìm thấy khách hàng phù hợp.</td></tr>`;
+      renderPagination('crmCustomerPagination', 1, 0, () => {});
+      return;
+    }
+
+    const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
+    crmCustomerPage = Math.min(crmCustomerPage, totalPages);
+    const pageData = filtered.slice((crmCustomerPage - 1) * PAGE_SIZE, crmCustomerPage * PAGE_SIZE);
+    const globalOffset = (crmCustomerPage - 1) * PAGE_SIZE;
+
+    const globalCrmIndexMap = new Map(_allCrmCustomers.map((c, i) => [c.id, 30001 + i]));
+    const avColors = ['#2563EB', '#7C3AED', '#059669', '#D97706', '#DC2626', '#0891B2'];
+
+    tbody.innerHTML = pageData.map((c, i) => {
+      const gi = globalOffset + i;
+      const displayCode = String(globalCrmIndexMap.get(c.id) ?? (30001 + gi));
+      const ini = (c.name || 'KH').split(' ').map(w => w[0]).filter(Boolean).slice(-2).join('').toUpperCase();
+      let dateStr = '--';
+      if (c.createdAt?.toDate) {
+        const d = c.createdAt.toDate();
+        dateStr = `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}/${d.getFullYear()}`;
+      }
+      const currentCrmStatus = c.crmStatus || 'Khách Hàng Mới';
+      const sc = SOURCE_STATUS_COLORS[currentCrmStatus] || SOURCE_STATUS_COLORS['Khách Hàng Mới'];
+      const optionsHtml = SOURCE_STATUSES.map(s =>
+        `<option value="${s}"${s === currentCrmStatus ? ' selected' : ''}>${s}</option>`
+      ).join('');
+      return `
+        <tr>
+          <td><span style="font-family:monospace;font-size:0.78rem;font-weight:700;color:#6366F1;">${displayCode}</span></td>
+          <td>
+            <div style="display:flex;align-items:center;gap:0.65rem">
+              <div style="width:32px;height:32px;border-radius:50%;background:${avColors[gi % avColors.length]};color:#fff;display:flex;align-items:center;justify-content:center;font-size:0.7rem;font-weight:700;flex-shrink:0">${ini}</div>
+              <span style="font-weight:600;font-size:0.83rem">${c.name || '--'}</span>
+            </div>
+          </td>
+          <td>
+            <div style="font-size:0.79rem">${c.email || '--'}</div>
+            <div style="font-size:0.73rem;color:var(--text-muted)">${c.phone || ''}</div>
+          </td>
+          <td><span class="crm-country-flag">${c.country || '--'}</span></td>
+          <td>
+            <select class="crm-advisor-select" data-id="${c.id}"
+              style="padding:0.22rem 0.5rem;border-radius:8px;border:1.5px solid #E5E7EB;
+                     background:#fff;color:var(--text-main);font-size:0.73rem;font-weight:500;
+                     cursor:pointer;font-family:inherit;outline:none;max-width:110px;">
+              <option value="">-- Chọn NV --</option>
+              ${_allCrmStaff.map(s => `<option value="${s.name}"${s.name === (c.advisor||'') ? ' selected' : ''}>${s.name}</option>`).join('')}
+            </select>
+          </td>
+          <td>
+            <select class="crm-status-select" data-id="${c.id}"
+              style="padding:0.22rem 0.55rem;border-radius:10px;border:1.5px solid ${sc.color};
+                     background:${sc.bg};color:${sc.color};
+                     font-size:0.68rem;font-weight:600;cursor:pointer;
+                     font-family:inherit;outline:none;appearance:none;-webkit-appearance:none;
+                     padding-right:1.4rem;
+                     background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23888'/%3E%3C/svg%3E");
+                     background-repeat:no-repeat;background-position:right 0.4rem center;">
+              ${optionsHtml}
+            </select>
+          </td>
+          <td style="font-size:0.79rem">${dateStr}</td>
+          <td style="text-align:center">
+            <button class="crm-action-btn view btn-view-crm" data-fidx="${i}" title="Xem hồ sơ">
+              <svg viewBox="0 0 24 24"><path d="M12,4.5C7,4.5 2.73,7.61 1,12C2.73,16.39 7,19.5 12,19.5C17,19.5 21.27,16.39 23,12C21.27,7.61 17,4.5 12,4.5M12,17A5,5 0 0,1 7,12A5,5 0 0,1 12,7A5,5 0 0,1 17,12A5,5 0 0,1 12,17M12,9A3,3 0 0,0 9,12A3,3 0 0,0 12,15A3,3 0 0,0 15,12A3,3 0 0,0 12,9Z"/></svg>
+            </button>
+            <button class="crm-action-btn edit btn-edit-crm" data-fidx="${i}" title="Chỉnh sửa">
+              <svg viewBox="0 0 24 24"><path d="M20.71,7.04C21.1,6.65 21.1,6 20.71,5.63L18.37,3.29C18,2.9 17.35,2.9 16.96,3.29L15.12,5.12L18.87,8.87M3,17.25V21H6.75L17.81,9.93L14.06,6.18L3,17.25Z"/></svg>
+            </button>
+            <button class="crm-action-btn delete btn-delete-crm" data-fidx="${i}" title="Xóa">
+              <svg viewBox="0 0 24 24"><path d="M9,3V4H4V6H5V19A2,2 0 0,0 7,21H17A2,2 0 0,0 19,19V6H20V4H15V3H9M7,6H17V19H7V6M9,8V17H11V8H9M13,8V17H15V8H13Z"/></svg>
+            </button>
+          </td>
+        </tr>`;
+    }).join('');
+
+    tbody.querySelectorAll('.crm-status-select').forEach(sel => {
+      sel.addEventListener('change', async () => {
+        const sc = SOURCE_STATUS_COLORS[sel.value] || SOURCE_STATUS_COLORS['Khách Hàng Mới'];
+        sel.style.borderColor = sc.color;
+        sel.style.color = sc.color;
+        sel.style.background = `${sc.bg} url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23888'/%3E%3C/svg%3E") no-repeat right 0.4rem center`;
+        const cust = _allCrmCustomers.find(x => x.id === sel.dataset.id);
+        if (cust) cust.crmStatus = sel.value;
+        try {
+          await db.collection('students').doc(sel.dataset.id).update({ crmStatus: sel.value });
+        } catch (e) { console.error('Lỗi lưu CRM status:', e); }
+      });
+    });
+
+    tbody.querySelectorAll('.crm-advisor-select').forEach(sel => {
+      sel.addEventListener('change', async () => {
+        const cust = _allCrmCustomers.find(x => x.id === sel.dataset.id);
+        if (cust) cust.advisor = sel.value;
+        try {
+          await db.collection('students').doc(sel.dataset.id).update({ advisor: sel.value });
+        } catch(e) { console.error('Lỗi lưu advisor:', e); }
+      });
+    });
+
+    tbody.querySelectorAll('.btn-view-crm').forEach(btn => {
+      btn.addEventListener('click', () => openCrmProfile(pageData[parseInt(btn.dataset.fidx)]));
+    });
+
+    tbody.querySelectorAll('.btn-edit-crm').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const c = pageData[parseInt(btn.dataset.fidx)];
+        if (!c) return;
+        openCrmCustomerModal(c);
+      });
+    });
+
+    tbody.querySelectorAll('.btn-delete-crm').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const c = pageData[parseInt(btn.dataset.fidx)];
+        if (!c?.id) return;
+        if (!confirm(`Xóa học viên "${c.name}"?\nHành động này không thể hoàn tác.`)) return;
+        try {
+          await db.collection('students').doc(c.id).delete();
+          _allCrmCustomers = _allCrmCustomers.filter(x => x.id !== c.id);
+          renderCrmOverview();
+          renderCrmCustomers(true);
+          showToast(`Đã xóa "${c.name}"`, 'success');
+        } catch (e) {
+          showToast('Lỗi xóa: ' + e.message, 'error');
+        }
+      });
+    });
+
+    renderPagination('crmCustomerPagination', crmCustomerPage, filtered.length, (p) => {
+      crmCustomerPage = p;
+      renderCrmCustomers();
+    });
+  };
+
+  // ── Old Customer table ─────────────────────────────────────────────────────
+  let crmOldCustomerPage = 1;
+
+  const renderCrmOldCustomers = (resetPage = false) => {
+    if (resetPage) crmOldCustomerPage = 1;
+    const tbody = document.getElementById('crmOldCustomerTableBody');
+    if (!tbody) return;
+
+    const search = (document.getElementById('crmOldSearchInput')?.value || '').toLowerCase().trim();
+    const countryF = document.getElementById('crmOldCountryFilter')?.value || 'All';
+    const statusF = document.getElementById('crmOldStatusFilter')?.value || 'All';
+
+    const filtered = _allCrmCustomers.filter(c => {
+      if (c.status !== "Đã xuất cảnh" && !c.isCrmOldCustomer) return false; // Chỉ lấy khách hàng cũ
+      if (countryF !== 'All' && c.country !== countryF) return false;
+      const cs = c.crmStatus || 'Khách Hàng Mới';
+      if (statusF !== 'All' && cs !== statusF) return false;
+      if (search && !`${c.name} ${c.email} ${c.code}`.toLowerCase().includes(search)) return false;
+      return true;
+    });
+
+    if (filtered.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;padding:2.5rem;color:var(--text-muted);font-size:0.82rem">Không tìm thấy khách hàng cũ phù hợp.</td></tr>`;
+      renderPagination('crmOldCustomerPagination', 1, 0, () => {});
+      return;
+    }
+
+    const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
+    crmOldCustomerPage = Math.min(crmOldCustomerPage, totalPages);
+    const pageData = filtered.slice((crmOldCustomerPage - 1) * PAGE_SIZE, crmOldCustomerPage * PAGE_SIZE);
+    const globalOffset = (crmOldCustomerPage - 1) * PAGE_SIZE;
+
+    const globalCrmIndexMap = new Map(_allCrmCustomers.map((c, i) => [c.id, 30001 + i]));
+    const avColors = ['#2563EB', '#7C3AED', '#059669', '#D97706', '#DC2626', '#0891B2'];
+
+    tbody.innerHTML = pageData.map((c, i) => {
+      const gi = globalOffset + i;
+      const displayCode = String(globalCrmIndexMap.get(c.id) ?? (30001 + gi));
+      const ini = (c.name || 'KH').split(' ').map(w => w[0]).filter(Boolean).slice(-2).join('').toUpperCase();
+      let dateStr = '--';
+      if (c.createdAt?.toDate) {
+        const d = c.createdAt.toDate();
+        dateStr = `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}/${d.getFullYear()}`;
+      }
+      const currentCrmStatus = c.crmStatus || 'Khách Hàng Mới';
+      const sc = SOURCE_STATUS_COLORS[currentCrmStatus] || SOURCE_STATUS_COLORS['Khách Hàng Mới'];
+      const optionsHtml = SOURCE_STATUSES.map(s =>
+        `<option value="${s}"${s === currentCrmStatus ? ' selected' : ''}>${s}</option>`
+      ).join('');
+      return `
+        <tr>
+          <td><span style="font-family:monospace;font-size:0.78rem;font-weight:700;color:#6366F1;">${displayCode}</span></td>
+          <td>
+            <div style="display:flex;align-items:center;gap:0.65rem">
+              <div style="width:32px;height:32px;border-radius:50%;background:${avColors[gi % avColors.length]};color:#fff;display:flex;align-items:center;justify-content:center;font-size:0.7rem;font-weight:700;flex-shrink:0">${ini}</div>
+              <span style="font-weight:600;font-size:0.83rem">${c.name || '--'}</span>
+            </div>
+          </td>
+          <td>
+            <div style="font-size:0.79rem">${c.email || '--'}</div>
+            <div style="font-size:0.73rem;color:var(--text-muted)">${c.phone || ''}</div>
+          </td>
+          <td><span class="crm-country-flag">${c.country || '--'}</span></td>
+          <td>
+            <select class="crm-old-advisor-select" data-id="${c.id}"
+              style="padding:0.22rem 0.5rem;border-radius:8px;border:1.5px solid #E5E7EB;
+                     background:#fff;color:var(--text-main);font-size:0.73rem;font-weight:500;
+                     cursor:pointer;font-family:inherit;outline:none;max-width:110px;">
+              <option value="">-- Chọn NV --</option>
+              ${_allCrmStaff.map(s => `<option value="${s.name}"${s.name === (c.advisor||'') ? ' selected' : ''}>${s.name}</option>`).join('')}
+            </select>
+          </td>
+          <td>
+            <select class="crm-old-status-select" data-id="${c.id}"
+              style="padding:0.22rem 0.55rem;border-radius:10px;border:1.5px solid ${sc.color};
+                     background:${sc.bg};color:${sc.color};
+                     font-size:0.68rem;font-weight:600;cursor:pointer;
+                     font-family:inherit;outline:none;appearance:none;-webkit-appearance:none;
+                     padding-right:1.4rem;
+                     background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23888'/%3E%3C/svg%3E");
+                     background-repeat:no-repeat;background-position:right 0.4rem center;">
+              ${optionsHtml}
+            </select>
+          </td>
+          <td style="font-size:0.79rem">${dateStr}</td>
+          <td style="text-align:center">
+            <button class="crm-action-btn view btn-view-crm-old" data-fidx="${i}" title="Xem hồ sơ">
+              <svg viewBox="0 0 24 24"><path d="M12,4.5C7,4.5 2.73,7.61 1,12C2.73,16.39 7,19.5 12,19.5C17,19.5 21.27,16.39 23,12C21.27,7.61 17,4.5 12,4.5M12,17A5,5 0 0,1 7,12A5,5 0 0,1 12,7A5,5 0 0,1 17,12A5,5 0 0,1 12,17M12,9A3,3 0 0,0 9,12A3,3 0 0,0 12,15A3,3 0 0,0 15,12A3,3 0 0,0 12,9Z"/></svg>
+            </button>
+            <button class="crm-action-btn edit btn-edit-crm-old" data-fidx="${i}" title="Chỉnh sửa">
+              <svg viewBox="0 0 24 24"><path d="M20.71,7.04C21.1,6.65 21.1,6 20.71,5.63L18.37,3.29C18,2.9 17.35,2.9 16.96,3.29L15.12,5.12L18.87,8.87M3,17.25V21H6.75L17.81,9.93L14.06,6.18L3,17.25Z"/></svg>
+            </button>
+            <button class="crm-action-btn delete btn-delete-crm-old" data-fidx="${i}" title="Xóa">
+              <svg viewBox="0 0 24 24"><path d="M9,3V4H4V6H5V19A2,2 0 0,0 7,21H17A2,2 0 0,0 19,19V6H20V4H15V3H9M7,6H17V19H7V6M9,8V17H11V8H9M13,8V17H15V8H13Z"/></svg>
+            </button>
+          </td>
+        </tr>`;
+    }).join('');
+
+    tbody.querySelectorAll('.crm-old-status-select').forEach(sel => {
+      sel.addEventListener('change', async () => {
+        const sc = SOURCE_STATUS_COLORS[sel.value] || SOURCE_STATUS_COLORS['Khách Hàng Mới'];
+        sel.style.borderColor = sc.color;
+        sel.style.color = sc.color;
+        sel.style.background = `${sc.bg} url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23888'/%3E%3C/svg%3E") no-repeat right 0.4rem center`;
+        const cust = _allCrmCustomers.find(x => x.id === sel.dataset.id);
+        if (cust) cust.crmStatus = sel.value;
+        try {
+          await db.collection('students').doc(sel.dataset.id).update({ crmStatus: sel.value });
+        } catch (e) { console.error('Lỗi lưu CRM status:', e); }
+      });
+    });
+
+    tbody.querySelectorAll('.crm-old-advisor-select').forEach(sel => {
+      sel.addEventListener('change', async () => {
+        const cust = _allCrmCustomers.find(x => x.id === sel.dataset.id);
+        if (cust) cust.advisor = sel.value;
+        try {
+          await db.collection('students').doc(sel.dataset.id).update({ advisor: sel.value });
+        } catch(e) { console.error('Lỗi lưu advisor:', e); }
+      });
+    });
+
+    tbody.querySelectorAll('.btn-view-crm-old').forEach(btn => {
+      btn.addEventListener('click', () => openCrmProfile(pageData[parseInt(btn.dataset.fidx)]));
+    });
+
+    tbody.querySelectorAll('.btn-edit-crm-old').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const c = pageData[parseInt(btn.dataset.fidx)];
+        if (!c) return;
+        openCrmOldCustomerModal(c);
+      });
+    });
+
+    tbody.querySelectorAll('.btn-delete-crm-old').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const c = pageData[parseInt(btn.dataset.fidx)];
+        if (!c?.id) return;
+        if (!confirm(`Xóa khách hàng cũ "${c.name}"?\nHành động này không thể hoàn tác.`)) return;
+        try {
+          await db.collection('students').doc(c.id).delete();
+          _allCrmCustomers = _allCrmCustomers.filter(x => x.id !== c.id);
+          renderCrmOverview();
+          renderCrmOldCustomers(true);
+          showToast(`Đã xóa "${c.name}"`, 'success');
+        } catch (e) {
+          showToast('Lỗi xóa: ' + e.message, 'error');
+        }
+      });
+    });
+
+    renderPagination('crmOldCustomerPagination', crmOldCustomerPage, filtered.length, (p) => {
+      crmOldCustomerPage = p;
+      renderCrmOldCustomers();
+    });
+  };ageBtn = (label, page, disabled = false, active = false) =>
+      `<button class="crm-page-btn${active ? ' active' : ''}" data-page="${page}" ${disabled ? 'disabled' : ''}>${label}</button>`;
+    let pages = '';
+    const delta = 2;
     for (let p = 1; p <= totalPages; p++) {
       if (p === 1 || p === totalPages || (p >= currentPage - delta && p <= currentPage + delta)) {
         pages += pageBtn(p, p, false, p === currentPage);
@@ -11072,11 +11451,95 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   };
 
+  // ── CRM Old Customer Add/Edit Modal ────────────────────────────────────────
+  const openCrmOldCustomerModal = async (customer) => {
+    const modal = document.getElementById('crmOldCustomerModal');
+    if (!modal) return;
+    const isEdit = !!customer;
+    document.getElementById('crmOldModalTitle').textContent = isEdit ? 'CHỈNH SỬA KHÁCH HÀNG CŨ' : '+ THÊM KHÁCH HÀNG CŨ';
+    document.getElementById('btnSubmitCrmOldCustomer').textContent = isEdit ? 'CẬP NHẬT KHÁCH HÀNG CŨ' : 'LƯU KHÁCH HÀNG CŨ';
+    document.getElementById('crmOldCustomerEditId').value = customer?.id || '';
+    document.getElementById('crmOldName').value = customer?.name || '';
+    document.getElementById('crmOldEmail').value = customer?.email || '';
+    document.getElementById('crmOldPhone').value = customer?.phone || '';
+    document.getElementById('crmOldCountry').value = customer?.country || 'Nhật';
+    document.getElementById('crmOldStatusSel').value = customer?.crmStatus || 'Khách Hàng Mới';
+    document.getElementById('crmOldNotes').value = customer?.notes || '';
+    await populateCrmOldAdvisorSelect(customer?.advisor || '');
+    modal.style.display = 'flex';
+  };
+
+  const setupCrmOldCustomerModal = () => {
+    const modal = document.getElementById('crmOldCustomerModal');
+    if (!modal) return;
+
+    const closeModal = () => { modal.style.display = 'none'; };
+    document.getElementById('btnCloseCrmOldCustomerModal')?.addEventListener('click', closeModal);
+    document.getElementById('btnCancelCrmOldCustomerModal')?.addEventListener('click', closeModal);
+    modal.addEventListener('click', e => { if (e.target === modal) closeModal(); });
+
+    document.getElementById('btnSubmitCrmOldCustomer')?.addEventListener('click', async () => {
+      const editId = document.getElementById('crmOldCustomerEditId').value;
+      const name = document.getElementById('crmOldName').value.trim();
+      const email = document.getElementById('crmOldEmail').value.trim();
+      const phone = document.getElementById('crmOldPhone').value.trim();
+      const country = document.getElementById('crmOldCountry').value;
+      const crmStatus = document.getElementById('crmOldStatusSel').value;
+      const advisor = document.getElementById('crmOldAdvisor').value;
+      const notes = document.getElementById('crmOldNotes').value.trim();
+
+      if (!name) {
+        showToast('Vui lòng nhập họ và tên khách hàng cũ!', 'error');
+        return;
+      }
+
+      const payload = {
+        name, email, phone, country, crmStatus, advisor, notes,
+        isCrmCustomer: true,
+        isCrmOldCustomer: true,
+        status: "Đã xuất cảnh",
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+      };
+
+      try {
+        if (editId) {
+          await db.collection('students').doc(editId).update(payload);
+          showToast(`Đã cập nhật khách hàng cũ ${name}!`, 'success');
+        } else {
+          payload.createdAt = firebase.firestore.FieldValue.serverTimestamp();
+          const snap = await db.collection('students')
+            .where('isCrmCustomer', '==', true).get();
+          let nextCode = 30001;
+          if (!snap.empty) {
+            let maxCode = 30000;
+            snap.forEach(doc => {
+              const codeStr = doc.data().code || '';
+              const codeNum = parseInt(codeStr.replace(/\D/g, '')) || 0;
+              if (codeNum > maxCode) {
+                maxCode = codeNum;
+              }
+            });
+            nextCode = maxCode + 1;
+          }
+          payload.code = String(nextCode);
+          await db.collection('students').add(payload);
+          showToast(`Đã thêm khách hàng cũ ${name}!`, 'success');
+        }
+        closeModal();
+        initCrmModule();
+      } catch (err) {
+        console.error('Save CRM old customer error:', err);
+        showToast('Lỗi lưu khách hàng cũ: ' + err.message, 'error');
+      }
+    });
+  };
+
   // ── init ───────────────────────────────────────────────────────────────────
   const initCrmModule = () => {
     if (!crmInitialized) {
       crmInitialized = true;
       setupCrmCustomerModal();
+      setupCrmOldCustomerModal();
 
       document.querySelectorAll('.crm-subtab').forEach(btn => {
         btn.addEventListener('click', () => {
@@ -11088,6 +11551,7 @@ document.addEventListener('DOMContentLoaded', () => {
           if (el) el.style.display = 'flex';
           if (target === 'crm-staff-tab')  renderCrmStaff();
           if (target === 'crm-source-tab') renderCrmSource(true);
+          if (target === 'crm-old-customers-tab') renderCrmOldCustomers(true);
           if (target === 'crm-chat-tab') setupCrmChat();
           else if (target !== 'crm-staff-tab') teardownCrmChat();
         });
@@ -11129,16 +11593,25 @@ document.addEventListener('DOMContentLoaded', () => {
       document.getElementById('btnEditCrmCustomer')?.addEventListener('click', async () => {
         if (!_currentCrmCustomer) return;
         closeCrmProfile();
-        openCrmCustomerModal(_currentCrmCustomer);
+        if (_currentCrmCustomer.status === "Đã xuất cảnh" || _currentCrmCustomer.isCrmOldCustomer) {
+          openCrmOldCustomerModal(_currentCrmCustomer);
+        } else {
+          openCrmCustomerModal(_currentCrmCustomer);
+        }
       });
 
       document.getElementById('btnAddCrmCustomer')?.addEventListener('click', () => {
         openCrmCustomerModal(null);
       });
 
+      document.getElementById('btnAddCrmOldCustomer')?.addEventListener('click', () => {
+        openCrmOldCustomerModal(null);
+      });
+
       document.getElementById('btnExportCrm')?.addEventListener('click', () => {
         if (!window.XLSX) { showToast('Thư viện Excel chưa sẵn sàng!', 'warning'); return; }
-        const rows = _allCrmCustomers.map(c => ({
+        const activeCustomers = _allCrmCustomers.filter(c => c.status !== "Đã xuất cảnh");
+        const rows = activeCustomers.map(c => ({
           'Mã HV': c.code || '', 'Họ tên': c.name || '', 'Email': c.email || '',
           'Điện thoại': c.phone || '', 'Quốc gia': c.country || '',
           'Trạng thái': c.status || '', 'Tháng học': c.learningMonth || '', 'Ghi chú': c.notes || '',
@@ -11150,9 +11623,28 @@ document.addEventListener('DOMContentLoaded', () => {
         showToast('Đã xuất Excel thành công!', 'success');
       });
 
+      document.getElementById('btnExportCrmOld')?.addEventListener('click', () => {
+        if (!window.XLSX) { showToast('Thư viện Excel chưa sẵn sàng!', 'warning'); return; }
+        const oldCustomers = _allCrmCustomers.filter(c => c.status === "Đã xuất cảnh" || c.isCrmOldCustomer);
+        const rows = oldCustomers.map(c => ({
+          'Mã HV': c.code || '', 'Họ tên': c.name || '', 'Email': c.email || '',
+          'Điện thoại': c.phone || '', 'Quốc gia': c.country || '',
+          'Trạng thái': c.status || '', 'Tháng học': c.learningMonth || '', 'Ghi chú': c.notes || '',
+        }));
+        const ws = XLSX.utils.json_to_sheet(rows);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, 'KhachHangCu_CRM');
+        XLSX.writeFile(wb, `CRM_KhachHangCu_${new Date().toISOString().split('T')[0]}.xlsx`);
+        showToast('Đã xuất Excel khách hàng cũ thành công!', 'success');
+      });
+
       document.getElementById('crmSearchInput')?.addEventListener('input', () => renderCrmCustomers(true));
       document.getElementById('crmCountryFilter')?.addEventListener('change', () => renderCrmCustomers(true));
       document.getElementById('crmStatusFilter')?.addEventListener('change', () => renderCrmCustomers(true));
+
+      document.getElementById('crmOldSearchInput')?.addEventListener('input', () => renderCrmOldCustomers(true));
+      document.getElementById('crmOldCountryFilter')?.addEventListener('change', () => renderCrmOldCustomers(true));
+      document.getElementById('crmOldStatusFilter')?.addEventListener('change', () => renderCrmOldCustomers(true));
 
       document.getElementById('srcSearchInput')?.addEventListener('input', () => renderCrmSource(true));
       document.getElementById('srcCountryFilter')?.addEventListener('change', () => renderCrmSource(true));
@@ -11319,6 +11811,7 @@ document.addEventListener('DOMContentLoaded', () => {
         snap.forEach(doc => { const d = doc.data(); d.id = doc.id; _allCrmCustomers.push(d); });
         renderCrmOverview();
         renderCrmCustomers();
+        renderCrmOldCustomers();
         // Re-render source tab if it's visible
         if (document.getElementById('crm-source-tab')?.style.display !== 'none') renderCrmSource();
       })
@@ -11330,6 +11823,7 @@ document.addEventListener('DOMContentLoaded', () => {
         snap.forEach(doc => { const d = doc.data(); d.id = doc.id; _allCrmStaff.push(d); });
         renderCrmStaff();
         renderCrmCustomers(); // populate advisor selects after staff loaded
+        renderCrmOldCustomers();
         if (document.getElementById('crm-source-tab')?.style.display !== 'none') renderCrmSource();
       })
       .catch(err => console.error('CRM staff load error:', err));

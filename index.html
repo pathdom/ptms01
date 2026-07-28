@@ -1910,6 +1910,7 @@
             <div class="crm-subtabs">
               <button class="crm-subtab active" data-tab="crm-overview-tab">📊 Tổng quan</button>
               <button class="crm-subtab" data-tab="crm-customers-tab">👥 Quản lý Khách hàng</button>
+              <button class="crm-subtab" data-tab="crm-old-customers-tab">🎓 Khách hàng cũ</button>
               <button class="crm-subtab" data-tab="crm-source-tab">📈 Học viên nguồn</button>
               <button class="crm-subtab" data-tab="crm-chat-tab">💬 Chat Nội bộ</button>
             </div>
@@ -2011,6 +2012,71 @@
                 </div>
                 <!-- Pagination -->
                 <div class="crm-pagination" id="crmCustomerPagination"></div>
+              </div>
+            </div>
+
+            <!-- ===== TAB 2.5: OLD CUSTOMER LIST ===== -->
+            <div id="crm-old-customers-tab" class="crm-tab-content" style="display: none">
+              <div class="crm-metric-card crm-customers-section">
+                <div class="crm-card-header">
+                  <h4>DANH SÁCH KHÁCH HÀNG CŨ</h4>
+                  <div class="crm-header-actions">
+                    <button type="button" id="btnAddCrmOldCustomer" class="crm-btn-accent" style="display:flex;align-items:center;gap:0.4rem;">
+                      <svg viewBox="0 0 24 24" style="width:16px;height:16px;fill:currentColor;"><path d="M19,13H13V19H11V13H5V11H11V5H13V11H19V13Z"/></svg>
+                      Thêm khách hàng cũ
+                    </button>
+                    <button type="button" id="btnExportCrmOld" class="crm-btn-secondary">
+                      <svg viewBox="0 0 24 24"><path d="M5,20H19V18H5M19,9H15V3H9V9H5L12,16L19,9Z"/></svg>
+                      Xuất Excel
+                    </button>
+                  </div>
+                </div>
+
+                <!-- Filter Bar -->
+                <div class="crm-filter-bar">
+                  <div class="crm-search-wrap">
+                    <svg viewBox="0 0 24 24"><path d="M9.5,3A6.5,6.5 0 0,1 16,9.5C16,11.11 15.41,12.59 14.44,13.73L14.71,14H15.5L20.5,19L19,20.5L14,15.5V14.71L13.73,14.44C12.59,15.41 11.11,16 9.5,16A6.5,6.5 0 0,1 3,9.5A6.5,6.5 0 0,1 9.5,3M9.5,5C7,5 5,7 5,9.5C5,12 7,14 9.5,14C12,14 14,12 14,9.5C14,7 12,5 9.5,5Z"/></svg>
+                    <input type="text" id="crmOldSearchInput" placeholder="Tìm theo tên, email, mã học viên..." />
+                  </div>
+                  <select id="crmOldCountryFilter">
+                    <option value="All">Tất cả quốc gia</option>
+                    <option value="Nhật">🇯🇵 Nhật Bản</option>
+                    <option value="Đài">🇹🇼 Đài Loan</option>
+                    <option value="Hàn">🇰🇷 Hàn Quốc</option>
+                  </select>
+                  <select id="crmOldStatusFilter">
+                    <option value="All">Tất cả trạng thái</option>
+                    <option value="Khách Hàng Mới">Khách Hàng Mới</option>
+                    <option value="Tư Vấn L1">Tư Vấn L1</option>
+                    <option value="Tư Vấn L2">Tư Vấn L2</option>
+                    <option value="Tư Vấn L3">Tư Vấn L3</option>
+                    <option value="Có Nhu Cầu">Có Nhu Cầu</option>
+                    <option value="Chốt Cọc">Chốt Cọc</option>
+                  </select>
+                </div>
+
+                <!-- Table -->
+                <div class="mini-table-container">
+                  <table class="crm-table">
+                    <thead>
+                      <tr>
+                        <th>MÃ KHÁCH HÀNG</th>
+                        <th>KHÁCH HÀNG</th>
+                        <th>LIÊN HỆ</th>
+                        <th>QUỐC GIA</th>
+                        <th>NV TƯ VẤN</th>
+                        <th>TRẠNG THÁI</th>
+                        <th>NGÀY ĐĂNG KÝ</th>
+                        <th style="text-align:center">HÀNH ĐỘNG</th>
+                      </tr>
+                    </thead>
+                    <tbody id="crmOldCustomerTableBody">
+                      <!-- Populated via JS -->
+                    </tbody>
+                  </table>
+                </div>
+                <!-- Pagination -->
+                <div class="crm-pagination" id="crmOldCustomerPagination"></div>
               </div>
             </div>
 
@@ -4309,6 +4375,103 @@
           </button>
           <div style="text-align:center;margin-top:0.85rem;">
             <button type="button" id="btnCancelCrmCustomerModal"
+              style="background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:0.8rem;letter-spacing:0.04em;">
+              HỦY
+            </button>
+          </div>
+
+        </div><!-- /scrollable body -->
+      </div>
+    </div>
+
+    <!-- Modal Thêm / Sửa Khách Hàng Cũ CRM -->
+    <div class="modal-overlay" id="crmOldCustomerModal"
+      style="display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;
+             background:rgba(0,0,0,0.5);z-index:1100;justify-content:center;
+             align-items:center;padding:2rem;backdrop-filter:blur(4px);">
+      <div class="login-card" style="max-width:560px;padding:2.5rem;width:100%;
+           border-radius:var(--border-radius-lg);box-shadow:var(--shadow-lg);">
+
+        <!-- Header -->
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:2rem;">
+          <h3 id="crmOldModalTitle" style="font-family:var(--font-serif);font-size:1.3rem;font-weight:500;color:var(--text-main);">
+            + THÊM KHÁCH HÀNG CŨ
+          </h3>
+          <button type="button" id="btnCloseCrmOldCustomerModal"
+            style="font-size:1.5rem;color:var(--text-muted);cursor:pointer;background:none;border:none;">&times;</button>
+        </div>
+
+        <input type="hidden" id="crmOldCustomerEditId"/>
+
+        <!-- Scrollable body -->
+        <div style="overflow-y:auto;max-height:calc(90vh - 160px);padding-right:4px;">
+
+          <!-- Row 1: Họ tên + Email -->
+          <div class="sf-row">
+            <div class="form-group-login sf-field">
+              <label for="crmOldName">Họ và tên *</label>
+              <input type="text" id="crmOldName" placeholder="Nguyễn Văn A"/>
+            </div>
+            <div class="form-group-login sf-field">
+              <label for="crmOldEmail">Email</label>
+              <input type="email" id="crmOldEmail" placeholder="email@gmail.com"/>
+            </div>
+          </div>
+
+          <!-- Row 2: SĐT + Quốc gia -->
+          <div class="sf-row">
+            <div class="form-group-login sf-field">
+              <label for="crmOldPhone">Số điện thoại</label>
+              <input type="tel" id="crmOldPhone" placeholder="0912345678"/>
+            </div>
+            <div class="form-group-login sf-field">
+              <label for="crmOldCountry">Quốc gia đến</label>
+              <select id="crmOldCountry">
+                <option value="Nhật">🇯🇵 Nhật Bản</option>
+                <option value="Hàn">🇰🇷 Hàn Quốc</option>
+                <option value="Đài">🇹🇼 Đài Loan</option>
+                <option value="Úc">🇦🇺 Úc</option>
+                <option value="Canada">🇨🇦 Canada</option>
+                <option value="Mỹ">🇺🇸 Mỹ</option>
+                <option value="Anh">🇬🇧 Anh</option>
+                <option value="Việt Nam">🇻🇳 Việt Nam (nội địa)</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Row 3: Trạng thái CRM + NV Tư vấn -->
+          <div class="sf-row">
+            <div class="form-group-login sf-field">
+              <label for="crmOldStatusSel">Trạng thái CRM</label>
+              <select id="crmOldStatusSel">
+                <option value="Khách Hàng Mới">Khách Hàng Mới</option>
+                <option value="Tư Vấn L1">Tư Vấn L1</option>
+                <option value="Tư Vấn L2">Tư Vấn L2</option>
+                <option value="Tư Vấn L3">Tư Vấn L3</option>
+                <option value="Có Nhu Cầu">Có Nhu Cầu</option>
+                <option value="Chốt Cọc">Chốt Cọc</option>
+              </select>
+            </div>
+            <div class="form-group-login sf-field">
+              <label for="crmOldAdvisor">NV Tư vấn</label>
+              <select id="crmOldAdvisor">
+                <option value="">-- Chọn nhân viên --</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Row 4: Ghi chú -->
+          <div class="form-group-login" style="margin-bottom:1.5rem;">
+            <label for="crmOldNotes">Ghi chú / Nhật ký tư vấn</label>
+            <textarea id="crmOldNotes" rows="3" placeholder="Nhập ghi chú tại đây..." style="resize:vertical;min-height:80px;"></textarea>
+          </div>
+
+          <!-- Submit -->
+          <button type="button" id="btnSubmitCrmOldCustomer" class="btn-submit-login">
+            LƯU KHÁCH HÀNG CŨ
+          </button>
+          <div style="text-align:center;margin-top:0.85rem;">
+            <button type="button" id="btnCancelCrmOldCustomerModal"
               style="background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:0.8rem;letter-spacing:0.04em;">
               HỦY
             </button>
