@@ -9121,7 +9121,7 @@ document.addEventListener('DOMContentLoaded', () => {
       crmOldCustomerPage = p;
       renderCrmOldCustomers();
     });
-
+  };
 
   // ── Học viên nguồn (Source tab) ───────────────────────────────────────────
   let crmSourcePage = 1;
