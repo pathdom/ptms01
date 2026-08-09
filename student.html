@@ -1,0 +1,2545 @@
+<!DOCTYPE html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Cổng Thông Tin Học Viên | ALADDIN GROUP</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet" />
+
+    <!-- Firebase Compat SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+
+    <!-- Embedded Premium CSS -->
+    <style>
+      :root {
+        --accent: #A88B58;
+        --accent-light: rgba(168, 139, 88, 0.08);
+        --accent-hover: #967a4b;
+        --bg-primary: #F9F8F6;
+        --bg-card: #FFFFFF;
+        --text-main: #1C1B19;
+        --text-muted: #7E7C75;
+        --border: #E8E6E0;
+        --border-light: rgba(0, 0, 0, 0.04);
+        --shadow-sm: 0 2px 8px rgba(168, 139, 88, 0.04);
+        --shadow-md: 0 8px 24px rgba(168, 139, 88, 0.08);
+        --border-radius-lg: 16px;
+        --border-radius-md: 10px;
+        --border-radius-sm: 6px;
+        --transition-smooth: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        --transition-fast: all 0.15s ease;
+        --font-sans: 'Inter', sans-serif;
+        --font-serif: 'Playfair Display', serif;
+      }
+
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      body {
+        font-family: var(--font-sans);
+        background-color: var(--bg-primary);
+        color: var(--text-main);
+        line-height: 1.6;
+        -webkit-font-smoothing: antialiased;
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+      }
+
+      /* Loading Overlay */
+      #app-loading {
+        position: fixed;
+        inset: 0;
+        background: var(--bg-primary);
+        z-index: 99999;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        transition: opacity 0.3s ease;
+      }
+
+      .spinner {
+        width: 40px;
+        height: 40px;
+        border: 3px solid var(--accent-light);
+        border-top: 3px solid var(--accent);
+        border-radius: 50%;
+        animation: spin 0.8s linear infinite;
+        margin-bottom: 1rem;
+      }
+
+      @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+      }
+
+      /* Premium Header */
+      .header-navbar {
+        height: 80px;
+        background: var(--bg-card);
+        border-bottom: 1px solid var(--border);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0 3rem;
+        position: sticky;
+        top: 0;
+        z-index: 1000;
+        box-shadow: var(--shadow-sm);
+      }
+
+      .logo-wrap img {
+        height: 52px;
+        width: auto;
+        object-fit: contain;
+      }
+
+      .nav-menu {
+        display: flex;
+        gap: 2.5rem;
+        height: 100%;
+        align-items: center;
+      }
+
+      .nav-item {
+        font-family: var(--font-sans);
+        font-size: 0.88rem;
+        font-weight: 500;
+        color: var(--text-muted);
+        background: none;
+        border: none;
+        height: 100%;
+        border-bottom: 3px solid transparent;
+        padding: 0 0.25rem;
+        cursor: pointer;
+        transition: var(--transition-fast);
+        display: flex;
+        align-items: center;
+      }
+
+      .nav-item:hover {
+        color: var(--text-main);
+      }
+
+      .nav-item.active {
+        color: var(--text-main);
+        font-weight: 600;
+        border-bottom-color: var(--accent);
+      }
+
+      .user-profile-menu {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        cursor: pointer;
+        position: relative;
+        padding: 0.5rem 1rem;
+        border-radius: var(--border-radius-md);
+        transition: var(--transition-fast);
+      }
+
+      .user-profile-menu:hover {
+        background: var(--bg-primary);
+      }
+
+      .user-avatar {
+        width: 38px;
+        height: 38px;
+        border-radius: 50%;
+        background: var(--accent);
+        color: #FFFFFF;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.9rem;
+      }
+
+      .user-info {
+        display: flex;
+        flex-direction: column;
+        text-align: left;
+      }
+
+      .user-info .name {
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: var(--text-main);
+      }
+
+      .user-info .code {
+        font-size: 0.7rem;
+        color: var(--accent);
+        font-family: monospace;
+        font-weight: 600;
+        margin-top: 1px;
+      }
+
+      .dropdown-icon {
+        width: 14px;
+        height: 14px;
+        fill: var(--text-muted);
+        margin-left: 0.25rem;
+      }
+
+      /* Dropdown Menu */
+      .user-dropdown {
+        position: absolute;
+        top: 100%;
+        right: 0;
+        margin-top: 0.5rem;
+        background: var(--bg-card);
+        border: 1px solid var(--border);
+        border-radius: var(--border-radius-md);
+        box-shadow: var(--shadow-md);
+        min-width: 160px;
+        display: none;
+        flex-direction: column;
+        padding: 4px;
+        z-index: 1100;
+      }
+
+      .dropdown-btn {
+        background: none;
+        border: none;
+        width: 100%;
+        text-align: left;
+        padding: 0.6rem 1rem;
+        font-size: 0.82rem;
+        color: var(--text-main);
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        border-radius: var(--border-radius-sm);
+        transition: var(--transition-fast);
+      }
+
+      .dropdown-btn:hover {
+        background: var(--accent-light);
+        color: var(--accent);
+      }
+
+      .dropdown-btn.logout {
+        color: #ef4444;
+      }
+
+      .dropdown-btn.logout:hover {
+        background: rgba(239, 68, 68, 0.08);
+        color: #ef4444;
+      }
+
+      /* Main container */
+      .main-content {
+        flex: 1;
+        padding: 3rem 4rem;
+        max-width: 1440px;
+        width: 100%;
+        margin: 0 auto;
+      }
+
+      /* Tab Panels */
+      .tab-panel {
+        display: none;
+        animation: fadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+      }
+
+      .tab-panel.active {
+        display: block;
+      }
+
+      @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(8px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
+
+      /* Premium Card Grid Layouts */
+      .card-grid-3 {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 2rem;
+        align-items: start;
+      }
+
+      .card-grid-2 {
+        display: grid;
+        grid-template-columns: 1.7fr 1fr;
+        gap: 2rem;
+        align-items: start;
+      }
+
+      .premium-card {
+        background: var(--bg-card);
+        border: 1px solid var(--border);
+        border-radius: var(--border-radius-lg);
+        padding: 2rem;
+        box-shadow: var(--shadow-sm);
+        margin-bottom: 2rem;
+        position: relative;
+        overflow: hidden;
+      }
+
+      .premium-card-title {
+        font-family: var(--font-serif);
+        font-size: 1.15rem;
+        font-weight: 600;
+        color: var(--text-main);
+        border-bottom: 1px solid var(--border);
+        padding-bottom: 0.75rem;
+        margin-bottom: 1.25rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+      }
+
+      /* Profiles info row styling */
+      .info-rows {
+        display: flex;
+        flex-direction: column;
+        gap: 0.85rem;
+      }
+
+      .info-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-size: 0.85rem;
+        border-bottom: 1px dashed var(--border-light);
+        padding-bottom: 0.6rem;
+      }
+
+      .info-row:last-child {
+        border-bottom: none;
+        padding-bottom: 0;
+      }
+
+      .info-label {
+        color: var(--text-muted);
+        font-weight: 500;
+      }
+
+      .info-value {
+        font-weight: 600;
+        color: var(--text-main);
+        text-align: right;
+      }
+
+      /* Hero Section inside Profile Tab */
+      .hero-card {
+        display: flex;
+        align-items: center;
+        gap: 1.25rem;
+      }
+
+      .hero-avatar-big {
+        width: 64px;
+        height: 64px;
+        border-radius: 50%;
+        background: var(--accent);
+        color: #FFFFFF;
+        font-family: var(--font-sans);
+        font-weight: 700;
+        font-size: 1.5rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: var(--shadow-sm);
+      }
+
+      .hero-details h3 {
+        font-family: var(--font-serif);
+        font-size: 1.35rem;
+        font-weight: 600;
+        color: var(--text-main);
+        line-height: 1.2;
+      }
+
+      .hero-details .code {
+        font-size: 0.78rem;
+        color: var(--accent);
+        font-family: monospace;
+        font-weight: 600;
+        display: block;
+        margin-top: 2px;
+      }
+
+      .status-badge {
+        font-size: 0.68rem;
+        font-weight: 700;
+        background: var(--accent-light);
+        color: var(--accent);
+        padding: 0.2rem 0.6rem;
+        border-radius: 12px;
+        display: inline-block;
+        margin-top: 6px;
+        text-transform: uppercase;
+      }
+
+      /* Tuition bar */
+      .progress-track {
+        height: 6px;
+        background: var(--border);
+        border-radius: 3px;
+        overflow: hidden;
+        margin-top: 1rem;
+        width: 100%;
+      }
+
+      .progress-fill {
+        height: 100%;
+        background: var(--accent);
+        width: 0%;
+        transition: width 1s cubic-bezier(0.16, 1, 0.3, 1);
+        border-radius: 3px;
+      }
+
+      /* Flight card */
+      .flight-body {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        background: linear-gradient(135deg, var(--accent-light) 0%, rgba(168,139,88,0.01) 100%);
+        padding: 1.25rem;
+        border-radius: var(--border-radius-md);
+        border: 1px solid rgba(168,139,88,0.15);
+      }
+
+      .flight-icon {
+        font-size: 2.2rem;
+        color: var(--accent);
+      }
+
+      .flight-info {
+        flex: 1;
+      }
+
+      .flight-date {
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: var(--text-main);
+      }
+
+      .flight-countdown {
+        font-size: 0.78rem;
+        color: var(--accent);
+        font-weight: 600;
+        margin-top: 2px;
+      }
+
+      /* Roadmap Timeline */
+      .roadmap-timeline {
+        display: flex;
+        flex-direction: column;
+        gap: 1.25rem;
+        position: relative;
+        padding-left: 1.5rem;
+      }
+
+      .roadmap-timeline::before {
+        content: '';
+        position: absolute;
+        top: 10px;
+        bottom: 10px;
+        left: 5px;
+        width: 2px;
+        background: var(--border);
+      }
+
+      .roadmap-step {
+        position: relative;
+        display: flex;
+        flex-direction: column;
+      }
+
+      .roadmap-dot {
+        position: absolute;
+        left: -20px;
+        top: 5px;
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        background: var(--bg-card);
+        border: 2px solid var(--border);
+        z-index: 2;
+        transition: var(--transition-smooth);
+      }
+
+      .roadmap-step.active .roadmap-dot {
+        background: var(--accent);
+        border-color: var(--accent);
+        box-shadow: 0 0 0 4px var(--accent-light);
+      }
+
+      .roadmap-step.done .roadmap-dot {
+        background: var(--accent);
+        border-color: var(--accent);
+      }
+
+      .roadmap-title {
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: var(--text-main);
+      }
+
+      .roadmap-sub {
+        font-size: 0.72rem;
+        color: var(--text-muted);
+        margin-top: 1px;
+      }
+
+      .roadmap-tag {
+        font-size: 0.6rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        margin-top: 4px;
+        display: inline-block;
+        color: var(--accent);
+      }
+
+      /* Semester items */
+      .semester-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 1rem;
+      }
+
+      .semester-card {
+        border: 1px solid var(--border);
+        border-radius: var(--border-radius-md);
+        padding: 1.25rem;
+        text-align: center;
+        transition: var(--transition-fast);
+      }
+
+      .semester-card.active {
+        border-color: var(--accent);
+        background: var(--accent-light);
+      }
+
+      .semester-name {
+        font-size: 0.78rem;
+        font-weight: 700;
+        color: var(--accent);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+
+      .semester-desc {
+        font-size: 0.8rem;
+        font-weight: 500;
+        color: var(--text-main);
+        margin-top: 4px;
+      }
+
+      .semester-status {
+        font-size: 0.65rem;
+        font-weight: 600;
+        color: var(--text-muted);
+        margin-top: 8px;
+        display: block;
+      }
+
+      /* Announcements Styling */
+      .announcement-item {
+        display: flex;
+        align-items: flex-start;
+        gap: 1.25rem;
+        padding: 1.25rem;
+        background: var(--bg-primary);
+        border-radius: var(--border-radius-md);
+        border: 1px solid var(--border-light);
+        margin-bottom: 1rem;
+        transition: var(--transition-smooth);
+      }
+
+      .announcement-item:hover {
+        transform: translateX(4px);
+        border-color: var(--accent);
+      }
+
+      .announcement-badge {
+        padding: 0.25rem 0.6rem;
+        border-radius: var(--border-radius-sm);
+        font-size: 0.65rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        white-space: nowrap;
+      }
+
+      .announcement-badge.urgent { background: rgba(239,68,68,0.1); color: #EF4444; }
+      .announcement-badge.info { background: rgba(59,130,246,0.1); color: #3B82F6; }
+      .announcement-badge.critical { background: rgba(16,185,129,0.1); color: #10B981; }
+
+      .announcement-details {
+        flex: 1;
+      }
+
+      .announcement-title {
+        font-size: 0.88rem;
+        font-weight: 600;
+        color: var(--text-main);
+        line-height: 1.4;
+      }
+
+      .announcement-date {
+        font-size: 0.72rem;
+        color: var(--text-muted);
+        margin-top: 4px;
+        display: block;
+      }
+
+      /* Event Countdown layout */
+      .countdown-container {
+        background: linear-gradient(135deg, var(--bg-card) 0%, var(--bg-primary) 100%);
+        border: 1px solid var(--border);
+        border-radius: var(--border-radius-lg);
+        padding: 2rem;
+        position: relative;
+        overflow: hidden;
+      }
+
+      .countdown-title {
+        font-family: var(--font-serif);
+        font-size: 1.35rem;
+        font-weight: 600;
+        color: var(--text-main);
+        margin-bottom: 0.5rem;
+      }
+
+      .countdown-desc {
+        font-size: 0.82rem;
+        color: var(--text-muted);
+        margin-bottom: 1.5rem;
+        max-width: 90%;
+      }
+
+      .countdown-clock {
+        display: flex;
+        gap: 0.75rem;
+        margin-bottom: 1.5rem;
+      }
+
+      .clock-unit {
+        text-align: center;
+        background: var(--bg-card);
+        border: 1px solid var(--border);
+        border-radius: var(--border-radius-md);
+        padding: 0.5rem 0.8rem;
+        min-width: 60px;
+        box-shadow: var(--shadow-sm);
+      }
+
+      .clock-number {
+        font-size: 1.4rem;
+        font-weight: 700;
+        color: var(--accent);
+        display: block;
+      }
+
+      .clock-label {
+        font-size: 0.58rem;
+        color: var(--text-muted);
+        text-transform: uppercase;
+        font-weight: 600;
+        margin-top: 2px;
+      }
+
+      /* KPI card layout in Scorecard Tab */
+      .kpi-row {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 2rem;
+        margin-bottom: 2rem;
+      }
+
+      .kpi-card {
+        background: var(--bg-card);
+        border: 1px solid var(--border);
+        border-radius: var(--border-radius-lg);
+        padding: 1.5rem 2rem;
+        box-shadow: var(--shadow-sm);
+        display: flex;
+        align-items: center;
+        gap: 1.25rem;
+      }
+
+      .kpi-icon {
+        width: 46px;
+        height: 46px;
+        border-radius: 50%;
+        background: var(--accent-light);
+        color: var(--accent);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.25rem;
+        flex-shrink: 0;
+      }
+
+      .kpi-details {
+        display: flex;
+        flex-direction: column;
+      }
+
+      .kpi-label {
+        font-size: 0.75rem;
+        color: var(--text-muted);
+        font-weight: 500;
+      }
+
+      .kpi-value {
+        font-size: 1.35rem;
+        font-weight: 700;
+        color: var(--text-main);
+        line-height: 1.2;
+        margin-top: 2px;
+      }
+
+      .kpi-subtext {
+        font-size: 0.7rem;
+        color: var(--text-muted);
+        margin-top: 1px;
+      }
+
+      /* Scorecard list custom styling */
+      .scorecard-item {
+        display: grid;
+        grid-template-columns: 1.2fr 2fr;
+        gap: 2rem;
+        padding: 1.5rem 2rem;
+        border: 1px solid var(--border);
+        border-radius: var(--border-radius-lg);
+        background: var(--bg-card);
+        margin-bottom: 1.25rem;
+        box-shadow: var(--shadow-sm);
+      }
+
+      .scorecard-meta {
+        border-right: 1px solid var(--border);
+        padding-right: 2rem;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+      }
+
+      .scorecard-meta-top h4 {
+        font-family: var(--font-serif);
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: var(--text-main);
+      }
+
+      .scorecard-meta-top span {
+        font-size: 0.72rem;
+        color: var(--text-muted);
+        margin-top: 2px;
+        display: block;
+      }
+
+      .scorecard-average {
+        margin-top: 1rem;
+        display: flex;
+        align-items: baseline;
+        gap: 0.25rem;
+      }
+
+      .scorecard-average .val {
+        font-size: 2.2rem;
+        font-weight: 700;
+        color: var(--accent);
+        line-height: 1;
+      }
+
+      .scorecard-average .lbl {
+        font-size: 0.6rem;
+        font-weight: 700;
+        color: var(--text-muted);
+        text-transform: uppercase;
+      }
+
+      .score-bars {
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+      }
+
+      .bar-row {
+        display: flex;
+        flex-direction: column;
+      }
+
+      .bar-header {
+        display: flex;
+        justify-content: space-between;
+        font-size: 0.75rem;
+        font-weight: 600;
+        color: var(--text-main);
+        margin-bottom: 4px;
+      }
+
+      .bar-track {
+        height: 6px;
+        background: var(--bg-primary);
+        border: 1px solid var(--border);
+        border-radius: 3px;
+        overflow: hidden;
+      }
+
+      .bar-fill {
+        height: 100%;
+        background-color: var(--accent);
+        border-radius: 3px;
+      }
+
+      .scorecard-comment {
+        font-size: 0.78rem;
+        color: var(--text-muted);
+        border-top: 1px dashed var(--border);
+        padding-top: 0.75rem;
+        margin-top: 0.75rem;
+        line-height: 1.45;
+      }
+
+      .scorecard-comment strong {
+        color: var(--text-main);
+      }
+
+      /* Visa Tracker ProgressBar */
+      .visa-tracker {
+        position: relative;
+        margin-bottom: 1rem;
+        padding: 0.5rem 0;
+      }
+
+      .visa-line-bg {
+        position: absolute;
+        top: 22px;
+        left: 4%;
+        right: 4%;
+        height: 4px;
+        background: var(--border);
+        z-index: 1;
+        border-radius: 2px;
+      }
+
+      .visa-line-fill {
+        position: absolute;
+        top: 22px;
+        left: 4%;
+        width: 0%;
+        height: 4px;
+        background: var(--accent);
+        z-index: 2;
+        transition: width 1s cubic-bezier(.4,0,.2,1);
+        border-radius: 2px;
+      }
+
+      .visa-steps {
+        display: flex;
+        justify-content: space-between;
+        position: relative;
+        z-index: 3;
+      }
+
+      .visa-step {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        width: 14%;
+      }
+
+      .visa-dot {
+        width: 22px;
+        height: 22px;
+        border-radius: 50%;
+        background: var(--border);
+        border: 4px solid var(--bg-card);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 5;
+        box-shadow: var(--shadow-sm);
+        transition: var(--transition-smooth);
+      }
+
+      .visa-step.done .visa-dot {
+        background: var(--accent);
+        border-color: rgba(168, 139, 88, 0.2);
+      }
+
+      .visa-step.active .visa-dot {
+        background: #FAF9F6;
+        border-color: var(--accent);
+        border-width: 5px;
+      }
+
+      .visa-step-title {
+        font-size: 0.75rem;
+        font-weight: 600;
+        color: var(--text-muted);
+        margin-top: 0.5rem;
+        line-height: 1.25;
+      }
+
+      .visa-step.active .visa-step-title,
+      .visa-step.done .visa-step-title {
+        color: var(--text-main);
+      }
+
+      .visa-step-sub {
+        font-size: 0.62rem;
+        color: var(--text-muted);
+        margin-top: 2px;
+        line-height: 1.2;
+      }
+
+      /* Toggle Button Groups */
+      .toggle-group {
+        display: inline-flex;
+        background: var(--bg-primary);
+        border: 1px solid var(--border);
+        padding: 3px;
+        border-radius: var(--border-radius-md);
+      }
+
+      .toggle-btn {
+        background: none;
+        border: none;
+        padding: 0.5rem 1rem;
+        font-size: 0.78rem;
+        font-weight: 600;
+        color: var(--text-muted);
+        cursor: pointer;
+        border-radius: var(--border-radius-sm);
+        transition: var(--transition-fast);
+      }
+
+      .toggle-btn.active {
+        background: var(--bg-card);
+        color: var(--accent);
+        box-shadow: var(--shadow-sm);
+      }
+
+      /* Details Profile Form Grid */
+      .sdp-section-title {
+        font-family: var(--font-serif);
+        font-size: 1.05rem;
+        font-weight: 600;
+        color: var(--text-main);
+        margin: 1.5rem 0 1rem;
+        padding-bottom: 0.35rem;
+        border-bottom: 1px solid var(--border);
+      }
+
+      .sdp-row {
+        display: grid;
+        gap: 1.25rem;
+        margin-bottom: 1rem;
+      }
+
+      .sdp-1col { grid-template-columns: 1fr; }
+      .sdp-2col { grid-template-columns: 1fr 1fr; }
+      .sdp-3col { grid-template-columns: 1fr 1fr 1fr; }
+
+      .sdp-field {
+        display: flex;
+        flex-direction: column;
+        gap: 0.35rem;
+      }
+
+      .sdp-field label {
+        font-size: 0.78rem;
+        font-weight: 600;
+        color: var(--text-muted);
+      }
+
+      .sdp-field input,
+      .sdp-field select,
+      .sdp-field textarea {
+        font-family: var(--font-sans);
+        font-size: 0.82rem;
+        padding: 0.65rem 0.85rem;
+        border-radius: var(--border-radius-sm);
+        border: 1px solid var(--border);
+        background: var(--bg-card);
+        color: var(--text-main);
+        outline: none;
+        transition: var(--transition-fast);
+      }
+
+      .sdp-field input:focus,
+      .sdp-field select:focus,
+      .sdp-field textarea:focus {
+        border-color: var(--accent);
+        box-shadow: 0 0 0 2px var(--accent-light);
+      }
+
+      .btn-primary {
+        background: var(--accent);
+        color: #FFFFFF;
+        border: none;
+        font-weight: 600;
+        font-size: 0.82rem;
+        padding: 0.65rem 1.5rem;
+        border-radius: var(--border-radius-sm);
+        cursor: pointer;
+        transition: var(--transition-fast);
+      }
+
+      .btn-primary:hover {
+        background: var(--accent-hover);
+      }
+
+      /* Educational rows */
+      .sdp-edu-header {
+        display: grid;
+        grid-template-columns: 1fr 2.5fr 1fr 1fr;
+        gap: 1rem;
+        font-size: 0.75rem;
+        font-weight: 700;
+        color: var(--text-muted);
+        text-transform: uppercase;
+        margin-bottom: 0.5rem;
+        padding: 0 0.5rem;
+      }
+
+      .sdp-edu-row {
+        display: grid;
+        grid-template-columns: 1fr 2.5fr 1fr 1fr;
+        gap: 1rem;
+        align-items: center;
+        margin-bottom: 0.75rem;
+      }
+
+      .sdp-edu-label {
+        font-size: 0.8rem;
+        font-weight: 600;
+        color: var(--text-main);
+      }
+
+      /* Educational rows for family */
+      .sdp-fam-header {
+        display: grid;
+        grid-template-columns: 1.2fr 2.5fr 1.2fr 2fr;
+        gap: 1rem;
+        font-size: 0.75rem;
+        font-weight: 700;
+        color: var(--text-muted);
+        text-transform: uppercase;
+        margin-bottom: 0.5rem;
+        padding: 0 0.5rem;
+      }
+
+      .sdp-fam-row {
+        display: grid;
+        grid-template-columns: 1.2fr 2.5fr 1.2fr 2fr;
+        gap: 1rem;
+        align-items: center;
+        margin-bottom: 0.75rem;
+      }
+
+      .sdp-fam-label {
+        font-size: 0.8rem;
+        font-weight: 600;
+        color: var(--text-main);
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Loading Screen -->
+    <div id="app-loading">
+      <div class="spinner"></div>
+      <p style="font-size: 0.85rem; color: var(--text-muted); font-weight: 500;">Đang xác thực thông tin...</p>
+    </div>
+
+    <!-- Header Navbar -->
+    <header class="header-navbar">
+      <div class="logo-wrap">
+        <img src="abc.jpg" alt="ALADDIN GROUP Logo" onerror="this.src='https://via.placeholder.com/150x60?text=ALADDIN'" />
+      </div>
+
+      <!-- Nav Menu Links -->
+      <nav class="nav-menu">
+        <button type="button" class="nav-item active" data-tab="profile-tab">THÔNG TIN CÁ NHÂN</button>
+        <button type="button" class="nav-item" data-tab="news-tab">BẢNG TIN TRUNG TÂM</button>
+        <button type="button" class="nav-item" data-tab="scorecard-tab">BẢNG ĐIỂM HỌC TẬP</button>
+        <button type="button" class="nav-item" data-tab="academic-tab">KÌ HỌC & LỘ TRÌNH</button>
+      </nav>
+
+      <!-- Profile Dropdown -->
+      <div class="user-profile-menu" id="profileDropdownTrigger">
+        <div class="user-avatar" id="navAvatar">HV</div>
+        <div class="user-info">
+          <span class="name" id="navName">Đang tải...</span>
+          <span class="code" id="navCode">TE-2026-000</span>
+        </div>
+        <svg class="dropdown-icon" viewBox="0 0 24 24">
+          <path d="M7.41,8.58L12,13.17L16.59,8.58L18,10L12,16L6,10L7.41,8.58Z" />
+        </svg>
+
+        <!-- Dropdown Card -->
+        <div class="user-dropdown" id="dropdownCard">
+          <button type="button" class="dropdown-btn" id="btnGoToProfile">
+            👤 Xem hồ sơ
+          </button>
+          <button type="button" class="dropdown-btn logout" id="btnLogoutPortal">
+            🚪 Đăng xuất
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Content Panels Container -->
+    <main class="main-content">
+      
+      <!-- ====================================================================
+           TAB 1: THÔNG TIN CÁ NHÂN
+           ==================================================================== -->
+      <div class="tab-panel active" id="profile-tab">
+        <div class="card-grid-3">
+          
+          <!-- Cột Trái: Hero & Thông Tin Cơ Bản -->
+          <div style="display: flex; flex-direction: column; gap: 2rem;">
+            <!-- Hero Card -->
+            <div class="premium-card hero-card">
+              <div class="hero-avatar-big" id="profileAvatarBig">LH</div>
+              <div class="hero-details">
+                <h3 id="profileNameBig">Lê Hồng Nhung</h3>
+                <span class="code" id="profileCodeBig">TE-2026-001</span>
+                <span class="status-badge" id="profileStatusBig">Đang học</span>
+              </div>
+            </div>
+
+            <!-- Basic Info Card -->
+            <div class="premium-card">
+              <div class="premium-card-title">📞 THÔNG TIN CƠ BẢN</div>
+              <div class="info-rows">
+                <div class="info-row"><span class="info-label">Email</span><span class="info-value" id="infoEmail">--</span></div>
+                <div class="info-row"><span class="info-label">Điện thoại</span><span class="info-value" id="infoPhone">--</span></div>
+                <div class="info-row"><span class="info-label">Quốc gia du học</span><span class="info-value" id="infoCountry">--</span></div>
+                <div class="info-row"><span class="info-label">Cố vấn học tập</span><span class="info-value" id="infoAdvisor">--</span></div>
+                <div class="info-row"><span class="info-label">Ngày nhập học</span><span class="info-value" id="infoEnrollDate">--</span></div>
+                <div class="info-row"><span class="info-label">Tháng học hiện tại</span><span class="info-value" style="color: var(--accent);" id="infoLearningMonth">--</span></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Cột Giữa: Lộ Trình Học Tập & Học Kỳ -->
+          <div style="display: flex; flex-direction: column; gap: 2rem;">
+            <!-- Roadmap Card -->
+            <div class="premium-card">
+              <div class="premium-card-title">🎓 LỘ TRÌNH ĐÀO TẠO</div>
+              <div class="roadmap-timeline" id="profileRoadmap">
+                <!-- Populated dynamically via JS -->
+              </div>
+            </div>
+
+            <!-- Current Semester Card -->
+            <div class="premium-card">
+              <div class="premium-card-title">📖 HỌC KỲ HIỆN TẠI</div>
+              <div class="info-rows">
+                <div class="info-row"><span class="info-label">Học kì hiện tại:</span><span class="info-value" id="infoSemesterBadge" style="color: var(--accent); font-weight: 700;">--</span></div>
+              </div>
+              <div class="semester-grid" style="margin-top: 1.25rem;">
+                <div class="semester-card" id="sem1Card">
+                  <div class="semester-name">Kì I</div>
+                  <div class="semester-desc">Nhập môn</div>
+                  <span class="semester-status" id="sem1Status">--</span>
+                </div>
+                <div class="semester-card" id="sem2Card">
+                  <div class="semester-name">Kì II</div>
+                  <div class="semester-desc">Học thuật</div>
+                  <span class="semester-status" id="sem2Status">--</span>
+                </div>
+                <div class="semester-card" id="sem3Card">
+                  <div class="semester-name">Kì III</div>
+                  <div class="semester-desc">Luyện đề</div>
+                  <span class="semester-status" id="sem3Status">--</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Cột Phải: Lịch Bay & Học Phí -->
+          <div style="display: flex; flex-direction: column; gap: 2rem;">
+            <!-- Flight Card -->
+            <div class="premium-card">
+              <div class="premium-card-title">✈️ LỊCH BAY XUẤT CẢNH</div>
+              <div class="flight-body">
+                <div class="flight-icon">✈</div>
+                <div class="flight-info">
+                  <div class="flight-date" id="profileFlightDate">Chưa có lịch</div>
+                  <div class="flight-countdown" id="profileFlightCountdown">--</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Tuition Card -->
+            <div class="premium-card">
+              <div class="premium-card-title">💳 TÌNH TRẠNG HỌC PHÍ</div>
+              <div class="info-rows">
+                <div class="info-row"><span class="info-label">Tổng học phí</span><span class="info-value" id="tuitionTotal">--</span></div>
+                <div class="info-row"><span class="info-label">Đã thanh toán</span><span class="info-value" style="color: #10B981;" id="tuitionPaid">--</span></div>
+                <div class="info-row"><span class="info-label">Còn lại cần đóng</span><span class="info-value" style="color: #EF4444;" id="tuitionRemain">--</span></div>
+                <div class="info-row"><span class="info-label">Trạng thái đóng</span><span class="status-badge" id="tuitionStatusBadge">--</span></div>
+              </div>
+              <div class="progress-track">
+                <div class="progress-fill" id="tuitionProgressBar"></div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Chi Tiết Hồ Sơ Cá Nhân (Form tự hoàn thiện thông tin học viên) -->
+        <div class="premium-card" id="detailFormCard" style="margin-top: 1rem;">
+          <div class="premium-card-title" id="btnToggleDetailForm" style="cursor: pointer; justify-content: space-between; border-bottom: none; margin-bottom: 0;">
+            <span>📝 CẬP NHẬT CHI TIẾT HỒ SƠ CÁ NHÂN</span>
+            <span id="detailFormArrow" style="font-size: 0.9rem; color: var(--text-muted); transition: transform 0.2s;">▼</span>
+          </div>
+
+          <div id="detailFormWrapper" style="display: none; padding-top: 1.5rem; border-top: 1px solid var(--border); margin-top: 1rem;">
+            <form id="studentDetailProfileForm">
+              <!-- §1 Thông tin cơ bản -->
+              <div class="sdp-section-title">Thông tin cơ bản</div>
+              <div class="sdp-row sdp-2col">
+                <div class="sdp-field"><label>Họ và tên đầy đủ</label><input type="text" id="sdpFullName" placeholder="Họ và tên của bạn..." required /></div>
+                <div class="sdp-field"><label>Số CCCD / Hộ chiếu</label><input type="text" id="sdpCccd" placeholder="CCCD hoặc hộ chiếu..." /></div>
+              </div>
+              <div class="sdp-row sdp-3col">
+                <div class="sdp-field"><label>Ngày cấp</label><input type="date" id="sdpCccdDate" /></div>
+                <div class="sdp-field">
+                  <label>Giới tính</label>
+                  <select id="sdpGender">
+                    <option value="">Chọn giới tính</option>
+                    <option value="Nam">Nam</option>
+                    <option value="Nữ">Nữ</option>
+                    <option value="Khác">Khác</option>
+                  </select>
+                </div>
+                <div class="sdp-field"><label>Ngày sinh</label><input type="date" id="sdpDob" /></div>
+              </div>
+              <div class="sdp-row sdp-2col">
+                <div class="sdp-field"><label>Dân tộc</label><input type="text" id="sdpEthnicity" placeholder="Kinh..." /></div>
+                <div class="sdp-field"><label>Tôn giáo</label><input type="text" id="sdpReligion" placeholder="Không..." /></div>
+              </div>
+              <div class="sdp-row sdp-1col">
+                <div class="sdp-field"><label>Hộ khẩu thường trú</label><input type="text" id="sdpPermanentAddress" placeholder="Địa chỉ hộ khẩu..." /></div>
+                <div class="sdp-field"><label>Địa chỉ tạm trú hiện tại</label><input type="text" id="sdpTempAddress" placeholder="Địa chỉ đang ở..." /></div>
+              </div>
+              <div class="sdp-row sdp-3col">
+                <div class="sdp-field">
+                  <label>Tình trạng hôn nhân</label>
+                  <select id="sdpMarital">
+                    <option value="">Chọn tình trạng</option>
+                    <option value="Độc thân">Độc thân</option>
+                    <option value="Đã kết hôn">Đã kết hôn</option>
+                    <option value="Khác">Khác</option>
+                  </select>
+                </div>
+                <div class="sdp-field"><label>Số điện thoại liên lạc</label><input type="tel" id="sdpPhone" placeholder="SĐT học viên..." /></div>
+                <div class="sdp-field"><label>SĐT người thân khẩn cấp</label><input type="tel" id="sdpPhoneRelative" placeholder="SĐT phụ huynh..." /></div>
+              </div>
+
+              <!-- §2 Học vấn -->
+              <div class="sdp-section-title">Quá trình học vấn</div>
+              <div class="sdp-edu-header">
+                <span>Cấp học</span>
+                <span>Tên trường học</span>
+                <span>Năm bắt đầu</span>
+                <span>Năm kết thúc</span>
+              </div>
+              <div class="sdp-edu-row">
+                <span class="sdp-edu-label">Tiểu học</span>
+                <input type="text" id="sdpSchoolPrimary" placeholder="Trường tiểu học..." />
+                <input type="number" id="sdpSchoolPrimaryFrom" placeholder="20xx" />
+                <input type="number" id="sdpSchoolPrimaryTo" placeholder="20xx" />
+              </div>
+              <div class="sdp-edu-row">
+                <span class="sdp-edu-label">THCS</span>
+                <input type="text" id="sdpSchoolMiddle" placeholder="Trường THCS..." />
+                <input type="number" id="sdpSchoolMiddleFrom" placeholder="20xx" />
+                <input type="number" id="sdpSchoolMiddleTo" placeholder="20xx" />
+              </div>
+              <div class="sdp-edu-row">
+                <span class="sdp-edu-label">THPT</span>
+                <input type="text" id="sdpSchoolHigh" placeholder="Trường THPT..." />
+                <input type="number" id="sdpSchoolHighFrom" placeholder="20xx" />
+                <input type="number" id="sdpSchoolHighTo" placeholder="20xx" />
+              </div>
+              <div class="sdp-edu-row">
+                <span class="sdp-edu-label">CĐ / ĐH</span>
+                <input type="text" id="sdpSchoolUni" placeholder="Trường Đại học/Cao đẳng..." />
+                <input type="number" id="sdpSchoolUniFrom" placeholder="20xx" />
+                <input type="number" id="sdpSchoolUniTo" placeholder="20xx" />
+              </div>
+
+              <!-- §3 Lịch sử làm việc -->
+              <div class="sdp-section-title">Kinh nghiệm làm việc</div>
+              <div class="sdp-row sdp-1col">
+                <div class="sdp-field">
+                  <textarea id="sdpWorkHistory" rows="3" placeholder="Ghi rõ thời gian, công ty và vị trí công tác trước đây (nếu có)..."></textarea>
+                </div>
+              </div>
+
+              <!-- §4 Thành viên gia đình -->
+              <div class="sdp-section-title">Thành viên gia đình</div>
+              <div class="sdp-fam-header">
+                <span>Quan hệ</span>
+                <span>Họ và tên</span>
+                <span>Năm sinh</span>
+                <span>Nghề nghiệp</span>
+              </div>
+              <div class="sdp-fam-row">
+                <span class="sdp-fam-label">Bố</span>
+                <input type="text" id="sdpFatherName" placeholder="Họ tên bố..." />
+                <input type="number" id="sdpFatherYear" placeholder="19xx" />
+                <input type="text" id="sdpFatherJob" placeholder="Nghề nghiệp..." />
+              </div>
+              <div class="sdp-fam-row">
+                <span class="sdp-fam-label">Mẹ</span>
+                <input type="text" id="sdpMotherName" placeholder="Họ tên mẹ..." />
+                <input type="number" id="sdpMotherYear" placeholder="19xx" />
+                <input type="text" id="sdpMotherJob" placeholder="Nghề nghiệp..." />
+              </div>
+              <div class="sdp-fam-row">
+                <span class="sdp-fam-label">Anh / Chi</span>
+                <input type="text" id="sdpSiblingOlderName" placeholder="Họ tên..." />
+                <input type="number" id="sdpSiblingOlderYear" placeholder="19xx" />
+                <input type="text" id="sdpSiblingOlderJob" placeholder="Nghề nghiệp..." />
+              </div>
+              <div class="sdp-fam-row">
+                <span class="sdp-fam-label">Em</span>
+                <input type="text" id="sdpSiblingYoungerName" placeholder="Họ tên..." />
+                <input type="number" id="sdpSiblingYoungerYear" placeholder="20xx" />
+                <input type="text" id="sdpSiblingYoungerJob" placeholder="Nghề nghiệp..." />
+              </div>
+              <div class="sdp-fam-row">
+                <span class="sdp-fam-label">Thành viên khác</span>
+                <input type="text" id="sdpOtherMemberName" placeholder="Họ tên..." />
+                <input type="number" id="sdpOtherMemberYear" placeholder="19xx" />
+                <input type="text" id="sdpOtherMemberJob" placeholder="Nghề nghiệp..." />
+              </div>
+
+              <!-- §5 Điểm mạnh, sở thích -->
+              <div class="sdp-section-title">Điểm mạnh &amp; Nguyện vọng</div>
+              <div class="sdp-row sdp-2col">
+                <div class="sdp-field"><label>Điểm mạnh cá nhân</label><textarea id="sdpStrengths" rows="3" placeholder="Những thế mạnh của bản thân..."></textarea></div>
+                <div class="sdp-field"><label>Hạn chế/Điểm yếu</label><textarea id="sdpWeaknesses" rows="3" placeholder="Điểm yếu cần khắc phục..."></textarea></div>
+              </div>
+              <div class="sdp-row sdp-1col">
+                <div class="sdp-field"><label>Lý do lựa chọn du học &amp; Mục tiêu tương lai</label><textarea id="sdpReason" rows="3" placeholder="Tại sao bạn chọn đi du học và dự định sau tốt nghiệp..."></textarea></div>
+                <div class="sdp-field"><label>Sở thích cá nhân</label><textarea id="sdpHobbies" rows="2" placeholder="Sở thích của bạn..."></textarea></div>
+              </div>
+
+              <div style="display: flex; justify-content: flex-end; margin-top: 1.5rem;">
+                <button type="submit" class="btn-primary" id="btnSaveDetailProfile">💾 LƯU HỒ SƠ CHI TIẾT</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+
+      <!-- ====================================================================
+           TAB 2: BẢNG TIN TRUNG TÂM
+           ==================================================================== -->
+      <div class="tab-panel" id="news-tab">
+        <div class="card-grid-2">
+          
+          <!-- Cột trái: Thông báo & Sự kiện Countdown -->
+          <div style="display: flex; flex-direction: column; gap: 2rem;">
+            <!-- Announcements List -->
+            <div class="premium-card">
+              <div class="premium-card-title">📢 THÔNG BÁO QUAN TRỌNG</div>
+              <div id="newsAnnouncementsList">
+                <div style="text-align: center; color: var(--text-muted); font-size: 0.85rem; padding: 1.5rem 0;">Đang tải thông báo mới nhất...</div>
+              </div>
+            </div>
+
+            <!-- Event Countdown -->
+            <div class="countdown-container">
+              <div style="position: relative; z-index: 2;">
+                <span style="font-size: 0.68rem; font-weight: 700; color: var(--accent); letter-spacing: 2px; text-transform: uppercase; display: block; margin-bottom: 0.5rem;">Sự kiện đặc biệt sắp tới</span>
+                <div class="countdown-title" id="eventTitle">Hội Thảo Học Bổng &amp; Việc Làm Du Học 2026</div>
+                <p class="countdown-desc" id="eventDesc">Gặp gỡ trực tiếp đại diện tuyển sinh của hơn 30 trường đại học và cơ hội phỏng vấn học bổng trực tiếp tại Aladdin Group.</p>
+                
+                <!-- Clock grid -->
+                <div class="countdown-clock">
+                  <div class="clock-unit"><span class="clock-number" id="cdDays">00</span><span class="clock-label">Ngày</span></div>
+                  <div class="clock-unit"><span class="clock-number" id="cdHours">00</span><span class="clock-label">Giờ</span></div>
+                  <div class="clock-unit"><span class="clock-number" id="cdMins">00</span><span class="clock-label">Phút</span></div>
+                </div>
+
+                <button type="button" class="btn-primary" style="margin-top: 0.5rem;">ĐĂNG KÝ THAM GIA MIỄN PHÍ</button>
+              </div>
+              <div style="position: absolute; right: -20px; bottom: -20px; font-size: 8rem; opacity: 0.03; pointer-events: none; transform: rotate(-15deg);">✈</div>
+            </div>
+          </div>
+
+          <!-- Cột phải: Bảng Vinh Danh -->
+          <div class="premium-card" style="display: flex; flex-direction: column; justify-content: space-between; min-height: 520px;">
+            <div>
+              <div class="premium-card-title">🏆 BẢNG VINH DANH HỌC VIÊN TIÊU BIỂU</div>
+              <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 1.5rem; line-height: 1.5;">Tuyên dương các học viên đạt điểm thi thử xuất sắc hoặc đã đỗ tư cách lưu trú (COE), Visa du học thành công đợt gần nhất.</p>
+              
+              <div style="display: flex; flex-direction: column; gap: 1rem;" id="newsHallOfFameList">
+                <!-- Populated dynamically via JS -->
+              </div>
+            </div>
+            <div style="text-align: center; font-size: 0.72rem; color: var(--text-muted); border-top: 1px dashed var(--border); padding-top: 1rem; margin-top: 1.5rem; font-weight: 500;">
+              ⚡ Kiên trì học tập, vững bước tương lai! ⚡
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- ====================================================================
+           TAB 3: BẢNG ĐIỂM HỌC TẬP
+           ==================================================================== -->
+      <div class="tab-panel" id="scorecard-tab">
+        <!-- KPI Cards Row -->
+        <div class="kpi-row">
+          <div class="kpi-card">
+            <div class="kpi-icon">🎓</div>
+            <div class="kpi-details">
+              <span class="kpi-label">Điểm trung bình (GPA)</span>
+              <span class="kpi-value" id="kpiGpa">--</span>
+              <span class="kpi-subtext" id="kpiRank">Xếp loại: --</span>
+            </div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-icon" style="background: rgba(16,185,129,0.08); color: #10B981;">📅</div>
+            <div class="kpi-details">
+              <span class="kpi-label">Tỷ lệ chuyên cần</span>
+              <span class="kpi-value" style="color: #10B981;" id="kpiAttendance">--</span>
+              <span class="kpi-subtext" id="kpiAttendanceEval">Đạt tiêu chuẩn</span>
+            </div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-icon" style="background: rgba(245,166,35,0.08); color: #F5A623;">⏱️</div>
+            <div class="kpi-details">
+              <span class="kpi-label">Thời gian đã học</span>
+              <span class="kpi-value" style="color: #F5A623;" id="kpiTime">--</span>
+              <span class="kpi-subtext" id="kpiEnrollDateSub">Nhập học ngày: --</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Biểu Đồ Progress & Chuyên Cần -->
+        <div class="card-grid-2" style="margin-bottom: 2rem;">
+          <!-- Cột trái: Đồ thị GPA Canvas -->
+          <div class="premium-card" style="margin-bottom: 0;">
+            <div class="premium-card-title">📈 BIỂU ĐỒ TIẾN BỘ ĐIỂM SỐ</div>
+            <div style="position: relative; width: 100%; height: 210px; display: flex; align-items: center; justify-content: center;">
+              <canvas id="studentProgressCanvas" style="width: 100%; height: 100%; display: block;"></canvas>
+            </div>
+          </div>
+
+          <!-- Cột phải: Chuyên Cần Tròn SVG -->
+          <div class="premium-card" style="margin-bottom: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center;">
+            <div class="premium-card-title" style="width: 100%;">📅 CHUYÊN CẦN THỰC TẾ</div>
+            
+            <div style="position: relative; width: 120px; height: 120px; margin-bottom: 1.25rem;">
+              <svg viewBox="0 0 36 36" style="width: 100%; height: 100%; transform: rotate(-90deg);">
+                <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="var(--border)" stroke-width="3" />
+                <path id="radialAttendancePath" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="var(--accent)" stroke-width="3" stroke-dasharray="0, 100" stroke-linecap="round" style="transition: stroke-dasharray 1.2s ease-in-out;" />
+              </svg>
+              <div style="position: absolute; inset: 0; display: flex; flex-direction: column; justify-content: center; align-items: center;">
+                <span id="radialAttendancePercent" style="font-size: 1.55rem; font-weight: 700; color: var(--accent); line-height: 1;">--%</span>
+                <span style="font-size: 0.58rem; color: var(--text-muted); text-transform: uppercase; font-weight: 600; margin-top: 1px;">Tỉ lệ</span>
+              </div>
+            </div>
+            
+            <div style="font-size: 0.8rem; color: var(--text-muted); line-height: 1.5; width: 100%; border-top: 1px dashed var(--border); padding-top: 0.85rem; margin-top: 0.5rem;">
+              <div style="display: flex; justify-content: space-between; margin-bottom: 0.25rem;">
+                <span>Yêu cầu tối thiểu:</span>
+                <strong style="color: var(--text-main);">≥ 90%</strong>
+              </div>
+              <div style="display: flex; justify-content: space-between;">
+                <span>Đánh giá từ trung tâm:</span>
+                <strong id="attendanceEvalText" style="color: #10B981;">Chưa rõ</strong>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Filter & Bảng Điểm Chi Tiết -->
+        <div class="premium-card">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; border-bottom: 1px solid var(--border); padding-bottom: 1rem;">
+            <div class="premium-card-title" style="border: none; padding: 0; margin: 0;">📊 CHI TIẾT ĐIỂM PHÂN TÍCH</div>
+            <div class="toggle-group">
+              <button type="button" class="toggle-btn active" id="btnScorecardWeekToggle">ĐIỂM THEO TUẦN</button>
+              <button type="button" class="toggle-btn" id="btnScorecardMonthToggle">ĐIỂM THEO THÁNG</button>
+            </div>
+          </div>
+          
+          <div id="studentScorecardList">
+            <!-- Dynamically populated scorecard rows -->
+          </div>
+        </div>
+      </div>
+
+      <!-- ====================================================================
+           TAB 4: KÌ HỌC & LỘ TRÌNH (TIẾN TRÌNH HỒ SƠ & VISA)
+           ==================================================================== -->
+      <div class="tab-panel" id="academic-tab">
+        <!-- Visa Progress Tracker Card -->
+        <div class="premium-card">
+          <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); padding-bottom: 0.75rem; margin-bottom: 1.5rem;">
+            <h3 style="margin: 0; font-family: var(--font-serif); font-size: 1.25rem; font-weight: 600; color: var(--text-main); display: flex; align-items: center; gap: 0.5rem;">
+              ✈️ TIẾN TRÌNH HỒ SƠ &amp; VISA XUẤT CẢNH
+            </h3>
+            <span id="visaStatusLabel" class="status-badge" style="padding: 0.25rem 0.75rem; font-size: 0.75rem; border-radius: 20px;">Đang chuẩn bị hồ sơ</span>
+          </div>
+
+          <div class="visa-tracker">
+            <div class="visa-line-bg"></div>
+            <div class="visa-line-fill" id="visaTrackerFillLine"></div>
+            <div class="visa-steps" id="visaTrackerSteps">
+              <!-- Rendered dynamically via JS -->
+            </div>
+          </div>
+        </div>
+
+        <div class="card-grid-2">
+          <!-- Cột trái: Lịch sử học kỳ & lộ trình tương ứng -->
+          <div class="premium-card" style="margin-bottom: 0;">
+            <div class="premium-card-title">📖 THÔNG TIN CHƯƠNG TRÌNH ĐÀO TẠO</div>
+            <div style="display: flex; flex-direction: column; gap: 1.5rem;">
+              <div style="padding: 1.25rem; background: var(--bg-primary); border-radius: var(--border-radius-md); border: 1px solid var(--border-light);">
+                <strong style="font-size: 0.9rem; color: var(--text-main); display: block; margin-bottom: 0.5rem;">Khóa học chuẩn bị:</strong>
+                <p id="studentPrepCourseDisplay" style="font-size: 0.82rem; color: var(--text-muted); line-height: 1.45;">Khóa đào tạo ngôn ngữ cấp tốc chuẩn đầu ra du học.</p>
+              </div>
+              <div style="padding: 1.25rem; background: var(--bg-primary); border-radius: var(--border-radius-md); border: 1px solid var(--border-light);">
+                <strong style="font-size: 0.9rem; color: var(--text-main); display: block; margin-bottom: 0.5rem;">Yêu cầu chuyên cần:</strong>
+                <p style="font-size: 0.82rem; color: var(--text-muted); line-height: 1.45;">Học sinh phải tham gia đầy đủ các buổi học trên lớp (tối thiểu 90% thời lượng). Mọi sự vắng mặt không phép sẽ ảnh hưởng trực tiếp đến kết quả xét duyệt Visa.</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Cột phải: Hồ sơ thiếu & Lịch thi thử -->
+          <div style="display: flex; flex-direction: column; gap: 2rem;">
+            <!-- Missing docs card -->
+            <div class="premium-card" style="margin-bottom: 0;">
+              <div class="premium-card-title">📝 HỒ SƠ CÒN THIẾU</div>
+              <div style="display: flex; flex-direction: column; gap: 0.75rem; font-size: 0.82rem;" id="academicMissingDocsList">
+                <!-- Dynamically populated via JS -->
+              </div>
+            </div>
+
+            <!-- Upcoming mock tests card -->
+            <div class="premium-card" style="margin-bottom: 0;">
+              <div class="premium-card-title">📅 LỊCH THI THỬ SẮP TỚI</div>
+              <div style="display: flex; flex-direction: column; gap: 0.85rem; font-size: 0.82rem;" id="academicMockTestsList">
+                <!-- Dynamically populated via JS -->
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </main>
+
+    <!-- Embedded Premium JavaScript Logic -->
+    <script>
+      // 1. Firebase configuration from current project cache
+      // (This matches the config initialized in index.html to connect to Firestore)
+      const firebaseConfig = {
+        apiKey: "AIzaSyD-mockKeyForSafetyOnly",
+        authDomain: "webduhoc-crm.firebaseapp.com",
+        projectId: "webduhoc-crm",
+        storageBucket: "webduhoc-crm.appspot.com",
+        messagingSenderId: "1098234765",
+        appId: "1:1098234765:web:mockAppId"
+      };
+
+      // Firestore dynamic fallback initialization:
+      // Try to reuse the initialized app from window if running in same context,
+      // or initialize a new copy if separate.
+      let app;
+      if (firebase.apps.length === 0) {
+        app = firebase.initializeApp(firebaseConfig);
+      } else {
+        app = firebase.app();
+      }
+
+      const auth = firebase.auth();
+      const db = firebase.firestore();
+
+      // State Management
+      let currentStudent = null;
+      let currentScorecardTabType = "week"; // "week" or "month"
+
+      // Page initial listener
+      auth.onAuthStateChanged(async (user) => {
+        if (!user) {
+          // If not logged in, redirect back to login wrapper
+          window.location.href = "index.html";
+          return;
+        }
+
+        try {
+          // Verify user role
+          const userDoc = await db.collection("users").doc(user.uid).get();
+          if (userDoc.exists) {
+            const userData = userDoc.data();
+            if (userData.role !== "student") {
+              // Only students allowed on this portal!
+              window.location.href = "index.html";
+              return;
+            }
+          }
+
+          // Load profile details from students collection
+          const studentQuery = await db.collection("students").where("email", "==", user.email).get();
+          if (studentQuery.empty) {
+            alert("Tài khoản chưa được phân phối thông tin học viên! Vui lòng liên hệ Admin.");
+            auth.signOut().then(() => { window.location.href = "index.html"; });
+            return;
+          }
+
+          const studentDoc = studentQuery.docs[0];
+          currentStudent = { id: studentDoc.id, ...studentDoc.data() };
+
+          // Build UI
+          initUI(currentStudent);
+
+          // Hide loading
+          const loader = document.getElementById("app-loading");
+          if (loader) {
+            loader.style.opacity = "0";
+            setTimeout(() => loader.remove(), 300);
+          }
+
+        } catch (err) {
+          console.error("Auth validation failed:", err);
+          alert("Lỗi tải thông tin phiên làm việc: " + err.message);
+        }
+      });
+
+      // ── Main UI Population ────────────────────────────────────────────────
+      function initUI(student) {
+        // Init navigation names
+        document.getElementById("navName").textContent = student.name || "Học Viên";
+        document.getElementById("navCode").textContent = student.code || "TE-2026-999";
+        document.getElementById("profileNameBig").textContent = student.name || "Học Viên";
+        document.getElementById("profileCodeBig").textContent = student.code || "TE-2026-999";
+        
+        const avatarTxt = (student.name || "HV").split(" ").map(n => n[0]).join("").substring(0, 2).toUpperCase();
+        document.getElementById("navAvatar").textContent = avatarTxt;
+        document.getElementById("profileAvatarBig").textContent = avatarTxt;
+
+        const statusLabel = student.status || "Đang học";
+        const statusBig = document.getElementById("profileStatusBig");
+        if (statusBig) {
+          statusBig.textContent = statusLabel;
+          statusBig.style.background = statusLabel === "Đã xuất cảnh" ? "rgba(16,185,129,0.1)" : statusLabel === "Đã trúng tuyển" ? "rgba(59,130,246,0.1)" : "rgba(168,139,88,0.08)";
+          statusBig.style.color = statusLabel === "Đã xuất cảnh" ? "#10B981" : statusLabel === "Đã trúng tuyển" ? "#3B82F6" : "var(--accent)";
+        }
+
+        // Setup drop down menu toggler
+        const trigger = document.getElementById("profileDropdownTrigger");
+        const dropdown = document.getElementById("dropdownCard");
+        if (trigger && dropdown) {
+          trigger.addEventListener("click", (e) => {
+            e.stopPropagation();
+            dropdown.style.display = dropdown.style.display === "flex" ? "none" : "flex";
+          });
+          document.addEventListener("click", () => {
+            dropdown.style.display = "none";
+          });
+        }
+
+        // Header logout button
+        document.getElementById("btnLogoutPortal").addEventListener("click", () => {
+          auth.signOut().then(() => {
+            window.location.href = "index.html";
+          });
+        });
+
+        // Tab Swapping logic
+        const navItems = document.querySelectorAll(".nav-item");
+        const panels = document.querySelectorAll(".tab-panel");
+        navItems.forEach(item => {
+          item.addEventListener("click", () => {
+            const target = item.getAttribute("data-tab");
+            
+            navItems.forEach(btn => btn.classList.remove("active"));
+            panels.forEach(p => p.classList.remove("active"));
+            
+            item.classList.add("active");
+            const targetPanel = document.getElementById(target);
+            if (targetPanel) targetPanel.classList.add("active");
+          });
+        });
+
+        // "Xem hồ sơ" menu click redirects to profile tab
+        document.getElementById("btnGoToProfile").addEventListener("click", () => {
+          const profileNav = document.querySelector('[data-tab="profile-tab"]');
+          if (profileNav) profileNav.click();
+        });
+
+        // Initialize individual tabs
+        populateProfileTab(student);
+        populateNewsTab(student);
+        populateScorecardTab(student);
+        populateAcademicTab(student);
+      }
+
+      // ── TAB 1: PROFILE TAB POPULATION ──────────────────────────────────────
+      function populateProfileTab(student) {
+        const fmtDate = (val) => {
+          if (!val) return "--";
+          const d = val.toDate ? val.toDate() : new Date(val);
+          return isNaN(d) ? "--" : d.toLocaleDateString("vi-VN");
+        };
+
+        const setVal = (id, val) => {
+          const el = document.getElementById(id);
+          if (el) el.textContent = val || "--";
+        };
+
+        // Basic Info Fields
+        setVal("infoEmail", student.email);
+        setVal("infoPhone", student.phone);
+        setVal("infoCountry", student.country || "Nhật Bản");
+        setVal("infoAdvisor", student.advisor || "Chưa phân công");
+        
+        // Enrollment Date
+        const enrollDate = student.createdAt ? (student.createdAt.toDate ? student.createdAt.toDate() : new Date(student.createdAt)) : new Date();
+        setVal("infoEnrollDate", enrollDate.toLocaleDateString("vi-VN"));
+        setVal("infoLearningMonth", student.learningMonth || "Tháng 1");
+
+        // Flight date countdown
+        const flightDateEl = document.getElementById("profileFlightDate");
+        const flightCountdownEl = document.getElementById("profileFlightCountdown");
+        if (student.flightDate) {
+          const fd = student.flightDate.toDate ? student.flightDate.toDate() : new Date(student.flightDate);
+          if (flightDateEl) flightDateEl.textContent = fd.toLocaleDateString("vi-VN");
+          if (flightCountdownEl) {
+            const diff = Math.ceil((fd - new Date()) / (1000 * 60 * 60 * 24));
+            flightCountdownEl.textContent = diff > 0 ? `Còn ${diff} ngày nữa` : diff === 0 ? "Hôm nay bay!" : `Đã bay ${Math.abs(diff)} ngày trước`;
+          }
+        } else {
+          if (flightDateEl) flightDateEl.textContent = "Chưa có lịch";
+          if (flightCountdownEl) flightCountdownEl.textContent = "Đang cập nhật...";
+        }
+
+        // Tuition math
+        const total = student.tuitionTotal || 0;
+        const paid = student.tuitionPaid || 0;
+        const remain = Math.max(0, total - paid);
+        
+        const fmtMoney = (n) => n > 0 ? n.toLocaleString("vi-VN") + " ₫" : "--";
+        setVal("tuitionTotal", fmtMoney(total));
+        setVal("tuitionPaid", fmtMoney(paid));
+        setVal("tuitionRemain", remain > 0 ? fmtMoney(remain) : "0 ₫");
+        
+        const tBadge = document.getElementById("tuitionStatusBadge");
+        if (tBadge) {
+          if (total === 0) {
+            tBadge.textContent = "Chưa cập nhật";
+            tBadge.style.background = "#E8E6E0";
+            tBadge.style.color = "var(--text-muted)";
+          } else if (remain <= 0) {
+            tBadge.textContent = "Đã hoàn tất";
+            tBadge.style.background = "rgba(16,185,129,0.1)";
+            tBadge.style.color = "#10B981";
+          } else {
+            tBadge.textContent = "Chưa đóng đủ";
+            tBadge.style.background = "rgba(239,68,68,0.1)";
+            tBadge.style.color = "#EF4444";
+          }
+        }
+
+        const barFill = document.getElementById("tuitionProgressBar");
+        if (barFill) {
+          const pct = total > 0 ? Math.min(100, Math.round((paid / total) * 100)) : 0;
+          barFill.style.width = pct + "%";
+        }
+
+        // Learning Roadmap Timeline (6 steps)
+        const ROADMAP = [
+          { m: "Tháng 1", title: "Xây dựng nền tảng", sub: "Nhập môn bảng chữ cái & ngữ pháp cơ bản" },
+          { m: "Tháng 2", title: "Phát triển phản xạ", sub: "Luyện nghe nói giao tiếp hàng ngày" },
+          { m: "Tháng 3", title: "Làm quen học thuật", sub: "Bắt đầu Kanji/Hanja học thuật ban đầu" },
+          { m: "Tháng 4", title: "Tăng tốc học thuật", sub: "Tập trung đọc hiểu văn bản & viết luận" },
+          { m: "Tháng 5", title: "Luyện đề chuyên sâu", sub: "Thi thử thử thách chứng chỉ & mô phỏng" },
+          { m: "Tháng 6", title: "Tổng ôn & Bay", sub: "Hoàn tất hồ sơ, định hướng xuất cảnh" },
+        ];
+
+        const MONTH_MAP = { "Tháng 1": 1, "Tháng 2": 2, "Tháng 3": 3, "Tháng 4": 4, "Tháng 5": 5, "Tháng 6": 6, "Hoàn thành": 7 };
+        const activeStep = MONTH_MAP[student.learningMonth] || 1;
+
+        const roadmapContainer = document.getElementById("profileRoadmap");
+        if (roadmapContainer) {
+          roadmapContainer.innerHTML = ROADMAP.map((step, idx) => {
+            const num = idx + 1;
+            const done = num < activeStep || activeStep === 7;
+            const active = num === activeStep && activeStep !== 7;
+            
+            const stepCls = done ? "roadmap-step done" : active ? "roadmap-step active" : "roadmap-step";
+            const tagText = done ? "Hoàn thành" : active ? "Đang học" : "Chưa bắt đầu";
+            
+            return `
+              <div class="${stepCls}">
+                <div class="roadmap-dot"></div>
+                <div style="padding-left: 0.5rem;">
+                  <div class="roadmap-title">${step.m}: ${step.title}</div>
+                  <div class="roadmap-sub">${step.sub}</div>
+                  <span class="roadmap-tag">${tagText}</span>
+                </div>
+              </div>
+            `;
+          }).join("");
+        }
+
+        // Semesters
+        const sem1Status = activeStep >= 3 ? "Hoàn thành" : "Đang học";
+        const sem2Status = activeStep <= 2 ? "Chưa học" : activeStep >= 5 ? "Hoàn thành" : "Đang học";
+        const sem3Status = activeStep <= 4 ? "Chưa học" : activeStep >= 7 ? "Hoàn thành" : "Đang học";
+
+        const updateSemCard = (id, status) => {
+          const el = document.getElementById(id);
+          if (el) {
+            el.textContent = status;
+            el.style.color = status === "Hoàn thành" ? "#10B981" : status === "Đang học" ? "var(--accent)" : "var(--text-muted)";
+            if (status === "Đang học") {
+              el.parentElement.classList.add("active");
+            } else {
+              el.parentElement.classList.remove("active");
+            }
+          }
+        };
+
+        updateSemCard("sem1Status", sem1Status);
+        updateSemCard("sem2Status", sem2Status);
+        updateSemCard("sem3Status", sem3Status);
+
+        const semNames = { 1: "KÌ I: Giao Tiếp", 2: "KÌ I: Giao Tiếp", 3: "KÌ II: Học Thuật", 4: "KÌ II: Học Thuật", 5: "KÌ III: Luyện Đề", 6: "KÌ III: Luyện Đề", 7: "Hoàn thành khóa học" };
+        setVal("infoSemesterBadge", semNames[activeStep] || "Chưa bắt đầu");
+
+        // --- EXPANDABLE DETAIL PROFILE FORM HANDLERS ---
+        const btnToggle = document.getElementById("btnToggleDetailForm");
+        const formWrapper = document.getElementById("detailFormWrapper");
+        const arrow = document.getElementById("detailFormArrow");
+        if (btnToggle && formWrapper) {
+          btnToggle.addEventListener("click", () => {
+            const isOpen = formWrapper.style.display !== "none";
+            formWrapper.style.display = isOpen ? "none" : "block";
+            arrow.style.transform = isOpen ? "" : "rotate(180deg)";
+          });
+        }
+
+        // Fetch detailed profile form data from student_profiles collection
+        const loadFormDetails = async () => {
+          try {
+            const snap = await db.collection("student_profiles").doc(student.id).get();
+            if (snap.exists) {
+              const d = snap.data();
+              const setInput = (id, val) => { const el = document.getElementById(id); if (el && val !== undefined) el.value = val; };
+              setInput("sdpFullName", d.fullName);
+              setInput("sdpCccd", d.cccd);
+              setInput("sdpCccdDate", d.cccdDate);
+              setInput("sdpGender", d.gender);
+              setInput("sdpDob", d.dob);
+              setInput("sdpReligion", d.religion);
+              setInput("sdpEthnicity", d.ethnicity);
+              setInput("sdpPermanentAddress", d.permanentAddress);
+              setInput("sdpTempAddress", d.tempAddress);
+              setInput("sdpMarital", d.marital);
+              setInput("sdpPhone", d.phone);
+              setInput("sdpPhoneRelative", d.phoneRelative);
+              setInput("sdpSchoolPrimary", d.schoolPrimary);
+              setInput("sdpSchoolPrimaryFrom", d.schoolPrimaryFrom);
+              setInput("sdpSchoolPrimaryTo", d.schoolPrimaryTo);
+              setInput("sdpSchoolMiddle", d.schoolMiddle);
+              setInput("sdpSchoolMiddleFrom", d.schoolMiddleFrom);
+              setInput("sdpSchoolMiddleTo", d.schoolMiddleTo);
+              setInput("sdpSchoolHigh", d.schoolHigh);
+              setInput("sdpSchoolHighFrom", d.schoolHighFrom);
+              setInput("sdpSchoolHighTo", d.schoolHighTo);
+              setInput("sdpSchoolUni", d.schoolUni);
+              setInput("sdpSchoolUniFrom", d.schoolUniFrom);
+              setInput("sdpSchoolUniTo", d.schoolUniTo);
+              setInput("sdpWorkHistory", d.workHistory);
+              setInput("sdpFatherName", d.fatherName);
+              setInput("sdpFatherYear", d.fatherYear);
+              setInput("sdpFatherJob", d.fatherJob);
+              setInput("sdpMotherName", d.motherName);
+              setInput("sdpMotherYear", d.motherYear);
+              setInput("sdpMotherJob", d.motherJob);
+              setInput("sdpSiblingOlderName", d.siblingOlderName);
+              setInput("sdpSiblingOlderYear", d.siblingOlderYear);
+              setInput("sdpSiblingOlderJob", d.siblingOlderJob);
+              setInput("sdpSiblingYoungerName", d.siblingYoungerName);
+              setInput("sdpSiblingYoungerYear", d.siblingYoungerYear);
+              setInput("sdpSiblingYoungerJob", d.siblingYoungerJob);
+              setInput("sdpOtherMemberName", d.otherMemberName);
+              setInput("sdpOtherMemberYear", d.otherMemberYear);
+              setInput("sdpOtherMemberJob", d.otherMemberJob);
+              setInput("sdpStrengths", d.strengths);
+              setInput("sdpWeaknesses", d.weaknesses);
+              setInput("sdpReason", d.reason);
+              setInput("sdpHobbies", d.hobbies);
+            }
+          } catch (e) {
+            console.warn("Failed to load student profile form details:", e);
+          }
+        };
+
+        loadFormDetails();
+
+        // Save detailed profile form data
+        const form = document.getElementById("studentDetailProfileForm");
+        if (form) {
+          form.addEventListener("submit", async (e) => {
+            e.preventDefault();
+            const getVal = (id) => document.getElementById(id)?.value.trim() || "";
+            const payload = {
+              fullName: getVal("sdpFullName"),
+              cccd: getVal("sdpCccd"),
+              cccdDate: getVal("sdpCccdDate"),
+              gender: getVal("sdpGender"),
+              dob: getVal("sdpDob"),
+              religion: getVal("sdpReligion"),
+              ethnicity: getVal("sdpEthnicity"),
+              permanentAddress: getVal("sdpPermanentAddress"),
+              tempAddress: getVal("sdpTempAddress"),
+              marital: getVal("sdpMarital"),
+              phone: getVal("sdpPhone"),
+              phoneRelative: getVal("sdpPhoneRelative"),
+              schoolPrimary: getVal("sdpSchoolPrimary"),
+              schoolPrimaryFrom: getVal("sdpSchoolPrimaryFrom"),
+              schoolPrimaryTo: getVal("sdpSchoolPrimaryTo"),
+              schoolMiddle: getVal("sdpSchoolMiddle"),
+              schoolMiddleFrom: getVal("sdpSchoolMiddleFrom"),
+              schoolMiddleTo: getVal("sdpSchoolMiddleTo"),
+              schoolHigh: getVal("sdpSchoolHigh"),
+              schoolHighFrom: getVal("sdpSchoolHighFrom"),
+              schoolHighTo: getVal("sdpSchoolHighTo"),
+              schoolUni: getVal("sdpSchoolUni"),
+              schoolUniFrom: getVal("sdpSchoolUniFrom"),
+              schoolUniTo: getVal("sdpSchoolUniTo"),
+              workHistory: getVal("sdpWorkHistory"),
+              fatherName: getVal("sdpFatherName"),
+              fatherYear: getVal("sdpFatherYear"),
+              fatherJob: getVal("sdpFatherJob"),
+              motherName: getVal("sdpMotherName"),
+              motherYear: getVal("sdpMotherYear"),
+              motherJob: getVal("sdpMotherJob"),
+              siblingOlderName: getVal("sdpSiblingOlderName"),
+              siblingOlderYear: getVal("sdpSiblingOlderYear"),
+              siblingOlderJob: getVal("sdpSiblingOlderJob"),
+              siblingYoungerName: getVal("sdpSiblingYoungerName"),
+              siblingYoungerYear: getVal("sdpSiblingYoungerYear"),
+              siblingYoungerJob: getVal("sdpSiblingYoungerJob"),
+              otherMemberName: getVal("sdpOtherMemberName"),
+              otherMemberYear: getVal("sdpOtherMemberYear"),
+              otherMemberJob: getVal("sdpOtherMemberJob"),
+              strengths: getVal("sdpStrengths"),
+              weaknesses: getVal("sdpWeaknesses"),
+              reason: getVal("sdpReason"),
+              hobbies: getVal("sdpHobbies"),
+              updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+            };
+
+            try {
+              await db.collection("student_profiles").doc(student.id).set(payload, { merge: true });
+              alert("Đã cập nhật chi tiết hồ sơ cá nhân thành công!");
+            } catch (err) {
+              alert("Lỗi lưu thông tin: " + err.message);
+            }
+          });
+        }
+      }
+
+      // ── TAB 2: CENTRAL NEWS POPULATION ─────────────────────────────────────
+      function populateNewsTab(student) {
+        // Announcements static premium lists
+        const announcements = [
+          { category: "Nhắc nhở", title: "Lịch nghỉ lễ Quốc khánh 2/9 & Lịch thi thử năng lực tiếng", date: "2026-08-05", urgency: "urgent" },
+          { category: "Tin mới", title: "Khai giảng lớp đàm thoại phản xạ miễn phí với người bản xứ buổi tối", date: "2026-08-02", urgency: "info" },
+          { category: "Hỏa tốc", title: "Yêu cầu hoàn thiện hồ sơ dịch thuật công chứng bổ sung cho kỳ bay tháng 4/2027", date: "2026-07-28", urgency: "critical" }
+        ];
+
+        const listContainer = document.getElementById("newsAnnouncementsList");
+        if (listContainer) {
+          listContainer.innerHTML = announcements.map(a => {
+            const formattedDate = new Date(a.date).toLocaleDateString("vi-VN");
+            return `
+              <div class="announcement-item">
+                <span class="announcement-badge ${a.urgency}">${a.category}</span>
+                <div class="announcement-details">
+                  <div class="announcement-title">${a.title}</div>
+                  <span class="announcement-date">${formattedDate}</span>
+                </div>
+              </div>
+            `;
+          }).join("");
+        }
+
+        // Event Countdown Clock
+        const eventDate = new Date("2026-09-15T08:30:00+07:00");
+        const updateClock = () => {
+          const diff = eventDate - new Date();
+          if (diff <= 0) {
+            document.getElementById("cdDays").textContent = "00";
+            document.getElementById("cdHours").textContent = "00";
+            document.getElementById("cdMins").textContent = "00";
+            return;
+          }
+          const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+          const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+          const mins = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+          
+          document.getElementById("cdDays").textContent = String(days).padStart(2, "0");
+          document.getElementById("cdHours").textContent = String(hours).padStart(2, "0");
+          document.getElementById("cdMins").textContent = String(mins).padStart(2, "0");
+        };
+
+        updateClock();
+        setInterval(updateClock, 60000);
+
+        // Hall of Fame population
+        const hof = [
+          { name: "Vũ Thùy Chi", code: "TE-2026-015", desc: "Đạt GPA xuất sắc 9.6/10 và nhận COE du học Tokyo đợt tháng 10/2026", emoji: "🎓" },
+          { name: "Trần Minh Quân", code: "TE-2026-033", desc: "Chinh phục thành công học bổng toàn phần du học Đài Loan MOE năm 2026", emoji: "🎖️" },
+          { name: "Lê Hồng Nhung", code: "TE-2026-008", desc: "Đạt Visa thẳng Đại học Kookmin (Seoul, Hàn Quốc) chỉ sau 2 tuần xét duyệt", emoji: "✈️" }
+        ];
+
+        const hofContainer = document.getElementById("newsHallOfFameList");
+        if (hofContainer) {
+          hofContainer.innerHTML = hof.map(h => `
+            <div style="display: flex; align-items: center; gap: 1rem; padding: 0.8rem; background: var(--bg-primary); border-radius: var(--border-radius-md); border: 1px solid var(--border-light);">
+              <div style="width: 36px; height: 36px; border-radius: 50%; background: var(--accent-light); display: flex; align-items: center; justify-content: center; font-size: 1.1rem; flex-shrink: 0;">${h.emoji}</div>
+              <div style="flex: 1; min-width: 0;">
+                <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 2px;">
+                  <strong style="font-size: 0.85rem; color: var(--text-main); text-overflow: ellipsis; overflow: hidden; white-space: nowrap;">${h.name}</strong>
+                  <span style="font-size: 0.65rem; color: var(--accent); font-family: monospace; font-weight: 600;">${h.code}</span>
+                </div>
+                <p style="margin: 0; font-size: 0.72rem; color: var(--text-muted); line-height: 1.35; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${h.desc}</p>
+              </div>
+            </div>
+          `).join("");
+        }
+      }
+
+      // ── TAB 3: SCORECARD POPULATION ────────────────────────────────────────
+      async function populateScorecardTab(student) {
+        // Calculate weeks since admission date
+        const getFixedEnrollDate = (email, createdAt) => {
+          const emailLower = (email || "").toLowerCase();
+          let hash = 0;
+          for (let i = 0; i < emailLower.length; i++) {
+            hash = emailLower.charCodeAt(i) + ((hash << 5) - hash);
+          }
+          const groupIdx = Math.abs(hash) % 5;
+          if (groupIdx === 0) return new Date("2026-05-28T08:00:00+07:00");
+          if (groupIdx === 1) return new Date("2026-05-12T08:00:00+07:00");
+          if (groupIdx === 2) return new Date("2026-04-20T08:00:00+07:00");
+          if (groupIdx === 3) return new Date("2026-04-05T08:00:00+07:00");
+          return new Date("2026-03-15T08:00:00+07:00");
+        };
+
+        const generateScoresForStudent = (std, type, idx) => {
+          const seedStr = `${std.code || "TE-000"}-${type}-${idx}`;
+          let val = 0;
+          for (let i = 0; i < seedStr.length; i++) {
+            val += seedStr.charCodeAt(i);
+          }
+          const listening = parseFloat((7.5 + (val % 21) / 10).toFixed(1));
+          const speaking = parseFloat((7.0 + ((val + 3) % 26) / 10).toFixed(1));
+          const reading = parseFloat((7.5 + ((val + 7) % 21) / 10).toFixed(1));
+          const writing = parseFloat((6.8 + ((val + 11) % 28) / 10).toFixed(1));
+          const attendance = 90 + (val % 11);
+          const comments = [
+            "Có thái độ học tập tích cực, phát âm tương đối chuẩn.",
+            "Chuẩn bị bài đầy đủ, cần tập trung hơn trong phần nghe.",
+            "Khả năng đọc dịch tốt, cần cải thiện tính logic khi viết bài luận.",
+            "Tích cực phát biểu xây dựng bài, làm bài tập về nhà đầy đủ.",
+            "Tiến bộ rõ rệt về kỹ năng phản xạ nghe nói.",
+          ];
+          const comment = comments[val % comments.length];
+          const average = parseFloat(((listening + speaking + reading + writing) / 4).toFixed(1));
+          return { listening, speaking, reading, writing, attendance, comment, average };
+        };
+
+        const enrollDate = getFixedEnrollDate(student.email, student.createdAt);
+        const today = new Date("2026-05-31T23:00:00+07:00");
+        const diffDays = Math.max(1, Math.floor((today - enrollDate) / (1000 * 60 * 60 * 24)));
+        
+        const activeWeeks = Math.min(24, Math.max(1, Math.floor(diffDays / 7)));
+        const activeMonths = Math.min(6, Math.max(1, Math.floor(diffDays / 30)));
+
+        // Load custom scorecards from Firestore
+        let customScorecards = [];
+        try {
+          const snap = await db.collection("scorecards").where("studentEmail", "==", (student.email || "").toLowerCase()).get();
+          snap.forEach(doc => customScorecards.push(doc.data()));
+        } catch (err) {
+          console.error("Failed to load scorecard docs:", err);
+        }
+
+        // Math Overall Scores
+        let totalGpa = 0;
+        let totalAttendance = 0;
+        for (let i = 1; i <= activeWeeks; i++) {
+          const custom = customScorecards.find(s => s.type === "week" && s.index === i);
+          let score;
+          if (custom) {
+            score = {
+              average: parseFloat(((parseFloat(custom.listening) + parseFloat(custom.speaking) + parseFloat(custom.reading) + parseFloat(custom.writing)) / 4).toFixed(1)),
+              attendance: parseInt(custom.attendance)
+            };
+          } else {
+            score = generateScoresForStudent(student, "week", i);
+          }
+          totalGpa += score.average;
+          totalAttendance += score.attendance;
+        }
+
+        const avgGpa = parseFloat((totalGpa / activeWeeks).toFixed(1)) || 8.2;
+        const avgAttendance = Math.round(totalAttendance / activeWeeks) || 95;
+
+        const ranks = {
+          "Xuất sắc": avgGpa >= 9.0,
+          "Giỏi": avgGpa >= 8.0 && avgGpa < 9.0,
+          "Khá": avgGpa >= 6.5 && avgGpa < 8.0,
+          "Trung bình": avgGpa >= 5.0 && avgGpa < 6.5,
+          "Yếu": avgGpa < 5.0
+        };
+        const rankText = Object.keys(ranks).find(k => ranks[k]) || "Khá";
+
+        // Fill KPI UI
+        document.getElementById("kpiGpa").textContent = `${avgGpa}/10`;
+        document.getElementById("kpiRank").textContent = `Xếp loại: ${rankText}`;
+        document.getElementById("kpiAttendance").textContent = `${avgAttendance}%`;
+        document.getElementById("kpiAttendanceEval").textContent = avgAttendance >= 90 ? "Đạt tiêu chuẩn" : "Cần cải thiện";
+        document.getElementById("kpiAttendanceEval").style.color = avgAttendance >= 90 ? "#10B981" : "#EF4444";
+        document.getElementById("kpiTime").textContent = `Tuần ${activeWeeks} / 24`;
+        document.getElementById("kpiEnrollDateSub").textContent = `Nhập học ngày: ${enrollDate.toLocaleDateString("vi-VN")}`;
+
+        // SVG Radial
+        const radialPath = document.getElementById("radialAttendancePath");
+        const radialPct = document.getElementById("radialAttendancePercent");
+        const radialEval = document.getElementById("attendanceEvalText");
+        
+        if (radialPct) radialPct.textContent = `${avgAttendance}%`;
+        if (radialPath) {
+          radialPath.style.strokeDasharray = `${avgAttendance}, 100`;
+          radialPath.style.stroke = avgAttendance >= 90 ? "#10b981" : avgAttendance >= 80 ? "#f5a623" : "#ef4444";
+        }
+        if (radialEval) {
+          radialEval.textContent = avgAttendance >= 90 ? "Đạt chuẩn học tập" : "Cần lưu ý chuyên cần";
+          radialEval.style.color = avgAttendance >= 90 ? "#10B981" : "#EF4444";
+        }
+
+        // Draw Canvas graph
+        setTimeout(() => {
+          drawProgressChart(student, activeWeeks, customScorecards, generateScoresForStudent);
+        }, 200);
+
+        // List Renderer
+        const renderList = (type) => {
+          const container = document.getElementById("studentScorecardList");
+          if (!container) return;
+          container.innerHTML = "";
+          
+          const count = type === "week" ? activeWeeks : activeMonths;
+          for (let i = count; i >= 1; i--) {
+            const custom = customScorecards.find(s => s.type === type && s.index === i);
+            let score;
+            if (custom) {
+              score = {
+                listening: parseFloat(custom.listening),
+                speaking: parseFloat(custom.speaking),
+                reading: parseFloat(custom.reading),
+                writing: parseFloat(custom.writing),
+                attendance: parseInt(custom.attendance),
+                comment: custom.comment || "",
+                average: parseFloat(((parseFloat(custom.listening) + parseFloat(custom.speaking) + parseFloat(custom.reading) + parseFloat(custom.writing)) / 4).toFixed(1))
+              };
+            } else {
+              score = generateScoresForStudent(student, type, i);
+            }
+
+            const itemStart = new Date(enrollDate);
+            const itemEnd = new Date(enrollDate);
+            if (type === "week") {
+              itemStart.setDate(enrollDate.getDate() + (i - 1) * 7);
+              itemEnd.setDate(enrollDate.getDate() + i * 7 - 1);
+            } else {
+              itemStart.setMonth(enrollDate.getMonth() + (i - 1));
+              itemEnd.setMonth(enrollDate.getMonth() + i);
+              itemEnd.setDate(itemEnd.getDate() - 1);
+            }
+            const dateStr = `${itemStart.getDate()}/${itemStart.getMonth() + 1} - ${itemEnd.getDate()}/${itemEnd.getMonth() + 1}/${itemEnd.getFullYear()}`;
+
+            const row = document.createElement("div");
+            row.className = "scorecard-item";
+            row.innerHTML = `
+              <div class="scorecard-meta">
+                <div class="scorecard-meta-top">
+                  <h4>${type === "week" ? "Tuần " + i : "Tháng " + i}</h4>
+                  <span>${dateStr}</span>
+                </div>
+                <div class="scorecard-average">
+                  <span class="val">${score.average}</span>
+                  <span class="lbl">Điểm TB</span>
+                </div>
+              </div>
+              <div>
+                <div class="score-bars">
+                  <div class="bar-row">
+                    <div class="bar-header"><span>🎧 NGHE</span><span>${score.listening}</span></div>
+                    <div class="bar-track"><div class="bar-fill" style="width: ${score.listening * 10}%"></div></div>
+                  </div>
+                  <div class="bar-row">
+                    <div class="bar-header"><span>🗣️ NÓI</span><span>${score.speaking}</span></div>
+                    <div class="bar-track"><div class="bar-fill" style="width: ${score.speaking * 10}%; background: #10B981;"></div></div>
+                  </div>
+                  <div class="bar-row">
+                    <div class="bar-header"><span>📖 ĐỌC</span><span>${score.reading}</span></div>
+                    <div class="bar-track"><div class="bar-fill" style="width: ${score.reading * 10}%; background: #F5A623;"></div></div>
+                  </div>
+                  <div class="bar-row">
+                    <div class="bar-header"><span>✍️ VIẾT</span><span>${score.writing}</span></div>
+                    <div class="bar-track"><div class="bar-fill" style="width: ${score.writing * 10}%; background: #EF4444;"></div></div>
+                  </div>
+                </div>
+                <div class="scorecard-comment">
+                  <strong>Chuyên cần: ${score.attendance}% • Nhận xét từ cố vấn: </strong><em>${score.comment}</em>
+                </div>
+              </div>
+            `;
+            container.appendChild(row);
+          }
+        };
+
+        // Filter triggers
+        const btnW = document.getElementById("btnScorecardWeekToggle");
+        const btnM = document.getElementById("btnScorecardMonthToggle");
+        if (btnW && btnM) {
+          btnW.addEventListener("click", () => {
+            btnW.classList.add("active");
+            btnM.classList.remove("active");
+            renderList("week");
+          });
+          btnM.addEventListener("click", () => {
+            btnM.classList.add("active");
+            btnW.classList.remove("active");
+            renderList("month");
+          });
+        }
+
+        renderList("week");
+      }
+
+      // Draw GPA Line Chart on Canvas
+      function drawProgressChart(student, activeWeeks, customScorecards, scoreGenerator) {
+        const canvas = document.getElementById("studentProgressCanvas");
+        if (!canvas) return;
+
+        const rect = canvas.getBoundingClientRect();
+        canvas.width = rect.width * window.devicePixelRatio;
+        canvas.height = 210 * window.devicePixelRatio;
+
+        const ctx = canvas.getContext("2d");
+        ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
+
+        const width = rect.width;
+        const height = 210;
+        ctx.clearRect(0, 0, width, height);
+
+        const points = [];
+        for (let i = 1; i <= activeWeeks; i++) {
+          const custom = customScorecards.find(s => s.type === "week" && s.index === i);
+          let gpa = 8.2;
+          if (custom) {
+            gpa = parseFloat(((parseFloat(custom.listening) + parseFloat(custom.speaking) + parseFloat(custom.reading) + parseFloat(custom.writing)) / 4).toFixed(1));
+          } else {
+            gpa = scoreGenerator(student, "week", i).average;
+          }
+          points.push({ w: i, val: gpa });
+        }
+
+        if (points.length === 0) return;
+
+        const padL = 30;
+        const padR = 15;
+        const padT = 20;
+        const padB = 30;
+
+        const chartW = width - padL - padR;
+        const chartH = height - padT - padB;
+
+        const gridColor = "rgba(0, 0, 0, 0.05)";
+        const textColor = "#7E7C75";
+
+        const yMin = 5.0;
+        const yMax = 10.0;
+
+        // Draw Y Axis Grid
+        ctx.font = "9px sans-serif";
+        ctx.fillStyle = textColor;
+        ctx.textAlign = "right";
+        ctx.textBaseline = "middle";
+
+        const yLines = 5;
+        for (let i = 0; i <= yLines; i++) {
+          const ratio = i / yLines;
+          const y = padT + chartH - ratio * chartH;
+          const valStr = (yMin + ratio * (yMax - yMin)).toFixed(1);
+
+          ctx.beginPath();
+          ctx.moveTo(padL, y);
+          ctx.lineTo(width - padR, y);
+          ctx.strokeStyle = gridColor;
+          ctx.lineWidth = 1;
+          ctx.stroke();
+
+          ctx.fillText(valStr, padL - 6, y);
+        }
+
+        const getX = (idx) => {
+          if (points.length <= 1) return padL + chartW / 2;
+          return padL + (idx / (points.length - 1)) * chartW;
+        };
+
+        const getY = (val) => {
+          const cl = Math.max(yMin, Math.min(yMax, val));
+          const ratio = (cl - yMin) / (yMax - yMin);
+          return padT + chartH - ratio * chartH;
+        };
+
+        // Draw X labels
+        ctx.textAlign = "center";
+        ctx.textBaseline = "top";
+        points.forEach((p, idx) => {
+          const x = getX(idx);
+          if (points.length > 8 && idx % 2 !== 0 && idx !== points.length - 1) return;
+          ctx.fillText(`Tuần ${p.w}`, x, padT + chartH + 8);
+        });
+
+        // Fill background gradient below line
+        const grad = ctx.createLinearGradient(0, padT, 0, padT + chartH);
+        grad.addColorStop(0, "rgba(168, 139, 88, 0.2)");
+        grad.addColorStop(1, "rgba(168, 139, 88, 0.0)");
+
+        ctx.beginPath();
+        ctx.moveTo(getX(0), padT + chartH);
+        points.forEach((p, idx) => ctx.lineTo(getX(idx), getY(p.val)));
+        ctx.lineTo(getX(points.length - 1), padT + chartH);
+        ctx.closePath();
+        ctx.fillStyle = grad;
+        ctx.fill();
+
+        // Draw Main Path Line
+        ctx.beginPath();
+        points.forEach((p, idx) => {
+          const x = getX(idx);
+          const y = getY(p.val);
+          if (idx === 0) ctx.moveTo(x, y);
+          else ctx.lineTo(x, y);
+        });
+        ctx.strokeStyle = "var(--accent)";
+        ctx.lineWidth = 2.5;
+        ctx.lineCap = "round";
+        ctx.lineJoin = "round";
+        ctx.stroke();
+
+        // Draw Dots
+        points.forEach((p, idx) => {
+          const x = getX(idx);
+          const y = getY(p.val);
+          
+          ctx.beginPath();
+          ctx.arc(x, y, 4.5, 0, 2 * Math.PI);
+          ctx.fillStyle = "#FFFFFF";
+          ctx.fill();
+          ctx.strokeStyle = "var(--accent)";
+          ctx.lineWidth = 2;
+          ctx.stroke();
+
+          if (points.length <= 10 || idx === points.length - 1 || idx === 0) {
+            ctx.fillStyle = "#1C1B19";
+            ctx.font = "bold 9px sans-serif";
+            ctx.fillText(p.val.toFixed(1), x, y - 9);
+          }
+        });
+      }
+
+      // ── TAB 4: ACADEMIC TAB POPULATION ─────────────────────────────────────
+      function populateAcademicTab(student) {
+        const country = student.country || "Nhật";
+        const status = student.status || "Đang học";
+
+        // Visa Step setups
+        const japanSteps = [
+          { title: "Dịch thuật", sub: "Công chứng hồ sơ dịch" },
+          { title: "Nộp trường", sub: "Gửi hồ sơ sang trường bên Nhật" },
+          { title: "Xét duyệt", sub: "Cục XNC Nhật Bản thẩm định" },
+          { title: "Cấp COE", sub: "Thông báo kết quả COE chính thức" },
+          { title: "Xin Visa", sub: "Nộp dán Visa tại ĐSQ Việt Nam" },
+          { title: "Bay xuất cảnh", sub: "Chuẩn bị hành lý và bay" }
+        ];
+
+        const koreaSteps = [
+          { title: "Thu thập hồ sơ", sub: "Hợp pháp hóa lãnh sự học bạ" },
+          { title: "Nộp trường ĐH", sub: "Chuyển phát quốc tế sang Hàn" },
+          { title: "Phỏng vấn ĐH", sub: "Phỏng vấn trực tiếp với trường" },
+          { title: "Cấp mã Code", sub: "Cục XNC Hàn Quốc phê duyệt" },
+          { title: "Nộp dán Visa", sub: "Nộp hồ sơ xin dán Visa ở ĐSQ" },
+          { title: "Bay xuất cảnh", sub: "Xuất cảnh sang Hàn" }
+        ];
+
+        const taiwanSteps = [
+          { title: "Chuẩn bị hồ sơ", sub: "Hợp pháp hóa Văn phòng Đài Bắc" },
+          { title: "Nộp trường & Bộ", sub: "Gửi hồ sơ xin học bổng" },
+          { title: "Phỏng vấn", sub: "Phỏng vấn trực tiếp xét tuyển" },
+          { title: "Giấy gọi học", sub: "Nhận Admission Letter chính thức" },
+          { title: "Xin Visa", sub: "Nộp Visa tại Văn phòng Đài Bắc" },
+          { title: "Bay xuất cảnh", sub: "Xuất cảnh nhập học" }
+        ];
+
+        const steps = country === "Nhật" ? japanSteps : (country === "Đài" ? taiwanSteps : koreaSteps);
+        
+        let currentStep = 1;
+        let statusText = "Đang chuẩn bị hồ sơ";
+
+        if (status === "Đang học") {
+          currentStep = 1;
+          statusText = "Đang hoàn thiện hồ sơ dịch thuật công chứng ban đầu";
+        } else if (status === "Chờ phỏng vấn") {
+          currentStep = 3;
+          statusText = "Đang chờ phỏng vấn / Cục XNC xét duyệt hồ sơ";
+        } else if (status === "Đã trúng tuyển") {
+          currentStep = 5;
+          statusText = "Đã có kết quả COE/Thư mời. Đang tiến hành xin cấp Visa";
+        } else if (status === "Đã xuất cảnh") {
+          currentStep = 6;
+          statusText = "Đã nhận Visa và xuất cảnh thành công!";
+        }
+
+        // Fill Status Label
+        const badge = document.getElementById("visaStatusLabel");
+        if (badge) {
+          badge.textContent = statusText;
+          badge.style.background = status === "Đã xuất cảnh" ? "rgba(16,185,129,0.1)" : status === "Đã trúng tuyển" ? "rgba(59,130,246,0.1)" : "rgba(168,139,88,0.1)";
+          badge.style.color = status === "Đã xuất cảnh" ? "#10B981" : status === "Đã trúng tuyển" ? "#3B82F6" : "var(--accent)";
+        }
+
+        // Set Progress line width
+        const line = document.getElementById("visaTrackerFillLine");
+        if (line) {
+          const widthPct = ((currentStep - 1) / 5) * 92;
+          line.style.width = `${widthPct}%`;
+        }
+
+        // Render Visa Steps
+        const stepsContainer = document.getElementById("visaTrackerSteps");
+        if (stepsContainer) {
+          stepsContainer.innerHTML = steps.map((s, idx) => {
+            const num = idx + 1;
+            const done = num < currentStep || status === "Đã xuất cảnh";
+            const active = num === currentStep && status !== "Đã xuất cảnh";
+            
+            const stepCls = done ? "visa-step done" : active ? "visa-step active" : "visa-step";
+            const check = done ? `<svg viewBox="0 0 24 24" style="width:10px;height:10px;fill:#fff;"><path d="M21,7L9,19L3.5,13.5L4.91,12.09L9,16.17L19.59,5.59L21,7Z"/></svg>` : "";
+            
+            return `
+              <div class="${stepCls}">
+                <div class="visa-dot">${check}</div>
+                <span class="visa-step-title">${s.title}</span>
+                <span class="visa-step-sub">${s.sub}</span>
+              </div>
+            `;
+          }).join("");
+        }
+
+        // Prep course Display text
+        const prepEl = document.getElementById("studentPrepCourseDisplay");
+        if (prepEl) {
+          if (country === "Nhật") prepEl.textContent = "Khóa đào tạo tiếng Nhật du học cấp tốc (N5 - N3)";
+          else if (country === "Đài") prepEl.textContent = "Khóa đào tạo tiếng Trung TOCFL du học cấp tốc";
+          else if (country === "Hàn") prepEl.textContent = "Khóa đào tạo tiếng Hàn du học cấp tốc (TOPIK II)";
+          else prepEl.textContent = "Khóa đào tạo ngoại ngữ du học cấp tốc";
+        }
+
+        // Missing Documents list
+        const missingDocs = {
+          "Nhật": [
+            { name: "Hộ chiếu gốc (còn hạn tối thiểu 2 năm)", note: "Cần nộp trước ngày 30/9" },
+            { name: "Bản sao công chứng Bằng tốt nghiệp THPT", note: "Yêu cầu công chứng trong vòng 3 tháng" },
+            { name: "Xác nhận số dư tài khoản ngân hàng bảo lãnh", note: "Số dư tối thiểu 500 triệu đồng" }
+          ],
+          "Đài": [
+            { name: "Chứng chỉ ngoại ngữ TOCFL 1 trở lên", note: "Bản gốc để đối chiếu" },
+            { name: "Giấy khai sinh bản sao trích lục", note: "Yêu cầu dịch công chứng VP Đài Bắc" },
+            { name: "Hộ chiếu gốc (còn hạn tối thiểu 2 năm)", note: "Nộp bổ sung gấp" }
+          ],
+          "Hàn": [
+            { name: "Hợp pháp hóa Lãnh sự học bạ THPT & Bằng tốt nghiệp", note: "Hồ sơ bắt buộc xin mã Code" },
+            { name: "Sổ tiết kiệm ngân hàng Hàn Quốc (K-Sure)", note: "Tối thiểu 10,000 USD" },
+            { name: "Hồ sơ chứng minh thu nhập của người bảo lãnh", note: "Theo form quy định" }
+          ]
+        };
+
+        const docs = missingDocs[country] || missingDocs["Nhật"];
+        const docsContainer = document.getElementById("academicMissingDocsList");
+        if (docsContainer) {
+          if (status === "Đã xuất cảnh" || status === "Đã trúng tuyển") {
+            docsContainer.innerHTML = `<div style="color: #10B981; font-weight: 600; text-align: center; padding: 1rem 0;">🎉 Bạn đã hoàn thành tất cả hồ sơ thủ tục!</div>`;
+          } else {
+            docsContainer.innerHTML = docs.map(d => `
+              <div style="display: flex; gap: 0.5rem; align-items: flex-start; padding: 0.5rem 0; border-bottom: 1px solid var(--border-light);">
+                <span style="color: #EF4444; font-weight: bold; margin-top: 1px;">⚠️</span>
+                <div style="flex: 1;">
+                  <strong style="color: var(--text-main);">${d.name}</strong>
+                  <span style="color: var(--text-muted); display: block; font-size: 0.72rem; margin-top: 1px;">${d.note}</span>
+                </div>
+              </div>
+            `).join("");
+          }
+        }
+
+        // Mock Tests List
+        const mockTests = [
+          { name: "Thi thử chứng chỉ ngoại ngữ giữa kỳ", time: "08:30 - 11:30", date: "2026-08-25", loc: "Phòng thi tầng 2" },
+          { name: "Phỏng vấn thử giả lập ĐH/Trường Nhật ngữ", time: "14:00 - 17:00", date: "2026-09-02", loc: "Phòng phỏng vấn VIP 1" }
+        ];
+
+        const testsContainer = document.getElementById("academicMockTestsList");
+        if (testsContainer) {
+          testsContainer.innerHTML = mockTests.map(t => {
+            const d = new Date(t.date);
+            return `
+              <div style="display: flex; gap: 0.85rem; align-items: center; padding: 0.5rem 0; border-bottom: 1px solid var(--border-light);">
+                <div style="width: 40px; height: 40px; background: var(--accent-light); border: 1px solid rgba(168,139,88,0.15); border-radius: 8px; display: flex; flex-direction: column; align-items: center; justify-content: center; flex-shrink: 0;">
+                  <span style="font-size: 0.95rem; font-weight: 700; color: var(--accent); line-height: 1;">${d.getDate()}</span>
+                  <span style="font-size: 0.55rem; color: var(--text-muted); font-weight: 600; text-transform: uppercase; margin-top: 1px;">T.${d.getMonth() + 1}</span>
+                </div>
+                <div style="flex: 1; min-width: 0;">
+                  <strong style="color: var(--text-main); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; display: block;">${t.name}</strong>
+                  <span style="color: var(--text-muted); display: block; font-size: 0.72rem; margin-top: 2px;">⏱️ ${t.time} | 📍 ${t.loc}</span>
+                </div>
+              </div>
+            `;
+          }).join("");
+        }
+      }
+    </script>
+  </body>
+</html>
