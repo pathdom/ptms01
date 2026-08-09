@@ -4644,7 +4644,8 @@ document.addEventListener('DOMContentLoaded', () => {
   let currentScorecardType = "week"; // "week" or "month"
 
   const initStudentScorecardModule = async (profileData) => {
-    const enrollDate = getFixedEnrollDate(profileData.email, profileData.createdAt);
+    const studentEmail = (profileData.email || "").trim().toLowerCase();
+    const enrollDate = getFixedEnrollDate(studentEmail, profileData.createdAt);
 
     const studyTime = calculateStudyTime(enrollDate);
     const activeWeeks = studyTime.activeWeeks;
@@ -4654,7 +4655,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let customScorecards = [];
     try {
       const snap = await db.collection("scorecards")
-        .where("studentEmail", "==", profileData.email.toLowerCase())
+        .where("studentEmail", "==", studentEmail)
         .get();
       snap.forEach(doc => {
         customScorecards.push(doc.data());
@@ -5343,6 +5344,22 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   };
 
+  const showStudentPortalDebugError = (msg) => {
+    let errDiv = document.getElementById("studentPortalDebugError");
+    if (!errDiv) {
+      errDiv = document.createElement("div");
+      errDiv.id = "studentPortalDebugError";
+      errDiv.style.cssText = "background: #fee2e2; border: 1px solid #ef4444; color: #b91c1c; padding: 1rem; margin: 1rem 4rem; border-radius: 8px; font-size: 0.85rem; font-family: monospace; white-space: pre-wrap; z-index: 99999; text-align: left;";
+      const mainContent = document.querySelector(".student-main-content");
+      if (mainContent) {
+        mainContent.insertBefore(errDiv, mainContent.firstChild);
+      } else {
+        document.body.insertBefore(errDiv, document.body.firstChild);
+      }
+    }
+    errDiv.textContent += msg + "\n";
+  };
+
   // ── Populate student "Thông tin cá nhân" tab ───────────────────────────
   const populateStudentProfileTab = (p) => {
     const set = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val || '--'; };
@@ -5553,6 +5570,7 @@ document.addEventListener('DOMContentLoaded', () => {
               const profileQuery = await db.collection("students").where("email", "==", user.email).get();
               let profileData = {
                 name: currentUser.name,
+                email: user.email,
                 code: "TE-2026-999",
                 phone: "Chưa rõ",
                 country: "Nhật",
@@ -5564,14 +5582,27 @@ document.addEventListener('DOMContentLoaded', () => {
                 profileData = { id: pDoc.id, ...pDoc.data() };
               });
 
-              // ── Populate "Thông tin cá nhân" tab ──────────────────
-              populateStudentProfileTab(profileData);
+              // ── Populate tabs with error debugging ────────────────
+              try {
+                populateStudentProfileTab(profileData);
+              } catch (err) {
+                console.error("Lỗi populateStudentProfileTab:", err);
+                showStudentPortalDebugError("Lỗi Thông tin cá nhân: " + err.stack);
+              }
 
-              // ── Populate "Bảng tin trung tâm" tab ─────────────────
-              initStudentNewsTab(profileData);
+              try {
+                initStudentNewsTab(profileData);
+              } catch (err) {
+                console.error("Lỗi initStudentNewsTab:", err);
+                showStudentPortalDebugError("Lỗi Bảng tin trung tâm: " + err.stack);
+              }
 
-              // ── Populate "Kì học & Lộ trình" tab ──────────────────
-              initStudentAcademicTab(profileData);
+              try {
+                initStudentAcademicTab(profileData);
+              } catch (err) {
+                console.error("Lỗi initStudentAcademicTab:", err);
+                showStudentPortalDebugError("Lỗi Kì học & Lộ trình: " + err.stack);
+              }
 
               // ── Load & wire Chi tiết hồ sơ ────────────────────────
               if (profileData.id) {
@@ -5848,7 +5879,12 @@ document.addEventListener('DOMContentLoaded', () => {
               }
 
               // Load weekly and monthly scorecard details!
-              initStudentScorecardModule(profileData);
+              try {
+                initStudentScorecardModule(profileData);
+              } catch (err) {
+                console.error("Lỗi initStudentScorecardModule:", err);
+                showStudentPortalDebugError("Lỗi Bảng điểm: " + err.stack);
+              }
 
             } catch (err) {
               console.error("Error loading student profile details:", err);
