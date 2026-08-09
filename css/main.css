@@ -1559,6 +1559,31 @@ body.dark-theme-crm .student-header-navbar {
   display: block;
 }
 
+/* Responsive Header adjustments */
+@media (max-width: 900px) {
+  .student-header-navbar {
+    height: auto !important;
+    padding: 1rem !important;
+    flex-wrap: wrap;
+    gap: 1rem;
+  }
+  .student-nav-menu {
+    order: 3;
+    width: 100%;
+    justify-content: center !important;
+    gap: 1.25rem !important;
+    height: auto !important;
+    border-top: 1px solid var(--border);
+    padding-top: 0.75rem;
+    margin-top: 0.25rem;
+  }
+  .student-nav-item {
+    padding: 0.5rem 0 !important;
+    font-size: 0.85rem !important;
+  }
+}
+
+
 /* Timeline Customization */
 .milestone-timeline {
   margin-top: 1.5rem;

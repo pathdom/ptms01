@@ -4707,6 +4707,31 @@ document.addEventListener('DOMContentLoaded', () => {
     const enrollDateStr = `${pad(enrollDate.getDate())}/${pad(enrollDate.getMonth() + 1)}/${enrollDate.getFullYear()}`;
     if (timeSub) timeSub.textContent = `Nhập học ngày ${enrollDateStr}`;
 
+    // Set circular progress SVG attributes
+    const radialPath = document.getElementById("radialAttendancePath");
+    const radialPercent = document.getElementById("radialAttendancePercent");
+    const attStatusLabel = document.getElementById("studentAttendanceStatusLabel");
+    if (radialPercent) radialPercent.textContent = `${avgAttendance}%`;
+    if (radialPath) {
+      // SVG circumference is 2 * PI * r = 100
+      radialPath.style.strokeDasharray = `${avgAttendance}, 100`;
+      radialPath.style.stroke = avgAttendance >= 90 ? "#10b981" : avgAttendance >= 80 ? "#f5a623" : "#ef4444";
+    }
+    if (attStatusLabel) {
+      if (avgAttendance >= 90) {
+        attStatusLabel.textContent = "Đạt chuẩn";
+        attStatusLabel.style.color = "#10b981";
+      } else {
+        attStatusLabel.textContent = "Cần lưu ý";
+        attStatusLabel.style.color = "#ef4444";
+      }
+    }
+
+    // Draw GPA progress line chart on Canvas
+    setTimeout(() => {
+      drawStudentGpaCanvas(profileData, activeWeeks, customScorecards);
+    }, 150);
+
     // List rendering
     const renderList = (type) => {
       const listContainer = document.getElementById("studentScorecardList");
@@ -4953,6 +4978,371 @@ document.addEventListener('DOMContentLoaded', () => {
     renderAdminList(currentAdminScorecardType);
   };
 
+  // ── Draw student learning progress chart on Canvas ──────────────────────
+  const drawStudentGpaCanvas = (student, activeWeeks, customScorecards) => {
+    const canvas = document.getElementById("studentProgressCanvas");
+    if (!canvas) return;
+    
+    const rect = canvas.getBoundingClientRect();
+    canvas.width = rect.width * window.devicePixelRatio;
+    canvas.height = 210 * window.devicePixelRatio;
+    
+    const ctx = canvas.getContext("2d");
+    ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
+    
+    const width = rect.width;
+    const height = 210;
+    
+    ctx.clearRect(0, 0, width, height);
+    
+    const points = [];
+    for (let i = 1; i <= activeWeeks; i++) {
+      const customScore = customScorecards.find(s => s.type === "week" && s.index === i);
+      let gpa = 8.2;
+      if (customScore) {
+        gpa = parseFloat(((parseFloat(customScore.listening) + parseFloat(customScore.speaking) + parseFloat(customScore.reading) + parseFloat(customScore.writing)) / 4).toFixed(1));
+      } else {
+        gpa = generateScoresForStudent(student, "week", i).average;
+      }
+      points.push({ week: i, gpa: gpa });
+    }
+    
+    if (points.length === 0) return;
+    
+    const paddingLeft = 35;
+    const paddingRight = 20;
+    const paddingTop = 25;
+    const paddingBottom = 30;
+    
+    const chartWidth = width - paddingLeft - paddingRight;
+    const chartHeight = height - paddingTop - paddingBottom;
+    
+    const isDark = document.body.classList.contains("dark-theme-crm");
+    const gridColor = isDark ? "rgba(255, 255, 255, 0.08)" : "rgba(0, 0, 0, 0.05)";
+    const textColor = isDark ? "#94A3B8" : "#64748B";
+    
+    const yMin = 5.0;
+    const yMax = 10.0;
+    
+    ctx.font = "10px sans-serif";
+    ctx.fillStyle = textColor;
+    ctx.textAlign = "right";
+    ctx.textBaseline = "middle";
+    
+    const gridLines = 5;
+    for (let i = 0; i <= gridLines; i++) {
+      const ratio = i / gridLines;
+      const y = paddingTop + chartHeight - ratio * chartHeight;
+      const val = (yMin + ratio * (yMax - yMin)).toFixed(1);
+      
+      ctx.beginPath();
+      ctx.moveTo(paddingLeft, y);
+      ctx.lineTo(width - paddingRight, y);
+      ctx.strokeStyle = gridColor;
+      ctx.lineWidth = 1;
+      ctx.stroke();
+      
+      ctx.fillText(val, paddingLeft - 8, y);
+    }
+    
+    const getX = (index) => {
+      if (points.length <= 1) return paddingLeft + chartWidth / 2;
+      return paddingLeft + (index / (points.length - 1)) * chartWidth;
+    };
+    
+    const getY = (gpa) => {
+      const clamped = Math.max(yMin, Math.min(yMax, gpa));
+      const ratio = (clamped - yMin) / (yMax - yMin);
+      return paddingTop + chartHeight - ratio * chartHeight;
+    };
+    
+    ctx.textAlign = "center";
+    ctx.textBaseline = "top";
+    points.forEach((p, idx) => {
+      const x = getX(idx);
+      if (points.length > 8 && idx % 2 !== 0 && idx !== points.length - 1) return;
+      ctx.fillText(`Tuần ${p.week}`, x, paddingTop + chartHeight + 8);
+    });
+    
+    const gradient = ctx.createLinearGradient(0, paddingTop, 0, paddingTop + chartHeight);
+    gradient.addColorStop(0, "rgba(168, 139, 88, 0.22)");
+    gradient.addColorStop(1, "rgba(168, 139, 88, 0.00)");
+    
+    ctx.beginPath();
+    ctx.moveTo(getX(0), paddingTop + chartHeight);
+    points.forEach((p, idx) => {
+      ctx.lineTo(getX(idx), getY(p.gpa));
+    });
+    ctx.lineTo(getX(points.length - 1), paddingTop + chartHeight);
+    ctx.closePath();
+    ctx.fillStyle = gradient;
+    ctx.fill();
+    
+    ctx.beginPath();
+    points.forEach((p, idx) => {
+      const x = getX(idx);
+      const y = getY(p.gpa);
+      if (idx === 0) ctx.moveTo(x, y);
+      else ctx.lineTo(x, y);
+    });
+    ctx.strokeStyle = "var(--accent, #A88B58)";
+    ctx.lineWidth = 2.5;
+    ctx.lineCap = "round";
+    ctx.lineJoin = "round";
+    ctx.stroke();
+    
+    points.forEach((p, idx) => {
+      const x = getX(idx);
+      const y = getY(p.gpa);
+      
+      ctx.beginPath();
+      ctx.arc(x, y, 5, 0, 2 * Math.PI);
+      ctx.fillStyle = isDark ? "#1E293B" : "#FFFFFF";
+      ctx.fill();
+      ctx.strokeStyle = "var(--accent, #A88B58)";
+      ctx.lineWidth = 2;
+      ctx.stroke();
+      
+      if (points.length <= 10 || idx === points.length - 1 || idx === 0) {
+        ctx.fillStyle = isDark ? "#F8FAFC" : "#0F172A";
+        ctx.font = "bold 9px sans-serif";
+        ctx.textAlign = "center";
+        ctx.fillText(p.gpa.toFixed(1), x, y - 10);
+      }
+    });
+  };
+
+  // ── Populate student "Bảng tin trung tâm" tab ──────────────────────────
+  let studentCountdownInterval = null;
+
+  const initStudentNewsTab = (p) => {
+    const announcements = [
+      { id: 1, title: "Lịch nghỉ lễ Quốc khánh 2/9 & Thi thử giữa kỳ", category: "Nhắc nhở", date: "2026-08-05", urgency: "urgent" },
+      { id: 2, title: "Khai giảng lớp tiếng Nhật/Hàn/Đài đàm thoại phản xạ miễn phí lớp tối", category: "Tin mới", date: "2026-08-02", urgency: "info" },
+      { id: 3, title: "Thông báo về việc hoàn thiện hồ sơ dịch thuật đợt 2 kỳ nhập học tháng 4/2027", category: "Hỏa tốc", date: "2026-07-28", urgency: "critical" }
+    ];
+
+    const notifContainer = document.getElementById("studentAnnouncementsList");
+    if (notifContainer) {
+      notifContainer.innerHTML = announcements.map(a => {
+        const badgeColor = a.urgency === "critical" ? "rgba(239,68,68,0.1)" : a.urgency === "urgent" ? "rgba(245,166,35,0.1)" : "rgba(59,130,246,0.1)";
+        const textColor = a.urgency === "critical" ? "#EF4444" : a.urgency === "urgent" ? "#F5A623" : "#3B82F6";
+        const formattedDate = new Date(a.date).toLocaleDateString('vi-VN');
+        return `
+          <div style="display: flex; align-items: flex-start; gap: 1rem; padding: 0.85rem; background: var(--bg-primary); border-radius: var(--border-radius-sm); border: 1px solid var(--border-light, rgba(0,0,0,0.03)); transition: transform 0.2s; text-align: left;" onmouseover="this.style.transform='translateX(4px)'" onmouseout="this.style.transform='none'">
+            <span style="background: ${badgeColor}; color: ${textColor}; padding: 0.25rem 0.5rem; border-radius: var(--border-radius-sm); font-size: 0.68rem; font-weight: 700; text-transform: uppercase; white-space: nowrap;">${a.category}</span>
+            <div style="flex: 1; min-width: 0;">
+              <div style="font-size: 0.85rem; font-weight: 600; color: var(--text-main); line-height: 1.4; margin-bottom: 2px;">${a.title}</div>
+              <span style="font-size: 0.72rem; color: var(--text-muted);">${formattedDate}</span>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    const vinhDanhList = [
+      { name: "Vũ Thùy Chi", code: "TE-2026-015", text: "Đạt GPA xuất sắc 9.6/10 và đỗ COE du học Tokyo, Nhật Bản kỳ tháng 10/2026", type: "study" },
+      { name: "Trần Minh Quân", code: "TE-2026-033", text: "Chinh phục thành công học bổng toàn phần Chính phủ Đài Loan MOE 2026", type: "scholarship" },
+      { name: "Lê Hồng Nhung", code: "TE-2026-008", text: "Xuất sắc đỗ Visa thẳng Đại học Kookmin, Hàn Quốc chỉ sau 2 tuần xét duyệt", type: "visa" }
+    ];
+
+    const hofContainer = document.getElementById("studentHallOfFameList");
+    if (hofContainer) {
+      hofContainer.innerHTML = vinhDanhList.map(v => {
+        const icon = v.type === "study" ? "🎓" : v.type === "scholarship" ? "🎖️" : "✈️";
+        return `
+          <div style="display: flex; align-items: center; gap: 1rem; padding: 0.75rem; background: var(--bg-primary); border-radius: var(--border-radius-sm); border: 1px solid var(--border-light, rgba(0,0,0,0.03)); text-align: left;">
+            <div style="width: 36px; height: 36px; border-radius: 50%; background: var(--accent-light); display: flex; align-items: center; justify-content: center; font-size: 1.1rem; flex-shrink: 0;">${icon}</div>
+            <div style="flex: 1; min-width: 0;">
+              <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 2px;">
+                <strong style="font-size: 0.85rem; color: var(--text-main); text-overflow: ellipsis; overflow: hidden; white-space: nowrap;">${v.name}</strong>
+                <span style="font-size: 0.65rem; color: var(--accent); font-family: monospace; font-weight: 600;">${v.code}</span>
+              </div>
+              <p style="margin: 0; font-size: 0.75rem; color: var(--text-muted); line-height: 1.35; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${v.text}</p>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    const targetDate = new Date("2026-09-15T08:30:00+07:00");
+    if (studentCountdownInterval) clearInterval(studentCountdownInterval);
+
+    const updateClock = () => {
+      const now = new Date();
+      const diff = targetDate - now;
+      if (diff <= 0) {
+        clearInterval(studentCountdownInterval);
+        const clockEl = document.getElementById("eventCountdownClock");
+        if (clockEl) clockEl.innerHTML = `<span style="font-size:0.9rem; color: var(--accent); font-weight: 600;">Sự kiện đang diễn ra hoặc đã kết thúc!</span>`;
+        return;
+      }
+      const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+      const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+      const mins = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+      
+      const dEl = document.getElementById("cdDays");
+      const hEl = document.getElementById("cdHours");
+      const mEl = document.getElementById("cdMins");
+      
+      if (dEl) dEl.textContent = String(days).padStart(2, '0');
+      if (hEl) hEl.textContent = String(hours).padStart(2, '0');
+      if (mEl) mEl.textContent = String(mins).padStart(2, '0');
+    };
+
+    updateClock();
+    studentCountdownInterval = setInterval(updateClock, 60000);
+  };
+
+  // ── Populate student "Kì học & Lộ trình" tab ───────────────────────────
+  const initStudentAcademicTab = (p) => {
+    const targetCountry = p.country || "Nhật";
+    const status = p.status || "Đang học";
+
+    const stepsJapan = [
+      { title: "Dịch thuật HS", sub: "Hoàn thiện dịch công chứng" },
+      { title: "Nộp hồ sơ trường", sub: "Trường Nhật ngữ thẩm định" },
+      { title: "Xét duyệt COE", sub: "Cục xuất nhập cảnh xét" },
+      { title: "Nhận kết quả COE", sub: "Thông báo kết quả chính thức" },
+      { title: "Xin Visa ĐSQ", sub: "Nộp hồ sơ xin dán Visa" },
+      { title: "Nhận Visa & Bay", sub: "Chuẩn bị xuất cảnh du học" }
+    ];
+
+    const stepsKorea = [
+      { title: "Dịch thuật HS", sub: "Hợp pháp hóa Lãnh sự học bạ" },
+      { title: "Gửi hồ sơ ĐH Hàn", sub: "Chuyển phát nhanh sang trường" },
+      { title: "Phỏng vấn ĐH", sub: "Trường đại học phỏng vấn" },
+      { title: "Cấp mã code Visa", sub: "Cục XNC Hàn Quốc duyệt" },
+      { title: "Nộp dán Visa ĐSQ", sub: "Nộp hồ sơ xin dán Visa" },
+      { title: "Nhập học Seoul", sub: "Chuẩn bị xuất cảnh du học" }
+    ];
+
+    const stepsTaiwan = [
+      { title: "Dịch thuật HS", sub: "Hợp pháp hóa VP Đài Bắc" },
+      { title: "Nộp hồ sơ học bổng", sub: "Gửi trường & Bộ Giáo dục" },
+      { title: "Phỏng vấn học bổng", sub: "Ủy ban học bổng phỏng vấn" },
+      { title: "Nhận Admission Letter", sub: "Thư mời nhập học chính thức" },
+      { title: "Xin Visa VP Đài Bắc", sub: "Nộp hồ sơ xin dán Visa" },
+      { title: "Bay xuất cảnh", sub: "Nhập học kì mùa thu" }
+    ];
+
+    const steps = targetCountry === "Nhật" ? stepsJapan : (targetCountry === "Đài" ? stepsTaiwan : stepsKorea);
+
+    let currentStepIdx = 1;
+    let statusText = "Đang chuẩn bị hồ sơ";
+
+    if (status === "Đang học") {
+      currentStepIdx = 1;
+      statusText = "Đang xử lý dịch thuật & hoàn thiện hồ sơ ban đầu";
+    } else if (status === "Chờ phỏng vấn") {
+      currentStepIdx = 3;
+      statusText = "Hồ sơ đã gửi đi. Đang chờ phỏng vấn / xét duyệt tư cách lưu trú (COE)";
+    } else if (status === "Đã trúng tuyển") {
+      currentStepIdx = 5;
+      statusText = "Đã trúng tuyển, có COE/Thư mời. Đang tiến hành xin dán Visa";
+    } else if (status === "Đã xuất cảnh") {
+      currentStepIdx = 6;
+      statusText = "Đã hoàn tất thủ tục Visa & xuất cảnh thành công!";
+    }
+
+    const badgeEl = document.getElementById("studentVisaStatusBadge");
+    if (badgeEl) {
+      badgeEl.textContent = statusText;
+      badgeEl.style.background = status === "Đã xuất cảnh" ? "rgba(16,185,129,0.1)" : status === "Đã trúng tuyển" ? "rgba(59,130,246,0.1)" : "rgba(168,139,88,0.1)";
+      badgeEl.style.color = status === "Đã xuất cảnh" ? "#10B981" : status === "Đã trúng tuyển" ? "#3B82F6" : "var(--accent)";
+    }
+
+    const fillLine = document.getElementById("studentVisaTrackerFillLine");
+    if (fillLine) {
+      const widthPercent = ((currentStepIdx - 1) / 5) * 92;
+      fillLine.style.width = `${widthPercent}%`;
+    }
+
+    const stepsContainer = document.getElementById("studentVisaTrackerSteps");
+    if (stepsContainer) {
+      stepsContainer.innerHTML = steps.map((s, idx) => {
+        const stepNum = idx + 1;
+        const done = stepNum < currentStepIdx || status === "Đã xuất cảnh";
+        const active = stepNum === currentStepIdx && status !== "Đã xuất cảnh";
+        const dotBg = done ? "var(--accent)" : active ? "#FAF9F6" : "var(--border)";
+        const dotBorder = done ? "4px solid var(--accent-light)" : active ? "5px solid var(--accent)" : "4px solid var(--bg-card)";
+        const titleColor = done || active ? "var(--text-main)" : "var(--text-muted)";
+        const checkIcon = done ? `<svg viewBox="0 0 24 24" style="width:10px;height:10px;fill:#fff;"><path d="M21,7L9,19L3.5,13.5L4.91,12.09L9,16.17L19.59,5.59L21,7Z"/></svg>` : "";
+        return `
+          <div style="display: flex; flex-direction: column; align-items: center; text-align: center; width: 14%; position: relative;">
+            <div style="width: 22px; height: 22px; border-radius: 50%; background: ${dotBg}; border: ${dotBorder}; display: flex; align-items: center; justify-content: center; z-index: 5; box-shadow: var(--shadow-sm);">
+              ${checkIcon}
+            </div>
+            <span style="font-size: 0.78rem; font-weight: ${active ? '700' : '600'}; color: ${titleColor}; margin-top: 0.5rem; display: block; line-height: 1.25;">${s.title}</span>
+            <span style="font-size: 0.62rem; color: var(--text-muted); display: block; margin-top: 2px; line-height: 1.2; max-width: 90px; text-overflow: ellipsis; overflow: hidden; white-space: normal;">${s.sub}</span>
+          </div>
+        `;
+      }).join('');
+    }
+
+    const allMissingDocs = {
+      "Nhật": [
+        { name: "Hộ chiếu gốc (còn hạn tối thiểu 2 năm)", note: "Cần nộp trước ngày 30/9" },
+        { name: "Bản sao công chứng Bằng tốt nghiệp THPT", note: "Yêu cầu công chứng trong vòng 3 tháng" },
+        { name: "Xác nhận số dư tài khoản ngân hàng bảo lãnh", note: "Số dư tối thiểu 500 triệu đồng" }
+      ],
+      "Đài": [
+        { name: "Chứng chỉ ngoại ngữ TOCFL 1 trở lên", note: "Bản gốc đối chiếu" },
+        { name: "Giấy khai sinh bản sao trích lục", note: "Dịch thuật công chứng Văn phòng Đài Bắc" },
+        { name: "Hộ chiếu gốc (còn hạn tối thiểu 2 năm)", note: "Cần nộp gấp" }
+      ],
+      "Hàn": [
+        { name: "Hợp pháp hóa Lãnh sự Học bạ & Bằng tốt nghiệp", note: "Hồ sơ bắt buộc xin Visa thẳng" },
+        { name: "Sổ tiết kiệm ngân hàng Hàn Quốc (K-Sure)", note: "Giá trị tối thiểu 10,000 USD" },
+        { name: "Chứng minh công việc và thu nhập người bảo lãnh", note: "Theo mẫu quy định" }
+      ]
+    };
+
+    const missingDocs = allMissingDocs[targetCountry] || allMissingDocs["Nhật"];
+    const docsContainer = document.getElementById("studentMissingDocsList");
+    if (docsContainer) {
+      if (status === "Đã xuất cảnh" || status === "Đã trúng tuyển") {
+        docsContainer.innerHTML = `<div style="color:#10b981; font-weight: 600; text-align: center; padding: 1rem 0; font-size: 0.82rem;">🎉 Bạn đã hoàn thành tất cả hồ sơ!</div>`;
+      } else {
+        docsContainer.innerHTML = missingDocs.map(doc => `
+          <div style="display: flex; align-items: flex-start; gap: 0.5rem; padding: 0.5rem 0; border-bottom: 1px solid var(--border-light, rgba(0,0,0,0.03)); text-align: left;">
+            <span style="color: #ef4444; font-weight: bold; margin-top: 1px; font-size: 0.8rem;">⚠️</span>
+            <div style="flex: 1; min-width: 0;">
+              <div style="font-weight: 600; color: var(--text-main); font-size: 0.8rem;">${doc.name}</div>
+              <span style="font-size: 0.72rem; color: var(--text-muted); display: block; margin-top: 1px;">${doc.note}</span>
+            </div>
+          </div>
+        `).join('');
+      }
+    }
+
+    const mockTests = [
+      { name: "Thi thử học kỳ năng lực ngoại ngữ", time: "08:30 - 11:30", date: "2026-08-25", location: "Phòng thi tầng 2" },
+      { name: "Phỏng vấn thử ĐH/Trường Nhật ngữ", time: "14:00 - 17:00", date: "2026-09-02", location: "Phòng Lab VIP 1" }
+    ];
+
+    const testsContainer = document.getElementById("studentMockTestsList");
+    if (testsContainer) {
+      testsContainer.innerHTML = mockTests.map(test => {
+        const d = new Date(test.date);
+        const dayStr = d.getDate();
+        const monthStr = `T.${d.getMonth() + 1}`;
+        return `
+          <div style="display: flex; gap: 0.85rem; align-items: center; padding: 0.5rem 0; border-bottom: 1px solid var(--border-light, rgba(0,0,0,0.03)); text-align: left;">
+            <div style="width: 40px; height: 40px; background: rgba(168,139,88,0.08); border: 1px solid rgba(168,139,88,0.15); border-radius: 8px; display: flex; flex-direction: column; align-items: center; justify-content: center; flex-shrink: 0;">
+              <span style="font-size: 0.9rem; font-weight: 700; color: var(--accent); line-height: 1;">${dayStr}</span>
+              <span style="font-size: 0.55rem; color: var(--text-muted); font-weight: 600; text-transform: uppercase;">${monthStr}</span>
+            </div>
+            <div style="flex: 1; min-width: 0;">
+              <div style="font-weight: 600; color: var(--text-main); font-size: 0.8rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${test.name}</div>
+              <span style="font-size: 0.7rem; color: var(--text-muted); display: block; margin-top: 1px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">⏱️ ${test.time} | 📍 ${test.location}</span>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+  };
+
   // ── Populate student "Thông tin cá nhân" tab ───────────────────────────
   const populateStudentProfileTab = (p) => {
     const set = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val || '--'; };
@@ -5176,6 +5566,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
               // ── Populate "Thông tin cá nhân" tab ──────────────────
               populateStudentProfileTab(profileData);
+
+              // ── Populate "Bảng tin trung tâm" tab ─────────────────
+              initStudentNewsTab(profileData);
+
+              // ── Populate "Kì học & Lộ trình" tab ──────────────────
+              initStudentAcademicTab(profileData);
 
               // ── Load & wire Chi tiết hồ sơ ────────────────────────
               if (profileData.id) {
