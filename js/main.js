@@ -862,8 +862,8 @@ document.addEventListener('DOMContentLoaded', () => {
   firebase.initializeApp(firebaseConfig);
   const auth = firebase.auth();
   
-  // Persist session across page reloads; idle timeout handles auto-logout
-  auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL)
+  // Do not persist session across page reloads (log out on F5)
+  auth.setPersistence(firebase.auth.Auth.Persistence.NONE)
     .catch((err) => console.error("Error setting Firebase persistence:", err));
 
   // ── Idle timeout: logout after 10 minutes of inactivity ──
