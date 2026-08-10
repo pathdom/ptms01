@@ -1,0 +1,2880 @@
+<!DOCTYPE html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Cổng Thông Tin Học Viên | ALADDIN GROUP</title>
+    <!-- Google Fonts: Playfair Display for Serifs, Plus Jakarta Sans for UI/Sans-serif -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet" />
+
+    <!-- Firebase Compat SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+
+    <!-- Premium Custom Styles (Palais Inspired: Alabaster Cream & Antique Gold) -->
+    <style>
+      :root {
+        --accent: #A88B58;
+        --accent-light: rgba(168, 139, 88, 0.08);
+        --accent-hover: #8D7243;
+        --bg-primary: #FAF8F5; /* Warm Alabaster Cream */
+        --bg-card: #FFFFFF;
+        --text-main: #1A1A1A; /* Deep Charcoal */
+        --text-muted: #6B6A67; /* Soft Earth Slate */
+        --border: #E8E5DF; /* Thin elegant divider grey */
+        --border-light: rgba(0, 0, 0, 0.04);
+        --shadow-sm: 0 4px 16px rgba(168, 139, 88, 0.03);
+        --shadow-md: 0 10px 30px rgba(168, 139, 88, 0.06);
+        --shadow-lg: 0 20px 48px rgba(168, 139, 88, 0.1);
+        --border-radius-lg: 16px;
+        --border-radius-md: 10px;
+        --border-radius-sm: 6px;
+        --transition-smooth: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        --transition-fast: all 0.2s ease;
+        --font-sans: 'Plus Jakarta Sans', sans-serif;
+        --font-serif: 'Playfair Display', serif;
+      }
+
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      body {
+        font-family: var(--font-sans);
+        background-color: var(--bg-primary);
+        color: var(--text-main);
+        line-height: 1.6;
+        -webkit-font-smoothing: antialiased;
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        overflow-x: hidden;
+      }
+
+      /* Background Gridlines for Architectural Vibe */
+      .grid-lines {
+        position: fixed;
+        inset: 0;
+        pointer-events: none;
+        z-index: 0;
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        opacity: 0.4;
+      }
+
+      .grid-line {
+        border-right: 1px solid rgba(168, 139, 88, 0.05);
+        height: 100%;
+      }
+
+      /* Loading Overlay */
+      #app-loading {
+        position: fixed;
+        inset: 0;
+        background: var(--bg-primary);
+        z-index: 99999;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        transition: opacity 0.4s ease;
+      }
+
+      .spinner {
+        width: 48px;
+        height: 48px;
+        border: 2px solid var(--accent-light);
+        border-top: 2px solid var(--accent);
+        border-radius: 50%;
+        animation: spin 0.8s linear infinite;
+        margin-bottom: 1.5rem;
+      }
+
+      @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+      }
+
+      /* Sticky Top Navbar */
+      .navbar {
+        height: 72px;
+        background: rgba(255, 255, 255, 0.8);
+        backdrop-filter: blur(12px);
+        border-bottom: 1px solid var(--border);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0 3rem;
+        position: sticky;
+        top: 0;
+        z-index: 1000;
+        box-shadow: var(--shadow-sm);
+      }
+
+      .logo-brand {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+      }
+
+      .logo-brand img {
+        height: 38px;
+        border-radius: 50%;
+        border: 1.5px solid var(--accent);
+      }
+
+      .logo-brand span {
+        font-family: var(--font-serif);
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: var(--text-main);
+        letter-spacing: 1px;
+      }
+
+      .nav-user-area {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        position: relative;
+      }
+
+      .nav-profile-trigger {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        cursor: pointer;
+        padding: 0.4rem 0.8rem;
+        border-radius: var(--border-radius-md);
+        transition: var(--transition-fast);
+        border: 1px solid transparent;
+      }
+
+      .nav-profile-trigger:hover {
+        background: rgba(255, 255, 255, 0.9);
+        border-color: var(--border);
+      }
+
+      .avatar-circle {
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        background: var(--accent);
+        color: #ffffff;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.85rem;
+      }
+
+      .user-meta-info {
+        text-align: left;
+      }
+
+      .user-meta-info .name {
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: var(--text-main);
+      }
+
+      .user-meta-info .code {
+        font-size: 0.7rem;
+        color: var(--accent);
+        font-family: monospace;
+        font-weight: 700;
+      }
+
+      /* Dropdown Menu Card */
+      .dropdown-menu-card {
+        position: absolute;
+        top: 100%;
+        right: 0;
+        margin-top: 0.5rem;
+        background: var(--bg-card);
+        border: 1px solid var(--border);
+        border-radius: var(--border-radius-md);
+        box-shadow: var(--shadow-md);
+        min-width: 180px;
+        display: none;
+        flex-direction: column;
+        padding: 6px;
+        z-index: 1010;
+        animation: dropFade 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+      }
+
+      @keyframes dropFade {
+        from { opacity: 0; transform: translateY(5px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
+
+      .dropdown-item {
+        background: none;
+        border: none;
+        width: 100%;
+        text-align: left;
+        padding: 0.6rem 1rem;
+        font-size: 0.82rem;
+        color: var(--text-main);
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 0.6rem;
+        border-radius: var(--border-radius-sm);
+        transition: var(--transition-fast);
+      }
+
+      .dropdown-item:hover {
+        background: var(--accent-light);
+        color: var(--accent);
+      }
+
+      .dropdown-item.logout {
+        color: #EF4444;
+      }
+
+      .dropdown-item.logout:hover {
+        background: rgba(239, 68, 68, 0.06);
+        color: #EF4444;
+      }
+
+      /* Main Page Grid Wrapper */
+      .portal-container {
+        flex: 1;
+        display: grid;
+        grid-template-columns: 280px 1fr;
+        position: relative;
+        z-index: 5;
+        max-width: 1600px;
+        width: 100%;
+        margin: 0 auto;
+      }
+
+      /* Left Sidebar Dashboard Card */
+      .portal-sidebar {
+        border-right: 1px solid var(--border);
+        padding: 2.5rem 1.5rem;
+        display: flex;
+        flex-direction: column;
+        gap: 2rem;
+        background: rgba(250, 248, 245, 0.7);
+        backdrop-filter: blur(8px);
+      }
+
+      .student-card-widget {
+        background: var(--bg-card);
+        border: 1px solid var(--border);
+        border-radius: var(--border-radius-lg);
+        padding: 1.5rem;
+        text-align: center;
+        box-shadow: var(--shadow-sm);
+      }
+
+      .widget-avatar {
+        width: 68px;
+        height: 68px;
+        border-radius: 50%;
+        background: var(--accent-light);
+        border: 2px solid var(--accent);
+        color: var(--accent);
+        font-size: 1.5rem;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 1rem auto;
+      }
+
+      .widget-name {
+        font-family: var(--font-serif);
+        font-size: 1.15rem;
+        font-weight: 600;
+        color: var(--text-main);
+        margin-bottom: 0.25rem;
+      }
+
+      .widget-code {
+        font-family: monospace;
+        font-size: 0.78rem;
+        color: var(--text-muted);
+        font-weight: 600;
+        margin-bottom: 0.75rem;
+        display: block;
+      }
+
+      .widget-status-badge {
+        font-size: 0.65rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        padding: 0.25rem 0.75rem;
+        border-radius: 12px;
+        display: inline-block;
+        letter-spacing: 0.5px;
+      }
+
+      .widget-country-badge {
+        font-size: 0.65rem;
+        font-weight: 600;
+        background: rgba(0, 0, 0, 0.05);
+        color: var(--text-main);
+        padding: 0.25rem 0.6rem;
+        border-radius: 12px;
+        display: inline-block;
+        margin-top: 0.5rem;
+      }
+
+      /* Sidebar Navigation Menu */
+      .sidebar-nav {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+      }
+
+      .sidebar-nav-item {
+        display: flex;
+        align-items: center;
+        gap: 0.85rem;
+        padding: 0.8rem 1rem;
+        border-radius: var(--border-radius-md);
+        font-size: 0.88rem;
+        font-weight: 500;
+        color: var(--text-muted);
+        cursor: pointer;
+        transition: var(--transition-fast);
+        border: 1px solid transparent;
+      }
+
+      .sidebar-nav-item:hover {
+        background: var(--bg-card);
+        color: var(--text-main);
+        border-color: var(--border);
+      }
+
+      .sidebar-nav-item.active {
+        background: var(--bg-card);
+        color: var(--accent);
+        font-weight: 600;
+        border-color: var(--border);
+        box-shadow: var(--shadow-sm);
+      }
+
+      .sidebar-nav-item svg {
+        width: 18px;
+        height: 18px;
+        fill: currentColor;
+      }
+
+      /* Right Main Panel Content */
+      .portal-main {
+        padding: 3rem 4rem;
+        overflow-y: auto;
+      }
+
+      .tab-panel {
+        display: none;
+        animation: contentFade 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+      }
+
+      .tab-panel.active {
+        display: block;
+      }
+
+      @keyframes contentFade {
+        from { opacity: 0; transform: translateY(8px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
+
+      /* Page Heading typography */
+      .page-header {
+        margin-bottom: 2.5rem;
+      }
+
+      .page-title {
+        font-family: var(--font-serif);
+        font-size: 2.2rem;
+        font-weight: 400;
+        letter-spacing: -0.5px;
+        color: var(--text-main);
+        margin-bottom: 0.35rem;
+      }
+
+      .page-subtitle {
+        font-size: 0.9rem;
+        color: var(--text-muted);
+      }
+
+      /* Premium Card Components */
+      .editorial-card {
+        background: var(--bg-card);
+        border: 1px solid var(--border);
+        border-radius: var(--border-radius-lg);
+        padding: 2rem;
+        box-shadow: var(--shadow-sm);
+        margin-bottom: 2rem;
+        position: relative;
+      }
+
+      .editorial-card-title {
+        font-family: var(--font-serif);
+        font-size: 1.25rem;
+        font-weight: 500;
+        color: var(--text-main);
+        border-bottom: 1px solid var(--border);
+        padding-bottom: 0.8rem;
+        margin-bottom: 1.5rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      /* Stats Quick Grid */
+      .stats-quick-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+      }
+
+      .stat-widget {
+        background: var(--bg-card);
+        border: 1px solid var(--border);
+        border-radius: var(--border-radius-lg);
+        padding: 1.5rem;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        min-height: 120px;
+        box-shadow: var(--shadow-sm);
+      }
+
+      .stat-widget-lbl {
+        font-size: 0.72rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        color: var(--text-muted);
+        letter-spacing: 0.5px;
+      }
+
+      .stat-widget-val {
+        font-family: var(--font-serif);
+        font-size: 1.8rem;
+        font-weight: 500;
+        color: var(--text-main);
+        margin: 0.5rem 0 0.2rem 0;
+      }
+
+      .stat-widget-sub {
+        font-size: 0.7rem;
+        color: var(--accent);
+        font-weight: 500;
+      }
+
+      /* Overview Two-Column Layout */
+      .overview-grid {
+        display: grid;
+        grid-template-columns: 1.7fr 1fr;
+        gap: 2rem;
+        align-items: start;
+      }
+
+      /* Info Rows (Administrative Details) */
+      .admin-info-list {
+        display: flex;
+        flex-direction: column;
+        gap: 0.9rem;
+      }
+
+      .admin-info-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-size: 0.85rem;
+        padding-bottom: 0.7rem;
+        border-bottom: 1px dashed var(--border);
+      }
+
+      .admin-info-row:last-child {
+        border-bottom: none;
+        padding-bottom: 0;
+      }
+
+      .admin-info-lbl {
+        color: var(--text-muted);
+        font-weight: 500;
+      }
+
+      .admin-info-val {
+        font-weight: 600;
+        color: var(--text-main);
+      }
+
+      /* Tuition Progress Tracker */
+      .tuition-progress-widget {
+        margin-top: 1.5rem;
+        background: var(--accent-light);
+        padding: 1.25rem;
+        border-radius: var(--border-radius-md);
+        border: 1px solid rgba(168, 139, 88, 0.15);
+      }
+
+      .tuition-bar-header {
+        display: flex;
+        justify-content: space-between;
+        font-size: 0.75rem;
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+      }
+
+      .tuition-track {
+        height: 6px;
+        background: rgba(168, 139, 88, 0.12);
+        border-radius: 3px;
+        overflow: hidden;
+      }
+
+      .tuition-fill {
+        height: 100%;
+        background: var(--accent);
+        width: 0%;
+        transition: width 0.8s ease;
+      }
+
+      /* News Bulletins CSS */
+      .news-bulletin-item {
+        padding: 1rem;
+        border-radius: var(--border-radius-md);
+        background: var(--bg-primary);
+        border: 1px solid var(--border-light);
+        margin-bottom: 1rem;
+        display: flex;
+        gap: 1rem;
+        align-items: flex-start;
+      }
+
+      .news-badge {
+        font-size: 0.65rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        padding: 0.25rem 0.5rem;
+        border-radius: 4px;
+        color: #FFFFFF;
+      }
+
+      .news-badge.urgent { background: #E2B25A; }
+      .news-badge.info { background: #A88B58; }
+      .news-badge.critical { background: #EF4444; }
+
+      .news-body {
+        flex: 1;
+      }
+
+      .news-title {
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: var(--text-main);
+        margin-bottom: 0.15rem;
+      }
+
+      .news-date {
+        font-size: 0.7rem;
+        color: var(--text-muted);
+      }
+
+      /* Kì Học (Semester Cards Timeline) */
+      .semester-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 1rem;
+        margin-top: 1.5rem;
+      }
+
+      .semester-card {
+        background: var(--bg-primary);
+        border: 1px solid var(--border-light);
+        border-radius: var(--border-radius-md);
+        padding: 1.25rem;
+        text-align: left;
+        position: relative;
+        transition: var(--transition-smooth);
+      }
+
+      .semester-card.active {
+        background: var(--accent-light);
+        border-color: var(--accent);
+      }
+
+      .semester-card h4 {
+        font-family: var(--font-serif);
+        font-size: 0.95rem;
+        font-weight: 600;
+        color: var(--text-main);
+        margin-bottom: 0.5rem;
+      }
+
+      .semester-card p {
+        font-size: 0.75rem;
+        color: var(--text-muted);
+      }
+
+      .semester-status {
+        position: absolute;
+        top: 1rem;
+        right: 1rem;
+        font-size: 0.65rem;
+        font-weight: 700;
+        text-transform: uppercase;
+      }
+
+      /* Roadmap Timeline Grid */
+      .timeline-col-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 2.5rem;
+      }
+
+      /* Vertical Timelines */
+      .timeline-vertical {
+        position: relative;
+        padding-left: 1.75rem;
+        border-left: 2px solid var(--border);
+        margin-left: 0.5rem;
+      }
+
+      .timeline-item {
+        position: relative;
+        margin-bottom: 2.2rem;
+      }
+
+      .timeline-item:last-child {
+        margin-bottom: 0;
+      }
+
+      .timeline-node {
+        position: absolute;
+        left: -2.3rem;
+        top: 0.15rem;
+        width: 16px;
+        height: 16px;
+        border-radius: 50%;
+        background: var(--bg-card);
+        border: 3px solid var(--border);
+        transition: var(--transition-smooth);
+      }
+
+      .timeline-item.done .timeline-node {
+        background: #10B981;
+        border-color: #10B981;
+      }
+
+      .timeline-item.active .timeline-node {
+        background: var(--accent);
+        border-color: var(--accent);
+        box-shadow: 0 0 0 4px var(--accent-light);
+      }
+
+      .timeline-content h4 {
+        font-family: var(--font-serif);
+        font-size: 0.95rem;
+        font-weight: 600;
+        color: var(--text-main);
+        margin-bottom: 0.25rem;
+      }
+
+      .timeline-content p {
+        font-size: 0.75rem;
+        color: var(--text-muted);
+        margin-bottom: 0.4rem;
+      }
+
+      .timeline-tag {
+        font-size: 0.62rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        padding: 0.15rem 0.5rem;
+        border-radius: 10px;
+        display: inline-block;
+      }
+
+      .timeline-tag.done { background: rgba(16, 185, 129, 0.1); color: #10B981; }
+      .timeline-tag.active { background: var(--accent-light); color: var(--accent); }
+      .timeline-tag.pending { background: rgba(0, 0, 0, 0.04); color: var(--text-muted); }
+
+      /* Grades Page Elements */
+      .grades-overview-row {
+        display: grid;
+        grid-template-columns: 1fr 260px;
+        gap: 2rem;
+        margin-bottom: 2rem;
+        align-items: center;
+      }
+
+      .canvas-container {
+        height: 220px;
+        position: relative;
+        background: var(--bg-primary);
+        border-radius: var(--border-radius-lg);
+        border: 1px solid var(--border);
+        padding: 1rem;
+      }
+
+      .radial-center-widget {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        background: var(--bg-card);
+        border: 1px solid var(--border);
+        border-radius: var(--border-radius-lg);
+        padding: 1.5rem;
+        box-shadow: var(--shadow-sm);
+        text-align: center;
+      }
+
+      .radial-svg-box {
+        position: relative;
+        width: 100px;
+        height: 100px;
+        margin-bottom: 1rem;
+      }
+
+      .radial-svg-box svg {
+        width: 100%;
+        height: 100%;
+        transform: rotate(-90deg);
+      }
+
+      .radial-track {
+        fill: none;
+        stroke: rgba(168, 139, 88, 0.08);
+        stroke-width: 8px;
+      }
+
+      .radial-fill {
+        fill: none;
+        stroke: var(--accent);
+        stroke-width: 8px;
+        stroke-dasharray: 100;
+        stroke-dashoffset: 100;
+        stroke-linecap: round;
+        transition: stroke-dashoffset 0.8s ease;
+      }
+
+      .radial-center-text {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-family: var(--font-serif);
+        font-size: 1.35rem;
+        font-weight: 600;
+        color: var(--text-main);
+      }
+
+      /* Scorecard Items Cards */
+      .scorecard-cards-grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+      }
+
+      .scorecard-card {
+        background: var(--bg-card);
+        border: 1px solid var(--border);
+        border-radius: var(--border-radius-lg);
+        padding: 1.5rem;
+        box-shadow: var(--shadow-sm);
+        display: grid;
+        grid-template-columns: 200px 1fr;
+        gap: 2rem;
+        transition: var(--transition-smooth);
+      }
+
+      .scorecard-card:hover {
+        border-color: var(--accent);
+        box-shadow: var(--shadow-md);
+      }
+
+      .scorecard-left {
+        border-right: 1px solid var(--border);
+        padding-right: 1.5rem;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+      }
+
+      .scorecard-left h4 {
+        font-family: var(--font-serif);
+        font-size: 1.2rem;
+        color: var(--text-main);
+        margin-bottom: 0.2rem;
+      }
+
+      .scorecard-left span {
+        font-size: 0.72rem;
+        color: var(--text-muted);
+        margin-bottom: 1rem;
+      }
+
+      .scorecard-average-box {
+        display: flex;
+        align-items: baseline;
+        gap: 0.25rem;
+      }
+
+      .scorecard-average-box .val {
+        font-family: var(--font-serif);
+        font-size: 2.2rem;
+        font-weight: 500;
+        color: var(--accent);
+        line-height: 1;
+      }
+
+      .scorecard-average-box .lbl {
+        font-size: 0.72rem;
+        font-weight: 600;
+        color: var(--text-muted);
+        text-transform: uppercase;
+      }
+
+      .skills-bars {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1rem;
+      }
+
+      .skill-bar-row {
+        display: flex;
+        flex-direction: column;
+        gap: 0.35rem;
+      }
+
+      .skill-bar-lbl {
+        display: flex;
+        justify-content: space-between;
+        font-size: 0.72rem;
+        font-weight: 600;
+      }
+
+      .skill-bar-track {
+        height: 5px;
+        background: rgba(0, 0, 0, 0.04);
+        border-radius: 2.5px;
+        overflow: hidden;
+      }
+
+      .skill-bar-fill {
+        height: 100%;
+        background: var(--accent);
+        width: 0%;
+        transition: width 0.6s ease;
+      }
+
+      .scorecard-comment-box {
+        grid-column: span 2;
+        background: var(--bg-primary);
+        padding: 0.85rem 1.25rem;
+        border-radius: var(--border-radius-md);
+        border-left: 3px solid var(--accent);
+        font-size: 0.78rem;
+        color: var(--text-muted);
+        font-style: italic;
+        line-height: 1.45;
+      }
+
+      /* Premium Toggle Button Group */
+      .toggle-btn-group {
+        display: flex;
+        background: var(--bg-primary);
+        padding: 4px;
+        border-radius: var(--border-radius-md);
+        border: 1px solid var(--border);
+      }
+
+      .toggle-btn {
+        padding: 0.4rem 1.2rem;
+        border-radius: var(--border-radius-sm);
+        font-size: 0.78rem;
+        font-weight: 600;
+        color: var(--text-muted);
+        transition: var(--transition-fast);
+      }
+
+      .toggle-btn.active {
+        background: var(--bg-card);
+        color: var(--accent);
+        box-shadow: var(--shadow-sm);
+      }
+
+      /* Profile Editing Form Styles */
+      .profile-section-heading {
+        font-family: var(--font-serif);
+        font-size: 1.05rem;
+        font-weight: 600;
+        color: var(--accent);
+        margin: 1.5rem 0 1rem 0;
+        padding-bottom: 0.3rem;
+        border-bottom: 1px solid var(--border-light);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+
+      .profile-form-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 1.25rem;
+        margin-bottom: 1.5rem;
+      }
+
+      .profile-form-grid.grid-2 {
+        grid-template-columns: 1fr 1fr;
+      }
+
+      .profile-form-grid.grid-1 {
+        grid-template-columns: 1fr;
+      }
+
+      .form-field-group {
+        display: flex;
+        flex-direction: column;
+        gap: 0.4rem;
+      }
+
+      .form-field-group label {
+        font-size: 0.72rem;
+        font-weight: 600;
+        color: var(--text-muted);
+      }
+
+      .form-field-group input,
+      .form-field-group select,
+      .form-field-group textarea {
+        background: var(--bg-primary);
+        border: 1px solid var(--border);
+        border-radius: var(--border-radius-sm);
+        padding: 0.65rem 0.9rem;
+        font-size: 0.82rem;
+        color: var(--text-main);
+        font-family: inherit;
+        outline: none;
+        transition: var(--transition-fast);
+      }
+
+      .form-field-group input:focus,
+      .form-field-group select:focus,
+      .form-field-group textarea:focus {
+        border-color: var(--accent);
+        background: var(--bg-card);
+        box-shadow: 0 0 0 3px var(--accent-light);
+      }
+
+      .form-field-group textarea {
+        resize: vertical;
+        min-height: 80px;
+      }
+
+      .form-save-button-wrap {
+        display: flex;
+        justify-content: flex-end;
+        margin-top: 2rem;
+      }
+
+      .btn-submit-premium {
+        background: var(--accent);
+        color: #FFFFFF;
+        font-size: 0.85rem;
+        font-weight: 600;
+        padding: 0.75rem 2rem;
+        border-radius: var(--border-radius-md);
+        box-shadow: 0 4px 12px rgba(168, 139, 88, 0.2);
+        transition: var(--transition-fast);
+        letter-spacing: 0.5px;
+      }
+
+      .btn-submit-premium:hover {
+        background: var(--accent-hover);
+        transform: translateY(-1px);
+        box-shadow: 0 6px 18px rgba(168, 139, 88, 0.3);
+      }
+
+      /* Leaves Management Styles */
+      .leave-request-container {
+        display: grid;
+        grid-template-columns: 1.2fr 1.8fr;
+        gap: 2rem;
+      }
+
+      .sp-resume-table {
+        width: 100%;
+        border-collapse: collapse;
+        text-align: left;
+        font-size: 0.8rem;
+      }
+
+      .sp-resume-table th {
+        font-weight: 600;
+        text-transform: uppercase;
+        color: var(--text-muted);
+        padding: 0.75rem 1rem;
+        border-bottom: 1px solid var(--border);
+        font-size: 0.68rem;
+        letter-spacing: 0.5px;
+      }
+
+      .sp-resume-table td {
+        padding: 0.85rem 1rem;
+        border-bottom: 1px solid var(--border-light);
+        color: var(--text-main);
+      }
+
+      .sp-resume-table tr:last-child td {
+        border-bottom: none;
+      }
+
+      .badge-session {
+        background: rgba(168, 139, 88, 0.1);
+        color: var(--accent);
+        padding: 0.15rem 0.5rem;
+        border-radius: 4px;
+        font-size: 0.68rem;
+        font-weight: 600;
+        text-transform: uppercase;
+      }
+
+      .badge-status-approved { background: rgba(16, 185, 129, 0.1); color: #10B981; }
+      .badge-status-pending { background: rgba(245, 166, 35, 0.1); color: #F5A623; }
+
+      /* Toast Notification CSS */
+      .toast-container {
+        position: fixed;
+        bottom: 2rem;
+        right: 2rem;
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+        z-index: 10000;
+      }
+
+      .toast-message {
+        background: var(--bg-card);
+        border: 1px solid var(--border);
+        border-left: 4px solid var(--accent);
+        border-radius: var(--border-radius-md);
+        box-shadow: var(--shadow-lg);
+        padding: 1rem 1.5rem;
+        min-width: 280px;
+        max-width: 400px;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        font-size: 0.82rem;
+        animation: toastIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+      }
+
+      @keyframes toastIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
+
+      .toast-message.error {
+        border-left-color: #EF4444;
+      }
+
+      /* Responsive Media Queries */
+      @media (max-width: 1024px) {
+        .portal-container {
+          grid-template-columns: 1fr;
+        }
+        .portal-sidebar {
+          border-right: none;
+          border-bottom: 1px solid var(--border);
+          padding: 1.5rem 2rem;
+          flex-direction: row;
+          justify-content: space-between;
+          align-items: center;
+        }
+        .student-card-widget {
+          display: flex;
+          align-items: center;
+          gap: 1rem;
+          text-align: left;
+          padding: 0.75rem 1.25rem;
+          margin-bottom: 0;
+        }
+        .widget-avatar {
+          width: 44px;
+          height: 44px;
+          font-size: 1.1rem;
+          margin: 0;
+        }
+        .widget-country-badge {
+          margin-top: 0;
+          margin-left: 0.5rem;
+        }
+        .sidebar-nav {
+          flex-direction: row;
+          overflow-x: auto;
+          gap: 0.5rem;
+          padding-bottom: 0.5rem;
+        }
+        .portal-main {
+          padding: 2rem;
+        }
+        .stats-quick-grid {
+          grid-template-columns: 1fr 1fr;
+        }
+        .overview-grid, .timeline-col-grid, .leave-request-container {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      @media (max-width: 768px) {
+        .navbar {
+          padding: 0 1.5rem;
+        }
+        .portal-sidebar {
+          flex-direction: column;
+          align-items: stretch;
+        }
+        .profile-form-grid {
+          grid-template-columns: 1fr;
+        }
+        .skills-bars {
+          grid-template-columns: 1fr;
+        }
+        .scorecard-card {
+          grid-template-columns: 1fr;
+          gap: 1.25rem;
+        }
+        .scorecard-left {
+          border-right: none;
+          border-bottom: 1px solid var(--border);
+          padding-right: 0;
+          padding-bottom: 1rem;
+        }
+        .scorecard-comment-box {
+          grid-column: span 1;
+        }
+      }
+    </style>
+  </head>
+
+  <body>
+    <!-- Fine Background Divider Grid lines -->
+    <div class="grid-lines">
+      <div class="grid-line"></div>
+      <div class="grid-line"></div>
+      <div class="grid-line"></div>
+      <div class="grid-line"></div>
+    </div>
+
+    <!-- App Loading Screen -->
+    <div id="app-loading">
+      <div class="spinner"></div>
+      <span style="font-family: var(--font-serif); font-size: 1.05rem; font-style: italic; color: var(--text-muted); letter-spacing: 0.5px;">Đang thiết lập trải nghiệm học tập...</span>
+    </div>
+
+    <!-- Sticky Navbar -->
+    <header class="navbar">
+      <div class="logo-brand">
+        <img src="abc.jpg" alt="Logo Aladdin" />
+        <span>ALADDIN PORTAL</span>
+      </div>
+
+      <div class="nav-user-area">
+        <div class="nav-profile-trigger" id="profileDropdownTrigger">
+          <div class="avatar-circle" id="navAvatar">HV</div>
+          <div class="user-meta-info">
+            <div class="name" id="navName">Đang tải...</div>
+            <div class="code" id="navCode">TE-XXXX</div>
+          </div>
+          <!-- Tiny elegant arrow SVG -->
+          <svg style="width: 10px; height: 10px; fill: var(--text-muted); margin-left: 0.25rem;" viewBox="0 0 24 24">
+            <path d="M7.41,8.58L12,13.17L16.59,8.58L18,10L12,16L6,10L7.41,8.58Z" />
+          </svg>
+        </div>
+
+        <div class="dropdown-menu-card" id="dropdownCard">
+          <button class="dropdown-item" id="btnGoToProfile">
+            <svg style="width:14px; height:14px; fill:currentColor;" viewBox="0 0 24 24"><path d="M12,4A4,4 0 0,1 16,8A4,4 0 0,1 12,12A4,4 0 0,1 8,8A4,4 0 0,1 12,4M12,14C16.42,14 20,15.79 20,18V20H4V18C4,15.79 7.58,14 12,14Z"/></svg>
+            Xem hồ sơ cá nhân
+          </button>
+          <button class="dropdown-item logout" id="btnLogoutPortal">
+            <svg style="width:14px; height:14px; fill:currentColor;" viewBox="0 0 24 24"><path d="M16,17V14H9V10H16V7L21,12L16,17M14,2A2,2 0 0,1 16,4V6H14V4H5V20H14V18H16V20A2,2 0 0,1 14,22H5A2,2 0 0,1 3,20V4A2,2 0 0,1 5,2M12,9H7V11H12V9M12,13H7V15H12V13Z"/></svg>
+            Đăng xuất
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Content Container Grid -->
+    <main class="portal-container">
+      
+      <!-- Left Dashboard Sidebar Widget -->
+      <aside class="portal-sidebar">
+        <div class="student-card-widget">
+          <div class="widget-avatar" id="profileAvatarBig">HV</div>
+          <h3 class="widget-name" id="profileNameBig">Đang tải...</h3>
+          <span class="widget-code" id="profileCodeBig">TE-XXXX-XXX</span>
+          <div class="widget-status-badge" id="profileStatusBig">Đang học</div>
+          <div class="widget-country-badge" id="profileCountryBig">Du học Nhật Bản</div>
+        </div>
+
+        <nav class="sidebar-nav">
+          <button class="sidebar-nav-item active" data-tab="tab-overview">
+            <svg viewBox="0 0 24 24"><path d="M10,20V14H14V20H19V12H22L12,3L2,12H5V20H10Z"/></svg>
+            Tổng quan học tập
+          </button>
+          <button class="sidebar-nav-item" data-tab="tab-grades">
+            <svg viewBox="0 0 24 24"><path d="M19 3H5C3.9 3 3 3.9 3 5V19C3 20.1 3.9 21 5 21H19C20.1 21 21 20.1 21 19V5C21 3.9 20.1 3 19 3M9 17H7V10H9V17M13 17H11V7H13V17M17 17H15V12H17V17Z"/></svg>
+            Bảng điểm học thuật
+          </button>
+          <button class="sidebar-nav-item" data-tab="tab-roadmap">
+            <svg viewBox="0 0 24 24"><path d="M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M12,4A8,8 0 0,1 20,12A8,8 0 0,1 12,20A8,8 0 0,1 4,12A8,8 0 0,1 12,4M12,6A6,6 0 0,0 6,12A6,6 0 0,0 12,18A6,6 0 0,0 18,12A6,6 0 0,0 12,6M12,8A4,4 0 0,1 16,12A4,4 0 0,1 12,16A4,4 0 0,1 8,12A4,4 0 0,1 12,8Z"/></svg>
+            Lộ trình & Hồ sơ
+          </button>
+          <button class="sidebar-nav-item" data-tab="tab-profile">
+            <svg viewBox="0 0 24 24"><path d="M12,5.9A3,3 0 0,0 9,8.9A3,3 0 0,0 12,11.9A3,3 0 0,0 15,8.9A3,3 0 0,0 12,5.9M12,14C7.58,14 4,15.79 4,18V20H20V18C20,15.79 16.42,14 12,14Z"/></svg>
+            Hồ sơ lý lịch
+          </button>
+          <button class="sidebar-nav-item" data-tab="tab-leaves">
+            <svg viewBox="0 0 24 24"><path d="M19 19H5V8H19M19 3H18V1H16V3H8V1H6V3H5C3.89 3 3 3.9 3 5V19A2 2 0 0,0 5 21H19A2 2 0 0,0 21 19V5A2 2 0 0,0 19 3M16.53 11.06L15.47 10L10.5 14.97L8.53 13L7.47 14.06L10.5 17.09L16.53 11.06Z"/></svg>
+            Nghỉ phép chuyên cần
+          </button>
+        </nav>
+      </aside>
+
+      <!-- Right Main Workspace -->
+      <section class="portal-main">
+
+        <!-- ==========================================
+           TAB 1: OVERVIEW DASHBOARD
+           ========================================== -->
+        <div class="tab-panel active" id="tab-overview">
+          <div class="page-header">
+            <h2 class="page-title" style="font-size: 2.4rem;">Trải nghiệm Học tập tại Aladdin</h2>
+            <p class="page-subtitle">Hệ thống thông báo, chỉ số học tập trực quan và theo dõi chuyên cần thời gian thực.</p>
+          </div>
+
+          <!-- Quick Stats Indicators -->
+          <div class="stats-quick-grid">
+            <div class="stat-widget">
+              <span class="stat-widget-lbl">Điểm GPA Trung Bình</span>
+              <div class="stat-widget-val" id="ovGpa">--</div>
+              <span class="stat-widget-sub" id="ovRank">Xếp loại: --</span>
+            </div>
+            <div class="stat-widget">
+              <span class="stat-widget-lbl">Tỉ lệ chuyên cần</span>
+              <div class="stat-widget-val" id="ovAttendance">--</div>
+              <span class="stat-widget-sub" id="ovAttendanceEval">Đang cập nhật...</span>
+            </div>
+            <div class="stat-widget">
+              <span class="stat-widget-lbl">Kì Học Đào Tạo</span>
+              <div class="stat-widget-val" id="ovSemester" style="font-size: 1.15rem; font-weight: 600; line-height: 1.4; font-family: var(--font-sans);">Đang tải...</div>
+              <span class="stat-widget-sub" id="ovEnrollDate">Khai giảng: --</span>
+            </div>
+            <div class="stat-widget">
+              <span class="stat-widget-lbl">Đếm ngược bay / Xuất cảnh</span>
+              <div class="stat-widget-val" id="ovCountdown" style="font-size: 1.15rem; font-weight: 600; line-height: 1.4; font-family: var(--font-sans);">Chưa có lịch</div>
+              <span class="stat-widget-sub" id="ovFlightDate">Bay dự kiến: --</span>
+            </div>
+          </div>
+
+          <div class="overview-grid">
+            <!-- Left Overview Column: Notices and Semesters -->
+            <div>
+              <!-- Kì học hiện tại & Danh sách kì học -->
+              <div class="editorial-card">
+                <h3 class="editorial-card-title">Kì Học & Khóa Đào Tạo Ngoại Ngữ</h3>
+                <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1.25rem;">Lộ trình đào tạo được chia làm 3 kì học chính phục vụ cả kỹ năng phản xạ nghe nói giao tiếp thực chiến lẫn kỹ năng luyện thi chứng chỉ học thuật xuất cảnh.</p>
+                
+                <div class="semester-grid">
+                  <div class="semester-card" id="semCard1">
+                    <span class="semester-status" id="semStatus1">Chưa học</span>
+                    <h4>KÌ I: Giao Tiếp</h4>
+                    <p>Tập trung phát âm chuẩn IPA, nghe nói phản xạ cơ bản và hội thoại đời sống.</p>
+                  </div>
+                  <div class="semester-card" id="semCard2">
+                    <span class="semester-status" id="semStatus2">Chưa học</span>
+                    <h4>KÌ II: Học Thuật</h4>
+                    <p>Luyện đọc hiểu, viết bài luận, bổ túc ngữ pháp sâu rộng và học chữ Hán/Kanji.</p>
+                  </div>
+                  <div class="semester-card" id="semCard3">
+                    <span class="semester-status" id="semStatus3">Chưa học</span>
+                    <h4>KÌ III: Luyện Đề</h4>
+                    <p>Giả lập đề thi chứng chỉ thực tế (JLPT/TOCFL/TOPIK), rèn luyện phản xạ phỏng vấn.</p>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Tin tức trung tâm bulletins -->
+              <div class="editorial-card">
+                <h3 class="editorial-card-title">Thông báo & Tin tức từ Aladdin Group</h3>
+                <div id="ovAnnouncementsList">
+                  <div style="text-align: center; color: var(--text-muted); padding: 1.5rem 0;">Không có thông báo mới</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Right Overview Column: Timeline Flight & Hall of Fame -->
+            <div>
+              <!-- Calendar / Exam Countdown clock -->
+              <div class="editorial-card" style="background: rgba(168, 139, 88, 0.03);">
+                <h3 class="editorial-card-title">Kỳ Thi / Sự Kiện Gần Nhất</h3>
+                <div style="text-align: center; margin: 1.5rem 0;">
+                  <span style="font-size: 0.72rem; text-transform: uppercase; color: var(--text-muted); letter-spacing: 1px; font-weight: 600;">Sự kiện thi thử/phỏng vấn giả lập</span>
+                  <div style="font-family: var(--font-serif); font-size: 1.6rem; color: var(--accent); margin: 0.5rem 0 1rem 0;">Thi thử chứng chỉ ngoại ngữ giữa kì</div>
+                  
+                  <!-- Clock count -->
+                  <div style="display: flex; justify-content: center; gap: 1rem; margin-top: 1rem;">
+                    <div style="background: #ffffff; padding: 0.75rem 1rem; border-radius: var(--border-radius-md); border: 1px solid var(--border); min-width: 60px;">
+                      <span id="cdDays" style="font-family: var(--font-serif); font-size: 1.5rem; font-weight: 500; display: block; color: var(--text-main);">00</span>
+                      <span style="font-size: 0.55rem; color: var(--text-muted); text-transform: uppercase; font-weight: 700;">Ngày</span>
+                    </div>
+                    <div style="background: #ffffff; padding: 0.75rem 1rem; border-radius: var(--border-radius-md); border: 1px solid var(--border); min-width: 60px;">
+                      <span id="cdHours" style="font-family: var(--font-serif); font-size: 1.5rem; font-weight: 500; display: block; color: var(--text-main);">00</span>
+                      <span style="font-size: 0.55rem; color: var(--text-muted); text-transform: uppercase; font-weight: 700;">Giờ</span>
+                    </div>
+                    <div style="background: #ffffff; padding: 0.75rem 1rem; border-radius: var(--border-radius-md); border: 1px solid var(--border); min-width: 60px;">
+                      <span id="cdMins" style="font-family: var(--font-serif); font-size: 1.5rem; font-weight: 500; display: block; color: var(--text-main);">00</span>
+                      <span style="font-size: 0.55rem; color: var(--text-muted); text-transform: uppercase; font-weight: 700;">Phút</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Hall of Fame Card -->
+              <div class="editorial-card">
+                <h3 class="editorial-card-title">Bảng Vàng Học Viên Xuất Sắc</h3>
+                <div id="ovHallOfFameList" style="display: flex; flex-direction: column; gap: 0.75rem;">
+                  <!-- Injected from JS -->
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ==========================================
+           TAB 2: ACADEMIC SCORECARD & GRADES
+           ========================================== -->
+        <div class="tab-panel" id="tab-grades">
+          <div class="page-header">
+            <h2 class="page-title">Bảng Điểm Học Tập & Chuyên Cần</h2>
+            <p class="page-subtitle">Theo dõi sát sao kết quả kiểm tra năng lực ngoại ngữ (Nghe - Nói - Đọc - Viết) và nhận xét chuyên sâu từ cố vấn.</p>
+          </div>
+
+          <div class="editorial-card">
+            <div class="editorial-card-title">
+              <span>Đồ Thị Xu Hướng Phát Triển GPA</span>
+              
+              <div class="toggle-btn-group">
+                <button class="toggle-btn active" id="btnScorecardWeekToggle">Tuần</button>
+                <button class="toggle-btn" id="btnScorecardMonthToggle">Tháng</button>
+              </div>
+            </div>
+
+            <!-- Canvas & Radial stats Row -->
+            <div class="grades-overview-row">
+              <div class="canvas-container">
+                <canvas id="studentProgressCanvas" style="width: 100%; height: 100%;"></canvas>
+              </div>
+
+              <div class="radial-center-widget">
+                <div class="radial-svg-box">
+                  <svg viewBox="0 0 36 36">
+                    <path class="radial-track" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                    <path class="radial-fill" id="radialAttendancePath" stroke-dasharray="0, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                  </svg>
+                  <div class="radial-center-text" id="radialAttendancePercent">0%</div>
+                </div>
+                <h4 style="font-size: 0.9rem; font-family: var(--font-serif); font-weight: 600; color: var(--text-main); margin-bottom: 0.25rem;">Tỉ lệ chuyên cần trung bình</h4>
+                <p id="attendanceEvalText" style="font-size: 0.72rem; font-weight: 600; color: var(--text-muted);">Đang tính toán...</p>
+              </div>
+            </div>
+
+            <!-- List of Scorecards -->
+            <div class="scorecard-cards-grid" id="studentScorecardList">
+              <div style="text-align: center; color: var(--text-muted); padding: 3rem 0;">Đang đồng bộ dữ liệu điểm số...</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ==========================================
+           TAB 3: ROADMAP & TIMELINE
+           ========================================== -->
+        <div class="tab-panel" id="tab-roadmap">
+          <div class="page-header">
+            <h2 class="page-title">Lộ Trình Đào Tạo & Tiến Độ Hồ Sơ</h2>
+            <p class="page-subtitle">Hiển thị trực quan hai trụ cột quan trọng: Lộ trình rèn luyện ngoại ngữ 6 tháng và Tiến trình chuẩn bị hồ sơ Visa xuất cảnh.</p>
+          </div>
+
+          <div class="timeline-col-grid">
+            <!-- Left Side: 6-Month Study Roadmap -->
+            <div class="editorial-card">
+              <h3 class="editorial-card-title">Lộ Trình Đào Tạo Ngoại Ngữ (6 Tháng)</h3>
+              <p style="font-size: 0.82rem; color: var(--text-muted); margin-bottom: 2rem;">Lộ trình thiết kế từng bước giúp học viên từ mất gốc đạt tới trình độ ngôn ngữ tự tin du học giao tiếp và thi đỗ COE/Visa.</p>
+              
+              <div class="timeline-vertical" id="profileRoadmap">
+                <!-- Injected dynamically from JS based on learningMonth -->
+              </div>
+            </div>
+
+            <!-- Right Side: Visa Milestones Timeline & Missing Documents -->
+            <div>
+              <div class="editorial-card">
+                <h3 class="editorial-card-title">
+                  <span>Quy Trình Hoàn Thiện Thủ Tục Visa</span>
+                  <span id="visaStatusLabel" class="widget-status-badge" style="font-size: 0.6rem; font-weight: 700; background: var(--accent-light); color: var(--accent);">Đang chuẩn bị hồ sơ</span>
+                </h3>
+                <p style="font-size: 0.82rem; color: var(--text-muted); margin-bottom: 2rem;" id="studentPrepCourseDisplay">Khóa đào tạo du học cấp tốc chuyên biệt.</p>
+                
+                <div class="timeline-vertical" id="visaTrackerSteps">
+                  <!-- Injected from JS based on student country -->
+                </div>
+              </div>
+
+              <!-- Missing Documents checklist -->
+              <div class="editorial-card">
+                <h3 class="editorial-card-title" style="border-bottom: 1px solid #EF4444; padding-bottom: 0.6rem; color: #EF4444;">Giấy Tờ Cần Hoàn Thiện Gấp</h3>
+                <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 1rem;">Vui lòng kiểm tra kỹ và bổ sung hồ sơ gốc cho bộ phận xử lý của Aladdin Group trước thời hạn quy định.</p>
+                <div id="academicMissingDocsList" style="display: flex; flex-direction: column; gap: 0.5rem;">
+                  <!-- Injected dynamically -->
+                </div>
+              </div>
+
+              <!-- Mock Exams details -->
+              <div class="editorial-card">
+                <h3 class="editorial-card-title">Kế Hoạch Khảo Sát & Phỏng Vấn Giả Lập</h3>
+                <div id="academicMockTestsList" style="display: flex; flex-direction: column; gap: 0.75rem;">
+                  <!-- Injected dynamically -->
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ==========================================
+           TAB 4: PERSONAL DETAIL BIOGRAPHY PROFILE
+           ========================================== -->
+        <div class="tab-panel" id="tab-profile">
+          <div class="page-header">
+            <h2 class="page-title">Lý Lịch & Hồ Sơ Học Viên</h2>
+            <p class="page-subtitle">Vui lòng rà soát chính xác thông tin cá nhân học tập và gia đình để phục vụ công tác dịch thuật công chứng xin hồ sơ du học.</p>
+          </div>
+
+          <!-- Tuition Summary Widget -->
+          <div class="editorial-card">
+            <h3 class="editorial-card-title">Nghĩa Vụ Tài Chính & Học Phí</h3>
+            <div class="admin-info-list">
+              <div class="admin-info-row"><span class="admin-info-lbl">Cố vấn hồ sơ phụ trách</span><span class="admin-info-val" id="infoAdvisor">Chưa phân công</span></div>
+              <div class="admin-info-row"><span class="admin-info-lbl">Ngày nhập học trung tâm</span><span class="admin-info-val" id="infoEnrollDate">--</span></div>
+              <div class="admin-info-row"><span class="admin-info-lbl">Tháng học hiện tại</span><span class="admin-info-val" id="infoLearningMonth">--</span></div>
+              <div class="admin-info-row">
+                <span class="admin-info-lbl">Hạn bay dự kiến</span>
+                <span class="admin-info-val" id="profileFlightDate">Chưa có lịch bay</span>
+              </div>
+              <div class="admin-info-row"><span class="admin-info-lbl">Trạng thái học phí</span><span class="widget-status-badge" id="tuitionStatusBadge">Đang tải...</span></div>
+            </div>
+
+            <!-- Tuition Progress Bar -->
+            <div class="tuition-progress-widget">
+              <div class="tuition-bar-header">
+                <span style="color: var(--text-main);">Tiến độ hoàn thành học phí</span>
+                <span id="tuitionPaidProgress">0 ₫ / 0 ₫</span>
+              </div>
+              <div class="tuition-track">
+                <div class="tuition-fill" id="tuitionProgressBar"></div>
+              </div>
+              <div style="display: flex; justify-content: space-between; font-size: 0.7rem; color: var(--text-muted); margin-top: 0.5rem;">
+                <span>Tổng phải đóng: <strong id="tuitionTotal">--</strong></span>
+                <span>Đã đóng: <strong id="tuitionPaid">--</strong></span>
+                <span>Còn thiếu: <strong id="tuitionRemain">--</strong></span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Comprehensive Edit Form -->
+          <div class="editorial-card">
+            <h3 class="editorial-card-title">Cập Nhật Thông Tin Sơ Yếu Lý Lịch Chi Tiết</h3>
+            <p style="font-size: 0.82rem; color: var(--text-muted); margin-bottom: 1.5rem;">Học viên chủ động hoàn tất các thông tin còn thiếu. Thông tin này sẽ được đồng bộ trực tiếp lên hệ thống quản lý cơ sở dữ liệu hồ sơ tuyển sinh du học.</p>
+            
+            <form id="studentDetailProfileForm">
+              <!-- Section 1 -->
+              <h4 class="profile-section-heading">1. Sơ yếu lý lịch cá nhân</h4>
+              <div class="profile-form-grid">
+                <div class="form-field-group">
+                  <label for="sdpFullName">Họ và tên khai sinh *</label>
+                  <input type="text" id="sdpFullName" placeholder="Nguyễn Văn A" required />
+                </div>
+                <div class="form-field-group">
+                  <label for="sdpGender">Giới tính</label>
+                  <select id="sdpGender">
+                    <option value="Nam">Nam</option>
+                    <option value="Nữ">Nữ</option>
+                  </select>
+                </div>
+                <div class="form-field-group">
+                  <label for="sdpDob">Ngày tháng năm sinh *</label>
+                  <input type="date" id="sdpDob" required />
+                </div>
+              </div>
+
+              <div class="profile-form-grid">
+                <div class="form-field-group">
+                  <label for="sdpCccd">Số CCCD / Hộ chiếu *</label>
+                  <input type="text" id="sdpCccd" placeholder="CCCD 12 chữ số" required />
+                </div>
+                <div class="form-field-group">
+                  <label for="sdpCccdDate">Ngày cấp CCCD</label>
+                  <input type="date" id="sdpCccdDate" />
+                </div>
+                <div class="form-field-group">
+                  <label for="sdpPhone">Số điện thoại di động *</label>
+                  <input type="tel" id="sdpPhone" placeholder="Ví dụ: 0987654321" required />
+                </div>
+              </div>
+
+              <div class="profile-form-grid">
+                <div class="form-field-group">
+                  <label for="sdpEthnicity">Dân tộc</label>
+                  <input type="text" id="sdpEthnicity" placeholder="Kinh, Tày, Nùng..." />
+                </div>
+                <div class="form-field-group">
+                  <label for="sdpReligion">Tôn giáo</label>
+                  <input type="text" id="sdpReligion" placeholder="Không, Phật giáo..." />
+                </div>
+                <div class="form-field-group">
+                  <label for="sdpMarital">Tình trạng hôn nhân</label>
+                  <select id="sdpMarital">
+                    <option value="Độc thân">Độc thân</option>
+                    <option value="Đã kết hôn">Đã kết hôn</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="profile-form-grid grid-2">
+                <div class="form-field-group">
+                  <label for="sdpPermanentAddress">Địa chỉ thường trú (trong sổ hộ khẩu) *</label>
+                  <input type="text" id="sdpPermanentAddress" placeholder="Số nhà, đường, thôn/xóm, xã/phường, quận/huyện, tỉnh" required />
+                </div>
+                <div class="form-field-group">
+                  <label for="sdpTempAddress">Địa chỉ tạm trú / Nơi ở hiện nay *</label>
+                  <input type="text" id="sdpTempAddress" placeholder="Điền nơi cư trú hiện tại để liên lạc" required />
+                </div>
+              </div>
+
+              <!-- Section 2 -->
+              <h4 class="profile-section-heading">2. Quá trình học tập & Làm việc</h4>
+              <p style="font-size: 0.72rem; color: var(--text-muted); margin-bottom: 1rem; margin-top: -0.5rem;">Vui lòng điền chi tiết tên trường học, khóa học và khoảng thời gian học tập tương ứng.</p>
+              
+              <div class="profile-form-grid">
+                <div class="form-field-group">
+                  <label for="sdpSchoolHigh">Trường THPT tốt nghiệp *</label>
+                  <input type="text" id="sdpSchoolHigh" placeholder="Tên trường THPT" required />
+                </div>
+                <div class="form-field-group">
+                  <label for="sdpSchoolHighFrom">Thời gian học từ ngày</label>
+                  <input type="date" id="sdpSchoolHighFrom" />
+                </div>
+                <div class="form-field-group">
+                  <label for="sdpSchoolHighTo">Thời gian học đến ngày</label>
+                  <input type="date" id="sdpSchoolHighTo" />
+                </div>
+              </div>
+
+              <div class="profile-form-grid">
+                <div class="form-field-group">
+                  <label for="sdpSchoolUni">Trường Cao đẳng / Đại học (nếu có)</label>
+                  <input type="text" id="sdpSchoolUni" placeholder="Tên trường Đại học/Cao đẳng" />
+                </div>
+                <div class="form-field-group">
+                  <label for="sdpSchoolUniFrom">Thời gian học từ ngày</label>
+                  <input type="date" id="sdpSchoolUniFrom" />
+                </div>
+                <div class="form-field-group">
+                  <label for="sdpSchoolUniTo">Thời gian học đến ngày</label>
+                  <input type="date" id="sdpSchoolUniTo" />
+                </div>
+              </div>
+
+              <div class="profile-form-grid">
+                <div class="form-field-group">
+                  <label for="sdpSchoolMiddle">Trường THCS (Cấp 2)</label>
+                  <input type="text" id="sdpSchoolMiddle" placeholder="Tên trường THCS" />
+                </div>
+                <div class="form-field-group">
+                  <label for="sdpSchoolMiddleFrom">Thời gian học từ ngày</label>
+                  <input type="date" id="sdpSchoolMiddleFrom" />
+                </div>
+                <div class="form-field-group">
+                  <label for="sdpSchoolMiddleTo">Thời gian học đến ngày</label>
+                  <input type="date" id="sdpSchoolMiddleTo" />
+                </div>
+              </div>
+
+              <div class="profile-form-grid">
+                <div class="form-field-group">
+                  <label for="sdpSchoolPrimary">Trường Tiểu học (Cấp 1)</label>
+                  <input type="text" id="sdpSchoolPrimary" placeholder="Tên trường Tiểu học" />
+                </div>
+                <div class="form-field-group">
+                  <label for="sdpSchoolPrimaryFrom">Thời gian học từ ngày</label>
+                  <input type="date" id="sdpSchoolPrimaryFrom" />
+                </div>
+                <div class="form-field-group">
+                  <label for="sdpSchoolPrimaryTo">Thời gian học đến ngày</label>
+                  <input type="date" id="sdpSchoolPrimaryTo" />
+                </div>
+              </div>
+
+              <div class="profile-form-grid grid-1">
+                <div class="form-field-group">
+                  <label for="sdpWorkHistory">Quá trình làm việc sau tốt nghiệp (nếu có)</label>
+                  <textarea id="sdpWorkHistory" placeholder="Ghi chi tiết tên công ty, vị trí, khoảng thời gian công tác... (Mỗi công ty cách nhau 1 dòng)"></textarea>
+                </div>
+              </div>
+
+              <!-- Section 3 -->
+              <h4 class="profile-section-heading">3. Thông tin người thân trong gia đình</h4>
+              <div class="profile-form-grid">
+                <div class="form-field-group">
+                  <label for="sdpFatherName">Họ tên Bố đẻ *</label>
+                  <input type="text" id="sdpFatherName" placeholder="Họ tên bố đẻ" required />
+                </div>
+                <div class="form-field-group">
+                  <label for="sdpFatherYear">Năm sinh của Bố *</label>
+                  <input type="number" id="sdpFatherYear" placeholder="Ví dụ: 1975" required />
+                </div>
+                <div class="form-field-group">
+                  <label for="sdpFatherJob">Nghề nghiệp của Bố *</label>
+                  <input type="text" id="sdpFatherJob" placeholder="Nghề nghiệp/Nơi công tác" required />
+                </div>
+              </div>
+
+              <div class="profile-form-grid">
+                <div class="form-field-group">
+                  <label for="sdpMotherName">Họ tên Mẹ đẻ *</label>
+                  <input type="text" id="sdpMotherName" placeholder="Họ tên mẹ đẻ" required />
+                </div>
+                <div class="form-field-group">
+                  <label for="sdpMotherYear">Năm sinh của Mẹ *</label>
+                  <input type="number" id="sdpMotherYear" placeholder="Ví dụ: 1978" required />
+                </div>
+                <div class="form-field-group">
+                  <label for="sdpMotherJob">Nghề nghiệp của Mẹ *</label>
+                  <input type="text" id="sdpMotherJob" placeholder="Nghề nghiệp/Nơi công tác" required />
+                </div>
+              </div>
+
+              <div class="profile-form-grid">
+                <div class="form-field-group">
+                  <label for="sdpSiblingOlderName">Họ tên Anh/Chị (nếu có)</label>
+                  <input type="text" id="sdpSiblingOlderName" placeholder="Họ tên anh hoặc chị ruột" />
+                </div>
+                <div class="form-field-group">
+                  <label for="sdpSiblingOlderYear">Năm sinh</label>
+                  <input type="number" id="sdpSiblingOlderYear" placeholder="Năm sinh" />
+                </div>
+                <div class="form-field-group">
+                  <label for="sdpSiblingOlderJob">Nghề nghiệp</label>
+                  <input type="text" id="sdpSiblingOlderJob" placeholder="Nghề nghiệp/Học tập" />
+                </div>
+              </div>
+
+              <div class="profile-form-grid">
+                <div class="form-field-group">
+                  <label for="sdpSiblingYoungerName">Họ tên Em (nếu có)</label>
+                  <input type="text" id="sdpSiblingYoungerName" placeholder="Họ tên em ruột" />
+                </div>
+                <div class="form-field-group">
+                  <label for="sdpSiblingYoungerYear">Năm sinh</label>
+                  <input type="number" id="sdpSiblingYoungerYear" placeholder="Năm sinh" />
+                </div>
+                <div class="form-field-group">
+                  <label for="sdpSiblingYoungerJob">Nghề nghiệp</label>
+                  <input type="text" id="sdpSiblingYoungerJob" placeholder="Nghề nghiệp/Học tập" />
+                </div>
+              </div>
+
+              <div class="profile-form-grid">
+                <div class="form-field-group">
+                  <label for="sdpOtherMemberName">Họ tên người thân khác (Vợ/Chồng nếu có)</label>
+                  <input type="text" id="sdpOtherMemberName" placeholder="Vợ hoặc chồng nếu đã kết hôn" />
+                </div>
+                <div class="form-field-group">
+                  <label for="sdpOtherMemberYear">Năm sinh</label>
+                  <input type="number" id="sdpOtherMemberYear" />
+                </div>
+                <div class="form-field-group">
+                  <label for="sdpOtherMemberJob">Nghề nghiệp</label>
+                  <input type="text" id="sdpOtherMemberJob" />
+                </div>
+              </div>
+
+              <div class="profile-form-grid grid-2">
+                <div class="form-field-group">
+                  <label for="sdpPhoneRelative">Số điện thoại liên hệ khẩn cấp của người thân *</label>
+                  <input type="tel" id="sdpPhoneRelative" placeholder="Ví dụ: SĐT Bố hoặc Mẹ để liên hệ khẩn cấp" required />
+                </div>
+                <div class="form-field-group">
+                  <label for="sdpHobbies">Sở thích cá nhân</label>
+                  <input type="text" id="sdpHobbies" placeholder="Bóng đá, đọc sách, nghe nhạc..." />
+                </div>
+              </div>
+
+              <!-- Section 4 -->
+              <h4 class="profile-section-heading">4. Điểm mạnh & Nguyện vọng</h4>
+              <div class="profile-form-grid">
+                <div class="form-field-group">
+                  <label for="sdpStrengths">Điểm mạnh lớn nhất của bản thân</label>
+                  <textarea id="sdpStrengths" placeholder="Ví dụ: Tiếp thu nhanh, kiên trì, giao tiếp tốt..."></textarea>
+                </div>
+                <div class="form-field-group">
+                  <label for="sdpWeaknesses">Điểm yếu cần khắc phục</label>
+                  <textarea id="sdpWeaknesses" placeholder="Ví dụ: Hay quên, nói trước đám đông còn rụt rè..."></textarea>
+                </div>
+                <div class="form-field-group">
+                  <label for="sdpReason">Lý do và Động lực muốn đi du học nước ngoài</label>
+                  <textarea id="sdpReason" placeholder="Ví dụ: Mong muốn tiếp cận nền giáo dục tiên tiến, kiếm thu nhập hỗ trợ gia đình và nâng cao chuyên môn..."></textarea>
+                </div>
+              </div>
+
+              <!-- Save Button -->
+              <div class="form-save-button-wrap">
+                <button type="submit" class="btn-submit-premium">LƯU THÔNG TIN LÝ LỊCH</button>
+              </div>
+            </form>
+          </div>
+        </div>
+
+        <!-- ==========================================
+           TAB 5: LEAVE REQUEST
+           ========================================== -->
+        <div class="tab-panel" id="tab-leaves">
+          <div class="page-header">
+            <h2 class="page-title">Đăng Ký Nghỉ Phép Học Viên</h2>
+            <p class="page-subtitle">Học viên xin nghỉ phép phải được sự đồng ý của cố vấn học tập tối thiểu 1 ngày trước khi nghỉ phép để đảm bảo tiến độ chuyên cần.</p>
+          </div>
+
+          <div class="leave-request-container">
+            <!-- Left: Request form -->
+            <div class="editorial-card">
+              <h3 class="editorial-card-title">Đơn Xin Nghỉ Phép Mới</h3>
+              <form id="leaveRequestForm" style="display: flex; flex-direction: column; gap: 1.25rem;">
+                <div class="form-field-group">
+                  <label for="leaveDate">Ngày muốn nghỉ phép *</label>
+                  <input type="date" id="leaveDate" required />
+                </div>
+                
+                <div class="form-field-group">
+                  <label for="leaveSession">Buổi đăng ký nghỉ *</label>
+                  <select id="leaveSession" required>
+                    <option value="morning">Buổi sáng</option>
+                    <option value="afternoon">Buổi chiều</option>
+                    <option value="full">Cả ngày (Tính 2 buổi phép)</option>
+                  </select>
+                </div>
+
+                <div class="form-field-group">
+                  <label for="leaveReason">Lý do xin nghỉ phép *</label>
+                  <textarea id="leaveReason" placeholder="Ghi chi tiết lý do (ví dụ: bị sốt, về quê có việc gia đình gấp...)" required></textarea>
+                </div>
+
+                <button type="submit" class="btn-submit-premium" style="width: 100%; justify-content: center; display: flex;">GỬI YÊU CẦU NGHỈ PHÉP</button>
+              </form>
+            </div>
+
+            <!-- Right: Leaves History -->
+            <div class="editorial-card">
+              <h3 class="editorial-card-title">Lịch Sử Xin Nghỉ Phép Của Bạn</h3>
+              <div style="overflow-x: auto;">
+                <table class="sp-resume-table">
+                  <thead>
+                    <tr>
+                      <th>Ngày Nghỉ</th>
+                      <th>Buổi</th>
+                      <th>Lý Do Xin Nghỉ</th>
+                      <th>Trạng Thái</th>
+                    </tr>
+                  </thead>
+                  <tbody id="studentLeavesList">
+                    <tr>
+                      <td colspan="4" style="text-align: center; color: var(--text-muted); padding: 2rem 0;">Chưa có lịch sử nghỉ phép.</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </section>
+    </main>
+
+    <!-- Toast Notifications Container -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <!-- Script Area for Database and UI interactions -->
+    <script>
+      // 1. Firebase configuration from current project cache
+      const firebaseConfig = {
+        apiKey: "AIzaSyC3wwnvpQwHX6UZcgXIShan5qJ7waR1Ccs",
+        authDomain: "box-chat-noi-bo.firebaseapp.com",
+        projectId: "box-chat-noi-bo",
+        storageBucket: "box-chat-noi-bo.firebasestorage.app",
+        messagingSenderId: "867982221264",
+        appId: "1:867982221264:web:63f22689b875e699fbe3d5",
+        measurementId: "G-P6QLZD5P4Y"
+      };
+
+      // Firestore dynamic fallback initialization:
+      let app;
+      if (firebase.apps.length === 0) {
+        app = firebase.initializeApp(firebaseConfig);
+      } else {
+        app = firebase.app();
+      }
+
+      const auth = firebase.auth();
+      const db = firebase.firestore();
+
+      // State Management
+      let currentStudent = null;
+      let currentScorecardTabType = "week"; // "week" or "month"
+
+      // Page initial listener
+      auth.onAuthStateChanged(async (user) => {
+        if (!user) {
+          // If not logged in, redirect back to login wrapper
+          window.location.href = "index.html";
+          return;
+        }
+
+        try {
+          // Verify user role
+          const userDoc = await db.collection("users").doc(user.uid).get();
+          if (userDoc.exists) {
+            const userData = userDoc.data();
+            if (userData.role !== "student") {
+              // Only students allowed on this portal!
+              window.location.href = "index.html";
+              return;
+            }
+          }
+
+          // Load profile details from students collection
+          const studentQuery = await db.collection("students").where("email", "==", user.email).get();
+          if (studentQuery.empty) {
+            showToast("Tài khoản chưa được liên kết thông tin học viên. Liên hệ admin!", "error");
+            setTimeout(() => {
+              auth.signOut().then(() => { window.location.href = "index.html"; });
+            }, 3000);
+            return;
+          }
+
+          const studentDoc = studentQuery.docs[0];
+          currentStudent = { id: studentDoc.id, ...studentDoc.data() };
+
+          // Build UI and load pages
+          initUI(currentStudent);
+
+          // Hide loading overlay
+          const loader = document.getElementById("app-loading");
+          if (loader) {
+            loader.style.opacity = "0";
+            setTimeout(() => loader.remove(), 400);
+          }
+
+        } catch (err) {
+          console.error("Auth validation failed:", err);
+          showToast("Lỗi đồng bộ dữ liệu: " + err.message, "error");
+        }
+      });
+
+      // Show Toast Notification
+      function showToast(message, type = "info") {
+        const container = document.getElementById("toastContainer");
+        if (!container) return;
+
+        const toast = document.createElement("div");
+        toast.className = `toast-message ${type === "error" ? "error" : ""}`;
+        toast.innerHTML = `
+          <div style="font-weight: 600;">${type === "error" ? "⚠️" : "✨"}</div>
+          <div>${message}</div>
+        `;
+        container.appendChild(toast);
+        
+        setTimeout(() => {
+          toast.style.opacity = "0";
+          setTimeout(() => toast.remove(), 300);
+        }, 4000);
+      }
+
+      // Initialize UI elements and tabs
+      function initUI(student) {
+        // Dropdown toggles
+        const trigger = document.getElementById("profileDropdownTrigger");
+        const dropdown = document.getElementById("dropdownCard");
+        if (trigger && dropdown) {
+          trigger.addEventListener("click", (e) => {
+            e.stopPropagation();
+            dropdown.style.display = dropdown.style.display === "flex" ? "none" : "flex";
+          });
+          document.addEventListener("click", () => {
+            dropdown.style.display = "none";
+          });
+        }
+
+        // View profile click
+        document.getElementById("btnGoToProfile").addEventListener("click", () => {
+          const profileNav = document.querySelector('[data-tab="tab-profile"]');
+          if (profileNav) profileNav.click();
+        });
+
+        // Logout listener
+        document.getElementById("btnLogoutPortal").addEventListener("click", () => {
+          auth.signOut().then(() => {
+            window.location.href = "index.html";
+          });
+        });
+
+        // Sidebar Navigation Tab swapping
+        const navItems = document.querySelectorAll(".sidebar-nav-item");
+        const panels = document.querySelectorAll(".tab-panel");
+        navItems.forEach(item => {
+          item.addEventListener("click", () => {
+            const target = item.getAttribute("data-tab");
+            
+            navItems.forEach(btn => btn.classList.remove("active"));
+            panels.forEach(p => p.classList.remove("active"));
+            
+            item.classList.add("active");
+            const targetPanel = document.getElementById(target);
+            if (targetPanel) targetPanel.classList.add("active");
+
+            // Redraw chart canvas if entering grades tab
+            if (target === "tab-grades") {
+              setTimeout(() => {
+                triggerCanvasRedraw();
+              }, 150);
+            }
+          });
+        });
+
+        // Populate header name details
+        document.getElementById("navName").textContent = student.name || "Học Viên";
+        document.getElementById("navCode").textContent = student.code || "TE-XXXX";
+        document.getElementById("profileNameBig").textContent = student.name || "Học Viên";
+        document.getElementById("profileCodeBig").textContent = student.code || "TE-XXXX";
+        
+        const avatarTxt = (student.name || "HV").split(" ").map(n => n[0]).join("").substring(0, 2).toUpperCase();
+        document.getElementById("navAvatar").textContent = avatarTxt;
+        document.getElementById("profileAvatarBig").textContent = avatarTxt;
+
+        const countryText = student.country || "Nhật";
+        const countryTextFull = countryText === "Nhật" ? "Du học Nhật Bản" : (countryText === "Hàn" ? "Du học Hàn Quốc" : "Du học Đài Loan");
+        document.getElementById("profileCountryBig").textContent = countryTextFull;
+
+        const statusLabel = student.status || "Đang học";
+        const statusBig = document.getElementById("profileStatusBig");
+        if (statusBig) {
+          statusBig.textContent = statusLabel;
+          statusBig.style.background = statusLabel === "Đã xuất cảnh" ? "rgba(16,185,129,0.1)" : statusLabel === "Đã trúng tuyển" ? "rgba(59,130,246,0.1)" : "rgba(168,139,88,0.1)";
+          statusBig.style.color = statusLabel === "Đã xuất cảnh" ? "#10B981" : statusLabel === "Đã trúng tuyển" ? "#3B82F6" : "var(--accent)";
+        }
+
+        // Initialize specific tabs content
+        populateOverviewTab(student);
+        populateGradesTab(student);
+        populateRoadmapTab(student);
+        populatePersonalInfoTab(student);
+        populateLeavesTab(student);
+      }
+
+      // ── TAB 1: OVERVIEW TAB POPULATION ──────────────────────────────
+      function populateOverviewTab(student) {
+        const enrollDate = student.createdAt ? (student.createdAt.toDate ? student.createdAt.toDate() : new Date(student.createdAt)) : new Date();
+        document.getElementById("ovEnrollDate").textContent = `Khai giảng: ${enrollDate.toLocaleDateString("vi-VN")}`;
+
+        // Countdown Bay
+        const countdownVal = document.getElementById("ovCountdown");
+        const countdownSub = document.getElementById("ovFlightDate");
+        if (student.flightDate) {
+          const fd = student.flightDate.toDate ? student.flightDate.toDate() : new Date(student.flightDate);
+          countdownSub.textContent = `Bay dự kiến: ${fd.toLocaleDateString("vi-VN")}`;
+          const diff = Math.ceil((fd - new Date()) / (1000 * 60 * 60 * 24));
+          countdownVal.textContent = diff > 0 ? `Còn ${diff} ngày` : diff === 0 ? "Hôm nay bay! ✈️" : `Đã bay ${Math.abs(diff)} ngày trước`;
+        } else {
+          countdownVal.textContent = "Chưa có lịch";
+          countdownSub.textContent = "Đang cập nhật...";
+        }
+
+        // Central news static
+        const announcements = [
+          { category: "Nhắc nhở", title: "Lịch nghỉ lễ Quốc khánh 2/9 & Lịch thi thử năng lực tiếng", date: "2026-08-05", urgency: "urgent" },
+          { category: "Tin mới", title: "Khai giảng lớp đàm thoại phản xạ miễn phí với người bản xứ buổi tối", date: "2026-08-02", urgency: "info" },
+          { category: "Hỏa tốc", title: "Yêu cầu hoàn thiện hồ sơ dịch thuật công chứng bổ sung cho kỳ bay tháng 4/2027", date: "2026-07-28", urgency: "critical" }
+        ];
+        const noticesContainer = document.getElementById("ovAnnouncementsList");
+        if (noticesContainer) {
+          noticesContainer.innerHTML = announcements.map(a => `
+            <div class="news-bulletin-item">
+              <span class="news-badge ${a.urgency}">${a.category}</span>
+              <div class="news-body">
+                <div class="news-title">${a.title}</div>
+                <div class="news-date">${new Date(a.date).toLocaleDateString("vi-VN")}</div>
+              </div>
+            </div>
+          `).join("");
+        }
+
+        // Countdown timer for next event (mock exam)
+        const eventDate = new Date("2026-09-15T08:30:00+07:00");
+        const updateClock = () => {
+          const diff = eventDate - new Date();
+          if (diff <= 0) {
+            document.getElementById("cdDays").textContent = "00";
+            document.getElementById("cdHours").textContent = "00";
+            document.getElementById("cdMins").textContent = "00";
+            return;
+          }
+          const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+          const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+          const mins = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+          
+          document.getElementById("cdDays").textContent = String(days).padStart(2, "0");
+          document.getElementById("cdHours").textContent = String(hours).padStart(2, "0");
+          document.getElementById("cdMins").textContent = String(mins).padStart(2, "0");
+        };
+        updateClock();
+        setInterval(updateClock, 60000);
+
+        // Hall of fame list
+        const hof = [
+          { name: "Vũ Thùy Chi", code: "TE-2026-015", desc: "GPA xuất sắc 9.6/10 & Đỗ COE Tokyo kỳ bay 10/2026", emoji: "🎓" },
+          { name: "Trần Minh Quân", code: "TE-2026-033", desc: "Học bổng toàn phần du học Đài Loan MOE 2026", emoji: "🎖️" },
+          { name: "Lê Hồng Nhung", code: "TE-2026-008", desc: "Nhận Visa thẳng ĐH Kookmin chỉ sau 2 tuần xét duyệt", emoji: "✈️" }
+        ];
+        const hofContainer = document.getElementById("ovHallOfFameList");
+        if (hofContainer) {
+          hofContainer.innerHTML = hof.map(h => `
+            <div style="display: flex; align-items: center; gap: 0.85rem; padding: 0.75rem; background: var(--bg-primary); border-radius: var(--border-radius-md); border: 1px solid var(--border-light);">
+              <div style="width: 32px; height: 32px; border-radius: 50%; background: var(--accent-light); display: flex; align-items: center; justify-content: center; font-size: 1rem; flex-shrink: 0;">${h.emoji}</div>
+              <div style="flex: 1; min-width: 0;">
+                <div style="display: flex; justify-content: space-between; align-items: baseline;">
+                  <strong style="font-size: 0.8rem; color: var(--text-main); text-overflow: ellipsis; overflow: hidden; white-space: nowrap;">${h.name}</strong>
+                  <span style="font-size: 0.62rem; color: var(--accent); font-family: monospace; font-weight: 700;">${h.code}</span>
+                </div>
+                <p style="margin: 0; font-size: 0.68rem; color: var(--text-muted); line-height: 1.3; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${h.desc}</p>
+              </div>
+            </div>
+          `).join("");
+        }
+      }
+
+      // ── Helper generator for mock scores ────────────────────────────
+      const generateScoresForStudent = (std, type, idx) => {
+        const seedStr = `${std.code || "TE-000"}-${type}-${idx}`;
+        let val = 0;
+        for (let i = 0; i < seedStr.length; i++) {
+          val += seedStr.charCodeAt(i);
+        }
+        const listening = parseFloat((7.5 + (val % 21) / 10).toFixed(1));
+        const speaking = parseFloat((7.0 + ((val + 3) % 26) / 10).toFixed(1));
+        const reading = parseFloat((7.5 + ((val + 7) % 21) / 10).toFixed(1));
+        const writing = parseFloat((6.8 + ((val + 11) % 28) / 10).toFixed(1));
+        const attendance = 90 + (val % 11);
+        const comments = [
+          "Thái độ học tập cực kỳ nghiêm túc, phát âm tương đối chuẩn tự nhiên.",
+          "Bài tập về nhà làm đầy đủ, kỹ năng nghe cần cải thiện phản xạ nhanh hơn.",
+          "Đọc dịch hiểu bài nhanh chóng, bài luận viết có lập luận chặt chẽ.",
+          "Hăng hái tương tác phát biểu xây dựng bài trên lớp, làm bài thi thử đạt chỉ tiêu.",
+          "Kỹ năng phản xạ nói tiến bộ rõ rệt qua từng tuần học."
+        ];
+        const comment = comments[val % comments.length];
+        const average = parseFloat(((listening + speaking + reading + writing) / 4).toFixed(1));
+        return { listening, speaking, reading, writing, attendance, comment, average };
+      };
+
+      // ── TAB 2: GRADES TAB POPULATION ────────────────────────────────
+      async function populateGradesTab(student) {
+        const getFixedEnrollDate = (email, createdAt) => {
+          const emailLower = (email || "").toLowerCase();
+          let hash = 0;
+          for (let i = 0; i < emailLower.length; i++) {
+            hash = emailLower.charCodeAt(i) + ((hash << 5) - hash);
+          }
+          const groupIdx = Math.abs(hash) % 5;
+          if (groupIdx === 0) return new Date("2026-05-28T08:00:00+07:00");
+          if (groupIdx === 1) return new Date("2026-05-12T08:00:00+07:00");
+          if (groupIdx === 2) return new Date("2026-04-20T08:00:00+07:00");
+          if (groupIdx === 3) return new Date("2026-04-05T08:00:00+07:00");
+          return new Date("2026-03-15T08:00:00+07:00");
+        };
+
+        const enrollDate = getFixedEnrollDate(student.email, student.createdAt);
+        const today = new Date("2026-05-31T23:00:00+07:00");
+        const diffDays = Math.max(1, Math.floor((today - enrollDate) / (1000 * 60 * 60 * 24)));
+        
+        const activeWeeks = Math.min(24, Math.max(1, Math.floor(diffDays / 7)));
+        const activeMonths = Math.min(6, Math.max(1, Math.floor(diffDays / 30)));
+
+        // Load custom scorecards from Firestore
+        let customScorecards = [];
+        try {
+          const snap = await db.collection("scorecards").where("studentEmail", "==", (student.email || "").toLowerCase()).get();
+          snap.forEach(doc => customScorecards.push(doc.data()));
+        } catch (err) {
+          console.error("Failed to load scorecard docs:", err);
+        }
+
+        // Calculate Average Stats
+        let totalGpa = 0;
+        let totalAttendance = 0;
+        for (let i = 1; i <= activeWeeks; i++) {
+          const custom = customScorecards.find(s => s.type === "week" && s.index === i);
+          let score;
+          if (custom) {
+            score = {
+              average: parseFloat(((parseFloat(custom.listening) + parseFloat(custom.speaking) + parseFloat(custom.reading) + parseFloat(custom.writing)) / 4).toFixed(1)),
+              attendance: parseInt(custom.attendance)
+            };
+          } else {
+            score = generateScoresForStudent(student, "week", i);
+          }
+          totalGpa += score.average;
+          totalAttendance += score.attendance;
+        }
+
+        const avgGpa = parseFloat((totalGpa / activeWeeks).toFixed(1)) || 8.2;
+        const avgAttendance = Math.round(totalAttendance / activeWeeks) || 95;
+
+        // Xếp loại học lực
+        const ranks = {
+          "Xuất sắc": avgGpa >= 9.0,
+          "Giỏi": avgGpa >= 8.0 && avgGpa < 9.0,
+          "Khá": avgGpa >= 6.5 && avgGpa < 8.0,
+          "Trung bình": avgGpa >= 5.0 && avgGpa < 6.5,
+          "Yếu": avgGpa < 5.0
+        };
+        const rankText = Object.keys(ranks).find(k => ranks[k]) || "Khá";
+
+        // Fill KPIs
+        document.getElementById("ovGpa").textContent = `${avgGpa}/10`;
+        document.getElementById("ovRank").textContent = `Xếp loại: ${rankText}`;
+        document.getElementById("ovAttendance").textContent = `${avgAttendance}%`;
+        document.getElementById("ovAttendanceEval").textContent = avgAttendance >= 90 ? "Đạt chuẩn chuyên cần" : "Cần tăng chuyên cần";
+        document.getElementById("ovAttendanceEval").style.color = avgAttendance >= 90 ? "#10B981" : "#EF4444";
+
+        const radialPath = document.getElementById("radialAttendancePath");
+        const radialPct = document.getElementById("radialAttendancePercent");
+        const radialEval = document.getElementById("attendanceEvalText");
+        
+        if (radialPct) radialPct.textContent = `${avgAttendance}%`;
+        if (radialPath) {
+          radialPath.style.strokeDashoffset = 100 - avgAttendance;
+          radialPath.style.stroke = avgAttendance >= 90 ? "#10b981" : avgAttendance >= 80 ? "#f5a623" : "#ef4444";
+        }
+        if (radialEval) {
+          radialEval.textContent = avgAttendance >= 90 ? "Chuyên cần xuất sắc" : "Cần bổ túc giờ học";
+          radialEval.style.color = avgAttendance >= 90 ? "#10B981" : "#EF4444";
+        }
+
+        // Draw Line Chart on Canvas helper
+        window.triggerCanvasRedraw = () => {
+          drawProgressChart(activeWeeks, customScorecards);
+        };
+
+        // Switch List of cards (Tuần / Tháng)
+        const renderList = (type) => {
+          const container = document.getElementById("studentScorecardList");
+          if (!container) return;
+          container.innerHTML = "";
+          
+          const count = type === "week" ? activeWeeks : activeMonths;
+          for (let i = count; i >= 1; i--) {
+            const custom = customScorecards.find(s => s.type === type && s.index === i);
+            let score;
+            if (custom) {
+              score = {
+                listening: parseFloat(custom.listening),
+                speaking: parseFloat(custom.speaking),
+                reading: parseFloat(custom.reading),
+                writing: parseFloat(custom.writing),
+                attendance: parseInt(custom.attendance),
+                comment: custom.comment || "",
+                average: parseFloat(((parseFloat(custom.listening) + parseFloat(custom.speaking) + parseFloat(custom.reading) + parseFloat(custom.writing)) / 4).toFixed(1))
+              };
+            } else {
+              score = generateScoresForStudent(student, type, i);
+            }
+
+            const itemStart = new Date(enrollDate);
+            const itemEnd = new Date(enrollDate);
+            if (type === "week") {
+              itemStart.setDate(enrollDate.getDate() + (i - 1) * 7);
+              itemEnd.setDate(enrollDate.getDate() + i * 7 - 1);
+            } else {
+              itemStart.setMonth(enrollDate.getMonth() + (i - 1));
+              itemEnd.setMonth(enrollDate.getMonth() + i);
+              itemEnd.setDate(itemEnd.getDate() - 1);
+            }
+            const dateStr = `${itemStart.getDate()}/${itemStart.getMonth() + 1} - ${itemEnd.getDate()}/${itemEnd.getMonth() + 1}/${itemEnd.getFullYear()}`;
+
+            const card = document.createElement("div");
+            card.className = "scorecard-card";
+            card.innerHTML = `
+              <div class="scorecard-left">
+                <h4>${type === "week" ? "Tuần học " + i : "Tháng học " + i}</h4>
+                <span>Lớp đào tạo ${dateStr}</span>
+                <div class="scorecard-average-box">
+                  <span class="val">${score.average}</span>
+                  <span class="lbl">GPA</span>
+                </div>
+              </div>
+              <div>
+                <div class="skills-bars">
+                  <div class="skill-bar-row">
+                    <div class="skill-bar-lbl"><span>NGHE</span><span>${score.listening}/10</span></div>
+                    <div class="skill-bar-track"><div class="skill-bar-fill" style="width: ${score.listening * 10}%;"></div></div>
+                  </div>
+                  <div class="skill-bar-row">
+                    <div class="skill-bar-lbl"><span>NÓI</span><span>${score.speaking}/10</span></div>
+                    <div class="skill-bar-track"><div class="skill-bar-fill" style="width: ${score.speaking * 10}%; background: #10B981;"></div></div>
+                  </div>
+                  <div class="skill-bar-row">
+                    <div class="skill-bar-lbl"><span>ĐỌC</span><span>${score.reading}/10</span></div>
+                    <div class="skill-bar-track"><div class="skill-bar-fill" style="width: ${score.reading * 10}%; background: #F5A623;"></div></div>
+                  </div>
+                  <div class="skill-bar-row">
+                    <div class="skill-bar-lbl"><span>VIẾT</span><span>${score.writing}/10</span></div>
+                    <div class="skill-bar-track"><div class="skill-bar-fill" style="width: ${score.writing * 10}%; background: #EF4444;"></div></div>
+                  </div>
+                </div>
+                <div class="scorecard-comment-box">
+                  Chuyên cần: ${score.attendance}% • <strong>Nhận xét học tập:</strong> "${score.comment}"
+                </div>
+              </div>
+            `;
+            container.appendChild(card);
+          }
+        };
+
+        // Setup filter triggers
+        const btnW = document.getElementById("btnScorecardWeekToggle");
+        const btnM = document.getElementById("btnScorecardMonthToggle");
+        if (btnW && btnM) {
+          btnW.addEventListener("click", () => {
+            btnW.classList.add("active");
+            btnM.classList.remove("active");
+            renderList("week");
+          });
+          btnM.addEventListener("click", () => {
+            btnM.classList.add("active");
+            btnW.classList.remove("active");
+            renderList("month");
+          });
+        }
+
+        renderList("week");
+      }
+
+      // Draw HTML5 Canvas Chart function
+      function drawProgressChart(activeWeeks, customScorecards) {
+        const canvas = document.getElementById("studentProgressCanvas");
+        if (!canvas) return;
+
+        const rect = canvas.getBoundingClientRect();
+        canvas.width = rect.width * window.devicePixelRatio;
+        canvas.height = 200 * window.devicePixelRatio;
+
+        const ctx = canvas.getContext("2d");
+        ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
+
+        const width = rect.width;
+        const height = 200;
+        ctx.clearRect(0, 0, width, height);
+
+        const points = [];
+        for (let i = 1; i <= activeWeeks; i++) {
+          const custom = customScorecards.find(s => s.type === "week" && s.index === i);
+          let gpa = 8.2;
+          if (custom) {
+            gpa = parseFloat(((parseFloat(custom.listening) + parseFloat(custom.speaking) + parseFloat(custom.reading) + parseFloat(custom.writing)) / 4).toFixed(1));
+          } else {
+            gpa = generateScoresForStudent(currentStudent, "week", i).average;
+          }
+          points.push({ w: i, val: gpa });
+        }
+
+        if (points.length === 0) return;
+
+        const padL = 35;
+        const padR = 15;
+        const padT = 20;
+        const padB = 30;
+
+        const chartW = width - padL - padR;
+        const chartH = height - padT - padB;
+
+        const yMin = 5.0;
+        const yMax = 10.0;
+
+        // Draw Y lines
+        ctx.font = "9px sans-serif";
+        ctx.fillStyle = "#7E7C75";
+        ctx.textAlign = "right";
+        ctx.textBaseline = "middle";
+
+        const yLines = 5;
+        for (let i = 0; i <= yLines; i++) {
+          const ratio = i / yLines;
+          const y = padT + chartH - ratio * chartH;
+          const valStr = (yMin + ratio * (yMax - yMin)).toFixed(1);
+
+          ctx.beginPath();
+          ctx.moveTo(padL, y);
+          ctx.lineTo(width - padR, y);
+          ctx.strokeStyle = "rgba(168, 139, 88, 0.06)";
+          ctx.lineWidth = 1;
+          ctx.stroke();
+
+          ctx.fillText(valStr, padL - 6, y);
+        }
+
+        const getX = (idx) => {
+          if (points.length <= 1) return padL + chartW / 2;
+          return padL + (idx / (points.length - 1)) * chartW;
+        };
+
+        const getY = (val) => {
+          const cl = Math.max(yMin, Math.min(yMax, val));
+          const ratio = (cl - yMin) / (yMax - yMin);
+          return padT + chartH - ratio * chartH;
+        };
+
+        // Draw X labels
+        ctx.textAlign = "center";
+        ctx.textBaseline = "top";
+        points.forEach((p, idx) => {
+          const x = getX(idx);
+          if (points.length > 8 && idx % 2 !== 0 && idx !== points.length - 1) return;
+          ctx.fillText(`Tuần ${p.w}`, x, padT + chartH + 8);
+        });
+
+        // Fill gold gradient
+        const grad = ctx.createLinearGradient(0, padT, 0, padT + chartH);
+        grad.addColorStop(0, "rgba(168, 139, 88, 0.15)");
+        grad.addColorStop(1, "rgba(168, 139, 88, 0.0)");
+
+        ctx.beginPath();
+        ctx.moveTo(getX(0), padT + chartH);
+        points.forEach((p, idx) => ctx.lineTo(getX(idx), getY(p.val)));
+        ctx.lineTo(getX(points.length - 1), padT + chartH);
+        ctx.closePath();
+        ctx.fillStyle = grad;
+        ctx.fill();
+
+        // Draw Main Path Line
+        ctx.beginPath();
+        points.forEach((p, idx) => {
+          const x = getX(idx);
+          const y = getY(p.val);
+          if (idx === 0) ctx.moveTo(x, y);
+          else ctx.lineTo(x, y);
+        });
+        ctx.strokeStyle = "var(--accent)";
+        ctx.lineWidth = 2.5;
+        ctx.lineCap = "round";
+        ctx.lineJoin = "round";
+        ctx.stroke();
+
+        // Draw Dots
+        points.forEach((p, idx) => {
+          const x = getX(idx);
+          const y = getY(p.val);
+          
+          ctx.beginPath();
+          ctx.arc(x, y, 4, 0, 2 * Math.PI);
+          ctx.fillStyle = "#FFFFFF";
+          ctx.fill();
+          ctx.strokeStyle = "var(--accent)";
+          ctx.lineWidth = 2;
+          ctx.stroke();
+
+          if (points.length <= 10 || idx === points.length - 1 || idx === 0) {
+            ctx.fillStyle = "#1C1B19";
+            ctx.font = "bold 9px sans-serif";
+            ctx.fillText(p.val.toFixed(1), x, y - 9);
+          }
+        });
+      }
+
+      // ── TAB 3: ROADMAP & TIMELINE POPULATION ────────────────────────
+      function populateRoadmapTab(student) {
+        // Study 6-Month Roadmap
+        const ROADMAP = [
+          { m: "Tháng 1", title: "Xây dựng nền tảng", sub: "Nhập môn bảng chữ cái & ngữ pháp cơ bản sơ cấp" },
+          { m: "Tháng 2", title: "Phát triển phản xạ", sub: "Luyện nghe nói hội thoại giao tiếp cơ bản" },
+          { m: "Tháng 3", title: "Làm quen học thuật", sub: "Học chữ Hán/Kanji/Hanja sơ trung cấp" },
+          { m: "Tháng 4", title: "Tăng tốc học thuật", sub: "Đọc hiểu văn bản trung cấp, viết luận" },
+          { m: "Tháng 5", title: "Luyện đề chuyên sâu", sub: "Thi thử thử thách chứng chỉ & giả lập phỏng vấn" },
+          { m: "Tháng 6", title: "Tổng ôn & Xuất cảnh", sub: "Định hướng văn hóa sống, hoàn tất bay" }
+        ];
+
+        const MONTH_MAP = { "Tháng 1": 1, "Tháng 2": 2, "Tháng 3": 3, "Tháng 4": 4, "Tháng 5": 5, "Tháng 6": 6, "Hoàn thành": 7 };
+        const activeStep = MONTH_MAP[student.learningMonth] || 1;
+
+        const roadmapContainer = document.getElementById("profileRoadmap");
+        if (roadmapContainer) {
+          roadmapContainer.innerHTML = ROADMAP.map((step, idx) => {
+            const num = idx + 1;
+            const done = num < activeStep || activeStep === 7;
+            const active = num === activeStep && activeStep !== 7;
+            
+            const stepCls = done ? "timeline-item done" : active ? "timeline-item active" : "timeline-item";
+            const tagCls = done ? "done" : active ? "active" : "pending";
+            const tagText = done ? "Hoàn thành" : active ? "Đang học" : "Chờ học";
+            
+            return `
+              <div class="${stepCls}">
+                <div class="timeline-node"></div>
+                <div class="timeline-content">
+                  <h4>${step.m}: ${step.title}</h4>
+                  <p>${step.sub}</p>
+                  <span class="timeline-tag ${tagCls}">${tagText}</span>
+                </div>
+              </div>
+            `;
+          }).join("");
+        }
+
+        // Semesters Status Map
+        const sem1Status = activeStep >= 3 ? "Hoàn thành" : "Đang học";
+        const sem2Status = activeStep <= 2 ? "Chưa học" : activeStep >= 5 ? "Hoàn thành" : "Đang học";
+        const sem3Status = activeStep <= 4 ? "Chưa học" : activeStep >= 7 ? "Hoàn thành" : "Đang học";
+
+        const updateSemCard = (idBadge, idCard, status) => {
+          const badge = document.getElementById(idBadge);
+          const card = document.getElementById(idCard);
+          if (badge && card) {
+            badge.textContent = status;
+            badge.style.color = status === "Hoàn thành" ? "#10B981" : status === "Đang học" ? "var(--accent)" : "var(--text-muted)";
+            if (status === "Đang học") {
+              card.classList.add("active");
+            } else {
+              card.classList.remove("active");
+            }
+          }
+        };
+        updateSemCard("semStatus1", "semCard1", sem1Status);
+        updateSemCard("semStatus2", "semCard2", sem2Status);
+        updateSemCard("semStatus3", "semCard3", sem3Status);
+
+        const semNames = { 1: "KÌ I: Giao Tiếp", 2: "KÌ I: Giao Tiếp", 3: "KÌ II: Học Thuật", 4: "KÌ II: Học Thuật", 5: "KÌ III: Luyện Đề", 6: "KÌ III: Luyện Đề", 7: "Hoàn thành khóa học" };
+        document.getElementById("ovSemester").textContent = semNames[activeStep] || "Chưa bắt đầu";
+
+        // Visa step setups
+        const country = student.country || "Nhật";
+        const status = student.status || "Đang học";
+
+        const japanSteps = [
+          { title: "Dịch thuật công chứng", sub: "Hoàn thiện hồ sơ lý lịch dịch thuật" },
+          { title: "Nộp hồ sơ trường", sub: "Chuyển phát hồ sơ sang trường đối tác Nhật" },
+          { title: "Thẩm định Cục", sub: "Cục Quản lý XNC Nhật Bản xét duyệt hồ sơ" },
+          { title: "Cấp kết quả COE", sub: "Cục cấp Giấy chứng nhận tư cách lưu trú COE" },
+          { title: "Xin dán Visa", sub: "Nộp dán Visa chính thức tại ĐSQ Nhật Bản" },
+          { title: "Hạ cánh bay", sub: "Xuất cảnh nhập học trường Nhật ngữ" }
+        ];
+
+        const koreaSteps = [
+          { title: "Hợp pháp hóa Lãnh sự", sub: "Xác thực học bạ & bằng cấp tại Lãnh sự quán" },
+          { title: "Nộp hồ sơ ĐH Hàn", sub: "Chuyển phát hồ sơ sang trường ĐH Hàn Quốc" },
+          { title: "Phỏng vấn ĐH", sub: "Phỏng vấn trực tiếp đại diện trường qua Zoom/Trực tiếp" },
+          { title: "Cấp mã Code Visa", sub: "Cục XNC Hàn Quốc phê duyệt cấp mã Code" },
+          { title: "Nộp dán Visa", sub: "Đăng ký nộp dán Visa tại KVAC" },
+          { title: "Bay xuất cảnh", sub: "Xuất cảnh nhập học kỳ đào tạo chính thức" }
+        ];
+
+        const taiwanSteps = [
+          { title: "Xác thực VP Đài Bắc", sub: "Hợp pháp hóa giấy tờ tại Văn phòng Kinh tế Đài Bắc" },
+          { title: "Gửi hồ sơ xét học bổng", sub: "Gửi hồ sơ xin học bổng trực tiếp lên trường/Bộ GD" },
+          { title: "Phỏng vấn trực tiếp", sub: "Hội đồng trường phỏng vấn trực tiếp hoặc viết bài test" },
+          { title: "Nhận thư nhập học", sub: "Nhận Giấy gọi nhập học chính thức từ trường" },
+          { title: "Dán Visa học sinh", sub: "Làm thủ tục dán Visa du học Đài Loan" },
+          { title: "Cất cánh xuất cảnh", sub: "Xuất cảnh bay nhập học kỳ tuyển sinh" }
+        ];
+
+        const steps = country === "Nhật" ? japanSteps : (country === "Đài" ? taiwanSteps : koreaSteps);
+        
+        let currentStep = 1;
+        let statusText = "Đang chuẩn bị hồ sơ";
+
+        if (status === "Đang học") {
+          currentStep = 1;
+          statusText = "Đang dịch thuật hồ sơ học tập cơ bản";
+        } else if (status === "Chờ phỏng vấn") {
+          currentStep = 3;
+          statusText = "Đang thẩm định hồ sơ / Chờ lịch phỏng vấn";
+        } else if (status === "Đã trúng tuyển") {
+          currentStep = 5;
+          statusText = "Đã nhận COE/Thư mời. Đang làm thủ tục xin cấp Visa";
+        } else if (status === "Đã xuất cảnh") {
+          currentStep = 6;
+          statusText = "Đã xuất cảnh thành công!";
+        }
+
+        const badge = document.getElementById("visaStatusLabel");
+        if (badge) {
+          badge.textContent = statusText;
+          badge.style.background = status === "Đã xuất cảnh" ? "rgba(16,185,129,0.1)" : status === "Đã trúng tuyển" ? "rgba(59,130,246,0.1)" : "rgba(168,139,88,0.1)";
+          badge.style.color = status === "Đã xuất cảnh" ? "#10B981" : status === "Đã trúng tuyển" ? "#3B82F6" : "var(--accent)";
+        }
+
+        const stepsContainer = document.getElementById("visaTrackerSteps");
+        if (stepsContainer) {
+          stepsContainer.innerHTML = steps.map((s, idx) => {
+            const num = idx + 1;
+            const done = num < currentStep || status === "Đã xuất cảnh";
+            const active = num === currentStep && status !== "Đã xuất cảnh";
+            
+            const stepCls = done ? "timeline-item done" : active ? "timeline-item active" : "timeline-item";
+            const check = done ? "✓" : num;
+            
+            return `
+              <div class="${stepCls}">
+                <div class="timeline-node" style="display:flex;align-items:center;justify-content:center;font-size:0.62rem;font-weight:bold;color:${done||active?'#fff':'var(--text-muted)'};">${check}</div>
+                <div class="timeline-content">
+                  <h4>Bước ${num}: ${s.title}</h4>
+                  <p>${s.sub}</p>
+                </div>
+              </div>
+            `;
+          }).join("");
+        }
+
+        const prepEl = document.getElementById("studentPrepCourseDisplay");
+        if (prepEl) {
+          if (country === "Nhật") prepEl.textContent = "Khóa đào tạo tiếng Nhật du học cấp tốc (N5 - N3)";
+          else if (country === "Đài") prepEl.textContent = "Khóa đào tạo tiếng Trung TOCFL du học cấp tốc";
+          else if (country === "Hàn") prepEl.textContent = "Khóa đào tạo tiếng Hàn du học cấp tốc (TOPIK II)";
+          else prepEl.textContent = "Khóa đào tạo ngoại ngữ du học cấp tốc";
+        }
+
+        // Missing Documents
+        const missingDocs = {
+          "Nhật": [
+            { name: "Hộ chiếu gốc (còn hạn tối thiểu 2 năm)", note: "Cần nộp trước ngày 30/9" },
+            { name: "Bản sao công chứng Bằng tốt nghiệp THPT", note: "Yêu cầu công chứng trong vòng 3 tháng" },
+            { name: "Xác nhận số dư tài khoản ngân hàng bảo lãnh", note: "Số dư tối thiểu 500 triệu đồng" }
+          ],
+          "Đài": [
+            { name: "Chứng chỉ ngoại ngữ TOCFL 1 trở lên", note: "Bản gốc để đối chiếu" },
+            { name: "Giấy khai sinh bản sao trích lục", note: "Yêu cầu dịch công chứng VP Đài Bắc" },
+            { name: "Hộ chiếu gốc (còn hạn tối thiểu 2 năm)", note: "Nộp bổ sung gấp" }
+          ],
+          "Hàn": [
+            { name: "Hợp pháp hóa Lãnh sự học bạ THPT & Bằng tốt nghiệp", note: "Hồ sơ bắt buộc xin mã Code" },
+            { name: "Sổ tiết kiệm ngân hàng Hàn Quốc (K-Sure)", note: "Tối thiểu 10,000 USD" },
+            { name: "Hồ sơ chứng minh thu nhập của người bảo lãnh", note: "Theo form quy định" }
+          ]
+        };
+
+        const docs = missingDocs[country] || missingDocs["Nhật"];
+        const docsContainer = document.getElementById("academicMissingDocsList");
+        if (docsContainer) {
+          if (status === "Đã xuất cảnh" || status === "Đã trúng tuyển") {
+            docsContainer.innerHTML = `<div style="color: #10B981; font-weight: 600; text-align: center; padding: 1rem 0;">🎉 Bạn đã hoàn thành tất cả hồ sơ thủ tục!</div>`;
+          } else {
+            docsContainer.innerHTML = docs.map(d => `
+              <div style="display: flex; gap: 0.5rem; align-items: flex-start; padding: 0.5rem 0; border-bottom: 1px solid var(--border-light);">
+                <span style="color: #EF4444; font-weight: bold; margin-top: 1px;">⚠️</span>
+                <div style="flex: 1;">
+                  <strong style="color: var(--text-main); font-size: 0.8rem;">${d.name}</strong>
+                  <span style="color: var(--text-muted); display: block; font-size: 0.7rem; margin-top: 1px;">${d.note}</span>
+                </div>
+              </div>
+            `).join("");
+          }
+        }
+
+        // Mock tests scheduled
+        const mockTests = [
+          { name: "Thi khảo sát chất lượng năng lực giữa kì", time: "08:30 - 11:30", date: "2026-08-25", loc: "Phòng thi tầng 2" },
+          { name: "Phỏng vấn thử giả lập đại diện trường", time: "14:00 - 17:00", date: "2026-09-02", loc: "Phòng phỏng vấn VIP 1" }
+        ];
+
+        const testsContainer = document.getElementById("academicMockTestsList");
+        if (testsContainer) {
+          testsContainer.innerHTML = mockTests.map(t => {
+            const d = new Date(t.date);
+            return `
+              <div style="display: flex; gap: 0.85rem; align-items: center; padding: 0.5rem 0; border-bottom: 1px solid var(--border-light);">
+                <div style="width: 36px; height: 36px; background: var(--accent-light); border: 1px solid rgba(168,139,88,0.15); border-radius: 8px; display: flex; flex-direction: column; align-items: center; justify-content: center; flex-shrink: 0;">
+                  <span style="font-size: 0.85rem; font-weight: 700; color: var(--accent); line-height: 1;">${d.getDate()}</span>
+                  <span style="font-size: 0.5rem; color: var(--text-muted); font-weight: 600; text-transform: uppercase; margin-top: 1px;">T.${d.getMonth() + 1}</span>
+                </div>
+                <div style="flex: 1; min-width: 0;">
+                  <strong style="color: var(--text-main); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; display: block; font-size: 0.8rem;">${t.name}</strong>
+                  <span style="color: var(--text-muted); display: block; font-size: 0.7rem; margin-top: 2px;">⏱️ ${t.time} | 📍 ${t.loc}</span>
+                </div>
+              </div>
+            `;
+          }).join("");
+        }
+      }
+
+      // ── TAB 4: PERSONAL INFO TAB & FORM POPULATION ──────────────────
+      async function populatePersonalInfoTab(student) {
+        document.getElementById("infoAdvisor").textContent = student.advisor || "Chưa phân công cố vấn";
+        
+        const enrollDate = student.createdAt ? (student.createdAt.toDate ? student.createdAt.toDate() : new Date(student.createdAt)) : new Date();
+        document.getElementById("infoEnrollDate").textContent = enrollDate.toLocaleDateString("vi-VN");
+        document.getElementById("infoLearningMonth").textContent = student.learningMonth || "Tháng 1";
+
+        const flightDateEl = document.getElementById("profileFlightDate");
+        if (student.flightDate) {
+          const fd = student.flightDate.toDate ? student.flightDate.toDate() : new Date(student.flightDate);
+          flightDateEl.textContent = fd.toLocaleDateString("vi-VN");
+        } else {
+          flightDateEl.textContent = "Chưa có lịch bay";
+        }
+
+        // Tuition Math
+        const total = student.tuitionTotal || 0;
+        const paid = student.tuitionPaid || 0;
+        const remain = Math.max(0, total - paid);
+
+        const fmtMoney = (n) => n > 0 ? n.toLocaleString("vi-VN") + " ₫" : "--";
+        document.getElementById("tuitionTotal").textContent = fmtMoney(total);
+        document.getElementById("tuitionPaid").textContent = fmtMoney(paid);
+        document.getElementById("tuitionRemain").textContent = remain > 0 ? fmtMoney(remain) : "0 ₫";
+        document.getElementById("tuitionPaidProgress").textContent = `${paid.toLocaleString("vi-VN")} ₫ / ${total.toLocaleString("vi-VN")} ₫`;
+
+        const tBadge = document.getElementById("tuitionStatusBadge");
+        if (tBadge) {
+          if (total === 0) {
+            tBadge.textContent = "Chưa đóng phí";
+            tBadge.style.background = "#E8E6E0";
+            tBadge.style.color = "var(--text-muted)";
+          } else if (remain <= 0) {
+            tBadge.textContent = "Đã hoàn tất";
+            tBadge.style.background = "rgba(16,185,129,0.1)";
+            tBadge.style.color = "#10B981";
+          } else {
+            tBadge.textContent = "Còn thiếu";
+            tBadge.style.background = "rgba(239,68,68,0.1)";
+            tBadge.style.color = "#EF4444";
+          }
+        }
+
+        const barFill = document.getElementById("tuitionProgressBar");
+        if (barFill) {
+          const pct = total > 0 ? Math.min(100, Math.round((paid / total) * 100)) : 0;
+          barFill.style.width = pct + "%";
+        }
+
+        // Fetch detailed profile form data from student_profiles collection
+        try {
+          const snap = await db.collection("student_profiles").doc(student.id).get();
+          if (snap.exists) {
+            const d = snap.data();
+            const setInput = (id, val) => { const el = document.getElementById(id); if (el && val !== undefined) el.value = val; };
+            
+            setInput("sdpFullName", d.fullName || student.name || "");
+            setInput("sdpGender", d.gender || "Nam");
+            setInput("sdpDob", d.dob || "");
+            setInput("sdpCccd", d.cccd || "");
+            setInput("sdpCccdDate", d.cccdDate || "");
+            setInput("sdpPhone", d.phone || student.phone || "");
+            setInput("sdpEthnicity", d.ethnicity || "Kinh");
+            setInput("sdpReligion", d.religion || "Không");
+            setInput("sdpMarital", d.marital || "Độc thân");
+            setInput("sdpPermanentAddress", d.permanentAddress || "");
+            setInput("sdpTempAddress", d.tempAddress || "");
+            setInput("sdpSchoolHigh", d.schoolHigh || "");
+            setInput("sdpSchoolHighFrom", d.schoolHighFrom || "");
+            setInput("sdpSchoolHighTo", d.schoolHighTo || "");
+            setInput("sdpSchoolUni", d.schoolUni || "");
+            setInput("sdpSchoolUniFrom", d.schoolUniFrom || "");
+            setInput("sdpSchoolUniTo", d.schoolUniTo || "");
+            setInput("sdpSchoolMiddle", d.schoolMiddle || "");
+            setInput("sdpSchoolMiddleFrom", d.schoolMiddleFrom || "");
+            setInput("sdpSchoolMiddleTo", d.schoolMiddleTo || "");
+            setInput("sdpSchoolPrimary", d.schoolPrimary || "");
+            setInput("sdpSchoolPrimaryFrom", d.schoolPrimaryFrom || "");
+            setInput("sdpSchoolPrimaryTo", d.schoolPrimaryTo || "");
+            setInput("sdpWorkHistory", d.workHistory || "");
+            setInput("sdpFatherName", d.fatherName || "");
+            setInput("sdpFatherYear", d.fatherYear || "");
+            setInput("sdpFatherJob", d.fatherJob || "");
+            setInput("sdpMotherName", d.motherName || "");
+            setInput("sdpMotherYear", d.motherYear || "");
+            setInput("sdpMotherJob", d.motherJob || "");
+            setInput("sdpSiblingOlderName", d.siblingOlderName || "");
+            setInput("sdpSiblingOlderYear", d.siblingOlderYear || "");
+            setInput("sdpSiblingOlderJob", d.siblingOlderJob || "");
+            setInput("sdpSiblingYoungerName", d.siblingYoungerName || "");
+            setInput("sdpSiblingYoungerYear", d.siblingYoungerYear || "");
+            setInput("sdpSiblingYoungerJob", d.siblingYoungerJob || "");
+            setInput("sdpOtherMemberName", d.otherMemberName || "");
+            setInput("sdpOtherMemberYear", d.otherMemberYear || "");
+            setInput("sdpOtherMemberJob", d.otherMemberJob || "");
+            setInput("sdpPhoneRelative", d.phoneRelative || "");
+            setInput("sdpHobbies", d.hobbies || "");
+            setInput("sdpStrengths", d.strengths || "");
+            setInput("sdpWeaknesses", d.weaknesses || "");
+            setInput("sdpReason", d.reason || "");
+          } else {
+            // Fill default fallback name and phone
+            document.getElementById("sdpFullName").value = student.name || "";
+            document.getElementById("sdpPhone").value = student.phone || "";
+          }
+        } catch (e) {
+          console.warn("Failed to load detailed student profile form:", e);
+        }
+
+        // Form Submit listener
+        const form = document.getElementById("studentDetailProfileForm");
+        if (form) {
+          form.addEventListener("submit", async (e) => {
+            e.preventDefault();
+            const getVal = (id) => document.getElementById(id)?.value.trim() || "";
+            
+            const payload = {
+              fullName: getVal("sdpFullName"),
+              gender: getVal("sdpGender"),
+              dob: getVal("sdpDob"),
+              cccd: getVal("sdpCccd"),
+              cccdDate: getVal("sdpCccdDate"),
+              phone: getVal("sdpPhone"),
+              ethnicity: getVal("sdpEthnicity"),
+              religion: getVal("sdpReligion"),
+              marital: getVal("sdpMarital"),
+              permanentAddress: getVal("sdpPermanentAddress"),
+              tempAddress: getVal("sdpTempAddress"),
+              schoolHigh: getVal("sdpSchoolHigh"),
+              schoolHighFrom: getVal("sdpSchoolHighFrom"),
+              schoolHighTo: getVal("sdpSchoolHighTo"),
+              schoolUni: getVal("sdpSchoolUni"),
+              schoolUniFrom: getVal("sdpSchoolUniFrom"),
+              schoolUniTo: getVal("sdpSchoolUniTo"),
+              schoolMiddle: getVal("sdpSchoolMiddle"),
+              schoolMiddleFrom: getVal("sdpSchoolMiddleFrom"),
+              schoolMiddleTo: getVal("sdpSchoolMiddleTo"),
+              schoolPrimary: getVal("sdpSchoolPrimary"),
+              schoolPrimaryFrom: getVal("sdpSchoolPrimaryFrom"),
+              schoolPrimaryTo: getVal("sdpSchoolPrimaryTo"),
+              workHistory: getVal("sdpWorkHistory"),
+              fatherName: getVal("sdpFatherName"),
+              fatherYear: getVal("sdpFatherYear"),
+              fatherJob: getVal("sdpFatherJob"),
+              motherName: getVal("sdpMotherName"),
+              motherYear: getVal("sdpMotherYear"),
+              motherJob: getVal("sdpMotherJob"),
+              siblingOlderName: getVal("sdpSiblingOlderName"),
+              siblingOlderYear: getVal("sdpSiblingOlderYear"),
+              siblingOlderJob: getVal("sdpSiblingOlderJob"),
+              siblingYoungerName: getVal("sdpSiblingYoungerName"),
+              siblingYoungerYear: getVal("sdpSiblingYoungerYear"),
+              siblingYoungerJob: getVal("sdpSiblingYoungerJob"),
+              otherMemberName: getVal("sdpOtherMemberName"),
+              otherMemberYear: getVal("sdpOtherMemberYear"),
+              otherMemberJob: getVal("sdpOtherMemberJob"),
+              phoneRelative: getVal("sdpPhoneRelative"),
+              hobbies: getVal("sdpHobbies"),
+              strengths: getVal("sdpStrengths"),
+              weaknesses: getVal("sdpWeaknesses"),
+              reason: getVal("sdpReason"),
+              updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+            };
+
+            try {
+              await db.collection("student_profiles").doc(student.id).set(payload, { merge: true });
+              showToast("Đã cập nhật chi tiết sơ yếu lý lịch thành công!", "success");
+            } catch (err) {
+              console.error("Save failed:", err);
+              showToast("Lỗi lưu trữ hồ sơ: " + err.message, "error");
+            }
+          });
+        }
+      }
+
+      // ── TAB 5: LEAVES REQUESTS POPULATION ───────────────────────────
+      function populateLeavesTab(student) {
+        const listContainer = document.getElementById("studentLeavesList");
+        
+        // Fetch leaves real-time subscription
+        db.collection("leaves")
+          .where("studentEmail", "==", (student.email || "").toLowerCase())
+          .orderBy("date", "desc")
+          .onSnapshot(snap => {
+            if (snap.empty) {
+              listContainer.innerHTML = `<tr><td colspan="4" style="text-align: center; color: var(--text-muted); padding: 2rem 0;">Chưa có lịch sử nghỉ phép.</td></tr>`;
+              return;
+            }
+
+            listContainer.innerHTML = "";
+            snap.forEach(doc => {
+              const d = doc.data();
+              const formattedDate = d.date ? new Date(d.date).toLocaleDateString("vi-VN") : "--";
+              const sessionText = d.session === "morning" ? "Sáng" : (d.session === "afternoon" ? "Chiều" : "Cả ngày");
+              const statusText = d.status || "Chờ duyệt";
+              const statusBadgeClass = statusText === "Đã duyệt" ? "badge-status-approved" : "badge-status-pending";
+              
+              const tr = document.createElement("tr");
+              tr.innerHTML = `
+                <td style="font-weight:600;">${formattedDate}</td>
+                <td><span class="badge-session">${sessionText}</span></td>
+                <td>${d.reason || ""}</td>
+                <td><span class="widget-status-badge ${statusBadgeClass}">${statusText}</span></td>
+              `;
+              listContainer.appendChild(tr);
+            });
+          }, err => {
+            console.error("Leaves loading failed:", err);
+          });
+
+        // Submit form
+        const leaveForm = document.getElementById("leaveRequestForm");
+        if (leaveForm) {
+          leaveForm.addEventListener("submit", async (e) => {
+            e.preventDefault();
+            const dateVal = document.getElementById("leaveDate").value;
+            const sessionVal = document.getElementById("leaveSession").value;
+            const reasonVal = document.getElementById("leaveReason").value.trim();
+
+            if (!dateVal || !reasonVal) {
+              showToast("Vui lòng điền đầy đủ ngày nghỉ và lý do!", "error");
+              return;
+            }
+
+            const payload = {
+              studentId: student.id,
+              studentName: student.name,
+              studentCode: student.code || "TE-HV",
+              studentEmail: (student.email || "").toLowerCase(),
+              date: dateVal,
+              session: sessionVal,
+              reason: reasonVal,
+              status: "Chờ duyệt",
+              createdAt: firebase.firestore.FieldValue.serverTimestamp()
+            };
+
+            try {
+              await db.collection("leaves").add(payload);
+              showToast("Gửi đơn xin nghỉ phép thành công. Chờ giáo viên duyệt!", "success");
+              leaveForm.reset();
+            } catch (err) {
+              console.error("Leave save failed:", err);
+              showToast("Lỗi gửi đơn xin nghỉ phép: " + err.message, "error");
+            }
+          });
+        }
+      }
+    </script>
+  </body>
+</html>

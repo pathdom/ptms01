@@ -1,0 +1,10 @@
+- `[x]` Create hocvien.html base file
+- `[x]` Design the Palais-inspired layout and CSS
+- `[x]` Implement Firebase authentication and state loading
+- `[x]` Implement Tab 1 (Overview - GPA / Attendance cards, news countdown, and Hall of Fame)
+- `[x]` Implement Tab 2 (Scorecards - Canvas chart and skill grade cards, adviser comments)
+- `[x]` Implement Tab 3 (Roadmap - study month roadmap timeline, visa milestones, missing docs checklist)
+- `[x]` Implement Tab 4 (Personal Profile - display and edit form)
+- `[x]` Implement Tab 5 (Leave Request - submit requests, list history)
+- `[/]` Verification - verify syntax and routing redirection
+- `[ ]` Walkthrough - create the walkthrough.md artifact

@@ -922,7 +922,7 @@ document.addEventListener('DOMContentLoaded', () => {
       console.log("Admin account setup status:", error.message);
     }
   };
-  setupDefaultAdmin();
+  // setupDefaultAdmin();
 
   // 2. Auth & UI Elements
   const loginContainer = document.getElementById('login-container');
@@ -5552,13 +5552,9 @@ document.addEventListener('DOMContentLoaded', () => {
           // Start idle watcher — auto logout after 10 min inactivity
           _lastActivity = Date.now();
           _startIdleWatch();
-
           if (currentUser.role === 'student') {
-            window.location.href = "student.html";
+            window.location.href = "hocvien.html";
             return;
-          }
-
-
           } else {
             // SHOW Main App Root, hide Student Portal and Login Panel
             const studentAppRoot = document.getElementById('student-app-root');
