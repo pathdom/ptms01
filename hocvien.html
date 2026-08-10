@@ -1839,8 +1839,14 @@
       }
 
       const auth = firebase.auth();
-      auth.setPersistence(firebase.auth.Auth.Persistence.NONE)
+      auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL)
         .catch((err) => console.error("Error setting persistence:", err));
+
+      // Detect F5 / Reload and force log out
+      const isReload = (performance.getEntriesByType("navigation")[0]?.type === "reload") || (performance.navigation?.type === 1);
+      if (isReload) {
+        auth.signOut().catch((err) => console.error("Signout on reload failed:", err));
+      }
       const db = firebase.firestore();
 
       // State Management

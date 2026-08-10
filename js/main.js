@@ -862,9 +862,15 @@ document.addEventListener('DOMContentLoaded', () => {
   firebase.initializeApp(firebaseConfig);
   const auth = firebase.auth();
   
-  // Do not persist session across page reloads (log out on F5)
-  auth.setPersistence(firebase.auth.Auth.Persistence.NONE)
+  // Set persistence to LOCAL so session survives the redirect from index.html to hocvien.html
+  auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL)
     .catch((err) => console.error("Error setting Firebase persistence:", err));
+
+  // Detect F5 / Reload and force log out
+  const isReload = (performance.getEntriesByType("navigation")[0]?.type === "reload") || (performance.navigation?.type === 1);
+  if (isReload) {
+    auth.signOut().catch((err) => console.error("Signout on reload failed:", err));
+  }
 
   // ── Idle timeout: logout after 10 minutes of inactivity ──
   const IDLE_LIMIT_MS = 10 * 60 * 1000;
