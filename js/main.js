@@ -7062,7 +7062,7 @@ document.addEventListener("DOMContentLoaded", () => {
           _lastActivity = Date.now();
           _startIdleWatch();
           if (currentUser.role === "student") {
-            window.location.href = "hocvien.html";
+            window.location.href = "/hocvien";
             return;
           } else {
             // SHOW Main App Root, hide Student Portal and Login Panel
