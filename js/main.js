@@ -7063,14 +7063,37 @@ document.addEventListener("DOMContentLoaded", () => {
           _startIdleWatch();
           if (currentUser.role === "student") {
             try {
-              const res = await fetch("/hocvien/index.html");
-              const html = await res.text();
-              document.open();
-              document.write(html);
-              document.close();
+              let iframeContainer = document.getElementById(
+                "student-iframe-container",
+              );
+              if (!iframeContainer) {
+                iframeContainer = document.createElement("div");
+                iframeContainer.id = "student-iframe-container";
+                iframeContainer.style.position = "fixed";
+                iframeContainer.style.inset = "0";
+                iframeContainer.style.width = "100vw";
+                iframeContainer.style.height = "100vh";
+                iframeContainer.style.zIndex = "999999";
+                iframeContainer.style.backgroundColor = "#FAF8F5";
+
+                const iframe = document.createElement("iframe");
+                iframe.src = "/hocvien/index.html";
+                iframe.style.width = "100%";
+                iframe.style.height = "100%";
+                iframe.style.border = "none";
+
+                iframeContainer.appendChild(iframe);
+                document.body.appendChild(iframeContainer);
+              } else {
+                iframeContainer.style.display = "block";
+                // Reload iframe to refresh content
+                const iframe = iframeContainer.querySelector("iframe");
+                if (iframe) iframe.src = "/hocvien/index.html";
+              }
+              if (loginContainer) loginContainer.style.display = "none";
+              if (appRoot) appRoot.style.display = "none";
             } catch (err) {
-              console.error("Failed to load student portal:", err);
-              window.location.href = "/hocvien";
+              console.error("Failed to load student portal iframe:", err);
             }
             return;
           } else {
@@ -13457,12 +13480,10 @@ document.addEventListener("DOMContentLoaded", () => {
             ? `📎 ${m.fileName}`
             : esc(m.content || ""),
         time: m.createdAt?.toDate
-          ? m.createdAt
-              .toDate()
-              .toLocaleTimeString("vi-VN", {
-                hour: "2-digit",
-                minute: "2-digit",
-              })
+          ? m.createdAt.toDate().toLocaleTimeString("vi-VN", {
+              hour: "2-digit",
+              minute: "2-digit",
+            })
           : "",
       };
     };
@@ -13797,12 +13818,10 @@ document.addEventListener("DOMContentLoaded", () => {
       ? pinned
           .map((m) => {
             const ts = m.createdAt?.toDate
-              ? m.createdAt
-                  .toDate()
-                  .toLocaleTimeString("vi-VN", {
-                    hour: "2-digit",
-                    minute: "2-digit",
-                  })
+              ? m.createdAt.toDate().toLocaleTimeString("vi-VN", {
+                  hour: "2-digit",
+                  minute: "2-digit",
+                })
               : "";
             return `<div class="ioc-pinned-item">
         <div class="ioc-pinned-item-sender">${esc(m.senderName || "")} · ${ts}</div>
@@ -19955,12 +19974,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const saveStep = async (wf, { skipUndo = false } = {}) => {
       if (!wf.id) return;
-      await WF_COL()
-        .doc(wf.id)
-        .update({
-          steps: wf.steps,
-          updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
-        });
+      await WF_COL().doc(wf.id).update({
+        steps: wf.steps,
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+      });
       const local = _workflows.find((w) => w.id === wf.id);
       if (local) local.steps = wf.steps;
     };
@@ -20619,14 +20636,12 @@ document.addEventListener("DOMContentLoaded", () => {
             showToast("Tên quy trình không được để trống", "error");
             return;
           }
-          await WF_COL()
-            .doc(_activeId)
-            .update({
-              name,
-              description: desc,
-              category: cat,
-              updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
-            });
+          await WF_COL().doc(_activeId).update({
+            name,
+            description: desc,
+            category: cat,
+            updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+          });
           wf.name = name;
           wf.description = desc;
           wf.category = cat;
