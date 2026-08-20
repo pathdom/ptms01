@@ -20709,24 +20709,28 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     // Setup drop down menu toggler
-    const trigger = document.getElementById("profileDropdownTrigger");
-    const dropdown = document.getElementById("dropdownCard");
+    const trigger = document.getElementById("studentProfileDropdownTrigger");
+    const dropdown = document.getElementById("studentDropdownCard");
     if (trigger && dropdown) {
-      trigger.addEventListener("click", (e) => {
+      trigger.onclick = (e) => {
         e.stopPropagation();
         dropdown.style.display =
           dropdown.style.display === "flex" ? "none" : "flex";
-      });
+      };
       document.addEventListener("click", () => {
         dropdown.style.display = "none";
       });
     }
 
     // Header logout button
-    const btnStudentLogout = document.getElementById("btnLogoutPortal");
+    const btnStudentLogout = document.getElementById("btnStudentLogoutPortal");
     if (btnStudentLogout) {
-      btnStudentLogout.addEventListener("click", async () => {
-        await auth.signOut();
+      btnStudentLogout.onclick = async () => {
+        try {
+          await auth.signOut();
+        } catch (e) {
+          console.error("Signout error:", e);
+        }
         const studentRoot = document.getElementById("student-app-root");
         const loginBox = document.getElementById("login-container");
         const mainApp = document.getElementById("app-root");
@@ -20734,14 +20738,14 @@ document.addEventListener("DOMContentLoaded", () => {
         if (mainApp) mainApp.style.display = "none";
         if (loginBox) loginBox.style.display = "flex";
         showToast("Đã đăng xuất thành công!", "info");
-      });
+      };
     }
 
     // Tab Swapping logic
-    const navItems = document.querySelectorAll(".nav-item");
-    const panels = document.querySelectorAll(".tab-panel");
+    const navItems = document.querySelectorAll("#student-app-root .nav-item");
+    const panels = document.querySelectorAll("#student-app-root .tab-panel");
     navItems.forEach((item) => {
-      item.addEventListener("click", () => {
+      item.onclick = () => {
         const target = item.getAttribute("data-tab");
 
         navItems.forEach((btn) => btn.classList.remove("active"));
@@ -20750,14 +20754,19 @@ document.addEventListener("DOMContentLoaded", () => {
         item.classList.add("active");
         const targetPanel = document.getElementById(target);
         if (targetPanel) targetPanel.classList.add("active");
-      });
+      };
     });
 
     // "Xem hồ sơ" menu click redirects to profile tab
-    document.getElementById("btnGoToProfile").addEventListener("click", () => {
-      const profileNav = document.querySelector('[data-tab="profile-tab"]');
-      if (profileNav) profileNav.click();
-    });
+    const btnGoToProfile = document.getElementById("studentBtnGoToProfile");
+    if (btnGoToProfile) {
+      btnGoToProfile.onclick = () => {
+        const profileNav = document.querySelector(
+          '#student-app-root [data-tab="profile-tab"]',
+        );
+        if (profileNav) profileNav.click();
+      };
+    }
 
     // Initialize individual tabs
     populateProfileTab(student);
