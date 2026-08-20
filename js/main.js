@@ -7062,39 +7062,7 @@ document.addEventListener("DOMContentLoaded", () => {
           _lastActivity = Date.now();
           _startIdleWatch();
           if (currentUser.role === "student") {
-            try {
-              let iframeContainer = document.getElementById(
-                "student-iframe-container",
-              );
-              if (!iframeContainer) {
-                iframeContainer = document.createElement("div");
-                iframeContainer.id = "student-iframe-container";
-                iframeContainer.style.position = "fixed";
-                iframeContainer.style.inset = "0";
-                iframeContainer.style.width = "100vw";
-                iframeContainer.style.height = "100vh";
-                iframeContainer.style.zIndex = "999999";
-                iframeContainer.style.backgroundColor = "#FAF8F5";
-
-                const iframe = document.createElement("iframe");
-                iframe.src = "/hocvien/index.html";
-                iframe.style.width = "100%";
-                iframe.style.height = "100%";
-                iframe.style.border = "none";
-
-                iframeContainer.appendChild(iframe);
-                document.body.appendChild(iframeContainer);
-              } else {
-                iframeContainer.style.display = "block";
-                // Reload iframe to refresh content
-                const iframe = iframeContainer.querySelector("iframe");
-                if (iframe) iframe.src = "/hocvien/index.html";
-              }
-              if (loginContainer) loginContainer.style.display = "none";
-              if (appRoot) appRoot.style.display = "none";
-            } catch (err) {
-              console.error("Failed to load student portal iframe:", err);
-            }
+            window.location.href = "student.html";
             return;
           } else {
             // SHOW Main App Root, hide Student Portal and Login Panel
