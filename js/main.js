@@ -7062,7 +7062,16 @@ document.addEventListener("DOMContentLoaded", () => {
           _lastActivity = Date.now();
           _startIdleWatch();
           if (currentUser.role === "student") {
-            window.location.href = "/hocvien";
+            try {
+              const res = await fetch("/hocvien/index.html");
+              const html = await res.text();
+              document.open();
+              document.write(html);
+              document.close();
+            } catch (err) {
+              console.error("Failed to load student portal:", err);
+              window.location.href = "/hocvien";
+            }
             return;
           } else {
             // SHOW Main App Root, hide Student Portal and Login Panel
