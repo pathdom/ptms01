@@ -10865,11 +10865,18 @@ document.addEventListener("DOMContentLoaded", () => {
       if (!el) return;
       const crmSt = c.crmStatus || "Khách Hàng Mới";
       const currentIdx = CRM_JOURNEY.findIndex((m) => m.status === crmSt);
-      const dStart = c.createdAt?.toDate
-        ? c.createdAt.toDate()
-        : new Date(Date.now() - (30 + (seed % 90)) * 86400000);
-      const fmt = (d) =>
-        `${String(d.getDate()).padStart(2, "0")}/${String(d.getMonth() + 1).padStart(2, "0")}/${d.getFullYear()}`;
+
+      const fmt = (d) => {
+        if (!d) return "--";
+        const dateObj = d.toDate ? d.toDate() : new Date(d);
+        if (isNaN(dateObj.getTime())) return "--";
+        return `${String(dateObj.getDate()).padStart(2, "0")}/${String(dateObj.getMonth() + 1).padStart(2, "0")}/${dateObj.getFullYear()}`;
+      };
+
+      const createdDateStr = fmt(
+        c.createdAt || c.enrollDate || c.date || new Date(),
+      );
+      const updatedDateStr = fmt(c.updatedAt || c.createdAt || new Date());
 
       el.innerHTML = CRM_JOURNEY.map((m, idx) => {
         const done = idx <= currentIdx;
@@ -10880,9 +10887,28 @@ document.addEventListener("DOMContentLoaded", () => {
         const checkIcon = done
           ? `<span style="position:absolute;top:-6px;right:-6px;width:14px;height:14px;border-radius:50%;background:${m.color};color:#fff;display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:700;">✓</span>`
           : "";
+
+        let stepDate = "";
+        if (done) {
+          const specificKey = `statusDate_${m.status.replace(/\s+/g, "_")}`;
+          const specificDate =
+            c[specificKey] ||
+            c[`statusDate_${m.status}`] ||
+            c.statusDates?.[m.status];
+          if (specificDate) {
+            stepDate = fmt(specificDate);
+          } else if (idx === 0) {
+            stepDate = createdDateStr;
+          } else if (current) {
+            stepDate = updatedDateStr;
+          } else {
+            stepDate = createdDateStr;
+          }
+        }
+
         const dateStr = done
-          ? fmt(new Date(dStart.getTime() + idx * 7 * 86400000))
-          : '<span style="font-style:italic;">Chưa đạt</span>';
+          ? stepDate
+          : '<span style="font-style:italic;color:var(--text-muted);">Chưa đạt</span>';
         return `<div class="crm-timeline-item" style="${done ? "" : "opacity:0.38"}">
           <div class="crm-timeline-dot" style="${dotStyle}position:relative;${current ? `box-shadow:0 0 0 4px ${m.color}28;` : ""}">${checkIcon}</div>
           <div class="crm-timeline-content">
@@ -11587,13 +11613,22 @@ document.addEventListener("DOMContentLoaded", () => {
         sel.style.borderColor = sc.color;
         sel.style.color = sc.color;
         sel.style.background = `${sc.bg} url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23888'/%3E%3C/svg%3E") no-repeat right 0.4rem center`;
+        const specificKey = `statusDate_${sel.value.replace(/\s+/g, "_")}`;
         const cust = _allCrmCustomers.find((x) => x.id === sel.dataset.id);
-        if (cust) cust.crmStatus = sel.value;
+        if (cust) {
+          cust.crmStatus = sel.value;
+          cust.updatedAt = new Date();
+          cust[specificKey] = new Date();
+        }
         try {
           await db
             .collection("students")
             .doc(sel.dataset.id)
-            .update({ crmStatus: sel.value });
+            .update({
+              crmStatus: sel.value,
+              updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+              [specificKey]: firebase.firestore.FieldValue.serverTimestamp(),
+            });
         } catch (e) {
           console.error("Lỗi lưu CRM status:", e);
         }
@@ -11800,13 +11835,22 @@ document.addEventListener("DOMContentLoaded", () => {
         sel.style.borderColor = sc.color;
         sel.style.color = sc.color;
         sel.style.background = `${sc.bg} url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23888'/%3E%3C/svg%3E") no-repeat right 0.4rem center`;
+        const specificKey = `statusDate_${sel.value.replace(/\s+/g, "_")}`;
         const cust = _allCrmCustomers.find((x) => x.id === sel.dataset.id);
-        if (cust) cust.crmStatus = sel.value;
+        if (cust) {
+          cust.crmStatus = sel.value;
+          cust.updatedAt = new Date();
+          cust[specificKey] = new Date();
+        }
         try {
           await db
             .collection("students")
             .doc(sel.dataset.id)
-            .update({ crmStatus: sel.value });
+            .update({
+              crmStatus: sel.value,
+              updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+              [specificKey]: firebase.firestore.FieldValue.serverTimestamp(),
+            });
         } catch (e) {
           console.error("Lỗi lưu CRM status:", e);
         }
@@ -14841,6 +14885,8 @@ document.addEventListener("DOMContentLoaded", () => {
           notes,
           isCrmCustomer: true,
           updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+          [`statusDate_${crmStatus.replace(/\s+/g, "_")}`]:
+            firebase.firestore.FieldValue.serverTimestamp(),
         };
 
         try {
@@ -14849,6 +14895,8 @@ document.addEventListener("DOMContentLoaded", () => {
             showToast(`Đã cập nhật khách hàng ${name}!`, "success");
           } else {
             payload.createdAt = firebase.firestore.FieldValue.serverTimestamp();
+            payload.statusDate_KhachHangMoi =
+              firebase.firestore.FieldValue.serverTimestamp();
             const snap = await db
               .collection("students")
               .where("isCrmCustomer", "==", true)
@@ -14948,6 +14996,8 @@ document.addEventListener("DOMContentLoaded", () => {
           isCrmOldCustomer: true,
           status: "Đã xuất cảnh",
           updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+          [`statusDate_${crmStatus.replace(/\s+/g, "_")}`]:
+            firebase.firestore.FieldValue.serverTimestamp(),
         };
 
         try {
@@ -14956,6 +15006,8 @@ document.addEventListener("DOMContentLoaded", () => {
             showToast(`Đã cập nhật khách hàng cũ ${name}!`, "success");
           } else {
             payload.createdAt = firebase.firestore.FieldValue.serverTimestamp();
+            payload.statusDate_KhachHangMoi =
+              firebase.firestore.FieldValue.serverTimestamp();
             const snap = await db
               .collection("students")
               .where("isCrmCustomer", "==", true)
