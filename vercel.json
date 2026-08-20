@@ -1,0 +1,9 @@
+{
+  "cleanUrls": true,
+  "rewrites": [
+    {
+      "source": "/hocvien",
+      "destination": "/hocvien.html"
+    }
+  ]
+}
