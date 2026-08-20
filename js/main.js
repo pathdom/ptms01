@@ -7062,12 +7062,40 @@ document.addEventListener("DOMContentLoaded", () => {
           _lastActivity = Date.now();
           _startIdleWatch();
           if (currentUser.role === "student") {
-            window.location.href = "student.html";
+            if (loginContainer) loginContainer.style.display = "none";
+            if (appRoot) appRoot.style.display = "none";
+            const studentRoot = document.getElementById("student-app-root");
+            if (studentRoot) {
+              studentRoot.style.display = "block";
+              try {
+                // Fetch student details from students collection if available
+                db.collection("students")
+                  .where("email", "==", currentUser.email)
+                  .get()
+                  .then((snap) => {
+                    let sData = currentUser;
+                    if (!snap.empty) {
+                      sData = {
+                        id: snap.docs[0].id,
+                        ...snap.docs[0].data(),
+                        ...currentUser,
+                      };
+                    }
+                    initStudentPortalUI(sData);
+                  })
+                  .catch(() => {
+                    initStudentPortalUI(currentUser);
+                  });
+              } catch (e) {
+                initStudentPortalUI(currentUser);
+              }
+            }
             return;
           } else {
             // SHOW Main App Root, hide Student Portal and Login Panel
             const studentAppRoot = document.getElementById("student-app-root");
-            if (studentAppRoot) studentAppRoot.style.display = "none";
+            const sRoot = document.getElementById("student-app-root");
+            if (sRoot) sRoot.style.display = "none";
             if (loginContainer) loginContainer.style.display = "none";
             if (appRoot) appRoot.style.display = "flex";
 
@@ -7138,7 +7166,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
         // Show Login Panel, hide App Workspaces
         const studentAppRoot = document.getElementById("student-app-root");
-        if (studentAppRoot) studentAppRoot.style.display = "none";
+        const sRoot = document.getElementById("student-app-root");
+        if (sRoot) sRoot.style.display = "none";
         if (loginContainer) loginContainer.style.display = "flex";
         if (appRoot) {
           appRoot.style.display = "none";
@@ -20640,4 +20669,1213 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     };
   })();
+
+  // ── STUDENT PORTAL SPA LOGIC ──
+  function initStudentPortalUI(student) {
+    // Init navigation names
+    document.getElementById("navName").textContent = student.name || "Học Viên";
+    document.getElementById("navCode").textContent =
+      student.code || "TE-2026-999";
+    document.getElementById("profileNameBig").textContent =
+      student.name || "Học Viên";
+    document.getElementById("profileCodeBig").textContent =
+      student.code || "TE-2026-999";
+
+    const avatarTxt = (student.name || "HV")
+      .split(" ")
+      .map((n) => n[0])
+      .join("")
+      .substring(0, 2)
+      .toUpperCase();
+    document.getElementById("navAvatar").textContent = avatarTxt;
+    document.getElementById("profileAvatarBig").textContent = avatarTxt;
+
+    const statusLabel = student.status || "Đang học";
+    const statusBig = document.getElementById("profileStatusBig");
+    if (statusBig) {
+      statusBig.textContent = statusLabel;
+      statusBig.style.background =
+        statusLabel === "Đã xuất cảnh"
+          ? "rgba(16,185,129,0.1)"
+          : statusLabel === "Đã trúng tuyển"
+            ? "rgba(59,130,246,0.1)"
+            : "rgba(168,139,88,0.08)";
+      statusBig.style.color =
+        statusLabel === "Đã xuất cảnh"
+          ? "#10B981"
+          : statusLabel === "Đã trúng tuyển"
+            ? "#3B82F6"
+            : "var(--accent)";
+    }
+
+    // Setup drop down menu toggler
+    const trigger = document.getElementById("profileDropdownTrigger");
+    const dropdown = document.getElementById("dropdownCard");
+    if (trigger && dropdown) {
+      trigger.addEventListener("click", (e) => {
+        e.stopPropagation();
+        dropdown.style.display =
+          dropdown.style.display === "flex" ? "none" : "flex";
+      });
+      document.addEventListener("click", () => {
+        dropdown.style.display = "none";
+      });
+    }
+
+    // Header logout button
+    const btnStudentLogout = document.getElementById("btnLogoutPortal");
+    if (btnStudentLogout) {
+      btnStudentLogout.addEventListener("click", async () => {
+        await auth.signOut();
+        const studentRoot = document.getElementById("student-app-root");
+        const loginBox = document.getElementById("login-container");
+        const mainApp = document.getElementById("app-root");
+        if (studentRoot) studentRoot.style.display = "none";
+        if (mainApp) mainApp.style.display = "none";
+        if (loginBox) loginBox.style.display = "flex";
+        showToast("Đã đăng xuất thành công!", "info");
+      });
+    }
+
+    // Tab Swapping logic
+    const navItems = document.querySelectorAll(".nav-item");
+    const panels = document.querySelectorAll(".tab-panel");
+    navItems.forEach((item) => {
+      item.addEventListener("click", () => {
+        const target = item.getAttribute("data-tab");
+
+        navItems.forEach((btn) => btn.classList.remove("active"));
+        panels.forEach((p) => p.classList.remove("active"));
+
+        item.classList.add("active");
+        const targetPanel = document.getElementById(target);
+        if (targetPanel) targetPanel.classList.add("active");
+      });
+    });
+
+    // "Xem hồ sơ" menu click redirects to profile tab
+    document.getElementById("btnGoToProfile").addEventListener("click", () => {
+      const profileNav = document.querySelector('[data-tab="profile-tab"]');
+      if (profileNav) profileNav.click();
+    });
+
+    // Initialize individual tabs
+    populateProfileTab(student);
+    populateNewsTab(student);
+    populateScorecardTab(student);
+    populateAcademicTab(student);
+  }
+
+  // ── TAB 1: PROFILE TAB POPULATION ──────────────────────────────────────
+  function populateProfileTab(student) {
+    const fmtDate = (val) => {
+      if (!val) return "--";
+      const d = val.toDate ? val.toDate() : new Date(val);
+      return isNaN(d) ? "--" : d.toLocaleDateString("vi-VN");
+    };
+
+    const setVal = (id, val) => {
+      const el = document.getElementById(id);
+      if (el) el.textContent = val || "--";
+    };
+
+    // Basic Info Fields
+    setVal("infoEmail", student.email);
+    setVal("infoPhone", student.phone);
+    setVal("infoCountry", student.country || "Nhật Bản");
+    setVal("infoAdvisor", student.advisor || "Chưa phân công");
+
+    // Enrollment Date
+    const enrollDate = student.createdAt
+      ? student.createdAt.toDate
+        ? student.createdAt.toDate()
+        : new Date(student.createdAt)
+      : new Date();
+    setVal("infoEnrollDate", enrollDate.toLocaleDateString("vi-VN"));
+    setVal("infoLearningMonth", student.learningMonth || "Tháng 1");
+
+    // Flight date countdown
+    const flightDateEl = document.getElementById("profileFlightDate");
+    const flightCountdownEl = document.getElementById("profileFlightCountdown");
+    if (student.flightDate) {
+      const fd = student.flightDate.toDate
+        ? student.flightDate.toDate()
+        : new Date(student.flightDate);
+      if (flightDateEl)
+        flightDateEl.textContent = fd.toLocaleDateString("vi-VN");
+      if (flightCountdownEl) {
+        const diff = Math.ceil((fd - new Date()) / (1000 * 60 * 60 * 24));
+        flightCountdownEl.textContent =
+          diff > 0
+            ? `Còn ${diff} ngày nữa`
+            : diff === 0
+              ? "Hôm nay bay!"
+              : `Đã bay ${Math.abs(diff)} ngày trước`;
+      }
+    } else {
+      if (flightDateEl) flightDateEl.textContent = "Chưa có lịch";
+      if (flightCountdownEl) flightCountdownEl.textContent = "Đang cập nhật...";
+    }
+
+    // Tuition math
+    const total = student.tuitionTotal || 0;
+    const paid = student.tuitionPaid || 0;
+    const remain = Math.max(0, total - paid);
+
+    const fmtMoney = (n) => (n > 0 ? n.toLocaleString("vi-VN") + " ₫" : "--");
+    setVal("tuitionTotal", fmtMoney(total));
+    setVal("tuitionPaid", fmtMoney(paid));
+    setVal("tuitionRemain", remain > 0 ? fmtMoney(remain) : "0 ₫");
+
+    const tBadge = document.getElementById("tuitionStatusBadge");
+    if (tBadge) {
+      if (total === 0) {
+        tBadge.textContent = "Chưa cập nhật";
+        tBadge.style.background = "#E8E6E0";
+        tBadge.style.color = "var(--text-muted)";
+      } else if (remain <= 0) {
+        tBadge.textContent = "Đã hoàn tất";
+        tBadge.style.background = "rgba(16,185,129,0.1)";
+        tBadge.style.color = "#10B981";
+      } else {
+        tBadge.textContent = "Chưa đóng đủ";
+        tBadge.style.background = "rgba(239,68,68,0.1)";
+        tBadge.style.color = "#EF4444";
+      }
+    }
+
+    const barFill = document.getElementById("tuitionProgressBar");
+    if (barFill) {
+      const pct =
+        total > 0 ? Math.min(100, Math.round((paid / total) * 100)) : 0;
+      barFill.style.width = pct + "%";
+    }
+
+    // Learning Roadmap Timeline (6 steps)
+    const ROADMAP = [
+      {
+        m: "Tháng 1",
+        title: "Xây dựng nền tảng",
+        sub: "Nhập môn bảng chữ cái & ngữ pháp cơ bản",
+      },
+      {
+        m: "Tháng 2",
+        title: "Phát triển phản xạ",
+        sub: "Luyện nghe nói giao tiếp hàng ngày",
+      },
+      {
+        m: "Tháng 3",
+        title: "Làm quen học thuật",
+        sub: "Bắt đầu Kanji/Hanja học thuật ban đầu",
+      },
+      {
+        m: "Tháng 4",
+        title: "Tăng tốc học thuật",
+        sub: "Tập trung đọc hiểu văn bản & viết luận",
+      },
+      {
+        m: "Tháng 5",
+        title: "Luyện đề chuyên sâu",
+        sub: "Thi thử thử thách chứng chỉ & mô phỏng",
+      },
+      {
+        m: "Tháng 6",
+        title: "Tổng ôn & Bay",
+        sub: "Hoàn tất hồ sơ, định hướng xuất cảnh",
+      },
+    ];
+
+    const MONTH_MAP = {
+      "Tháng 1": 1,
+      "Tháng 2": 2,
+      "Tháng 3": 3,
+      "Tháng 4": 4,
+      "Tháng 5": 5,
+      "Tháng 6": 6,
+      "Hoàn thành": 7,
+    };
+    const activeStep = MONTH_MAP[student.learningMonth] || 1;
+
+    const roadmapContainer = document.getElementById("profileRoadmap");
+    if (roadmapContainer) {
+      roadmapContainer.innerHTML = ROADMAP.map((step, idx) => {
+        const num = idx + 1;
+        const done = num < activeStep || activeStep === 7;
+        const active = num === activeStep && activeStep !== 7;
+
+        const stepCls = done
+          ? "roadmap-step done"
+          : active
+            ? "roadmap-step active"
+            : "roadmap-step";
+        const tagText = done
+          ? "Hoàn thành"
+          : active
+            ? "Đang học"
+            : "Chưa bắt đầu";
+
+        return `
+              <div class="${stepCls}">
+                <div class="roadmap-dot"></div>
+                <div style="padding-left: 0.5rem;">
+                  <div class="roadmap-title">${step.m}: ${step.title}</div>
+                  <div class="roadmap-sub">${step.sub}</div>
+                  <span class="roadmap-tag">${tagText}</span>
+                </div>
+              </div>
+            `;
+      }).join("");
+    }
+
+    // Semesters
+    const sem1Status = activeStep >= 3 ? "Hoàn thành" : "Đang học";
+    const sem2Status =
+      activeStep <= 2
+        ? "Chưa học"
+        : activeStep >= 5
+          ? "Hoàn thành"
+          : "Đang học";
+    const sem3Status =
+      activeStep <= 4
+        ? "Chưa học"
+        : activeStep >= 7
+          ? "Hoàn thành"
+          : "Đang học";
+
+    const updateSemCard = (id, status) => {
+      const el = document.getElementById(id);
+      if (el) {
+        el.textContent = status;
+        el.style.color =
+          status === "Hoàn thành"
+            ? "#10B981"
+            : status === "Đang học"
+              ? "var(--accent)"
+              : "var(--text-muted)";
+        if (status === "Đang học") {
+          el.parentElement.classList.add("active");
+        } else {
+          el.parentElement.classList.remove("active");
+        }
+      }
+    };
+
+    updateSemCard("sem1Status", sem1Status);
+    updateSemCard("sem2Status", sem2Status);
+    updateSemCard("sem3Status", sem3Status);
+
+    const semNames = {
+      1: "KÌ I: Giao Tiếp",
+      2: "KÌ I: Giao Tiếp",
+      3: "KÌ II: Học Thuật",
+      4: "KÌ II: Học Thuật",
+      5: "KÌ III: Luyện Đề",
+      6: "KÌ III: Luyện Đề",
+      7: "Hoàn thành khóa học",
+    };
+    setVal("infoSemesterBadge", semNames[activeStep] || "Chưa bắt đầu");
+
+    // --- EXPANDABLE DETAIL PROFILE FORM HANDLERS ---
+    const btnToggle = document.getElementById("btnToggleDetailForm");
+    const formWrapper = document.getElementById("detailFormWrapper");
+    const arrow = document.getElementById("detailFormArrow");
+    if (btnToggle && formWrapper) {
+      btnToggle.addEventListener("click", () => {
+        const isOpen = formWrapper.style.display !== "none";
+        formWrapper.style.display = isOpen ? "none" : "block";
+        arrow.style.transform = isOpen ? "" : "rotate(180deg)";
+      });
+    }
+
+    // Fetch detailed profile form data from student_profiles collection
+    const loadFormDetails = async () => {
+      try {
+        const snap = await db
+          .collection("student_profiles")
+          .doc(student.id)
+          .get();
+        if (snap.exists) {
+          const d = snap.data();
+          const setInput = (id, val) => {
+            const el = document.getElementById(id);
+            if (el && val !== undefined) el.value = val;
+          };
+          setInput("sdpFullName", d.fullName);
+          setInput("sdpCccd", d.cccd);
+          setInput("sdpCccdDate", d.cccdDate);
+          setInput("sdpGender", d.gender);
+          setInput("sdpDob", d.dob);
+          setInput("sdpReligion", d.religion);
+          setInput("sdpEthnicity", d.ethnicity);
+          setInput("sdpPermanentAddress", d.permanentAddress);
+          setInput("sdpTempAddress", d.tempAddress);
+          setInput("sdpMarital", d.marital);
+          setInput("sdpPhone", d.phone);
+          setInput("sdpPhoneRelative", d.phoneRelative);
+          setInput("sdpSchoolPrimary", d.schoolPrimary);
+          setInput("sdpSchoolPrimaryFrom", d.schoolPrimaryFrom);
+          setInput("sdpSchoolPrimaryTo", d.schoolPrimaryTo);
+          setInput("sdpSchoolMiddle", d.schoolMiddle);
+          setInput("sdpSchoolMiddleFrom", d.schoolMiddleFrom);
+          setInput("sdpSchoolMiddleTo", d.schoolMiddleTo);
+          setInput("sdpSchoolHigh", d.schoolHigh);
+          setInput("sdpSchoolHighFrom", d.schoolHighFrom);
+          setInput("sdpSchoolHighTo", d.schoolHighTo);
+          setInput("sdpSchoolUni", d.schoolUni);
+          setInput("sdpSchoolUniFrom", d.schoolUniFrom);
+          setInput("sdpSchoolUniTo", d.schoolUniTo);
+          setInput("sdpWorkHistory", d.workHistory);
+          setInput("sdpFatherName", d.fatherName);
+          setInput("sdpFatherYear", d.fatherYear);
+          setInput("sdpFatherJob", d.fatherJob);
+          setInput("sdpMotherName", d.motherName);
+          setInput("sdpMotherYear", d.motherYear);
+          setInput("sdpMotherJob", d.motherJob);
+          setInput("sdpSiblingOlderName", d.siblingOlderName);
+          setInput("sdpSiblingOlderYear", d.siblingOlderYear);
+          setInput("sdpSiblingOlderJob", d.siblingOlderJob);
+          setInput("sdpSiblingYoungerName", d.siblingYoungerName);
+          setInput("sdpSiblingYoungerYear", d.siblingYoungerYear);
+          setInput("sdpSiblingYoungerJob", d.siblingYoungerJob);
+          setInput("sdpOtherMemberName", d.otherMemberName);
+          setInput("sdpOtherMemberYear", d.otherMemberYear);
+          setInput("sdpOtherMemberJob", d.otherMemberJob);
+          setInput("sdpStrengths", d.strengths);
+          setInput("sdpWeaknesses", d.weaknesses);
+          setInput("sdpReason", d.reason);
+          setInput("sdpHobbies", d.hobbies);
+        }
+      } catch (e) {
+        console.warn("Failed to load student profile form details:", e);
+      }
+    };
+
+    loadFormDetails();
+
+    // Save detailed profile form data
+    const form = document.getElementById("studentDetailProfileForm");
+    if (form) {
+      form.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const getVal = (id) => document.getElementById(id)?.value.trim() || "";
+        const payload = {
+          fullName: getVal("sdpFullName"),
+          cccd: getVal("sdpCccd"),
+          cccdDate: getVal("sdpCccdDate"),
+          gender: getVal("sdpGender"),
+          dob: getVal("sdpDob"),
+          religion: getVal("sdpReligion"),
+          ethnicity: getVal("sdpEthnicity"),
+          permanentAddress: getVal("sdpPermanentAddress"),
+          tempAddress: getVal("sdpTempAddress"),
+          marital: getVal("sdpMarital"),
+          phone: getVal("sdpPhone"),
+          phoneRelative: getVal("sdpPhoneRelative"),
+          schoolPrimary: getVal("sdpSchoolPrimary"),
+          schoolPrimaryFrom: getVal("sdpSchoolPrimaryFrom"),
+          schoolPrimaryTo: getVal("sdpSchoolPrimaryTo"),
+          schoolMiddle: getVal("sdpSchoolMiddle"),
+          schoolMiddleFrom: getVal("sdpSchoolMiddleFrom"),
+          schoolMiddleTo: getVal("sdpSchoolMiddleTo"),
+          schoolHigh: getVal("sdpSchoolHigh"),
+          schoolHighFrom: getVal("sdpSchoolHighFrom"),
+          schoolHighTo: getVal("sdpSchoolHighTo"),
+          schoolUni: getVal("sdpSchoolUni"),
+          schoolUniFrom: getVal("sdpSchoolUniFrom"),
+          schoolUniTo: getVal("sdpSchoolUniTo"),
+          workHistory: getVal("sdpWorkHistory"),
+          fatherName: getVal("sdpFatherName"),
+          fatherYear: getVal("sdpFatherYear"),
+          fatherJob: getVal("sdpFatherJob"),
+          motherName: getVal("sdpMotherName"),
+          motherYear: getVal("sdpMotherYear"),
+          motherJob: getVal("sdpMotherJob"),
+          siblingOlderName: getVal("sdpSiblingOlderName"),
+          siblingOlderYear: getVal("sdpSiblingOlderYear"),
+          siblingOlderJob: getVal("sdpSiblingOlderJob"),
+          siblingYoungerName: getVal("sdpSiblingYoungerName"),
+          siblingYoungerYear: getVal("sdpSiblingYoungerYear"),
+          siblingYoungerJob: getVal("sdpSiblingYoungerJob"),
+          otherMemberName: getVal("sdpOtherMemberName"),
+          otherMemberYear: getVal("sdpOtherMemberYear"),
+          otherMemberJob: getVal("sdpOtherMemberJob"),
+          strengths: getVal("sdpStrengths"),
+          weaknesses: getVal("sdpWeaknesses"),
+          reason: getVal("sdpReason"),
+          hobbies: getVal("sdpHobbies"),
+          updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+        };
+
+        try {
+          await db
+            .collection("student_profiles")
+            .doc(student.id)
+            .set(payload, { merge: true });
+          alert("Đã cập nhật chi tiết hồ sơ cá nhân thành công!");
+        } catch (err) {
+          alert("Lỗi lưu thông tin: " + err.message);
+        }
+      });
+    }
+  }
+
+  // ── TAB 2: CENTRAL NEWS POPULATION ─────────────────────────────────────
+  function populateNewsTab(student) {
+    // Announcements static premium lists
+    const announcements = [
+      {
+        category: "Nhắc nhở",
+        title: "Lịch nghỉ lễ Quốc khánh 2/9 & Lịch thi thử năng lực tiếng",
+        date: "2026-08-05",
+        urgency: "urgent",
+      },
+      {
+        category: "Tin mới",
+        title:
+          "Khai giảng lớp đàm thoại phản xạ miễn phí với người bản xứ buổi tối",
+        date: "2026-08-02",
+        urgency: "info",
+      },
+      {
+        category: "Hỏa tốc",
+        title:
+          "Yêu cầu hoàn thiện hồ sơ dịch thuật công chứng bổ sung cho kỳ bay tháng 4/2027",
+        date: "2026-07-28",
+        urgency: "critical",
+      },
+    ];
+
+    const listContainer = document.getElementById("newsAnnouncementsList");
+    if (listContainer) {
+      listContainer.innerHTML = announcements
+        .map((a) => {
+          const formattedDate = new Date(a.date).toLocaleDateString("vi-VN");
+          return `
+              <div class="announcement-item">
+                <span class="announcement-badge ${a.urgency}">${a.category}</span>
+                <div class="announcement-details">
+                  <div class="announcement-title">${a.title}</div>
+                  <span class="announcement-date">${formattedDate}</span>
+                </div>
+              </div>
+            `;
+        })
+        .join("");
+    }
+
+    // Event Countdown Clock
+    const eventDate = new Date("2026-09-15T08:30:00+07:00");
+    const updateClock = () => {
+      const diff = eventDate - new Date();
+      if (diff <= 0) {
+        document.getElementById("cdDays").textContent = "00";
+        document.getElementById("cdHours").textContent = "00";
+        document.getElementById("cdMins").textContent = "00";
+        return;
+      }
+      const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+      const hours = Math.floor(
+        (diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60),
+      );
+      const mins = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+
+      document.getElementById("cdDays").textContent = String(days).padStart(
+        2,
+        "0",
+      );
+      document.getElementById("cdHours").textContent = String(hours).padStart(
+        2,
+        "0",
+      );
+      document.getElementById("cdMins").textContent = String(mins).padStart(
+        2,
+        "0",
+      );
+    };
+
+    updateClock();
+    setInterval(updateClock, 60000);
+
+    // Hall of Fame population
+    const hof = [
+      {
+        name: "Vũ Thùy Chi",
+        code: "TE-2026-015",
+        desc: "Đạt GPA xuất sắc 9.6/10 và nhận COE du học Tokyo đợt tháng 10/2026",
+        emoji: "🎓",
+      },
+      {
+        name: "Trần Minh Quân",
+        code: "TE-2026-033",
+        desc: "Chinh phục thành công học bổng toàn phần du học Đài Loan MOE năm 2026",
+        emoji: "🎖️",
+      },
+      {
+        name: "Lê Hồng Nhung",
+        code: "TE-2026-008",
+        desc: "Đạt Visa thẳng Đại học Kookmin (Seoul, Hàn Quốc) chỉ sau 2 tuần xét duyệt",
+        emoji: "✈️",
+      },
+    ];
+
+    const hofContainer = document.getElementById("newsHallOfFameList");
+    if (hofContainer) {
+      hofContainer.innerHTML = hof
+        .map(
+          (h) => `
+            <div style="display: flex; align-items: center; gap: 1rem; padding: 0.8rem; background: var(--bg-primary); border-radius: var(--border-radius-md); border: 1px solid var(--border-light);">
+              <div style="width: 36px; height: 36px; border-radius: 50%; background: var(--accent-light); display: flex; align-items: center; justify-content: center; font-size: 1.1rem; flex-shrink: 0;">${h.emoji}</div>
+              <div style="flex: 1; min-width: 0;">
+                <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 2px;">
+                  <strong style="font-size: 0.85rem; color: var(--text-main); text-overflow: ellipsis; overflow: hidden; white-space: nowrap;">${h.name}</strong>
+                  <span style="font-size: 0.65rem; color: var(--accent); font-family: monospace; font-weight: 600;">${h.code}</span>
+                </div>
+                <p style="margin: 0; font-size: 0.72rem; color: var(--text-muted); line-height: 1.35; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${h.desc}</p>
+              </div>
+            </div>
+          `,
+        )
+        .join("");
+    }
+  }
+
+  // ── TAB 3: SCORECARD POPULATION ────────────────────────────────────────
+  async function populateScorecardTab(student) {
+    // Calculate weeks since admission date
+    const getFixedEnrollDate = (email, createdAt) => {
+      const emailLower = (email || "").toLowerCase();
+      let hash = 0;
+      for (let i = 0; i < emailLower.length; i++) {
+        hash = emailLower.charCodeAt(i) + ((hash << 5) - hash);
+      }
+      const groupIdx = Math.abs(hash) % 5;
+      if (groupIdx === 0) return new Date("2026-05-28T08:00:00+07:00");
+      if (groupIdx === 1) return new Date("2026-05-12T08:00:00+07:00");
+      if (groupIdx === 2) return new Date("2026-04-20T08:00:00+07:00");
+      if (groupIdx === 3) return new Date("2026-04-05T08:00:00+07:00");
+      return new Date("2026-03-15T08:00:00+07:00");
+    };
+
+    const generateScoresForStudent = (std, type, idx) => {
+      const seedStr = `${std.code || "TE-000"}-${type}-${idx}`;
+      let val = 0;
+      for (let i = 0; i < seedStr.length; i++) {
+        val += seedStr.charCodeAt(i);
+      }
+      const listening = parseFloat((7.5 + (val % 21) / 10).toFixed(1));
+      const speaking = parseFloat((7.0 + ((val + 3) % 26) / 10).toFixed(1));
+      const reading = parseFloat((7.5 + ((val + 7) % 21) / 10).toFixed(1));
+      const writing = parseFloat((6.8 + ((val + 11) % 28) / 10).toFixed(1));
+      const attendance = 90 + (val % 11);
+      const comments = [
+        "Có thái độ học tập tích cực, phát âm tương đối chuẩn.",
+        "Chuẩn bị bài đầy đủ, cần tập trung hơn trong phần nghe.",
+        "Khả năng đọc dịch tốt, cần cải thiện tính logic khi viết bài luận.",
+        "Tích cực phát biểu xây dựng bài, làm bài tập về nhà đầy đủ.",
+        "Tiến bộ rõ rệt về kỹ năng phản xạ nghe nói.",
+      ];
+      const comment = comments[val % comments.length];
+      const average = parseFloat(
+        ((listening + speaking + reading + writing) / 4).toFixed(1),
+      );
+      return {
+        listening,
+        speaking,
+        reading,
+        writing,
+        attendance,
+        comment,
+        average,
+      };
+    };
+
+    const enrollDate = getFixedEnrollDate(student.email, student.createdAt);
+    const today = new Date("2026-05-31T23:00:00+07:00");
+    const diffDays = Math.max(
+      1,
+      Math.floor((today - enrollDate) / (1000 * 60 * 60 * 24)),
+    );
+
+    const activeWeeks = Math.min(24, Math.max(1, Math.floor(diffDays / 7)));
+    const activeMonths = Math.min(6, Math.max(1, Math.floor(diffDays / 30)));
+
+    // Load custom scorecards from Firestore
+    let customScorecards = [];
+    try {
+      const snap = await db
+        .collection("scorecards")
+        .where("studentEmail", "==", (student.email || "").toLowerCase())
+        .get();
+      snap.forEach((doc) => customScorecards.push(doc.data()));
+    } catch (err) {
+      console.error("Failed to load scorecard docs:", err);
+    }
+
+    // Math Overall Scores
+    let totalGpa = 0;
+    let totalAttendance = 0;
+    for (let i = 1; i <= activeWeeks; i++) {
+      const custom = customScorecards.find(
+        (s) => s.type === "week" && s.index === i,
+      );
+      let score;
+      if (custom) {
+        score = {
+          average: parseFloat(
+            (
+              (parseFloat(custom.listening) +
+                parseFloat(custom.speaking) +
+                parseFloat(custom.reading) +
+                parseFloat(custom.writing)) /
+              4
+            ).toFixed(1),
+          ),
+          attendance: parseInt(custom.attendance),
+        };
+      } else {
+        score = generateScoresForStudent(student, "week", i);
+      }
+      totalGpa += score.average;
+      totalAttendance += score.attendance;
+    }
+
+    const avgGpa = parseFloat((totalGpa / activeWeeks).toFixed(1)) || 8.2;
+    const avgAttendance = Math.round(totalAttendance / activeWeeks) || 95;
+
+    const ranks = {
+      "Xuất sắc": avgGpa >= 9.0,
+      Giỏi: avgGpa >= 8.0 && avgGpa < 9.0,
+      Khá: avgGpa >= 6.5 && avgGpa < 8.0,
+      "Trung bình": avgGpa >= 5.0 && avgGpa < 6.5,
+      Yếu: avgGpa < 5.0,
+    };
+    const rankText = Object.keys(ranks).find((k) => ranks[k]) || "Khá";
+
+    // Fill KPI UI
+    document.getElementById("kpiGpa").textContent = `${avgGpa}/10`;
+    document.getElementById("kpiRank").textContent = `Xếp loại: ${rankText}`;
+    document.getElementById("kpiAttendance").textContent = `${avgAttendance}%`;
+    document.getElementById("kpiAttendanceEval").textContent =
+      avgAttendance >= 90 ? "Đạt tiêu chuẩn" : "Cần cải thiện";
+    document.getElementById("kpiAttendanceEval").style.color =
+      avgAttendance >= 90 ? "#10B981" : "#EF4444";
+    document.getElementById("kpiTime").textContent = `Tuần ${activeWeeks} / 24`;
+    document.getElementById("kpiEnrollDateSub").textContent =
+      `Nhập học ngày: ${enrollDate.toLocaleDateString("vi-VN")}`;
+
+    // SVG Radial
+    const radialPath = document.getElementById("radialAttendancePath");
+    const radialPct = document.getElementById("radialAttendancePercent");
+    const radialEval = document.getElementById("attendanceEvalText");
+
+    if (radialPct) radialPct.textContent = `${avgAttendance}%`;
+    if (radialPath) {
+      radialPath.style.strokeDasharray = `${avgAttendance}, 100`;
+      radialPath.style.stroke =
+        avgAttendance >= 90
+          ? "#10b981"
+          : avgAttendance >= 80
+            ? "#f5a623"
+            : "#ef4444";
+    }
+    if (radialEval) {
+      radialEval.textContent =
+        avgAttendance >= 90 ? "Đạt chuẩn học tập" : "Cần lưu ý chuyên cần";
+      radialEval.style.color = avgAttendance >= 90 ? "#10B981" : "#EF4444";
+    }
+
+    // Draw Canvas graph
+    setTimeout(() => {
+      drawProgressChart(
+        student,
+        activeWeeks,
+        customScorecards,
+        generateScoresForStudent,
+      );
+    }, 200);
+
+    // List Renderer
+    const renderList = (type) => {
+      const container = document.getElementById("studentScorecardList");
+      if (!container) return;
+      container.innerHTML = "";
+
+      const count = type === "week" ? activeWeeks : activeMonths;
+      for (let i = count; i >= 1; i--) {
+        const custom = customScorecards.find(
+          (s) => s.type === type && s.index === i,
+        );
+        let score;
+        if (custom) {
+          score = {
+            listening: parseFloat(custom.listening),
+            speaking: parseFloat(custom.speaking),
+            reading: parseFloat(custom.reading),
+            writing: parseFloat(custom.writing),
+            attendance: parseInt(custom.attendance),
+            comment: custom.comment || "",
+            average: parseFloat(
+              (
+                (parseFloat(custom.listening) +
+                  parseFloat(custom.speaking) +
+                  parseFloat(custom.reading) +
+                  parseFloat(custom.writing)) /
+                4
+              ).toFixed(1),
+            ),
+          };
+        } else {
+          score = generateScoresForStudent(student, type, i);
+        }
+
+        const itemStart = new Date(enrollDate);
+        const itemEnd = new Date(enrollDate);
+        if (type === "week") {
+          itemStart.setDate(enrollDate.getDate() + (i - 1) * 7);
+          itemEnd.setDate(enrollDate.getDate() + i * 7 - 1);
+        } else {
+          itemStart.setMonth(enrollDate.getMonth() + (i - 1));
+          itemEnd.setMonth(enrollDate.getMonth() + i);
+          itemEnd.setDate(itemEnd.getDate() - 1);
+        }
+        const dateStr = `${itemStart.getDate()}/${itemStart.getMonth() + 1} - ${itemEnd.getDate()}/${itemEnd.getMonth() + 1}/${itemEnd.getFullYear()}`;
+
+        const row = document.createElement("div");
+        row.className = "scorecard-item";
+        row.innerHTML = `
+              <div class="scorecard-meta">
+                <div class="scorecard-meta-top">
+                  <h4>${type === "week" ? "Tuần " + i : "Tháng " + i}</h4>
+                  <span>${dateStr}</span>
+                </div>
+                <div class="scorecard-average">
+                  <span class="val">${score.average}</span>
+                  <span class="lbl">Điểm TB</span>
+                </div>
+              </div>
+              <div>
+                <div class="score-bars">
+                  <div class="bar-row">
+                    <div class="bar-header"><span>🎧 NGHE</span><span>${score.listening}</span></div>
+                    <div class="bar-track"><div class="bar-fill" style="width: ${score.listening * 10}%"></div></div>
+                  </div>
+                  <div class="bar-row">
+                    <div class="bar-header"><span>🗣️ NÓI</span><span>${score.speaking}</span></div>
+                    <div class="bar-track"><div class="bar-fill" style="width: ${score.speaking * 10}%; background: #10B981;"></div></div>
+                  </div>
+                  <div class="bar-row">
+                    <div class="bar-header"><span>📖 ĐỌC</span><span>${score.reading}</span></div>
+                    <div class="bar-track"><div class="bar-fill" style="width: ${score.reading * 10}%; background: #F5A623;"></div></div>
+                  </div>
+                  <div class="bar-row">
+                    <div class="bar-header"><span>✍️ VIẾT</span><span>${score.writing}</span></div>
+                    <div class="bar-track"><div class="bar-fill" style="width: ${score.writing * 10}%; background: #EF4444;"></div></div>
+                  </div>
+                </div>
+                <div class="scorecard-comment">
+                  <strong>Chuyên cần: ${score.attendance}% • Nhận xét từ cố vấn: </strong><em>${score.comment}</em>
+                </div>
+              </div>
+            `;
+        container.appendChild(row);
+      }
+    };
+
+    // Filter triggers
+    const btnW = document.getElementById("btnScorecardWeekToggle");
+    const btnM = document.getElementById("btnScorecardMonthToggle");
+    if (btnW && btnM) {
+      btnW.addEventListener("click", () => {
+        btnW.classList.add("active");
+        btnM.classList.remove("active");
+        renderList("week");
+      });
+      btnM.addEventListener("click", () => {
+        btnM.classList.add("active");
+        btnW.classList.remove("active");
+        renderList("month");
+      });
+    }
+
+    renderList("week");
+  }
+
+  // Draw GPA Line Chart on Canvas
+  function drawProgressChart(
+    student,
+    activeWeeks,
+    customScorecards,
+    scoreGenerator,
+  ) {
+    const canvas = document.getElementById("studentProgressCanvas");
+    if (!canvas) return;
+
+    const rect = canvas.getBoundingClientRect();
+    canvas.width = rect.width * window.devicePixelRatio;
+    canvas.height = 210 * window.devicePixelRatio;
+
+    const ctx = canvas.getContext("2d");
+    ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
+
+    const width = rect.width;
+    const height = 210;
+    ctx.clearRect(0, 0, width, height);
+
+    const points = [];
+    for (let i = 1; i <= activeWeeks; i++) {
+      const custom = customScorecards.find(
+        (s) => s.type === "week" && s.index === i,
+      );
+      let gpa = 8.2;
+      if (custom) {
+        gpa = parseFloat(
+          (
+            (parseFloat(custom.listening) +
+              parseFloat(custom.speaking) +
+              parseFloat(custom.reading) +
+              parseFloat(custom.writing)) /
+            4
+          ).toFixed(1),
+        );
+      } else {
+        gpa = scoreGenerator(student, "week", i).average;
+      }
+      points.push({ w: i, val: gpa });
+    }
+
+    if (points.length === 0) return;
+
+    const padL = 30;
+    const padR = 15;
+    const padT = 20;
+    const padB = 30;
+
+    const chartW = width - padL - padR;
+    const chartH = height - padT - padB;
+
+    const gridColor = "rgba(0, 0, 0, 0.05)";
+    const textColor = "#7E7C75";
+
+    const yMin = 5.0;
+    const yMax = 10.0;
+
+    // Draw Y Axis Grid
+    ctx.font = "9px sans-serif";
+    ctx.fillStyle = textColor;
+    ctx.textAlign = "right";
+    ctx.textBaseline = "middle";
+
+    const yLines = 5;
+    for (let i = 0; i <= yLines; i++) {
+      const ratio = i / yLines;
+      const y = padT + chartH - ratio * chartH;
+      const valStr = (yMin + ratio * (yMax - yMin)).toFixed(1);
+
+      ctx.beginPath();
+      ctx.moveTo(padL, y);
+      ctx.lineTo(width - padR, y);
+      ctx.strokeStyle = gridColor;
+      ctx.lineWidth = 1;
+      ctx.stroke();
+
+      ctx.fillText(valStr, padL - 6, y);
+    }
+
+    const getX = (idx) => {
+      if (points.length <= 1) return padL + chartW / 2;
+      return padL + (idx / (points.length - 1)) * chartW;
+    };
+
+    const getY = (val) => {
+      const cl = Math.max(yMin, Math.min(yMax, val));
+      const ratio = (cl - yMin) / (yMax - yMin);
+      return padT + chartH - ratio * chartH;
+    };
+
+    // Draw X labels
+    ctx.textAlign = "center";
+    ctx.textBaseline = "top";
+    points.forEach((p, idx) => {
+      const x = getX(idx);
+      if (points.length > 8 && idx % 2 !== 0 && idx !== points.length - 1)
+        return;
+      ctx.fillText(`Tuần ${p.w}`, x, padT + chartH + 8);
+    });
+
+    // Fill background gradient below line
+    const grad = ctx.createLinearGradient(0, padT, 0, padT + chartH);
+    grad.addColorStop(0, "rgba(168, 139, 88, 0.2)");
+    grad.addColorStop(1, "rgba(168, 139, 88, 0.0)");
+
+    ctx.beginPath();
+    ctx.moveTo(getX(0), padT + chartH);
+    points.forEach((p, idx) => ctx.lineTo(getX(idx), getY(p.val)));
+    ctx.lineTo(getX(points.length - 1), padT + chartH);
+    ctx.closePath();
+    ctx.fillStyle = grad;
+    ctx.fill();
+
+    // Draw Main Path Line
+    ctx.beginPath();
+    points.forEach((p, idx) => {
+      const x = getX(idx);
+      const y = getY(p.val);
+      if (idx === 0) ctx.moveTo(x, y);
+      else ctx.lineTo(x, y);
+    });
+    ctx.strokeStyle = "var(--accent)";
+    ctx.lineWidth = 2.5;
+    ctx.lineCap = "round";
+    ctx.lineJoin = "round";
+    ctx.stroke();
+
+    // Draw Dots
+    points.forEach((p, idx) => {
+      const x = getX(idx);
+      const y = getY(p.val);
+
+      ctx.beginPath();
+      ctx.arc(x, y, 4.5, 0, 2 * Math.PI);
+      ctx.fillStyle = "#FFFFFF";
+      ctx.fill();
+      ctx.strokeStyle = "var(--accent)";
+      ctx.lineWidth = 2;
+      ctx.stroke();
+
+      if (points.length <= 10 || idx === points.length - 1 || idx === 0) {
+        ctx.fillStyle = "#1C1B19";
+        ctx.font = "bold 9px sans-serif";
+        ctx.fillText(p.val.toFixed(1), x, y - 9);
+      }
+    });
+  }
+
+  // ── TAB 4: ACADEMIC TAB POPULATION ─────────────────────────────────────
+  function populateAcademicTab(student) {
+    const country = student.country || "Nhật";
+    const status = student.status || "Đang học";
+
+    // Visa Step setups
+    const japanSteps = [
+      { title: "Dịch thuật", sub: "Công chứng hồ sơ dịch" },
+      { title: "Nộp trường", sub: "Gửi hồ sơ sang trường bên Nhật" },
+      { title: "Xét duyệt", sub: "Cục XNC Nhật Bản thẩm định" },
+      { title: "Cấp COE", sub: "Thông báo kết quả COE chính thức" },
+      { title: "Xin Visa", sub: "Nộp dán Visa tại ĐSQ Việt Nam" },
+      { title: "Bay xuất cảnh", sub: "Chuẩn bị hành lý và bay" },
+    ];
+
+    const koreaSteps = [
+      { title: "Thu thập hồ sơ", sub: "Hợp pháp hóa lãnh sự học bạ" },
+      { title: "Nộp trường ĐH", sub: "Chuyển phát quốc tế sang Hàn" },
+      { title: "Phỏng vấn ĐH", sub: "Phỏng vấn trực tiếp với trường" },
+      { title: "Cấp mã Code", sub: "Cục XNC Hàn Quốc phê duyệt" },
+      { title: "Nộp dán Visa", sub: "Nộp hồ sơ xin dán Visa ở ĐSQ" },
+      { title: "Bay xuất cảnh", sub: "Xuất cảnh sang Hàn" },
+    ];
+
+    const taiwanSteps = [
+      { title: "Chuẩn bị hồ sơ", sub: "Hợp pháp hóa Văn phòng Đài Bắc" },
+      { title: "Nộp trường & Bộ", sub: "Gửi hồ sơ xin học bổng" },
+      { title: "Phỏng vấn", sub: "Phỏng vấn trực tiếp xét tuyển" },
+      { title: "Giấy gọi học", sub: "Nhận Admission Letter chính thức" },
+      { title: "Xin Visa", sub: "Nộp Visa tại Văn phòng Đài Bắc" },
+      { title: "Bay xuất cảnh", sub: "Xuất cảnh nhập học" },
+    ];
+
+    const steps =
+      country === "Nhật"
+        ? japanSteps
+        : country === "Đài"
+          ? taiwanSteps
+          : koreaSteps;
+
+    let currentStep = 1;
+    let statusText = "Đang chuẩn bị hồ sơ";
+
+    if (status === "Đang học") {
+      currentStep = 1;
+      statusText = "Đang hoàn thiện hồ sơ dịch thuật công chứng ban đầu";
+    } else if (status === "Chờ phỏng vấn") {
+      currentStep = 3;
+      statusText = "Đang chờ phỏng vấn / Cục XNC xét duyệt hồ sơ";
+    } else if (status === "Đã trúng tuyển") {
+      currentStep = 5;
+      statusText = "Đã có kết quả COE/Thư mời. Đang tiến hành xin cấp Visa";
+    } else if (status === "Đã xuất cảnh") {
+      currentStep = 6;
+      statusText = "Đã nhận Visa và xuất cảnh thành công!";
+    }
+
+    // Fill Status Label
+    const badge = document.getElementById("visaStatusLabel");
+    if (badge) {
+      badge.textContent = statusText;
+      badge.style.background =
+        status === "Đã xuất cảnh"
+          ? "rgba(16,185,129,0.1)"
+          : status === "Đã trúng tuyển"
+            ? "rgba(59,130,246,0.1)"
+            : "rgba(168,139,88,0.1)";
+      badge.style.color =
+        status === "Đã xuất cảnh"
+          ? "#10B981"
+          : status === "Đã trúng tuyển"
+            ? "#3B82F6"
+            : "var(--accent)";
+    }
+
+    // Set Progress line width
+    const line = document.getElementById("visaTrackerFillLine");
+    if (line) {
+      const widthPct = ((currentStep - 1) / 5) * 92;
+      line.style.width = `${widthPct}%`;
+    }
+
+    // Render Visa Steps
+    const stepsContainer = document.getElementById("visaTrackerSteps");
+    if (stepsContainer) {
+      stepsContainer.innerHTML = steps
+        .map((s, idx) => {
+          const num = idx + 1;
+          const done = num < currentStep || status === "Đã xuất cảnh";
+          const active = num === currentStep && status !== "Đã xuất cảnh";
+
+          const stepCls = done
+            ? "visa-step done"
+            : active
+              ? "visa-step active"
+              : "visa-step";
+          const check = done
+            ? `<svg viewBox="0 0 24 24" style="width:10px;height:10px;fill:#fff;"><path d="M21,7L9,19L3.5,13.5L4.91,12.09L9,16.17L19.59,5.59L21,7Z"/></svg>`
+            : "";
+
+          return `
+              <div class="${stepCls}">
+                <div class="visa-dot">${check}</div>
+                <span class="visa-step-title">${s.title}</span>
+                <span class="visa-step-sub">${s.sub}</span>
+              </div>
+            `;
+        })
+        .join("");
+    }
+
+    // Prep course Display text
+    const prepEl = document.getElementById("studentPrepCourseDisplay");
+    if (prepEl) {
+      if (country === "Nhật")
+        prepEl.textContent = "Khóa đào tạo tiếng Nhật du học cấp tốc (N5 - N3)";
+      else if (country === "Đài")
+        prepEl.textContent = "Khóa đào tạo tiếng Trung TOCFL du học cấp tốc";
+      else if (country === "Hàn")
+        prepEl.textContent = "Khóa đào tạo tiếng Hàn du học cấp tốc (TOPIK II)";
+      else prepEl.textContent = "Khóa đào tạo ngoại ngữ du học cấp tốc";
+    }
+
+    // Missing Documents list
+    const missingDocs = {
+      Nhật: [
+        {
+          name: "Hộ chiếu gốc (còn hạn tối thiểu 2 năm)",
+          note: "Cần nộp trước ngày 30/9",
+        },
+        {
+          name: "Bản sao công chứng Bằng tốt nghiệp THPT",
+          note: "Yêu cầu công chứng trong vòng 3 tháng",
+        },
+        {
+          name: "Xác nhận số dư tài khoản ngân hàng bảo lãnh",
+          note: "Số dư tối thiểu 500 triệu đồng",
+        },
+      ],
+      Đài: [
+        {
+          name: "Chứng chỉ ngoại ngữ TOCFL 1 trở lên",
+          note: "Bản gốc để đối chiếu",
+        },
+        {
+          name: "Giấy khai sinh bản sao trích lục",
+          note: "Yêu cầu dịch công chứng VP Đài Bắc",
+        },
+        {
+          name: "Hộ chiếu gốc (còn hạn tối thiểu 2 năm)",
+          note: "Nộp bổ sung gấp",
+        },
+      ],
+      Hàn: [
+        {
+          name: "Hợp pháp hóa Lãnh sự học bạ THPT & Bằng tốt nghiệp",
+          note: "Hồ sơ bắt buộc xin mã Code",
+        },
+        {
+          name: "Sổ tiết kiệm ngân hàng Hàn Quốc (K-Sure)",
+          note: "Tối thiểu 10,000 USD",
+        },
+        {
+          name: "Hồ sơ chứng minh thu nhập của người bảo lãnh",
+          note: "Theo form quy định",
+        },
+      ],
+    };
+
+    const docs = missingDocs[country] || missingDocs["Nhật"];
+    const docsContainer = document.getElementById("academicMissingDocsList");
+    if (docsContainer) {
+      if (status === "Đã xuất cảnh" || status === "Đã trúng tuyển") {
+        docsContainer.innerHTML = `<div style="color: #10B981; font-weight: 600; text-align: center; padding: 1rem 0;">🎉 Bạn đã hoàn thành tất cả hồ sơ thủ tục!</div>`;
+      } else {
+        docsContainer.innerHTML = docs
+          .map(
+            (d) => `
+              <div style="display: flex; gap: 0.5rem; align-items: flex-start; padding: 0.5rem 0; border-bottom: 1px solid var(--border-light);">
+                <span style="color: #EF4444; font-weight: bold; margin-top: 1px;">⚠️</span>
+                <div style="flex: 1;">
+                  <strong style="color: var(--text-main);">${d.name}</strong>
+                  <span style="color: var(--text-muted); display: block; font-size: 0.72rem; margin-top: 1px;">${d.note}</span>
+                </div>
+              </div>
+            `,
+          )
+          .join("");
+      }
+    }
+
+    // Mock Tests List
+    const mockTests = [
+      {
+        name: "Thi thử chứng chỉ ngoại ngữ giữa kỳ",
+        time: "08:30 - 11:30",
+        date: "2026-08-25",
+        loc: "Phòng thi tầng 2",
+      },
+      {
+        name: "Phỏng vấn thử giả lập ĐH/Trường Nhật ngữ",
+        time: "14:00 - 17:00",
+        date: "2026-09-02",
+        loc: "Phòng phỏng vấn VIP 1",
+      },
+    ];
+
+    const testsContainer = document.getElementById("academicMockTestsList");
+    if (testsContainer) {
+      testsContainer.innerHTML = mockTests
+        .map((t) => {
+          const d = new Date(t.date);
+          return `
+              <div style="display: flex; gap: 0.85rem; align-items: center; padding: 0.5rem 0; border-bottom: 1px solid var(--border-light);">
+                <div style="width: 40px; height: 40px; background: var(--accent-light); border: 1px solid rgba(168,139,88,0.15); border-radius: 8px; display: flex; flex-direction: column; align-items: center; justify-content: center; flex-shrink: 0;">
+                  <span style="font-size: 0.95rem; font-weight: 700; color: var(--accent); line-height: 1;">${d.getDate()}</span>
+                  <span style="font-size: 0.55rem; color: var(--text-muted); font-weight: 600; text-transform: uppercase; margin-top: 1px;">T.${d.getMonth() + 1}</span>
+                </div>
+                <div style="flex: 1; min-width: 0;">
+                  <strong style="color: var(--text-main); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; display: block;">${t.name}</strong>
+                  <span style="color: var(--text-muted); display: block; font-size: 0.72rem; margin-top: 2px;">⏱️ ${t.time} | 📍 ${t.loc}</span>
+                </div>
+              </div>
+            `;
+        })
+        .join("");
+    }
+  }
 });
