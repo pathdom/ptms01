@@ -2486,6 +2486,7 @@
         try {
           // Verify user role
           const userDoc = await db.collection("users").doc(user.uid).get();
+          let userEmail = user.email;
           if (userDoc.exists) {
             const userData = userDoc.data();
             if (userData.role !== "student") {
@@ -2496,13 +2497,27 @@
               }
               return;
             }
+            if (userData.email) {
+              userEmail = userData.email;
+            }
           }
 
           // Load profile details from students collection
-          const studentQuery = await db
+          let studentQuery = await db
             .collection("students")
-            .where("email", "==", user.email)
+            .where("email", "==", userEmail)
             .get();
+
+          if (
+            studentQuery.empty &&
+            userEmail.toLowerCase() !== user.email.toLowerCase()
+          ) {
+            studentQuery = await db
+              .collection("students")
+              .where("email", "==", user.email)
+              .get();
+          }
+
           if (studentQuery.empty) {
             showToast(
               "Tài khoản chưa được liên kết thông tin học viên. Liên hệ admin!",
