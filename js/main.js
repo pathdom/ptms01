@@ -20860,47 +20860,57 @@ document.addEventListener("DOMContentLoaded", () => {
       barFill.style.width = pct + "%";
     }
 
-    // Learning Roadmap Timeline (6 steps)
+    // Learning Roadmap Timeline (6 steps requested)
     const ROADMAP = [
       {
-        m: "Tháng 1",
-        title: "Xây dựng nền tảng",
-        sub: "Nhập môn bảng chữ cái & ngữ pháp cơ bản",
+        m: "Tháng thứ 1",
+        items: [
+          "Viết được chữ cái, đếm số, viết họ tên mình, chào hỏi cơ bản.",
+          "Học 3 bài ngữ pháp đầu tiên.",
+        ],
       },
       {
-        m: "Tháng 2",
-        title: "Phát triển phản xạ",
-        sub: "Luyện nghe nói giao tiếp hàng ngày",
+        m: "Tháng thứ 2",
+        items: ["Học xong 10 bài ngữ pháp cơ bản.", "Biết khoảng 50 chữ Hán."],
       },
       {
-        m: "Tháng 3",
-        title: "Làm quen học thuật",
-        sub: "Bắt đầu Kanji/Hanja học thuật ban đầu",
+        m: "Tháng thứ 3",
+        items: [
+          "Học xong 18 bài ngữ pháp cơ bản.",
+          "Biết các cách biến đổi mệnh đề trong N5.",
+          "Biết khoảng 90 chữ Hán.",
+        ],
       },
       {
-        m: "Tháng 4",
-        title: "Tăng tốc học thuật",
-        sub: "Tập trung đọc hiểu văn bản & viết luận",
+        m: "Tháng thứ 4",
+        items: [
+          "Học xong toàn bộ ngữ pháp N5. Bắt đầu học N4, khoảng 3 bài đầu (26-27-28).",
+          "Biết khoảng 130 chữ Hán.",
+        ],
       },
       {
-        m: "Tháng 5",
-        title: "Luyện đề chuyên sâu",
-        sub: "Thi thử thử thách chứng chỉ & mô phỏng",
+        m: "Tháng thứ 5",
+        items: ["Học xong khoảng 36 bài.", "Biết khoảng hơn 170 chữ Hán."],
       },
       {
-        m: "Tháng 6",
-        title: "Tổng ôn & Bay",
-        sub: "Hoàn tất hồ sơ, định hướng xuất cảnh",
+        m: "Tháng thứ 6",
+        items: ["Học xong khoảng 44 bài.", "Biết khoảng 220 chữ Hán."],
       },
     ];
 
     const MONTH_MAP = {
       "Tháng 1": 1,
+      "Tháng thứ 1": 1,
       "Tháng 2": 2,
+      "Tháng thứ 2": 2,
       "Tháng 3": 3,
+      "Tháng thứ 3": 3,
       "Tháng 4": 4,
+      "Tháng thứ 4": 4,
       "Tháng 5": 5,
+      "Tháng thứ 5": 5,
       "Tháng 6": 6,
+      "Tháng thứ 6": 6,
       "Hoàn thành": 7,
     };
     const activeStep = MONTH_MAP[student.learningMonth] || 1;
@@ -20923,13 +20933,22 @@ document.addEventListener("DOMContentLoaded", () => {
             ? "Đang học"
             : "Chưa bắt đầu";
 
+        const itemsHtml = step.items
+          .map(
+            (it) =>
+              `<div style="font-size: 0.8rem; color: var(--text-muted); line-height: 1.5; margin-top: 3px;">• ${it}</div>`,
+          )
+          .join("");
+
         return `
-              <div class="${stepCls}">
+              <div class="${stepCls}" style="margin-bottom: 1.25rem;">
                 <div class="roadmap-dot"></div>
-                <div style="padding-left: 0.5rem;">
-                  <div class="roadmap-title">${step.m}: ${step.title}</div>
-                  <div class="roadmap-sub">${step.sub}</div>
-                  <span class="roadmap-tag">${tagText}</span>
+                <div style="padding-left: 0.5rem; flex: 1;">
+                  <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <div class="roadmap-title" style="font-weight: 700; font-size: 0.9rem; color: var(--text-main);">${step.m}</div>
+                    <span class="roadmap-tag" style="margin: 0;">${tagText}</span>
+                  </div>
+                  <div style="margin-top: 0.4rem;">${itemsHtml}</div>
                 </div>
               </div>
             `;

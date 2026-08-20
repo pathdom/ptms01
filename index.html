@@ -12747,9 +12747,16 @@
       id="student-app-root"
       style="
         display: none;
-        min-height: 100vh;
+        position: fixed;
+        inset: 0;
+        width: 100vw;
+        height: 100vh;
+        overflow-y: auto;
+        overflow-x: hidden;
         background-color: #f9f8f6;
         color: #1c1b19;
+        z-index: 1000;
+        -webkit-overflow-scrolling: touch;
       "
     >
       <header class="header-navbar">
