@@ -2476,7 +2476,7 @@
       auth.onAuthStateChanged(async (user) => {
         if (!user) {
           // If not logged in, redirect back to login wrapper
-          window.location.href = "index.html";
+          window.location.href = "/index.html";
           return;
         }
 
@@ -2487,7 +2487,7 @@
             const userData = userDoc.data();
             if (userData.role !== "student") {
               // Only students allowed on this portal!
-              window.location.href = "index.html";
+              window.location.href = "/index.html";
               return;
             }
           }
@@ -2504,7 +2504,7 @@
             );
             setTimeout(() => {
               auth.signOut().then(() => {
-                window.location.href = "index.html";
+                window.location.href = "/index.html";
               });
             }, 3000);
             return;
@@ -2578,7 +2578,7 @@
           .getElementById("btnLogoutPortal")
           .addEventListener("click", () => {
             auth.signOut().then(() => {
-              window.location.href = "index.html";
+              window.location.href = "/index.html";
             });
           });
 
