@@ -4798,9 +4798,12 @@ document.addEventListener("DOMContentLoaded", () => {
         "Họ Tên": "Vũ Thùy Chi",
         "Loại (Tuần/Tháng)": "Tuần",
         "Số (Tuần/Tháng số mấy)": 1,
-        "Từ vựng / Ngữ pháp / Hán tự (x1)": 9.2,
-        "Nghe / Hội thoại (x2)": 9.5,
-        "Chuyên Cần (%)": 91,
+        "Từ Vựng (x1)": 9.2,
+        "Ngữ Pháp (x1)": 8.8,
+        "Hán Tự (x1)": 9.0,
+        "Nghe (x2)": 9.5,
+        "Hội Thoại (x2)": 8.6,
+        "Chuyên Cần (%)": 95,
         "Nhận Xét Cố Vấn":
           "Hoàn thành xuất sắc toàn bộ chuyên đề ngôn ngữ học thuật.",
       },
@@ -4810,9 +4813,12 @@ document.addEventListener("DOMContentLoaded", () => {
         "Họ Tên": "Vũ Thùy Chi",
         "Loại (Tuần/Tháng)": "Tuần",
         "Số (Tuần/Tháng số mấy)": 2,
-        "Từ vựng / Ngữ pháp / Hán tự (x1)": 9.0,
-        "Nghe / Hội thoại (x2)": 9.3,
-        "Chuyên Cần (%)": 95,
+        "Từ Vựng (x1)": 9.0,
+        "Ngữ Pháp (x1)": 8.9,
+        "Hán Tự (x1)": 9.2,
+        "Nghe (x2)": 9.3,
+        "Hội Thoại (x2)": 8.8,
+        "Chuyên Cần (%)": 96,
         "Nhận Xét Cố Vấn":
           "Chăm chỉ làm bài tập về nhà và tích cực phản xạ hội thoại.",
       },
@@ -4822,11 +4828,14 @@ document.addEventListener("DOMContentLoaded", () => {
         "Họ Tên": "Vũ Thùy Chi",
         "Loại (Tuần/Tháng)": "Tháng",
         "Số (Tuần/Tháng số mấy)": 1,
-        "Từ vựng / Ngữ pháp / Hán tự (x1)": 9.1,
-        "Nghe / Hội thoại (x2)": 9.4,
-        "Chuyên Cần (%)": 93,
+        "Từ Vựng (x1)": 9.1,
+        "Ngữ Pháp (x1)": 8.8,
+        "Hán Tự (x1)": 9.1,
+        "Nghe (x2)": 9.4,
+        "Hội Thoại (x2)": 8.7,
+        "Chuyên Cần (%)": 95,
         "Nhận Xét Cố Vấn":
-          "Sự tiến bộ đồng đều ở cả các kỹ năng trong tháng đầu tiên.",
+          "Sự tiến bộ đồng đều ở cả 5 kỹ năng trong tháng đầu tiên.",
       },
     ];
 
@@ -4894,26 +4903,53 @@ document.addEventListener("DOMContentLoaded", () => {
               row["so"],
           );
 
-          // Skill 1: Từ vựng / Ngữ pháp / Hán tự (x1)
+          // 5 Skills:
+          // 1. Từ Vựng (x1)
           let vocab = parseFloat(
-            row["Từ vựng / Ngữ pháp / Hán tự (x1)"] ||
-              row["Từ vựng / Ngữ pháp / Hán tự"] ||
-              row["Từ vựng / Ngữ pháp"] ||
+            row["Từ Vựng (x1)"] ||
+              row["Từ Vựng"] ||
               row["Từ vựng"] ||
               row["Vocab"] ||
+              row["vocab"] ||
               row["Đọc (Thang điểm 10)"] ||
-              row["Đọc"] ||
-              row["Reading"],
+              row["Đọc"],
           );
 
-          // Skill 2: Nghe / Hội thoại (x2)
-          // Skill 2: Nghe / Hội thoại (x2)
+          // 2. Ngữ Pháp (x1)
+          let grammar = parseFloat(
+            row["Ngữ Pháp (x1)"] ||
+              row["Ngữ Pháp"] ||
+              row["Ngữ pháp"] ||
+              row["Grammar"] ||
+              row["grammar"] ||
+              row["Viết (Thang điểm 10)"] ||
+              row["Viết"],
+          );
+
+          // 3. Hán Tự (x1)
+          let kanji = parseFloat(
+            row["Hán Tự (x1)"] ||
+              row["Hán Tự"] ||
+              row["Hán tự"] ||
+              row["Kanji"] ||
+              row["kanji"],
+          );
+
+          // 4. Nghe (x2)
           let listening = parseFloat(
-            row["Nghe / Hội thoại (x2)"] ||
-              row["Nghe / Hội thoại"] ||
-              row["Nghe (Thang điểm 10)"] ||
+            row["Nghe (x2)"] ||
               row["Nghe"] ||
+              row["Nghe (Thang điểm 10)"] ||
               row["Listening"] ||
+              row["listening"],
+          );
+
+          // 5. Hội Thoại (x2)
+          let conversation = parseFloat(
+            row["Hội Thoại (x2)"] ||
+              row["Hội Thoại"] ||
+              row["Hội thoại"] ||
+              row["Conversation"] ||
               row["Nói (Thang điểm 10)"] ||
               row["Nói"] ||
               row["Speaking"],
@@ -4937,14 +4973,17 @@ document.addEventListener("DOMContentLoaded", () => {
             (!studentCode && !email) ||
             !typeVal ||
             isNaN(indexVal) ||
-            (isNaN(vocab) && isNaN(listening))
+            (isNaN(vocab) && isNaN(grammar) && isNaN(kanji) && isNaN(listening) && isNaN(conversation))
           ) {
             errorCount++;
             continue;
           }
 
           if (isNaN(vocab)) vocab = 8.5;
+          if (isNaN(grammar)) grammar = 8.5;
+          if (isNaN(kanji)) kanji = 8.5;
           if (isNaN(listening)) listening = 8.5;
+          if (isNaN(conversation)) conversation = 8.5;
 
           let type = "week";
           const typeLower = typeVal.toString().toLowerCase();
@@ -4983,7 +5022,10 @@ document.addEventListener("DOMContentLoaded", () => {
               type: type,
               index: indexVal,
               vocab: vocab,
+              grammar: grammar,
+              kanji: kanji,
               listening: listening,
+              conversation: conversation,
               attendance: attendance,
               comment: comment,
               updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
@@ -5915,13 +5957,20 @@ document.addEventListener("DOMContentLoaded", () => {
     const targetCountry = student.country || "Nhật";
     const baseOffset = index * 3;
 
-    // Skill 1: Từ vựng / Ngữ pháp / Hán tự (hệ số x 1)
+    // 5 Skills:
+    // 1. Từ Vựng (x1)
     const vocab = getValBetween(7.5, 9.8, baseOffset + 1);
-    // Skill 2: Nghe / Hội thoại (hệ số x 2)
-    const listening = getValBetween(7.2, 9.6, baseOffset + 2);
+    // 2. Ngữ Pháp (x1)
+    const grammar = getValBetween(7.2, 9.6, baseOffset + 2);
+    // 3. Hán Tự (x1)
+    const kanji = getValBetween(7.0, 9.7, baseOffset + 3);
+    // 4. Nghe (x2)
+    const listening = getValBetween(7.2, 9.8, baseOffset + 4);
+    // 5. Hội Thoại (x2)
+    const conversation = getValBetween(7.0, 9.5, baseOffset + 5);
 
     // Attendance rate (90% - 100%)
-    const attendance = Math.round(getValBetween(90, 100, baseOffset + 5));
+    const attendance = Math.round(getValBetween(90, 100, baseOffset + 6));
 
     // Custom Vietnamese teacher feedback comments based on country
     const commentsJP = [
@@ -5963,12 +6012,17 @@ document.addEventListener("DOMContentLoaded", () => {
     const commentIdx = Math.abs(hash) % commentList.length;
     const comment = commentList[commentIdx];
 
-    // Điểm TB có trọng số: Từ vựng/NP/Hán tự x 1, Nghe/Hội thoại x 2 => chia 3
-    const average = parseFloat(((vocab * 1 + listening * 2) / 3).toFixed(1));
+    // Điểm TB có trọng số: Từ Vựng x1, Ngữ Pháp x1, Hán Tự x1, Nghe x2, Hội Thoại x2 => tổng trọng số = 7
+    const average = parseFloat(
+      ((vocab * 1 + grammar * 1 + kanji * 1 + listening * 2 + conversation * 2) / 7).toFixed(1),
+    );
 
     return {
       vocab,
+      grammar,
+      kanji,
       listening,
+      conversation,
       attendance,
       comment,
       average,
@@ -6000,28 +6054,40 @@ document.addEventListener("DOMContentLoaded", () => {
       console.error("Failed to load custom scorecards:", err);
     }
 
+    // Helper to extract or generate scores with 5 skills
+    const getResolvedScores = (std, type, idx) => {
+      const custom = customScorecards.find((s) => s.type === type && s.index === idx);
+      if (custom) {
+        let v = custom.vocab !== undefined ? parseFloat(custom.vocab) : parseFloat(custom.reading || 8.5);
+        let g = custom.grammar !== undefined ? parseFloat(custom.grammar) : parseFloat(custom.writing || 8.5);
+        let k = custom.kanji !== undefined ? parseFloat(custom.kanji) : 8.5;
+        let l = custom.listening !== undefined ? parseFloat(custom.listening) : 8.5;
+        let c = custom.conversation !== undefined ? parseFloat(custom.conversation) : parseFloat(custom.speaking || 8.5);
+        if (isNaN(v)) v = 8.5;
+        if (isNaN(g)) g = 8.5;
+        if (isNaN(k)) k = 8.5;
+        if (isNaN(l)) l = 8.5;
+        if (isNaN(c)) c = 8.5;
+        const avg = parseFloat(((v * 1 + g * 1 + k * 1 + l * 2 + c * 2) / 7).toFixed(1));
+        return {
+          vocab: v,
+          grammar: g,
+          kanji: k,
+          listening: l,
+          conversation: c,
+          attendance: parseInt(custom.attendance) || 100,
+          comment: custom.comment || "",
+          average: avg,
+        };
+      }
+      return generateScoresForStudent(std, type, idx);
+    };
+
     // Calculate aggregated overall scores for KPI cards
     let totalGpa = 0;
     let totalAttendance = 0;
     for (let i = 1; i <= activeWeeks; i++) {
-      const customScore = customScorecards.find(
-        (s) => s.type === "week" && s.index === i,
-      );
-      let scores;
-      if (customScore) {
-        let v = customScore.vocab !== undefined ? parseFloat(customScore.vocab) : parseFloat(customScore.reading || 8.5);
-        let l = customScore.listening !== undefined ? parseFloat(customScore.listening) : parseFloat(customScore.speaking || 8.5);
-        if (isNaN(v)) v = 8.5;
-        if (isNaN(l)) l = 8.5;
-        scores = {
-          vocab: v,
-          listening: l,
-          average: parseFloat(((v * 1 + l * 2) / 3).toFixed(1)),
-          attendance: parseInt(customScore.attendance) || 100,
-        };
-      } else {
-        scores = generateScoresForStudent(profileData, "week", i);
-      }
+      const scores = getResolvedScores(profileData, "week", i);
       totalGpa += scores.average;
       totalAttendance += scores.attendance;
     }
@@ -6061,7 +6127,6 @@ document.addEventListener("DOMContentLoaded", () => {
     );
     if (radialPercent) radialPercent.textContent = `${avgAttendance}%`;
     if (radialPath) {
-      // SVG circumference is 2 * PI * r = 100
       radialPath.style.strokeDasharray = `${avgAttendance}, 100`;
       radialPath.style.stroke =
         avgAttendance >= 90
@@ -6094,25 +6159,7 @@ document.addEventListener("DOMContentLoaded", () => {
       const count = type === "week" ? activeWeeks : activeMonths;
 
       for (let i = count; i >= 1; i--) {
-        const customScore = customScorecards.find(
-          (s) => s.type === type && s.index === i,
-        );
-        let scores;
-        if (customScore) {
-          let v = customScore.vocab !== undefined ? parseFloat(customScore.vocab) : parseFloat(customScore.reading || 8.5);
-          let l = customScore.listening !== undefined ? parseFloat(customScore.listening) : parseFloat(customScore.speaking || 8.5);
-          if (isNaN(v)) v = 8.5;
-          if (isNaN(l)) l = 8.5;
-          scores = {
-            vocab: v,
-            listening: l,
-            attendance: parseInt(customScore.attendance) || 100,
-            comment: customScore.comment || "",
-            average: parseFloat(((v * 1 + l * 2) / 3).toFixed(1)),
-          };
-        } else {
-          scores = generateScoresForStudent(profileData, type, i);
-        }
+        const scores = getResolvedScores(profileData, type, i);
 
         // Calculate date ranges for each week/month card
         const itemStartDate = new Date(enrollDate.getTime());
@@ -6141,11 +6188,11 @@ document.addEventListener("DOMContentLoaded", () => {
             </div>
           </div>
           <div class="scorecard-item-right">
-            <div class="score-bars-container" style="grid-template-columns: 1fr 1fr;">
+            <div class="score-bars-container" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 0.75rem 1.25rem;">
               <div class="score-bar-row">
                 <div class="score-bar-header">
-                  <span class="score-bar-label">📖 TỪ VỰNG / NGỮ PHÁP / HÁN TỰ <small style="opacity:0.7;font-weight:normal;">(x1)</small></span>
-                  <span class="score-bar-value" style="color: #4F46E5;">${scores.vocab}</span>
+                  <span class="score-bar-label">📖 TỪ VỰNG <small style="opacity:0.7;font-weight:normal;">(x1)</small></span>
+                  <span class="score-bar-value" style="color: #6366F1;">${scores.vocab}</span>
                 </div>
                 <div class="score-bar-progress">
                   <div class="score-bar-fill" style="width: ${scores.vocab * 10}%; background-color: #6366F1;"></div>
@@ -6153,11 +6200,38 @@ document.addEventListener("DOMContentLoaded", () => {
               </div>
               <div class="score-bar-row">
                 <div class="score-bar-header">
-                  <span class="score-bar-label">🎧 NGHE / HỘI THOẠI <small style="opacity:0.7;font-weight:normal;">(x2)</small></span>
-                  <span class="score-bar-value" style="color: #059669;">${scores.listening}</span>
+                  <span class="score-bar-label">📝 NGỮ PHÁP <small style="opacity:0.7;font-weight:normal;">(x1)</small></span>
+                  <span class="score-bar-value" style="color: #3B82F6;">${scores.grammar}</span>
+                </div>
+                <div class="score-bar-progress">
+                  <div class="score-bar-fill" style="width: ${scores.grammar * 10}%; background-color: #3B82F6;"></div>
+                </div>
+              </div>
+              <div class="score-bar-row">
+                <div class="score-bar-header">
+                  <span class="score-bar-label">🈲 HÁN TỰ <small style="opacity:0.7;font-weight:normal;">(x1)</small></span>
+                  <span class="score-bar-value" style="color: #8B5CF6;">${scores.kanji}</span>
+                </div>
+                <div class="score-bar-progress">
+                  <div class="score-bar-fill" style="width: ${scores.kanji * 10}%; background-color: #8B5CF6;"></div>
+                </div>
+              </div>
+              <div class="score-bar-row">
+                <div class="score-bar-header">
+                  <span class="score-bar-label">🎧 NGHE <small style="opacity:0.7;font-weight:normal;">(x2)</small></span>
+                  <span class="score-bar-value" style="color: #10B981;">${scores.listening}</span>
                 </div>
                 <div class="score-bar-progress">
                   <div class="score-bar-fill" style="width: ${scores.listening * 10}%; background-color: #10B981;"></div>
+                </div>
+              </div>
+              <div class="score-bar-row">
+                <div class="score-bar-header">
+                  <span class="score-bar-label">🗣️ HỘI THOẠI <small style="opacity:0.7;font-weight:normal;">(x2)</small></span>
+                  <span class="score-bar-value" style="color: #EC4899;">${scores.conversation}</span>
+                </div>
+                <div class="score-bar-progress">
+                  <div class="score-bar-fill" style="width: ${scores.conversation * 10}%; background-color: #EC4899;"></div>
                 </div>
               </div>
             </div>
@@ -6228,6 +6302,34 @@ document.addEventListener("DOMContentLoaded", () => {
       console.error("Failed to load custom scorecards for admin:", err);
     }
 
+    const getResolvedScores = (std, type, idx) => {
+      const custom = customScorecards.find((s) => s.type === type && s.index === idx);
+      if (custom) {
+        let v = custom.vocab !== undefined ? parseFloat(custom.vocab) : parseFloat(custom.reading || 8.5);
+        let g = custom.grammar !== undefined ? parseFloat(custom.grammar) : parseFloat(custom.writing || 8.5);
+        let k = custom.kanji !== undefined ? parseFloat(custom.kanji) : 8.5;
+        let l = custom.listening !== undefined ? parseFloat(custom.listening) : 8.5;
+        let c = custom.conversation !== undefined ? parseFloat(custom.conversation) : parseFloat(custom.speaking || 8.5);
+        if (isNaN(v)) v = 8.5;
+        if (isNaN(g)) g = 8.5;
+        if (isNaN(k)) k = 8.5;
+        if (isNaN(l)) l = 8.5;
+        if (isNaN(c)) c = 8.5;
+        const avg = parseFloat(((v * 1 + g * 1 + k * 1 + l * 2 + c * 2) / 7).toFixed(1));
+        return {
+          vocab: v,
+          grammar: g,
+          kanji: k,
+          listening: l,
+          conversation: c,
+          attendance: parseInt(custom.attendance) || 100,
+          comment: custom.comment || "",
+          average: avg,
+        };
+      }
+      return generateScoresForStudent(std, type, idx);
+    };
+
     const renderAdminList = (type) => {
       const container =
         document.getElementById("adsdScorecardList") ||
@@ -6239,25 +6341,7 @@ document.addEventListener("DOMContentLoaded", () => {
       const pad = (n) => (n < 10 ? "0" + n : n);
 
       for (let i = count; i >= 1; i--) {
-        const customScore = customScorecards.find(
-          (s) => s.type === type && s.index === i,
-        );
-        let scores;
-        if (customScore) {
-          let v = customScore.vocab !== undefined ? parseFloat(customScore.vocab) : parseFloat(customScore.reading || 8.5);
-          let l = customScore.listening !== undefined ? parseFloat(customScore.listening) : parseFloat(customScore.speaking || 8.5);
-          if (isNaN(v)) v = 8.5;
-          if (isNaN(l)) l = 8.5;
-          scores = {
-            vocab: v,
-            listening: l,
-            attendance: parseInt(customScore.attendance) || 100,
-            comment: customScore.comment || "",
-            average: parseFloat(((v * 1 + l * 2) / 3).toFixed(1)),
-          };
-        } else {
-          scores = generateScoresForStudent(student, type, i);
-        }
+        const scores = getResolvedScores(student, type, i);
 
         const itemStartDate = new Date(enrollDate.getTime());
         const itemEndDate = new Date(enrollDate.getTime());
@@ -6281,9 +6365,12 @@ document.addEventListener("DOMContentLoaded", () => {
             <strong style="color: var(--text-main); font-size: 0.8rem;">${type === "week" ? "Tuần " + i : "Tháng " + i} (${dateRangeStr})</strong>
             <span style="background: var(--accent); color: white; padding: 2px 6px; border-radius: 10px; font-size: 0.65rem; font-weight: 700;">Điểm TB: ${scores.average}</span>
           </div>
-          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; font-size: 0.75rem;">
-            <div>Từ vựng / NP / Hán tự (x1): <strong style="color: #4F46E5;">${scores.vocab}</strong></div>
-            <div>Nghe / Hội thoại (x2): <strong style="color: #059669;">${scores.listening}</strong></div>
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 0.35rem 0.5rem; font-size: 0.73rem;">
+            <div>Từ Vựng (x1): <strong style="color: #6366F1;">${scores.vocab}</strong></div>
+            <div>Ngữ Pháp (x1): <strong style="color: #3B82F6;">${scores.grammar}</strong></div>
+            <div>Hán Tự (x1): <strong style="color: #8B5CF6;">${scores.kanji}</strong></div>
+            <div>Nghe (x2): <strong style="color: #10B981;">${scores.listening}</strong></div>
+            <div>Hội Thoại (x2): <strong style="color: #EC4899;">${scores.conversation}</strong></div>
           </div>
           <div style="font-size: 0.72rem; color: var(--text-muted); line-height: 1.4; border-top: 1px solid var(--border-light); padding-top: 0.35rem;">
             Chuyên cần: <strong>${scores.attendance}%</strong> • Nhận xét: <em>${scores.comment}</em>
@@ -6358,10 +6445,16 @@ document.addEventListener("DOMContentLoaded", () => {
       let gpa = 8.2;
       if (customScore) {
         let v = customScore.vocab !== undefined ? parseFloat(customScore.vocab) : parseFloat(customScore.reading || 8.5);
-        let l = customScore.listening !== undefined ? parseFloat(customScore.listening) : parseFloat(customScore.speaking || 8.5);
+        let g = customScore.grammar !== undefined ? parseFloat(customScore.grammar) : parseFloat(customScore.writing || 8.5);
+        let k = customScore.kanji !== undefined ? parseFloat(customScore.kanji) : 8.5;
+        let l = customScore.listening !== undefined ? parseFloat(customScore.listening) : 8.5;
+        let c = customScore.conversation !== undefined ? parseFloat(customScore.conversation) : parseFloat(customScore.speaking || 8.5);
         if (isNaN(v)) v = 8.5;
+        if (isNaN(g)) g = 8.5;
+        if (isNaN(k)) k = 8.5;
         if (isNaN(l)) l = 8.5;
-        gpa = parseFloat(((v * 1 + l * 2) / 3).toFixed(1));
+        if (isNaN(c)) c = 8.5;
+        gpa = parseFloat(((v * 1 + g * 1 + k * 1 + l * 2 + c * 2) / 7).toFixed(1));
       } else {
         gpa = generateScoresForStudent(student, "week", i).average;
       }
@@ -21617,10 +21710,18 @@ document.addEventListener("DOMContentLoaded", () => {
       for (let i = 0; i < seedStr.length; i++) {
         val += seedStr.charCodeAt(i);
       }
-      // Skill 1: Từ vựng / Ngữ pháp / Hán tự (x1)
+      // 5 Skills:
+      // 1. Từ Vựng (x1)
       const vocab = parseFloat((7.5 + (val % 21) / 10).toFixed(1));
-      // Skill 2: Nghe / Hội thoại (x2)
+      // 2. Ngữ Pháp (x1)
+      const grammar = parseFloat((7.2 + ((val + 3) % 23) / 10).toFixed(1));
+      // 3. Hán Tự (x1)
+      const kanji = parseFloat((7.0 + ((val + 7) % 25) / 10).toFixed(1));
+      // 4. Nghe (x2)
       const listening = parseFloat((7.2 + ((val + 5) % 25) / 10).toFixed(1));
+      // 5. Hội Thoại (x2)
+      const conversation = parseFloat((7.0 + ((val + 9) % 24) / 10).toFixed(1));
+
       const attendance = 90 + (val % 11);
       const comments = [
         "Có thái độ học tập tích cực, chuẩn bị bài đầy đủ và phát âm tốt.",
@@ -21630,10 +21731,15 @@ document.addEventListener("DOMContentLoaded", () => {
         "Tiến bộ rõ rệt về kỹ năng phản xạ nghe nói và hội thoại.",
       ];
       const comment = comments[val % comments.length];
-      const average = parseFloat(((vocab * 1 + listening * 2) / 3).toFixed(1));
+      const average = parseFloat(
+        ((vocab * 1 + grammar * 1 + kanji * 1 + listening * 2 + conversation * 2) / 7).toFixed(1),
+      );
       return {
         vocab,
+        grammar,
+        kanji,
         listening,
+        conversation,
         attendance,
         comment,
         average,
@@ -21662,28 +21768,39 @@ document.addEventListener("DOMContentLoaded", () => {
       console.error("Failed to load scorecard docs:", err);
     }
 
+    const getResolvedScores = (std, type, idx) => {
+      const custom = customScorecards.find((s) => s.type === type && s.index === idx);
+      if (custom) {
+        let v = custom.vocab !== undefined ? parseFloat(custom.vocab) : parseFloat(custom.reading || 8.5);
+        let g = custom.grammar !== undefined ? parseFloat(custom.grammar) : parseFloat(custom.writing || 8.5);
+        let k = custom.kanji !== undefined ? parseFloat(custom.kanji) : 8.5;
+        let l = custom.listening !== undefined ? parseFloat(custom.listening) : 8.5;
+        let c = custom.conversation !== undefined ? parseFloat(custom.conversation) : parseFloat(custom.speaking || 8.5);
+        if (isNaN(v)) v = 8.5;
+        if (isNaN(g)) g = 8.5;
+        if (isNaN(k)) k = 8.5;
+        if (isNaN(l)) l = 8.5;
+        if (isNaN(c)) c = 8.5;
+        const avg = parseFloat(((v * 1 + g * 1 + k * 1 + l * 2 + c * 2) / 7).toFixed(1));
+        return {
+          vocab: v,
+          grammar: g,
+          kanji: k,
+          listening: l,
+          conversation: c,
+          attendance: parseInt(custom.attendance) || 100,
+          comment: custom.comment || "",
+          average: avg,
+        };
+      }
+      return generateScoresForStudent(std, type, idx);
+    };
+
     // Math Overall Scores
     let totalGpa = 0;
     let totalAttendance = 0;
     for (let i = 1; i <= activeWeeks; i++) {
-      const custom = customScorecards.find(
-        (s) => s.type === "week" && s.index === i,
-      );
-      let score;
-      if (custom) {
-        let v = custom.vocab !== undefined ? parseFloat(custom.vocab) : parseFloat(custom.reading || 8.5);
-        let l = custom.listening !== undefined ? parseFloat(custom.listening) : parseFloat(custom.speaking || 8.5);
-        if (isNaN(v)) v = 8.5;
-        if (isNaN(l)) l = 8.5;
-        score = {
-          vocab: v,
-          listening: l,
-          average: parseFloat(((v * 1 + l * 2) / 3).toFixed(1)),
-          attendance: parseInt(custom.attendance) || 100,
-        };
-      } else {
-        score = generateScoresForStudent(student, "week", i);
-      }
+      const score = getResolvedScores(student, "week", i);
       totalGpa += score.average;
       totalAttendance += score.attendance;
     }
@@ -21751,25 +21868,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
       const count = type === "week" ? activeWeeks : activeMonths;
       for (let i = count; i >= 1; i--) {
-        const custom = customScorecards.find(
-          (s) => s.type === type && s.index === i,
-        );
-        let score;
-        if (custom) {
-          let v = custom.vocab !== undefined ? parseFloat(custom.vocab) : parseFloat(custom.reading || 8.5);
-          let l = custom.listening !== undefined ? parseFloat(custom.listening) : parseFloat(custom.speaking || 8.5);
-          if (isNaN(v)) v = 8.5;
-          if (isNaN(l)) l = 8.5;
-          score = {
-            vocab: v,
-            listening: l,
-            attendance: parseInt(custom.attendance) || 100,
-            comment: custom.comment || "",
-            average: parseFloat(((v * 1 + l * 2) / 3).toFixed(1)),
-          };
-        } else {
-          score = generateScoresForStudent(student, type, i);
-        }
+        const score = getResolvedScores(student, type, i);
 
         const itemStart = new Date(enrollDate);
         const itemEnd = new Date(enrollDate);
@@ -21799,12 +21898,24 @@ document.addEventListener("DOMContentLoaded", () => {
               <div>
                 <div class="score-bars">
                   <div class="bar-row">
-                    <div class="bar-header"><span>📖 TỪ VỰNG / NGỮ PHÁP / HÁN TỰ <span style="font-size:0.7rem;font-weight:normal;opacity:0.7;">(x1)</span></span><span style="font-weight:700;color:#4F46E5;">${score.vocab}</span></div>
+                    <div class="bar-header"><span>📖 TỪ VỰNG <span style="font-size:0.7rem;font-weight:normal;opacity:0.7;">(x1)</span></span><span style="font-weight:700;color:#6366F1;">${score.vocab}</span></div>
                     <div class="bar-track"><div class="bar-fill" style="width: ${score.vocab * 10}%; background: #6366F1;"></div></div>
                   </div>
                   <div class="bar-row">
-                    <div class="bar-header"><span>🎧 NGHE / HỘI THOẠI <span style="font-size:0.7rem;font-weight:normal;opacity:0.7;">(x2)</span></span><span style="font-weight:700;color:#059669;">${score.listening}</span></div>
+                    <div class="bar-header"><span>📝 NGỮ PHÁP <span style="font-size:0.7rem;font-weight:normal;opacity:0.7;">(x1)</span></span><span style="font-weight:700;color:#3B82F6;">${score.grammar}</span></div>
+                    <div class="bar-track"><div class="bar-fill" style="width: ${score.grammar * 10}%; background: #3B82F6;"></div></div>
+                  </div>
+                  <div class="bar-row">
+                    <div class="bar-header"><span>🈲 HÁN TỰ <span style="font-size:0.7rem;font-weight:normal;opacity:0.7;">(x1)</span></span><span style="font-weight:700;color:#8B5CF6;">${score.kanji}</span></div>
+                    <div class="bar-track"><div class="bar-fill" style="width: ${score.kanji * 10}%; background: #8B5CF6;"></div></div>
+                  </div>
+                  <div class="bar-row">
+                    <div class="bar-header"><span>🎧 NGHE <span style="font-size:0.7rem;font-weight:normal;opacity:0.7;">(x2)</span></span><span style="font-weight:700;color:#10B981;">${score.listening}</span></div>
                     <div class="bar-track"><div class="bar-fill" style="width: ${score.listening * 10}%; background: #10B981;"></div></div>
+                  </div>
+                  <div class="bar-row">
+                    <div class="bar-header"><span>🗣️ HỘI THOẠI <span style="font-size:0.7rem;font-weight:normal;opacity:0.7;">(x2)</span></span><span style="font-weight:700;color:#EC4899;">${score.conversation}</span></div>
+                    <div class="bar-track"><div class="bar-fill" style="width: ${score.conversation * 10}%; background: #EC4899;"></div></div>
                   </div>
                 </div>
                 <div class="scorecard-comment" style="margin-top: 0.85rem;">
@@ -21864,10 +21975,16 @@ document.addEventListener("DOMContentLoaded", () => {
       let gpa = 8.2;
       if (custom) {
         let v = custom.vocab !== undefined ? parseFloat(custom.vocab) : parseFloat(custom.reading || 8.5);
-        let l = custom.listening !== undefined ? parseFloat(custom.listening) : parseFloat(custom.speaking || 8.5);
+        let g = custom.grammar !== undefined ? parseFloat(custom.grammar) : parseFloat(custom.writing || 8.5);
+        let k = custom.kanji !== undefined ? parseFloat(custom.kanji) : 8.5;
+        let l = custom.listening !== undefined ? parseFloat(custom.listening) : 8.5;
+        let c = custom.conversation !== undefined ? parseFloat(custom.conversation) : parseFloat(custom.speaking || 8.5);
         if (isNaN(v)) v = 8.5;
+        if (isNaN(g)) g = 8.5;
+        if (isNaN(k)) k = 8.5;
         if (isNaN(l)) l = 8.5;
-        gpa = parseFloat(((v * 1 + l * 2) / 3).toFixed(1));
+        if (isNaN(c)) c = 8.5;
+        gpa = parseFloat(((v * 1 + g * 1 + k * 1 + l * 2 + c * 2) / 7).toFixed(1));
       } else {
         gpa = scoreGenerator(student, "week", i).average;
       }
