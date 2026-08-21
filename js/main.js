@@ -8162,7 +8162,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   };
 
-  // ── HRM Resume: document helpers ─────────────────────────────────────────
+  // ── HRM Resume & Documents helpers ───────────────────────────────────────
   const _hrmStorage = (() => {
     try {
       return firebase.storage();
@@ -8172,6 +8172,7 @@ document.addEventListener("DOMContentLoaded", () => {
   })();
 
   const _fmtBytes = (b) => {
+    if (!b || isNaN(b)) return "0 B";
     if (b < 1024) return b + " B";
     if (b < 1048576) return (b / 1024).toFixed(1) + " KB";
     return (b / 1048576).toFixed(1) + " MB";
@@ -8184,12 +8185,183 @@ document.addEventListener("DOMContentLoaded", () => {
       docx: "📝",
       xls: "📊",
       xlsx: "📊",
+      csv: "📊",
       zip: "🗜️",
+      rar: "🗜️",
+      "7z": "🗜️",
       jpg: "🖼️",
       jpeg: "🖼️",
       png: "🖼️",
+      webp: "🖼️",
+      gif: "🖼️",
+      svg: "🖼️",
+      txt: "📃",
+      json: "📋",
     };
     return m[ext] || "📁";
+  };
+
+  const downloadFileHelper = (url, fileName = "file") => {
+    if (!url) {
+      showToast("Không tìm thấy tệp để tải về", "warning");
+      return;
+    }
+    if (url.startsWith("data:")) {
+      try {
+        const parts = url.split(";base64,");
+        const contentType = parts[0].replace("data:", "") || "application/octet-stream";
+        const base64Data = parts[1] || "";
+        const raw = window.atob(base64Data);
+        const rawLength = raw.length;
+        const uInt8Array = new Uint8Array(rawLength);
+        for (let i = 0; i < rawLength; ++i) {
+          uInt8Array[i] = raw.charCodeAt(i);
+        }
+        const blob = new Blob([uInt8Array], { type: contentType });
+        const blobUrl = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = blobUrl;
+        a.download = fileName;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        setTimeout(() => URL.revokeObjectURL(blobUrl), 10000);
+        return;
+      } catch (e) {
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = fileName;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        return;
+      }
+    }
+    fetch(url)
+      .then((res) => {
+        if (!res.ok) throw new Error("Network response was not ok");
+        return res.blob();
+      })
+      .then((blob) => {
+        const blobUrl = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = blobUrl;
+        a.download = fileName;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        setTimeout(() => URL.revokeObjectURL(blobUrl), 10000);
+      })
+      .catch(() => {
+        const a = document.createElement("a");
+        a.href = url;
+        a.target = "_blank";
+        a.download = fileName;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+      });
+  };
+
+  const openDocPreview = (doc) => {
+    if (!doc) return;
+    const ext = (doc.name || "").split(".").pop().toLowerCase();
+    const fiIcon = _docIcon(ext);
+    let dateStr = "--";
+    if (doc.uploadedAt) {
+      if (doc.uploadedAt.toDate) {
+        const d = doc.uploadedAt.toDate();
+        dateStr = `${String(d.getDate()).padStart(2, "0")}/${String(d.getMonth() + 1).padStart(2, "0")}/${d.getFullYear()}`;
+      } else {
+        const d = new Date(doc.uploadedAt);
+        dateStr = isNaN(d) ? String(doc.uploadedAt) : `${String(d.getDate()).padStart(2, "0")}/${String(d.getMonth() + 1).padStart(2, "0")}/${d.getFullYear()}`;
+      }
+    }
+    const nameEl = document.getElementById("docPreviewName");
+    if (nameEl) nameEl.textContent = doc.name || "--";
+    const metaEl = document.getElementById("docPreviewMeta");
+    if (metaEl) {
+      metaEl.innerHTML = `
+        <div style="display:flex;flex-direction:column;gap:2px;">
+          <span style="font-size:0.65rem;color:var(--text-muted);font-weight:600;">LOẠI</span>
+          <span style="font-size:0.8rem;font-weight:700;color:#2563EB;text-transform:uppercase;">${ext || "FILE"}</span>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:2px;">
+          <span style="font-size:0.65rem;color:var(--text-muted);font-weight:600;">KÍCH THƯỚC</span>
+          <span style="font-size:0.8rem;font-weight:500;">${_fmtBytes(doc.size || 0)}</span>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:2px;">
+          <span style="font-size:0.65rem;color:var(--text-muted);font-weight:600;">NGÀY TẢI LÊN</span>
+          <span style="font-size:0.8rem;font-weight:500;">${dateStr}</span>
+        </div>`;
+    }
+    const contentEl = document.getElementById("docPreviewContent");
+    if (contentEl) {
+      contentEl.style.padding = "0";
+      contentEl.style.overflow = "auto";
+      contentEl.style.display = "block";
+      const isImage = ["jpg", "jpeg", "png", "gif", "webp", "svg"].includes(ext) || (doc.type && doc.type.startsWith("image/"));
+      const isPdf = ext === "pdf" || doc.type === "application/pdf";
+
+      if (doc.previewData && Array.isArray(doc.previewData) && doc.previewData.length) {
+        const headers = doc.previewData[0] || [];
+        const rows = doc.previewData.slice(1);
+        const thHtml = headers
+          .map(
+            (h) =>
+              `<th style="padding:7px 12px;white-space:nowrap;font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#6366F1;background:#EEF2FF;border-bottom:2px solid #C7D2FE;position:sticky;top:0;z-index:1;">${h ?? ""}</th>`,
+          )
+          .join("");
+        const trHtml = rows
+          .map(
+            (row, ri) =>
+              `<tr style="background:${ri % 2 === 0 ? "#fff" : "#F9FAFB"};">${headers.map((_, ci) => `<td style="padding:6px 12px;font-size:0.78rem;white-space:nowrap;border-bottom:1px solid #F0F0F0;color:var(--text-main);">${row[ci] ?? ""}</td>`).join("")}</tr>`,
+          )
+          .join("");
+        contentEl.innerHTML = `<div style="padding:0.75rem 1rem 0.5rem;font-size:0.7rem;color:var(--text-muted);">Hiển thị ${rows.length} hàng · ${headers.length} cột (cuộn để xem thêm)</div>
+          <div style="overflow:auto;flex:1;">
+            <table style="border-collapse:collapse;width:100%;font-family:inherit;">
+              <thead><tr>${thHtml}</tr></thead>
+              <tbody>${trHtml}</tbody>
+            </table>
+          </div>`;
+      } else if (doc.url && isImage) {
+        contentEl.style.display = "flex";
+        contentEl.style.alignItems = "center";
+        contentEl.style.justifyContent = "center";
+        contentEl.style.padding = "1rem";
+        contentEl.innerHTML = `<img src="${doc.url}" alt="${esc(doc.name || "preview")}" style="max-width:100%;max-height:100%;object-fit:contain;border-radius:8px;box-shadow:0 4px 20px rgba(0,0,0,0.12);" />`;
+      } else if (doc.url && isPdf) {
+        contentEl.innerHTML = `<iframe src="${doc.url}" title="${esc(doc.name || "pdf")}" style="width:100%;height:100%;border:none;"></iframe>`;
+      } else {
+        contentEl.style.display = "flex";
+        contentEl.style.alignItems = "center";
+        contentEl.style.justifyContent = "center";
+        contentEl.style.padding = "2rem";
+        contentEl.innerHTML = `<div style="text-align:center;">
+          <span style="font-size:3.5rem;display:block;margin-bottom:1rem;">${fiIcon}</span>
+          <div style="font-size:0.95rem;font-weight:600;color:var(--text-main);margin-bottom:0.4rem;">${esc(doc.name || "Tệp đính kèm")}</div>
+          <div style="font-size:0.82rem;color:var(--text-muted);line-height:1.7;">${doc.url ? "Chưa có bản xem trước trực tiếp cho định dạng này.<br>Bấm nút bên dưới để tải tệp về máy." : "Tệp này không có dữ liệu nội dung trực tuyến.<br>Vui lòng tải lại tệp nếu cần."}</div>
+        </div>`;
+      }
+    }
+    const dlBtn = document.getElementById("docPreviewDownload");
+    if (dlBtn) {
+      dlBtn.onclick = (e) => {
+        e.preventDefault();
+        if (doc.url) {
+          downloadFileHelper(doc.url, doc.name || "file");
+        } else {
+          showToast("Không có dữ liệu tệp để tải về", "warning");
+        }
+      };
+      dlBtn.style.opacity = doc.url ? "1" : "0.4";
+      dlBtn.style.cursor = doc.url ? "pointer" : "not-allowed";
+    }
+    const overlay = document.getElementById("docPreviewOverlay");
+    const panel = document.getElementById("docPreviewPanel");
+    if (overlay) overlay.style.display = "block";
+    if (panel) panel.style.transform = "translateX(0)";
   };
 
   const loadHrmResumeDocs = async (staffId, prefix) => {
@@ -8237,23 +8409,28 @@ document.addEventListener("DOMContentLoaded", () => {
           const d = doc.uploadedAt.toDate
             ? doc.uploadedAt.toDate()
             : new Date(doc.uploadedAt);
-          dateStr = d.toLocaleDateString("vi-VN");
+          dateStr = isNaN(d) ? "--" : d.toLocaleDateString("vi-VN");
         }
-        const downloadBtn = doc.url
-          ? `<a href="${doc.url}" target="_blank" download="${doc.name || "file"}" class="crm-icon-btn" title="Tải về" style="color:#2563EB;">
-            <svg viewBox="0 0 24 24" style="width:14px;height:14px;fill:currentColor;"><path d="M5,20H19V18H5M19,9H15V3H9V9H5L12,16L19,9Z"/></svg>
-           </a>`
-          : "";
         return `<tr>
-        <td style="font-size:.8rem;color:var(--text-muted);">${i + 1}</td>
-        <td style="font-size:.8rem;">${icon} ${esc(doc.name || "file")}</td>
-        <td style="font-size:.78rem;color:var(--text-muted);">${ext.toUpperCase()}</td>
+        <td style="font-size:.8rem;color:var(--text-muted);text-align:center;">${i + 1}</td>
+        <td style="font-size:.8rem;">
+          <div class="hrm-doc-preview-click" data-idx="${i}" style="display:flex;align-items:center;gap:6px;cursor:pointer;" title="Bấm để xem trước">
+            <span style="font-size:1.1rem;flex-shrink:0;">${icon}</span>
+            <span style="color:#2563EB;font-weight:500;text-decoration:underline;text-underline-offset:2px;">${esc(doc.name || "file")}</span>
+          </div>
+        </td>
+        <td style="font-size:.78rem;color:var(--text-muted);"><span style="background:rgba(99,102,241,0.08);color:#4F46E5;padding:2px 6px;border-radius:4px;font-weight:600;text-transform:uppercase;">${ext || "FILE"}</span></td>
         <td style="font-size:.78rem;color:var(--text-muted);">${_fmtBytes(doc.size || 0)}</td>
         <td style="font-size:.78rem;color:var(--text-muted);">${dateStr}</td>
         <td style="text-align:center;">
-          <div style="display:flex;align-items:center;justify-content:center;gap:4px;">
-            ${downloadBtn}
-            <button class="crm-icon-btn btn-del-hrm-doc" data-docid="${doc.id}" data-path="${doc.storagePath || ""}" title="Xóa" style="color:#EF4444;">
+          <div style="display:flex;align-items:center;justify-content:center;gap:5px;">
+            <button class="crm-icon-btn hrm-doc-view-btn" data-idx="${i}" title="Xem trước" style="color:#2563EB;background:#EEF2FF;border-radius:6px;padding:5px 7px;border:none;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;">
+              <svg viewBox="0 0 24 24" style="width:14px;height:14px;fill:currentColor;"><path d="M12,9A3,3 0 0,0 9,12A3,3 0 0,0 12,15A3,3 0 0,0 15,12A3,3 0 0,0 12,9M12,17A5,5 0 0,1 7,12A5,5 0 0,1 12,7A5,5 0 0,1 17,12A5,5 0 0,1 12,17M12,4.5C7,4.5 2.73,7.61 1,12C2.73,16.39 7,19.5 12,19.5C17,19.5 21.27,16.39 23,12C21.27,7.61 17,4.5 12,4.5Z"/></svg>
+            </button>
+            <button class="crm-icon-btn hrm-doc-download-btn" data-idx="${i}" title="Tải về" style="color:#059669;background:#ECFDF5;border-radius:6px;padding:5px 7px;border:none;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;${doc.url ? "" : "opacity:0.4;cursor:not-allowed;"}">
+              <svg viewBox="0 0 24 24" style="width:14px;height:14px;fill:currentColor;"><path d="M5,20H19V18H5M19,9H15V3H9V9H5L12,16L19,9Z"/></svg>
+            </button>
+            <button class="crm-icon-btn btn-del-hrm-doc" data-docid="${doc.id}" data-path="${doc.storagePath || ""}" title="Xóa" style="color:#EF4444;background:#FEF2F2;border-radius:6px;padding:5px 7px;border:none;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;">
               <svg viewBox="0 0 24 24" style="width:14px;height:14px;fill:currentColor;"><path d="M19,4H15.5L14.5,3H9.5L8.5,4H5V6H19M6,19A2,2 0 0,0 8,21H16A2,2 0 0,0 18,19V7H6V19Z"/></svg>
             </button>
           </div>
@@ -8261,6 +8438,25 @@ document.addEventListener("DOMContentLoaded", () => {
       </tr>`;
       })
       .join("");
+
+    tbody.querySelectorAll(".hrm-doc-preview-click, .hrm-doc-view-btn").forEach((el) => {
+      el.addEventListener("click", () => {
+        const idx = parseInt(el.dataset.idx);
+        if (!isNaN(idx) && docs[idx]) openDocPreview(docs[idx]);
+      });
+    });
+
+    tbody.querySelectorAll(".hrm-doc-download-btn").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const idx = parseInt(btn.dataset.idx);
+        const d = docs[idx];
+        if (d && d.url) {
+          downloadFileHelper(d.url, d.name || "file");
+        } else {
+          showToast("Tệp không có dữ liệu tải về", "warning");
+        }
+      });
+    });
 
     tbody.querySelectorAll(".btn-del-hrm-doc").forEach((btn) => {
       btn.addEventListener("click", async () => {
@@ -8325,31 +8521,44 @@ document.addEventListener("DOMContentLoaded", () => {
             url = "";
           }
         }
+        const extUp = file.name.split(".").pop().toLowerCase();
+        let previewData = null;
+        if (["xlsx", "xls", "csv"].includes(extUp) && window.XLSX) {
+          try {
+            const buf = await file.arrayBuffer();
+            const wb = XLSX.read(buf, { type: "array" });
+            const ws = wb.Sheets[wb.SheetNames[0]];
+            previewData = XLSX.utils
+              .sheet_to_json(ws, { header: 1, defval: "" })
+              .slice(0, 120);
+          } catch (_) {}
+        }
         let dataUrl = url;
-        if (
-          !dataUrl &&
-          file.type.startsWith("image/") &&
-          file.size < 2 * 1024 * 1024
-        ) {
-          dataUrl = await new Promise((res) => {
-            const r = new FileReader();
-            r.onload = (e) => res(e.target.result);
-            r.readAsDataURL(file);
-          });
+        if (!dataUrl && file.size <= 800 * 1024) {
+          try {
+            dataUrl = await new Promise((res, rej) => {
+              const r = new FileReader();
+              r.onload = (e) => res(e.target.result);
+              r.onerror = rej;
+              r.readAsDataURL(file);
+            });
+          } catch (_) {}
         }
         const nowTs = firebase.firestore.Timestamp.fromDate(new Date());
+        const docPayload = {
+          name: file.name,
+          size: file.size,
+          type: file.type || "",
+          url: dataUrl || "",
+          storagePath,
+          uploadedAt: nowTs,
+        };
+        if (previewData) docPayload.previewData = previewData;
         await db
           .collection("hrm_staff")
           .doc(staffId)
           .collection("documents")
-          .add({
-            name: file.name,
-            size: file.size,
-            type: file.type,
-            url: dataUrl || "",
-            storagePath,
-            uploadedAt: nowTs,
-          });
+          .add(docPayload);
         done++;
       } catch (e) {
         showToast("Lỗi lưu " + file.name + ": " + e.message, "error");
@@ -8413,23 +8622,28 @@ document.addEventListener("DOMContentLoaded", () => {
           const d = doc.uploadedAt.toDate
             ? doc.uploadedAt.toDate()
             : new Date(doc.uploadedAt);
-          dateStr = d.toLocaleDateString("vi-VN");
+          dateStr = isNaN(d) ? "--" : d.toLocaleDateString("vi-VN");
         }
-        const downloadBtn = doc.url
-          ? `<a href="${doc.url}" target="_blank" download="${doc.name || "file"}" class="crm-icon-btn" title="Tải về" style="color:#2563EB;">
-            <svg viewBox="0 0 24 24" style="width:14px;height:14px;fill:currentColor;"><path d="M5,20H19V18H5M19,9H15V3H9V9H5L12,16L19,9Z"/></svg>
-           </a>`
-          : "";
         return `<tr>
-        <td style="font-size:.8rem;color:var(--text-muted);">${i + 1}</td>
-        <td style="font-size:.8rem;">${icon} ${esc(doc.name || "file")}</td>
-        <td style="font-size:.78rem;color:var(--text-muted);">${ext.toUpperCase()}</td>
+        <td style="font-size:.8rem;color:var(--text-muted);text-align:center;">${i + 1}</td>
+        <td style="font-size:.8rem;">
+          <div class="hrm-cdoc-preview-click" data-idx="${i}" style="display:flex;align-items:center;gap:6px;cursor:pointer;" title="Bấm để xem trước">
+            <span style="font-size:1.1rem;flex-shrink:0;">${icon}</span>
+            <span style="color:#2563EB;font-weight:500;text-decoration:underline;text-underline-offset:2px;">${esc(doc.name || "file")}</span>
+          </div>
+        </td>
+        <td style="font-size:.78rem;color:var(--text-muted);"><span style="background:rgba(99,102,241,0.08);color:#4F46E5;padding:2px 6px;border-radius:4px;font-weight:600;text-transform:uppercase;">${ext || "FILE"}</span></td>
         <td style="font-size:.78rem;color:var(--text-muted);">${_fmtBytes(doc.size || 0)}</td>
         <td style="font-size:.78rem;color:var(--text-muted);">${dateStr}</td>
         <td style="text-align:center;">
-          <div style="display:flex;align-items:center;justify-content:center;gap:4px;">
-            ${downloadBtn}
-            <button class="crm-icon-btn btn-del-hrm-cdoc" data-docid="${doc.id}" data-path="${doc.storagePath || ""}" title="Xóa" style="color:#EF4444;">
+          <div style="display:flex;align-items:center;justify-content:center;gap:5px;">
+            <button class="crm-icon-btn hrm-cdoc-view-btn" data-idx="${i}" title="Xem trước" style="color:#2563EB;background:#EEF2FF;border-radius:6px;padding:5px 7px;border:none;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;">
+              <svg viewBox="0 0 24 24" style="width:14px;height:14px;fill:currentColor;"><path d="M12,9A3,3 0 0,0 9,12A3,3 0 0,0 12,15A3,3 0 0,0 15,12A3,3 0 0,0 12,9M12,17A5,5 0 0,1 7,12A5,5 0 0,1 12,7A5,5 0 0,1 17,12A5,5 0 0,1 12,7A5,5 0 0,1 12,17M12,4.5C7,4.5 2.73,7.61 1,12C2.73,16.39 7,19.5 12,19.5C17,19.5 21.27,16.39 23,12C21.27,7.61 17,4.5 12,4.5Z"/></svg>
+            </button>
+            <button class="crm-icon-btn hrm-cdoc-download-btn" data-idx="${i}" title="Tải về" style="color:#059669;background:#ECFDF5;border-radius:6px;padding:5px 7px;border:none;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;${doc.url ? "" : "opacity:0.4;cursor:not-allowed;"}">
+              <svg viewBox="0 0 24 24" style="width:14px;height:14px;fill:currentColor;"><path d="M5,20H19V18H5M19,9H15V3H9V9H5L12,16L19,9Z"/></svg>
+            </button>
+            <button class="crm-icon-btn btn-del-hrm-cdoc" data-docid="${doc.id}" data-path="${doc.storagePath || ""}" title="Xóa" style="color:#EF4444;background:#FEF2F2;border-radius:6px;padding:5px 7px;border:none;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;">
               <svg viewBox="0 0 24 24" style="width:14px;height:14px;fill:currentColor;"><path d="M19,4H15.5L14.5,3H9.5L8.5,4H5V6H19M6,19A2,2 0 0,0 8,21H16A2,2 0 0,0 18,19V7H6V19Z"/></svg>
             </button>
           </div>
@@ -8437,6 +8651,25 @@ document.addEventListener("DOMContentLoaded", () => {
       </tr>`;
       })
       .join("");
+
+    tbody.querySelectorAll(".hrm-cdoc-preview-click, .hrm-cdoc-view-btn").forEach((el) => {
+      el.addEventListener("click", () => {
+        const idx = parseInt(el.dataset.idx);
+        if (!isNaN(idx) && docs[idx]) openDocPreview(docs[idx]);
+      });
+    });
+
+    tbody.querySelectorAll(".hrm-cdoc-download-btn").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const idx = parseInt(btn.dataset.idx);
+        const d = docs[idx];
+        if (d && d.url) {
+          downloadFileHelper(d.url, d.name || "file");
+        } else {
+          showToast("Tệp không có dữ liệu tải về", "warning");
+        }
+      });
+    });
 
     tbody.querySelectorAll(".btn-del-hrm-cdoc").forEach((btn) => {
       btn.addEventListener("click", async () => {
@@ -8498,31 +8731,44 @@ document.addEventListener("DOMContentLoaded", () => {
             url = "";
           }
         }
+        const extUp = file.name.split(".").pop().toLowerCase();
+        let previewData = null;
+        if (["xlsx", "xls", "csv"].includes(extUp) && window.XLSX) {
+          try {
+            const buf = await file.arrayBuffer();
+            const wb = XLSX.read(buf, { type: "array" });
+            const ws = wb.Sheets[wb.SheetNames[0]];
+            previewData = XLSX.utils
+              .sheet_to_json(ws, { header: 1, defval: "" })
+              .slice(0, 120);
+          } catch (_) {}
+        }
         let dataUrl = url;
-        if (
-          !dataUrl &&
-          file.type.startsWith("image/") &&
-          file.size < 2 * 1024 * 1024
-        ) {
-          dataUrl = await new Promise((res) => {
-            const r = new FileReader();
-            r.onload = (e) => res(e.target.result);
-            r.readAsDataURL(file);
-          });
+        if (!dataUrl && file.size <= 800 * 1024) {
+          try {
+            dataUrl = await new Promise((res, rej) => {
+              const r = new FileReader();
+              r.onload = (e) => res(e.target.result);
+              r.onerror = rej;
+              r.readAsDataURL(file);
+            });
+          } catch (_) {}
         }
         const nowTs = firebase.firestore.Timestamp.fromDate(new Date());
+        const docPayload = {
+          name: file.name,
+          size: file.size,
+          type: file.type || "",
+          url: dataUrl || "",
+          storagePath,
+          uploadedAt: nowTs,
+        };
+        if (previewData) docPayload.previewData = previewData;
         await db
           .collection("hrm_staff")
           .doc(staffId)
           .collection("contractDocs")
-          .add({
-            name: file.name,
-            size: file.size,
-            type: file.type,
-            url: dataUrl || "",
-            storagePath,
-            uploadedAt: nowTs,
-          });
+          .add(docPayload);
         done++;
       } catch (e) {
         showToast("Lỗi lưu " + file.name + ": " + e.message, "error");
@@ -11006,105 +11252,13 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   };
 
-  const openDocPreview = (doc) => {
-    const ext = (doc.name || "").split(".").pop().toLowerCase();
-    const fi = FILE_ICONS[ext] || { icon: "📁", color: "#6B7280" };
-    let dateStr = "--";
-    if (doc.uploadedAt?.toDate) {
-      const d = doc.uploadedAt.toDate();
-      dateStr = `${String(d.getDate()).padStart(2, "0")}/${String(d.getMonth() + 1).padStart(2, "0")}/${d.getFullYear()}`;
-    }
-    document.getElementById("docPreviewName").textContent = doc.name || "--";
-    document.getElementById("docPreviewMeta").innerHTML = `
-      <div style="display:flex;flex-direction:column;gap:2px;">
-        <span style="font-size:0.65rem;color:var(--text-muted);font-weight:600;">LOẠI</span>
-        <span style="font-size:0.8rem;font-weight:700;color:${fi.color};text-transform:uppercase;">${ext}</span>
-      </div>
-      <div style="display:flex;flex-direction:column;gap:2px;">
-        <span style="font-size:0.65rem;color:var(--text-muted);font-weight:600;">KÍCH THƯỚC</span>
-        <span style="font-size:0.8rem;font-weight:500;">${fmtFileSize(doc.size || 0)}</span>
-      </div>
-      <div style="display:flex;flex-direction:column;gap:2px;">
-        <span style="font-size:0.65rem;color:var(--text-muted);font-weight:600;">NGÀY TẢI LÊN</span>
-        <span style="font-size:0.8rem;font-weight:500;">${dateStr}</span>
-      </div>`;
-    const contentEl = document.getElementById("docPreviewContent");
-    contentEl.style.padding = "0";
-    contentEl.style.overflow = "auto";
-    contentEl.style.display = "block";
-    const isImage = ["jpg", "jpeg", "png", "gif", "webp", "svg"].includes(ext);
-    const isPdf = ext === "pdf";
-
-    if (
-      doc.previewData &&
-      Array.isArray(doc.previewData) &&
-      doc.previewData.length
-    ) {
-      // Spreadsheet table preview
-      const headers = doc.previewData[0] || [];
-      const rows = doc.previewData.slice(1);
-      const thHtml = headers
-        .map(
-          (h) =>
-            `<th style="padding:7px 12px;white-space:nowrap;font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#6366F1;background:#EEF2FF;border-bottom:2px solid #C7D2FE;position:sticky;top:0;z-index:1;">${h ?? ""}</th>`,
-        )
-        .join("");
-      const trHtml = rows
-        .map(
-          (row, ri) =>
-            `<tr style="background:${ri % 2 === 0 ? "#fff" : "#F9FAFB"};">${headers.map((_, ci) => `<td style="padding:6px 12px;font-size:0.78rem;white-space:nowrap;border-bottom:1px solid #F0F0F0;color:var(--text-main);">${row[ci] ?? ""}</td>`).join("")}</tr>`,
-        )
-        .join("");
-      contentEl.innerHTML = `<div style="padding:0.75rem 1rem 0.5rem;font-size:0.7rem;color:var(--text-muted);">Hiển thị ${rows.length} hàng · ${headers.length} cột (cuộn để xem thêm)</div>
-        <div style="overflow:auto;flex:1;">
-          <table style="border-collapse:collapse;width:100%;font-family:inherit;">
-            <thead><tr>${thHtml}</tr></thead>
-            <tbody>${trHtml}</tbody>
-          </table>
-        </div>`;
-    } else if (doc.url && isImage) {
-      contentEl.style.display = "flex";
-      contentEl.style.alignItems = "center";
-      contentEl.style.justifyContent = "center";
-      contentEl.style.padding = "1rem";
-      contentEl.innerHTML = `<img src="${doc.url}" style="max-width:100%;max-height:100%;object-fit:contain;border-radius:8px;box-shadow:0 4px 20px rgba(0,0,0,0.12);" />`;
-    } else if (doc.url && isPdf) {
-      contentEl.innerHTML = `<iframe src="${doc.url}" style="width:100%;height:100%;border:none;"></iframe>`;
-    } else {
-      contentEl.style.display = "flex";
-      contentEl.style.alignItems = "center";
-      contentEl.style.justifyContent = "center";
-      contentEl.style.padding = "2rem";
-      contentEl.innerHTML = `<div style="text-align:center;">
-        <span style="font-size:3.5rem;display:block;margin-bottom:1rem;">${fi.icon}</span>
-        <div style="font-size:0.82rem;color:var(--text-muted);line-height:1.7;">Chưa có bản xem trước.<br>Tải file xuống để xem nội dung.</div>
-      </div>`;
-    }
-    const dlBtn = document.getElementById("docPreviewDownload");
-    if (dlBtn) {
-      dlBtn.href = doc.url || "#";
-      if (doc.url?.startsWith("data:")) {
-        dlBtn.setAttribute("download", doc.name || "file");
-        dlBtn.removeAttribute("target");
-      } else if (doc.url) {
-        dlBtn.setAttribute("target", "_blank");
-        dlBtn.removeAttribute("download");
-      }
-      dlBtn.style.opacity = doc.url ? "1" : "0.4";
-      dlBtn.style.pointerEvents = doc.url ? "auto" : "none";
-    }
-    document.getElementById("docPreviewOverlay").style.display = "block";
-    document.getElementById("docPreviewPanel").style.transform =
-      "translateX(0)";
-  };
-
   const renderDocRows = (docs) => {
     const tbody = document.getElementById("crmDocsTableBody");
     if (!tbody) return;
     tbody.innerHTML = docs
       .map((doc, i) => {
         const ext = (doc.name || "").split(".").pop().toLowerCase();
-        const fi = FILE_ICONS[ext] || { icon: "📁", color: "#6B7280" };
+        const fi = FILE_ICONS[ext] || { icon: _docIcon(ext), color: "#6B7280" };
         let dateStr = "--";
         if (doc.uploadedAt?.toDate) {
           const d = doc.uploadedAt.toDate();
@@ -11116,7 +11270,7 @@ document.addEventListener("DOMContentLoaded", () => {
           <td>
             <div style="display:flex;align-items:center;gap:0.55rem;cursor:pointer;" class="doc-preview-btn" data-idx="${i}">
               <span style="font-size:1.1rem;flex-shrink:0;">${fi.icon}</span>
-              <span style="font-size:0.82rem;font-weight:500;color:#2563EB;text-decoration:underline;text-underline-offset:2px;">${doc.name || "--"}</span>
+              <span style="font-size:0.82rem;font-weight:500;color:#2563EB;text-decoration:underline;text-underline-offset:2px;">${esc(doc.name || "--")}</span>
             </div>
           </td>
           <td><span style="font-size:0.72rem;background:rgba(99,102,241,0.1);color:#6366F1;
@@ -11125,11 +11279,11 @@ document.addEventListener("DOMContentLoaded", () => {
           <td style="font-size:0.79rem;">${dateStr}</td>
           <td style="text-align:center;">
             <div style="display:flex;gap:0.3rem;justify-content:center;">
-              <a href="${doc.url || "#"}" ${doc.url ? (doc.url.startsWith("data:") ? `download="${doc.name}"` : 'target="_blank"') : 'onclick="return false"'}
+              <button class="crm-doc-download-btn" data-idx="${i}"
                 style="padding:5px 7px;background:${doc.url ? "#EEF2FF" : "#F3F4F6"};color:${doc.url ? "#6366F1" : "#D1D5DB"};border-radius:7px;
-                       text-decoration:none;display:flex;align-items:center;${doc.url ? "" : "cursor:not-allowed;"}" title="${doc.url ? "Tải xuống" : "Không có file"}">
+                       border:none;cursor:${doc.url ? "pointer" : "not-allowed"};display:flex;align-items:center;" title="${doc.url ? "Tải xuống" : "Không có file"}">
                 <svg viewBox="0 0 24 24" style="width:14px;height:14px;fill:currentColor;"><path d="M5,20H19V18H5M19,9H15V3H9V9H5L12,16L19,9Z"/></svg>
-              </a>
+              </button>
               <button class="doc-delete-btn" data-docid="${doc.id}" data-path="${doc.storagePath || ""}"
                 style="padding:5px 7px;background:#FEF2F2;color:#EF4444;border:none;border-radius:7px;cursor:pointer;" title="Xóa">
                 <svg viewBox="0 0 24 24" style="width:14px;height:14px;fill:currentColor;"><path d="M19,4H15.5L14.5,3H9.5L8.5,4H5V6H19M6,19A2,2 0 0,0 8,21H16A2,2 0 0,0 18,19V7H6V19Z"/></svg>
@@ -11165,10 +11319,23 @@ document.addEventListener("DOMContentLoaded", () => {
       });
     });
 
+    tbody.querySelectorAll(".crm-doc-download-btn").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const idx = parseInt(btn.dataset.idx);
+        const d = docs[idx];
+        if (d && d.url) {
+          downloadFileHelper(d.url, d.name || "file");
+        } else {
+          showToast("Tệp không có dữ liệu tải về", "warning");
+        }
+      });
+    });
+
     tbody.querySelectorAll(".doc-preview-btn").forEach((btn) => {
-      btn.addEventListener("click", () =>
-        openDocPreview(docs[parseInt(btn.dataset.idx)]),
-      );
+      btn.addEventListener("click", () => {
+        const idx = parseInt(btn.dataset.idx);
+        if (!isNaN(idx) && docs[idx]) openDocPreview(docs[idx]);
+      });
     });
   };
 
