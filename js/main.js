@@ -4798,10 +4798,8 @@ document.addEventListener("DOMContentLoaded", () => {
         "Họ Tên": "Vũ Thùy Chi",
         "Loại (Tuần/Tháng)": "Tuần",
         "Số (Tuần/Tháng số mấy)": 1,
-        "Nghe (Thang điểm 10)": 9.8,
-        "Nói (Thang điểm 10)": 8.4,
-        "Đọc (Thang điểm 10)": 9.1,
-        "Viết (Thang điểm 10)": 8.8,
+        "Từ vựng / Ngữ pháp / Hán tự (x1)": 9.2,
+        "Nghe / Hội thoại (x2)": 9.5,
         "Chuyên Cần (%)": 91,
         "Nhận Xét Cố Vấn":
           "Hoàn thành xuất sắc toàn bộ chuyên đề ngôn ngữ học thuật.",
@@ -4812,10 +4810,8 @@ document.addEventListener("DOMContentLoaded", () => {
         "Họ Tên": "Vũ Thùy Chi",
         "Loại (Tuần/Tháng)": "Tuần",
         "Số (Tuần/Tháng số mấy)": 2,
-        "Nghe (Thang điểm 10)": 9.5,
-        "Nói (Thang điểm 10)": 8.6,
-        "Đọc (Thang điểm 10)": 9.2,
-        "Viết (Thang điểm 10)": 8.9,
+        "Từ vựng / Ngữ pháp / Hán tự (x1)": 9.0,
+        "Nghe / Hội thoại (x2)": 9.3,
         "Chuyên Cần (%)": 95,
         "Nhận Xét Cố Vấn":
           "Chăm chỉ làm bài tập về nhà và tích cực phản xạ hội thoại.",
@@ -4826,13 +4822,11 @@ document.addEventListener("DOMContentLoaded", () => {
         "Họ Tên": "Vũ Thùy Chi",
         "Loại (Tuần/Tháng)": "Tháng",
         "Số (Tuần/Tháng số mấy)": 1,
-        "Nghe (Thang điểm 10)": 9.6,
-        "Nói (Thang điểm 10)": 8.5,
-        "Đọc (Thang điểm 10)": 9.1,
-        "Viết (Thang điểm 10)": 8.8,
+        "Từ vựng / Ngữ pháp / Hán tự (x1)": 9.1,
+        "Nghe / Hội thoại (x2)": 9.4,
         "Chuyên Cần (%)": 93,
         "Nhận Xét Cố Vấn":
-          "Sự tiến bộ đồng đều ở cả 4 kỹ năng trong tháng đầu tiên.",
+          "Sự tiến bộ đồng đều ở cả các kỹ năng trong tháng đầu tiên.",
       },
     ];
 
@@ -4900,30 +4894,31 @@ document.addEventListener("DOMContentLoaded", () => {
               row["so"],
           );
 
-          const listening = parseFloat(
-            row["Nghe (Thang điểm 10)"] ||
+          // Skill 1: Từ vựng / Ngữ pháp / Hán tự (x1)
+          let vocab = parseFloat(
+            row["Từ vựng / Ngữ pháp / Hán tự (x1)"] ||
+              row["Từ vựng / Ngữ pháp / Hán tự"] ||
+              row["Từ vựng / Ngữ pháp"] ||
+              row["Từ vựng"] ||
+              row["Vocab"] ||
+              row["Đọc (Thang điểm 10)"] ||
+              row["Đọc"] ||
+              row["Reading"],
+          );
+
+          // Skill 2: Nghe / Hội thoại (x2)
+          // Skill 2: Nghe / Hội thoại (x2)
+          let listening = parseFloat(
+            row["Nghe / Hội thoại (x2)"] ||
+              row["Nghe / Hội thoại"] ||
+              row["Nghe (Thang điểm 10)"] ||
               row["Nghe"] ||
               row["Listening"] ||
-              row["nghe"],
-          );
-          const speaking = parseFloat(
-            row["Nói (Thang điểm 10)"] ||
+              row["Nói (Thang điểm 10)"] ||
               row["Nói"] ||
-              row["Speaking"] ||
-              row["noi"],
+              row["Speaking"],
           );
-          const reading = parseFloat(
-            row["Đọc (Thang điểm 10)"] ||
-              row["Đọc"] ||
-              row["Reading"] ||
-              row["doc"],
-          );
-          const writing = parseFloat(
-            row["Viết (Thang điểm 10)"] ||
-              row["Viết"] ||
-              row["Writing"] ||
-              row["viet"],
-          );
+
           const attendance = parseInt(
             row["Chuyên Cần (%)"] ||
               row["Chuyên cần"] ||
@@ -4942,14 +4937,14 @@ document.addEventListener("DOMContentLoaded", () => {
             (!studentCode && !email) ||
             !typeVal ||
             isNaN(indexVal) ||
-            isNaN(listening) ||
-            isNaN(speaking) ||
-            isNaN(reading) ||
-            isNaN(writing)
+            (isNaN(vocab) && isNaN(listening))
           ) {
             errorCount++;
             continue;
           }
+
+          if (isNaN(vocab)) vocab = 8.5;
+          if (isNaN(listening)) listening = 8.5;
 
           let type = "week";
           const typeLower = typeVal.toString().toLowerCase();
@@ -4987,10 +4982,8 @@ document.addEventListener("DOMContentLoaded", () => {
               studentName: name || "",
               type: type,
               index: indexVal,
+              vocab: vocab,
               listening: listening,
-              speaking: speaking,
-              reading: reading,
-              writing: writing,
               attendance: attendance,
               comment: comment,
               updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
@@ -5922,21 +5915,20 @@ document.addEventListener("DOMContentLoaded", () => {
     const targetCountry = student.country || "Nhật";
     const baseOffset = index * 3;
 
-    // Skills scores: Listening, Speaking, Reading, Writing (scaled out of 10.0)
-    const listening = getValBetween(7.5, 9.8, baseOffset + 1);
-    const speaking = getValBetween(7.0, 9.5, baseOffset + 2);
-    const reading = getValBetween(7.8, 9.8, baseOffset + 3);
-    const writing = getValBetween(6.8, 9.2, baseOffset + 4);
+    // Skill 1: Từ vựng / Ngữ pháp / Hán tự (hệ số x 1)
+    const vocab = getValBetween(7.5, 9.8, baseOffset + 1);
+    // Skill 2: Nghe / Hội thoại (hệ số x 2)
+    const listening = getValBetween(7.2, 9.6, baseOffset + 2);
 
     // Attendance rate (90% - 100%)
     const attendance = Math.round(getValBetween(90, 100, baseOffset + 5));
 
     // Custom Vietnamese teacher feedback comments based on country
     const commentsJP = [
-      "Học tập chăm chỉ, từ vựng Hiragana/Katakana vững chắc.",
+      "Học tập chăm chỉ, từ vựng Hiragana/Katakana và Hán tự vững chắc.",
       "Phản xạ đàm thoại cơ bản khá nhạy bén, phát âm âm ngắt tốt.",
       "Tiến bộ rõ rệt ở kỹ năng đọc hiểu ngữ pháp Minna no Nihongo.",
-      "Có tư duy tốt khi viết đoạn văn, cần cải thiện tốc độ nghe.",
+      "Có tư duy tốt khi học từ vựng và ngữ pháp, phản xạ nghe đàm thoại nhanh.",
       "Kỹ năng nghe hiểu hội thoại trung cấp N3 tiến bộ vượt bậc.",
       "Luyện đề tích cực, điểm số ổn định, sẵn sàng phỏng vấn COE.",
       "Hoàn thành xuất sắc toàn bộ chuyên đề ngôn ngữ học thuật.",
@@ -5944,9 +5936,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const commentsCN = [
       "Làm quen nhanh với bính âm Pinyin, phát âm chuẩn 4 thanh điệu.",
-      "Học từ vựng nhanh, có năng khiếu giao tiếp tự nhiên.",
-      "Đọc hiểu chữ Hán phồn thể tiến bộ rõ rệt qua từng bài học.",
-      "Kỹ năng viết luận TOCFL tiến bộ tốt, hành văn khá tự nhiên.",
+      "Học từ vựng và Hán tự nhanh, có năng khiếu giao tiếp tự nhiên.",
+      "Đọc hiểu chữ Hán phồn thể và ngữ pháp tiến bộ rõ rệt qua từng bài học.",
+      "Kỹ năng luyện nghe và hội thoại TOCFL tiến bộ tốt, hành văn khá tự nhiên.",
       "Luyện nghe hội thoại trung cấp đạt kết quả cao, phản xạ nhanh.",
       "Giải đề thi thử TOCFL Band B đạt điểm số xuất sắc, tự tin.",
       "Kỹ năng phỏng vấn học bổng xuất sắc, thần thái tự tin.",
@@ -5954,9 +5946,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const commentsKR = [
       "Thuộc bảng chữ cái Hangeul nhanh, phát âm chuẩn nối âm.",
-      "Phản xạ đàm thoại cuộc sống nhanh, chủ động trong bài học.",
-      "Đọc hiểu cấu trúc kính ngữ và đuôi câu tiếng Hàn vững chắc.",
-      "Học tập chuyên cần, viết đoạn văn TOPIK mạch lạc và đủ ý.",
+      "Phản xạ nghe hội thoại cuộc sống nhanh, chủ động trong bài học.",
+      "Nắm chắc từ vựng, cấu trúc kính ngữ và đuôi câu tiếng Hàn.",
+      "Học tập chuyên cần, chuẩn bị bài đầy đủ và làm bài tập về nhà chăm chỉ.",
       "Điểm số nghe hiểu các bài hội thoại thực tế tăng trưởng tốt.",
       "Luyện đề thi thử TOPIK II có chiến thuật quản lý thời gian tốt.",
       "Kỹ năng thuyết trình giới thiệu bản thân xuất sắc, lưu loát.",
@@ -5971,16 +5963,15 @@ document.addEventListener("DOMContentLoaded", () => {
     const commentIdx = Math.abs(hash) % commentList.length;
     const comment = commentList[commentIdx];
 
+    // Điểm TB có trọng số: Từ vựng/NP/Hán tự x 1, Nghe/Hội thoại x 2 => chia 3
+    const average = parseFloat(((vocab * 1 + listening * 2) / 3).toFixed(1));
+
     return {
+      vocab,
       listening,
-      speaking,
-      reading,
-      writing,
       attendance,
       comment,
-      average: parseFloat(
-        ((listening + speaking + reading + writing) / 4).toFixed(1),
-      ),
+      average,
     };
   };
 
@@ -6018,17 +6009,15 @@ document.addEventListener("DOMContentLoaded", () => {
       );
       let scores;
       if (customScore) {
+        let v = customScore.vocab !== undefined ? parseFloat(customScore.vocab) : parseFloat(customScore.reading || 8.5);
+        let l = customScore.listening !== undefined ? parseFloat(customScore.listening) : parseFloat(customScore.speaking || 8.5);
+        if (isNaN(v)) v = 8.5;
+        if (isNaN(l)) l = 8.5;
         scores = {
-          average: parseFloat(
-            (
-              (parseFloat(customScore.listening) +
-                parseFloat(customScore.speaking) +
-                parseFloat(customScore.reading) +
-                parseFloat(customScore.writing)) /
-              4
-            ).toFixed(1),
-          ),
-          attendance: parseInt(customScore.attendance),
+          vocab: v,
+          listening: l,
+          average: parseFloat(((v * 1 + l * 2) / 3).toFixed(1)),
+          attendance: parseInt(customScore.attendance) || 100,
         };
       } else {
         scores = generateScoresForStudent(profileData, "week", i);
@@ -6110,22 +6099,16 @@ document.addEventListener("DOMContentLoaded", () => {
         );
         let scores;
         if (customScore) {
+          let v = customScore.vocab !== undefined ? parseFloat(customScore.vocab) : parseFloat(customScore.reading || 8.5);
+          let l = customScore.listening !== undefined ? parseFloat(customScore.listening) : parseFloat(customScore.speaking || 8.5);
+          if (isNaN(v)) v = 8.5;
+          if (isNaN(l)) l = 8.5;
           scores = {
-            listening: parseFloat(customScore.listening),
-            speaking: parseFloat(customScore.speaking),
-            reading: parseFloat(customScore.reading),
-            writing: parseFloat(customScore.writing),
-            attendance: parseInt(customScore.attendance),
+            vocab: v,
+            listening: l,
+            attendance: parseInt(customScore.attendance) || 100,
             comment: customScore.comment || "",
-            average: parseFloat(
-              (
-                (parseFloat(customScore.listening) +
-                  parseFloat(customScore.speaking) +
-                  parseFloat(customScore.reading) +
-                  parseFloat(customScore.writing)) /
-                4
-              ).toFixed(1),
-            ),
+            average: parseFloat(((v * 1 + l * 2) / 3).toFixed(1)),
           };
         } else {
           scores = generateScoresForStudent(profileData, type, i);
@@ -6158,46 +6141,28 @@ document.addEventListener("DOMContentLoaded", () => {
             </div>
           </div>
           <div class="scorecard-item-right">
-            <div class="score-bars-container">
+            <div class="score-bars-container" style="grid-template-columns: 1fr 1fr;">
               <div class="score-bar-row">
                 <div class="score-bar-header">
-                  <span class="score-bar-label">🎧 NGHE</span>
-                  <span class="score-bar-value">${scores.listening}</span>
+                  <span class="score-bar-label">📖 TỪ VỰNG / NGỮ PHÁP / HÁN TỰ <small style="opacity:0.7;font-weight:normal;">(x1)</small></span>
+                  <span class="score-bar-value" style="color: #4F46E5;">${scores.vocab}</span>
                 </div>
                 <div class="score-bar-progress">
-                  <div class="score-bar-fill" style="width: ${scores.listening * 10}%;"></div>
+                  <div class="score-bar-fill" style="width: ${scores.vocab * 10}%; background-color: #6366F1;"></div>
                 </div>
               </div>
               <div class="score-bar-row">
                 <div class="score-bar-header">
-                  <span class="score-bar-label">🗣️ NÓI</span>
-                  <span class="score-bar-value">${scores.speaking}</span>
+                  <span class="score-bar-label">🎧 NGHE / HỘI THOẠI <small style="opacity:0.7;font-weight:normal;">(x2)</small></span>
+                  <span class="score-bar-value" style="color: #059669;">${scores.listening}</span>
                 </div>
                 <div class="score-bar-progress">
-                  <div class="score-bar-fill" style="width: ${scores.speaking * 10}%; background-color: #10B981;"></div>
-                </div>
-              </div>
-              <div class="score-bar-row">
-                <div class="score-bar-header">
-                  <span class="score-bar-label">📖 ĐỌC</span>
-                  <span class="score-bar-value">${scores.reading}</span>
-                </div>
-                <div class="score-bar-progress">
-                  <div class="score-bar-fill" style="width: ${scores.reading * 10}%; background-color: #F5A623;"></div>
-                </div>
-              </div>
-              <div class="score-bar-row">
-                <div class="score-bar-header">
-                  <span class="score-bar-label">✍️ VIẾT</span>
-                  <span class="score-bar-value">${scores.writing}</span>
-                </div>
-                <div class="score-bar-progress">
-                  <div class="score-bar-fill" style="width: ${scores.writing * 10}%; background-color: #EF4444;"></div>
+                  <div class="score-bar-fill" style="width: ${scores.listening * 10}%; background-color: #10B981;"></div>
                 </div>
               </div>
             </div>
             <div class="scorecard-feedback">
-              <strong>Chuyên cần: ${scores.attendance}% • Nhận xét từ cố vấn học tập</strong>
+              <strong>Chuyên cần: ${scores.attendance}% • Nhận xét từ cố vấn học tập: </strong>
               <span>${scores.comment}</span>
             </div>
           </div>
@@ -6279,22 +6244,16 @@ document.addEventListener("DOMContentLoaded", () => {
         );
         let scores;
         if (customScore) {
+          let v = customScore.vocab !== undefined ? parseFloat(customScore.vocab) : parseFloat(customScore.reading || 8.5);
+          let l = customScore.listening !== undefined ? parseFloat(customScore.listening) : parseFloat(customScore.speaking || 8.5);
+          if (isNaN(v)) v = 8.5;
+          if (isNaN(l)) l = 8.5;
           scores = {
-            listening: parseFloat(customScore.listening),
-            speaking: parseFloat(customScore.speaking),
-            reading: parseFloat(customScore.reading),
-            writing: parseFloat(customScore.writing),
-            attendance: parseInt(customScore.attendance),
+            vocab: v,
+            listening: l,
+            attendance: parseInt(customScore.attendance) || 100,
             comment: customScore.comment || "",
-            average: parseFloat(
-              (
-                (parseFloat(customScore.listening) +
-                  parseFloat(customScore.speaking) +
-                  parseFloat(customScore.reading) +
-                  parseFloat(customScore.writing)) /
-                4
-              ).toFixed(1),
-            ),
+            average: parseFloat(((v * 1 + l * 2) / 3).toFixed(1)),
           };
         } else {
           scores = generateScoresForStudent(student, type, i);
@@ -6320,11 +6279,11 @@ document.addEventListener("DOMContentLoaded", () => {
         card.innerHTML = `
           <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px dashed var(--border-light); padding-bottom: 0.35rem;">
             <strong style="color: var(--text-main); font-size: 0.8rem;">${type === "week" ? "Tuần " + i : "Tháng " + i} (${dateRangeStr})</strong>
-            <span style="background: var(--accent); color: white; padding: 2px 6px; border-radius: 10px; font-size: 0.65rem; font-weight: 700;">Avg: ${scores.average}</span>
+            <span style="background: var(--accent); color: white; padding: 2px 6px; border-radius: 10px; font-size: 0.65rem; font-weight: 700;">Điểm TB: ${scores.average}</span>
           </div>
-          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.35rem; font-size: 0.75rem;">
-            <div>Nghe: <strong>${scores.listening}</strong> | Nói: <strong>${scores.speaking}</strong></div>
-            <div>Đọc: <strong>${scores.reading}</strong> | Viết: <strong>${scores.writing}</strong></div>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; font-size: 0.75rem;">
+            <div>Từ vựng / NP / Hán tự (x1): <strong style="color: #4F46E5;">${scores.vocab}</strong></div>
+            <div>Nghe / Hội thoại (x2): <strong style="color: #059669;">${scores.listening}</strong></div>
           </div>
           <div style="font-size: 0.72rem; color: var(--text-muted); line-height: 1.4; border-top: 1px solid var(--border-light); padding-top: 0.35rem;">
             Chuyên cần: <strong>${scores.attendance}%</strong> • Nhận xét: <em>${scores.comment}</em>
@@ -6398,15 +6357,11 @@ document.addEventListener("DOMContentLoaded", () => {
       );
       let gpa = 8.2;
       if (customScore) {
-        gpa = parseFloat(
-          (
-            (parseFloat(customScore.listening) +
-              parseFloat(customScore.speaking) +
-              parseFloat(customScore.reading) +
-              parseFloat(customScore.writing)) /
-            4
-          ).toFixed(1),
-        );
+        let v = customScore.vocab !== undefined ? parseFloat(customScore.vocab) : parseFloat(customScore.reading || 8.5);
+        let l = customScore.listening !== undefined ? parseFloat(customScore.listening) : parseFloat(customScore.speaking || 8.5);
+        if (isNaN(v)) v = 8.5;
+        if (isNaN(l)) l = 8.5;
+        gpa = parseFloat(((v * 1 + l * 2) / 3).toFixed(1));
       } else {
         gpa = generateScoresForStudent(student, "week", i).average;
       }
@@ -21662,27 +21617,23 @@ document.addEventListener("DOMContentLoaded", () => {
       for (let i = 0; i < seedStr.length; i++) {
         val += seedStr.charCodeAt(i);
       }
-      const listening = parseFloat((7.5 + (val % 21) / 10).toFixed(1));
-      const speaking = parseFloat((7.0 + ((val + 3) % 26) / 10).toFixed(1));
-      const reading = parseFloat((7.5 + ((val + 7) % 21) / 10).toFixed(1));
-      const writing = parseFloat((6.8 + ((val + 11) % 28) / 10).toFixed(1));
+      // Skill 1: Từ vựng / Ngữ pháp / Hán tự (x1)
+      const vocab = parseFloat((7.5 + (val % 21) / 10).toFixed(1));
+      // Skill 2: Nghe / Hội thoại (x2)
+      const listening = parseFloat((7.2 + ((val + 5) % 25) / 10).toFixed(1));
       const attendance = 90 + (val % 11);
       const comments = [
-        "Có thái độ học tập tích cực, phát âm tương đối chuẩn.",
-        "Chuẩn bị bài đầy đủ, cần tập trung hơn trong phần nghe.",
-        "Khả năng đọc dịch tốt, cần cải thiện tính logic khi viết bài luận.",
+        "Có thái độ học tập tích cực, chuẩn bị bài đầy đủ và phát âm tốt.",
+        "Nắm chắc từ vựng và ngữ pháp, cần tập trung hơn trong phần luyện nghe.",
+        "Khả năng đọc hiểu Hán tự tốt, tiến bộ rõ rệt trong phản xạ hội thoại.",
         "Tích cực phát biểu xây dựng bài, làm bài tập về nhà đầy đủ.",
-        "Tiến bộ rõ rệt về kỹ năng phản xạ nghe nói.",
+        "Tiến bộ rõ rệt về kỹ năng phản xạ nghe nói và hội thoại.",
       ];
       const comment = comments[val % comments.length];
-      const average = parseFloat(
-        ((listening + speaking + reading + writing) / 4).toFixed(1),
-      );
+      const average = parseFloat(((vocab * 1 + listening * 2) / 3).toFixed(1));
       return {
+        vocab,
         listening,
-        speaking,
-        reading,
-        writing,
         attendance,
         comment,
         average,
@@ -21720,17 +21671,15 @@ document.addEventListener("DOMContentLoaded", () => {
       );
       let score;
       if (custom) {
+        let v = custom.vocab !== undefined ? parseFloat(custom.vocab) : parseFloat(custom.reading || 8.5);
+        let l = custom.listening !== undefined ? parseFloat(custom.listening) : parseFloat(custom.speaking || 8.5);
+        if (isNaN(v)) v = 8.5;
+        if (isNaN(l)) l = 8.5;
         score = {
-          average: parseFloat(
-            (
-              (parseFloat(custom.listening) +
-                parseFloat(custom.speaking) +
-                parseFloat(custom.reading) +
-                parseFloat(custom.writing)) /
-              4
-            ).toFixed(1),
-          ),
-          attendance: parseInt(custom.attendance),
+          vocab: v,
+          listening: l,
+          average: parseFloat(((v * 1 + l * 2) / 3).toFixed(1)),
+          attendance: parseInt(custom.attendance) || 100,
         };
       } else {
         score = generateScoresForStudent(student, "week", i);
@@ -21807,22 +21756,16 @@ document.addEventListener("DOMContentLoaded", () => {
         );
         let score;
         if (custom) {
+          let v = custom.vocab !== undefined ? parseFloat(custom.vocab) : parseFloat(custom.reading || 8.5);
+          let l = custom.listening !== undefined ? parseFloat(custom.listening) : parseFloat(custom.speaking || 8.5);
+          if (isNaN(v)) v = 8.5;
+          if (isNaN(l)) l = 8.5;
           score = {
-            listening: parseFloat(custom.listening),
-            speaking: parseFloat(custom.speaking),
-            reading: parseFloat(custom.reading),
-            writing: parseFloat(custom.writing),
-            attendance: parseInt(custom.attendance),
+            vocab: v,
+            listening: l,
+            attendance: parseInt(custom.attendance) || 100,
             comment: custom.comment || "",
-            average: parseFloat(
-              (
-                (parseFloat(custom.listening) +
-                  parseFloat(custom.speaking) +
-                  parseFloat(custom.reading) +
-                  parseFloat(custom.writing)) /
-                4
-              ).toFixed(1),
-            ),
+            average: parseFloat(((v * 1 + l * 2) / 3).toFixed(1)),
           };
         } else {
           score = generateScoresForStudent(student, type, i);
@@ -21856,23 +21799,15 @@ document.addEventListener("DOMContentLoaded", () => {
               <div>
                 <div class="score-bars">
                   <div class="bar-row">
-                    <div class="bar-header"><span>🎧 NGHE</span><span>${score.listening}</span></div>
-                    <div class="bar-track"><div class="bar-fill" style="width: ${score.listening * 10}%"></div></div>
+                    <div class="bar-header"><span>📖 TỪ VỰNG / NGỮ PHÁP / HÁN TỰ <span style="font-size:0.7rem;font-weight:normal;opacity:0.7;">(x1)</span></span><span style="font-weight:700;color:#4F46E5;">${score.vocab}</span></div>
+                    <div class="bar-track"><div class="bar-fill" style="width: ${score.vocab * 10}%; background: #6366F1;"></div></div>
                   </div>
                   <div class="bar-row">
-                    <div class="bar-header"><span>🗣️ NÓI</span><span>${score.speaking}</span></div>
-                    <div class="bar-track"><div class="bar-fill" style="width: ${score.speaking * 10}%; background: #10B981;"></div></div>
-                  </div>
-                  <div class="bar-row">
-                    <div class="bar-header"><span>📖 ĐỌC</span><span>${score.reading}</span></div>
-                    <div class="bar-track"><div class="bar-fill" style="width: ${score.reading * 10}%; background: #F5A623;"></div></div>
-                  </div>
-                  <div class="bar-row">
-                    <div class="bar-header"><span>✍️ VIẾT</span><span>${score.writing}</span></div>
-                    <div class="bar-track"><div class="bar-fill" style="width: ${score.writing * 10}%; background: #EF4444;"></div></div>
+                    <div class="bar-header"><span>🎧 NGHE / HỘI THOẠI <span style="font-size:0.7rem;font-weight:normal;opacity:0.7;">(x2)</span></span><span style="font-weight:700;color:#059669;">${score.listening}</span></div>
+                    <div class="bar-track"><div class="bar-fill" style="width: ${score.listening * 10}%; background: #10B981;"></div></div>
                   </div>
                 </div>
-                <div class="scorecard-comment">
+                <div class="scorecard-comment" style="margin-top: 0.85rem;">
                   <strong>Chuyên cần: ${score.attendance}% • Nhận xét từ cố vấn: </strong><em>${score.comment}</em>
                 </div>
               </div>
@@ -21928,15 +21863,11 @@ document.addEventListener("DOMContentLoaded", () => {
       );
       let gpa = 8.2;
       if (custom) {
-        gpa = parseFloat(
-          (
-            (parseFloat(custom.listening) +
-              parseFloat(custom.speaking) +
-              parseFloat(custom.reading) +
-              parseFloat(custom.writing)) /
-            4
-          ).toFixed(1),
-        );
+        let v = custom.vocab !== undefined ? parseFloat(custom.vocab) : parseFloat(custom.reading || 8.5);
+        let l = custom.listening !== undefined ? parseFloat(custom.listening) : parseFloat(custom.speaking || 8.5);
+        if (isNaN(v)) v = 8.5;
+        if (isNaN(l)) l = 8.5;
+        gpa = parseFloat(((v * 1 + l * 2) / 3).toFixed(1));
       } else {
         gpa = scoreGenerator(student, "week", i).average;
       }
