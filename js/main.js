@@ -1,7 +1,14 @@
 document.addEventListener("DOMContentLoaded", () => {
-  // Tap-to-toggle topbar user dropdown (mobile/touch fallback — :hover không đáng tin cậy trên thiết bị chạm)
+  // Tap-to-toggle topbar user dropdown (mobile/touch fallback)
   document.addEventListener("click", (e) => {
     const wrapper = e.target.closest(".topbar-user-wrapper");
+    const isInsideDropdown = e.target.closest(".topbar-user-dropdown");
+    if (isInsideDropdown) {
+      document.querySelectorAll(".topbar-user-wrapper.open").forEach((w) => {
+        w.classList.remove("open");
+      });
+      return;
+    }
     document.querySelectorAll(".topbar-user-wrapper.open").forEach((w) => {
       if (w !== wrapper) w.classList.remove("open");
     });
@@ -5483,15 +5490,13 @@ document.addEventListener("DOMContentLoaded", () => {
   // Bind Open Profile Modal click
   const profileModal = document.getElementById("profileModal");
   const btnCloseProfileModal = document.getElementById("btnCloseProfileModal");
+  const btnCancelProfileModal = document.getElementById("btnCancelProfileModal");
   const profileForm = document.getElementById("profileForm");
   const profileAvatarPreview = document.getElementById("profileAvatarPreview");
-  const btnTriggerAvatarUpload = document.getElementById(
-    "btnTriggerAvatarUpload",
-  );
-  const profileAvatarFileInput = document.getElementById(
-    "profileAvatarFileInput",
-  );
-  const profileFullNameInput = document.getElementById("profileFullName");
+  const btnTriggerAvatarUpload = document.getElementById("btnTriggerAvatarUpload");
+  const profileAvatarFileInput = document.getElementById("profileAvatarFileInput");
+  const profileFullNameInput = document.getElementById("profileFullNameInput");
+  const btnToggleChangePassword = document.getElementById("btnToggleChangePassword");
 
   const openProfileModalFn = () => {
     if (!currentUser) {
@@ -5499,49 +5504,96 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
-    profileFullNameInput.value = currentUser.name || "";
+    const modal = document.getElementById("profileModal");
+    if (!modal) return;
+
+    const nameInput = document.getElementById("profileFullNameInput");
+    if (nameInput) nameInput.value = currentUser.name || "";
     selectedProfileAvatarBase64 = currentUser.avatar || null;
 
     const phoneEl = document.getElementById("profilePhone");
     const dobEl = document.getElementById("profileDob");
     const emailDisplayEl = document.getElementById("profileEmailDisplay");
+    const roleDisplayEl = document.getElementById("profileRoleDisplay");
+
     if (phoneEl) phoneEl.value = currentUser.phone || "";
     if (dobEl) dobEl.value = currentUser.dob || "";
     if (emailDisplayEl)
       emailDisplayEl.textContent =
         currentUser.email || auth.currentUser?.email || "--";
-
-    if (selectedProfileAvatarBase64) {
-      profileAvatarPreview.innerHTML = `<img src="${selectedProfileAvatarBase64}" style="width:100%; height:100%; object-fit:cover; border-radius:50%;">`;
-      profileAvatarPreview.style.backgroundColor = "transparent";
-    } else {
-      const initials = (currentUser.name || "U")
-        .split(" ")
-        .map((n) => n[0])
-        .join("")
-        .substring(0, 2)
-        .toUpperCase();
-      profileAvatarPreview.textContent = initials;
-      profileAvatarPreview.style.backgroundColor = getAvatarBgColor(
-        currentUser.name || "U",
-      );
+    if (roleDisplayEl) {
+      let rText = "Nhân viên";
+      if (currentUser.role === "admin") rText = "Quản trị viên";
+      else if (currentUser.role === "student") rText = "Học viên";
+      roleDisplayEl.textContent = rText;
     }
 
-    profileModal.style.display = "flex";
+    // Reset password fields & accordion
+    const curPassEl = document.getElementById("profileCurrentPassword");
+    const newPassEl = document.getElementById("profileNewPassword");
+    const confirmPassEl = document.getElementById("profileConfirmPassword");
+    const passFieldsEl = document.getElementById("profilePasswordFields");
+    const chevronEl = document.getElementById("profilePasswordChevron");
+    if (curPassEl) curPassEl.value = "";
+    if (newPassEl) newPassEl.value = "";
+    if (confirmPassEl) confirmPassEl.value = "";
+    if (passFieldsEl) passFieldsEl.style.display = "none";
+    if (chevronEl) chevronEl.style.transform = "rotate(0deg)";
+
+    const avPreview = document.getElementById("profileAvatarPreview");
+    if (avPreview) {
+      if (selectedProfileAvatarBase64) {
+        avPreview.innerHTML = `<img src="${selectedProfileAvatarBase64}" style="width:100%; height:100%; object-fit:cover; border-radius:50%;">`;
+        avPreview.style.backgroundColor = "transparent";
+      } else {
+        const initials = (currentUser.name || "U")
+          .split(" ")
+          .map((n) => n[0])
+          .join("")
+          .substring(0, 2)
+          .toUpperCase();
+        avPreview.textContent = initials;
+        avPreview.style.backgroundColor = getAvatarBgColor(
+          currentUser.name || "U",
+        );
+      }
+    }
+
+    modal.style.display = "flex";
   };
 
-  document
-    .querySelectorAll("#btnOpenProfileModal, .btn-open-profile-from-topbar")
-    .forEach((btn) => {
-      btn.addEventListener("click", openProfileModalFn);
+  // Bind to all "Hồ sơ" buttons and profile badges
+  document.addEventListener("click", (e) => {
+    const btn = e.target.closest("#btnOpenProfileModal, .btn-open-profile-from-topbar");
+    if (btn) {
+      e.preventDefault();
+      e.stopPropagation();
+      openProfileModalFn();
+    }
+  });
+
+  // Toggle Password Change Accordion
+  if (btnToggleChangePassword) {
+    btnToggleChangePassword.addEventListener("click", () => {
+      const sec = document.getElementById("profilePasswordFields");
+      const chevron = document.getElementById("profilePasswordChevron");
+      if (sec) {
+        const isHidden = sec.style.display === "none" || !sec.style.display;
+        sec.style.display = isHidden ? "block" : "none";
+        if (chevron) chevron.style.transform = isHidden ? "rotate(180deg)" : "rotate(0deg)";
+      }
     });
+  }
 
   // Close Profile Modal hooks
   const closeProfileModal = () => {
-    if (profileModal) profileModal.style.display = "none";
+    const modal = document.getElementById("profileModal");
+    if (modal) modal.style.display = "none";
   };
   if (btnCloseProfileModal)
     btnCloseProfileModal.addEventListener("click", closeProfileModal);
+  if (btnCancelProfileModal)
+    btnCancelProfileModal.addEventListener("click", closeProfileModal);
   if (profileModal) {
     profileModal.addEventListener("click", (e) => {
       if (e.target === profileModal) closeProfileModal();
@@ -5550,7 +5602,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Trigger avatar file input clicks
   const triggerAvatarClick = () => {
-    if (profileAvatarFileInput) profileAvatarFileInput.click();
+    const fileInput = document.getElementById("profileAvatarFileInput");
+    if (fileInput) fileInput.click();
   };
   if (btnTriggerAvatarUpload)
     btnTriggerAvatarUpload.addEventListener("click", triggerAvatarClick);
@@ -5572,7 +5625,6 @@ document.addEventListener("DOMContentLoaded", () => {
       reader.onload = function (event) {
         const img = new Image();
         img.onload = function () {
-          // Store at high resolution so org chart photos are sharp (maintains aspect ratio)
           const maxDim = 800;
           let w = img.width,
             h = img.height;
@@ -5593,14 +5645,15 @@ document.addEventListener("DOMContentLoaded", () => {
           ctx.imageSmoothingQuality = "high";
           ctx.drawImage(img, 0, 0, w, h);
 
-          // High quality JPEG for clear display in org chart
-          const compressedAvatar = canvas.toDataURL("image/jpeg", 0.92);
+          const compressedAvatar = canvas.toDataURL("image/jpeg", 0.90);
           selectedProfileAvatarBase64 = compressedAvatar;
 
-          // Render preview
-          profileAvatarPreview.textContent = "";
-          profileAvatarPreview.innerHTML = `<img src="${compressedAvatar}" style="width:100%; height:100%; object-fit:cover; border-radius:50%;">`;
-          profileAvatarPreview.style.backgroundColor = "transparent";
+          const avPreview = document.getElementById("profileAvatarPreview");
+          if (avPreview) {
+            avPreview.textContent = "";
+            avPreview.innerHTML = `<img src="${compressedAvatar}" style="width:100%; height:100%; object-fit:cover; border-radius:50%;">`;
+            avPreview.style.backgroundColor = "transparent";
+          }
         };
         img.src = event.target.result;
       };
@@ -5608,12 +5661,13 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // Submit Profile Form and update in Firestore
+  // Submit Profile Form and update in Firestore & Auth
   if (profileForm) {
     profileForm.addEventListener("submit", async (e) => {
       e.preventDefault();
 
-      const newName = profileFullNameInput.value.trim();
+      const nameInput = document.getElementById("profileFullNameInput");
+      const newName = nameInput ? nameInput.value.trim() : "";
       if (!newName) {
         showToast("Vui lòng điền đầy đủ họ và tên!", "error");
         return;
@@ -5624,10 +5678,64 @@ document.addEventListener("DOMContentLoaded", () => {
       ).trim();
       const newDob = document.getElementById("profileDob")?.value || "";
 
+      // Password fields
+      const currentPass = document.getElementById("profileCurrentPassword")?.value || "";
+      const newPass = document.getElementById("profileNewPassword")?.value || "";
+      const confirmPass = document.getElementById("profileConfirmPassword")?.value || "";
+
+      if (newPass) {
+        if (newPass.length < 6) {
+          showToast("Mật khẩu mới phải có ít nhất 6 ký tự!", "error");
+          return;
+        }
+        if (newPass !== confirmPass) {
+          showToast("Mật khẩu xác nhận không khớp!", "error");
+          return;
+        }
+      }
+
+      const btnSave = document.getElementById("btnSaveProfile");
+      if (btnSave) {
+        btnSave.disabled = true;
+        btnSave.innerHTML = `<svg class="spin" viewBox="0 0 24 24" style="width:15px;height:15px;fill:currentColor;"><path d="M12,4V2A10,10 0 0,0 2,12H4A8,8 0 0,1 12,4Z"/></svg> Đang lưu...`;
+      }
+
       showToast("Đang cập nhật hồ sơ...", "info");
 
       try {
-        const uid = auth.currentUser.uid;
+        const uid = auth.currentUser ? auth.currentUser.uid : null;
+        if (!uid) throw new Error("Chưa xác thực người dùng");
+
+        // 1. Handle Password Update if requested
+        if (newPass && auth.currentUser) {
+          try {
+            if (currentPass && auth.currentUser.email) {
+              const cred = firebase.auth.EmailAuthProvider.credential(
+                auth.currentUser.email,
+                currentPass,
+              );
+              await auth.currentUser.reauthenticateWithCredential(cred);
+            }
+            await auth.currentUser.updatePassword(newPass);
+            showToast("Đã đổi mật khẩu thành công!", "success");
+          } catch (passErr) {
+            console.error("Password update error:", passErr);
+            let errMsg = "Không thể đổi mật khẩu: " + passErr.message;
+            if (passErr.code === "auth/wrong-password" || passErr.code === "auth/invalid-credential") {
+              errMsg = "Mật khẩu hiện tại không chính xác!";
+            } else if (passErr.code === "auth/requires-recent-login") {
+              errMsg = "Vui lòng nhập đúng Mật khẩu hiện tại để xác thực đổi mật khẩu!";
+            }
+            showToast(errMsg, "error");
+            if (btnSave) {
+              btnSave.disabled = false;
+              btnSave.innerHTML = `<svg viewBox="0 0 24 24" style="width:15px;height:15px;fill:currentColor;"><path d="M15,9H5V5H15M12,19A3,3 0 0,1 9,16A3,3 0 0,1 12,13A3,3 0 0,1 15,16A3,3 0 0,1 12,19M17,3H5C3.89,3 3,3.9 3,5V19A2,2 0 0,0 5,21H19A2,2 0 0,0 21,19V7L17,3Z"/></svg> Lưu thay đổi`;
+            }
+            return;
+          }
+        }
+
+        // 2. Update users collection
         const updates = {
           name: newName,
           phone: newPhone,
@@ -5636,10 +5744,10 @@ document.addEventListener("DOMContentLoaded", () => {
           updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
         };
 
-        await db.collection("users").doc(uid).update(updates);
+        await db.collection("users").doc(uid).set(updates, { merge: true });
 
-        // Also sync photoUrl to hrm_staff document if this is an employee
-        if (selectedProfileAvatarBase64 && currentUser.email) {
+        // 3. Sync photoUrl and name to hrm_staff if this user is a staff member
+        if (currentUser.email) {
           try {
             const staffSnap = await db
               .collection("hrm_staff")
@@ -5647,21 +5755,43 @@ document.addEventListener("DOMContentLoaded", () => {
               .limit(1)
               .get();
             if (!staffSnap.empty) {
-              await staffSnap.docs[0].ref.update({
-                photoUrl: selectedProfileAvatarBase64,
-              });
-              // Update large profile avatar immediately if visible
+              const staffUpdates = { name: newName };
+              if (selectedProfileAvatarBase64) staffUpdates.photoUrl = selectedProfileAvatarBase64;
+              if (newPhone) staffUpdates.phone = newPhone;
+              if (newDob) staffUpdates.dob = newDob;
+              await staffSnap.docs[0].ref.update(staffUpdates);
+
               const lgEl = document.getElementById("spProfileAvatarLg");
-              if (lgEl) {
+              if (lgEl && selectedProfileAvatarBase64) {
                 lgEl.innerHTML = `<img src="${selectedProfileAvatarBase64}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">`;
                 lgEl.style.background = "transparent";
               }
+              const spNameEl = document.getElementById("spProfileFullName");
+              if (spNameEl) spNameEl.textContent = newName;
+            }
+          } catch (_) {
+            /* non-critical */
+          }
+
+          // 4. Sync to students collection if this user is a student
+          try {
+            const studentSnap = await db
+              .collection("students")
+              .where("email", "==", currentUser.email)
+              .limit(1)
+              .get();
+            if (!studentSnap.empty) {
+              const stUpdates = { name: newName };
+              if (selectedProfileAvatarBase64) stUpdates.avatar = selectedProfileAvatarBase64;
+              if (newPhone) stUpdates.phone = newPhone;
+              await studentSnap.docs[0].ref.update(stUpdates);
             }
           } catch (_) {
             /* non-critical */
           }
         }
 
+        // 5. Update local state & sync all UI avatars
         currentUser.name = newName;
         currentUser.phone = newPhone;
         currentUser.dob = newDob;
@@ -5669,10 +5799,15 @@ document.addEventListener("DOMContentLoaded", () => {
 
         syncUserInfoUI(currentUser);
         closeProfileModal();
-        showToast("Hồ sơ đã được cập nhật!", "success");
+        showToast("Hồ sơ đã được cập nhật thành công!", "success");
       } catch (err) {
         console.error("Failed to update user profile:", err);
-        showToast("Lỗi cập nhật hồ sơ!", "error");
+        showToast("Lỗi cập nhật hồ sơ: " + err.message, "error");
+      } finally {
+        if (btnSave) {
+          btnSave.disabled = false;
+          btnSave.innerHTML = `<svg viewBox="0 0 24 24" style="width:15px;height:15px;fill:currentColor;"><path d="M15,9H5V5H15M12,19A3,3 0 0,1 9,16A3,3 0 0,1 12,13A3,3 0 0,1 15,16A3,3 0 0,1 12,19M17,3H5C3.89,3 3,3.9 3,5V19A2,2 0 0,0 5,21H19A2,2 0 0,0 21,19V7L17,3Z"/></svg> Lưu thay đổi`;
+        }
       }
     });
   }
@@ -8005,6 +8140,14 @@ document.addEventListener("DOMContentLoaded", () => {
     if (s.email) loadLeaveData(s.email, s.joinDate, "adm", false);
   };
 
+  const closeDocPreview = () => {
+    const overlay = document.getElementById("docPreviewOverlay");
+    const panel = document.getElementById("docPreviewPanel");
+    if (overlay) overlay.style.display = "none";
+    if (panel) panel.style.transform = "translateX(100%)";
+  };
+  window.closeDocPreview = closeDocPreview;
+
   // ── KPI Trend SVG sparkline (last 6 months) ─────────────────────────────
   const renderKpiTrendChart = async (staffId, currentKpi, currentAtt) => {
     const svgEl = document.getElementById("kpiTrendSvg");
@@ -8203,7 +8346,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const downloadFileHelper = (url, fileName = "file") => {
     if (!url) {
-      showToast("Không tìm thấy tệp để tải về", "warning");
+      showToast("Không tìm thấy tệp để tải về (vui lòng xóa và tải lại tệp)", "warning");
       return;
     }
     if (url.startsWith("data:")) {
@@ -8341,7 +8484,7 @@ document.addEventListener("DOMContentLoaded", () => {
         contentEl.innerHTML = `<div style="text-align:center;">
           <span style="font-size:3.5rem;display:block;margin-bottom:1rem;">${fiIcon}</span>
           <div style="font-size:0.95rem;font-weight:600;color:var(--text-main);margin-bottom:0.4rem;">${esc(doc.name || "Tệp đính kèm")}</div>
-          <div style="font-size:0.82rem;color:var(--text-muted);line-height:1.7;">${doc.url ? "Chưa có bản xem trước trực tiếp cho định dạng này.<br>Bấm nút bên dưới để tải tệp về máy." : "Tệp này không có dữ liệu nội dung trực tuyến.<br>Vui lòng tải lại tệp nếu cần."}</div>
+          <div style="font-size:0.82rem;color:var(--text-muted);line-height:1.7;">${doc.url ? "Chưa có bản xem trước trực tiếp cho định dạng này.<br>Bấm nút bên dưới để tải tệp về máy." : "<span style='color:#EF4444;font-weight:500;'>Tệp này được tải lên trước đây nên chưa có dữ liệu lưu trữ.</span><br>Vui lòng bấm nút xóa (🗑️) và tải lại tệp này."}</div>
         </div>`;
       }
     }
@@ -8352,7 +8495,7 @@ document.addEventListener("DOMContentLoaded", () => {
         if (doc.url) {
           downloadFileHelper(doc.url, doc.name || "file");
         } else {
-          showToast("Không có dữ liệu tệp để tải về", "warning");
+          showToast("Tệp chưa có dữ liệu, vui lòng xóa và tải lại tệp này", "warning");
         }
       };
       dlBtn.style.opacity = doc.url ? "1" : "0.4";
@@ -8361,7 +8504,9 @@ document.addEventListener("DOMContentLoaded", () => {
     const overlay = document.getElementById("docPreviewOverlay");
     const panel = document.getElementById("docPreviewPanel");
     if (overlay) overlay.style.display = "block";
-    if (panel) panel.style.transform = "translateX(0)";
+    if (panel) {
+      panel.style.transform = "translateX(0)";
+    }
   };
 
   const loadHrmResumeDocs = async (staffId, prefix) => {
@@ -8425,9 +8570,9 @@ document.addEventListener("DOMContentLoaded", () => {
         <td style="text-align:center;">
           <div style="display:flex;align-items:center;justify-content:center;gap:5px;">
             <button class="crm-icon-btn hrm-doc-view-btn" data-idx="${i}" title="Xem trước" style="color:#2563EB;background:#EEF2FF;border-radius:6px;padding:5px 7px;border:none;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;">
-              <svg viewBox="0 0 24 24" style="width:14px;height:14px;fill:currentColor;"><path d="M12,9A3,3 0 0,0 9,12A3,3 0 0,0 12,15A3,3 0 0,0 15,12A3,3 0 0,0 12,9M12,17A5,5 0 0,1 7,12A5,5 0 0,1 12,7A5,5 0 0,1 17,12A5,5 0 0,1 12,17M12,4.5C7,4.5 2.73,7.61 1,12C2.73,16.39 7,19.5 12,19.5C17,19.5 21.27,16.39 23,12C21.27,7.61 17,4.5 12,4.5Z"/></svg>
+              <svg viewBox="0 0 24 24" style="width:14px;height:14px;fill:currentColor;"><path d="M12,9A3,3 0 0,0 9,12A3,3 0 0,0 12,15A3,3 0 0,0 15,12A3,3 0 0,0 12,9M12,17A5,5 0 0,1 7,12A5,5 0 0,1 12,7A5,5 0 0,1 12,7A5,5 0 0,1 12,17M12,4.5C7,4.5 2.73,7.61 1,12C2.73,16.39 7,19.5 12,19.5C17,19.5 21.27,16.39 23,12C21.27,7.61 17,4.5 12,4.5Z"/></svg>
             </button>
-            <button class="crm-icon-btn hrm-doc-download-btn" data-idx="${i}" title="Tải về" style="color:#059669;background:#ECFDF5;border-radius:6px;padding:5px 7px;border:none;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;${doc.url ? "" : "opacity:0.4;cursor:not-allowed;"}">
+            <button class="crm-icon-btn hrm-doc-download-btn" data-idx="${i}" title="Tải về" style="color:#059669;background:#ECFDF5;border-radius:6px;padding:5px 7px;border:none;cursor:${doc.url ? "pointer" : "not-allowed"};display:inline-flex;align-items:center;justify-content:center;${doc.url ? "" : "opacity:0.4;"}">
               <svg viewBox="0 0 24 24" style="width:14px;height:14px;fill:currentColor;"><path d="M5,20H19V18H5M19,9H15V3H9V9H5L12,16L19,9Z"/></svg>
             </button>
             <button class="crm-icon-btn btn-del-hrm-doc" data-docid="${doc.id}" data-path="${doc.storagePath || ""}" title="Xóa" style="color:#EF4444;background:#FEF2F2;border-radius:6px;padding:5px 7px;border:none;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;">
@@ -8453,7 +8598,7 @@ document.addEventListener("DOMContentLoaded", () => {
         if (d && d.url) {
           downloadFileHelper(d.url, d.name || "file");
         } else {
-          showToast("Tệp không có dữ liệu tải về", "warning");
+          showToast("Tệp chưa có dữ liệu tải về (vui lòng xóa và tải lại tệp)", "warning");
         }
       });
     });
@@ -8499,6 +8644,31 @@ document.addEventListener("DOMContentLoaded", () => {
       if (msgEl)
         msgEl.textContent = `Đang lưu: ${file.name} (${done + 1}/${files.length})`;
       try {
+        const extUp = file.name.split(".").pop().toLowerCase();
+        let previewData = null;
+        if (["xlsx", "xls", "csv"].includes(extUp) && window.XLSX) {
+          try {
+            const buf = await file.arrayBuffer();
+            const wb = XLSX.read(buf, { type: "array" });
+            const ws = wb.Sheets[wb.SheetNames[0]];
+            previewData = XLSX.utils
+              .sheet_to_json(ws, { header: 1, defval: "" })
+              .slice(0, 120);
+          } catch (_) {}
+        }
+
+        let dataUrl = "";
+        if (file.size <= 800 * 1024) {
+          try {
+            dataUrl = await new Promise((res, rej) => {
+              const r = new FileReader();
+              r.onload = (e) => res(e.target.result);
+              r.onerror = rej;
+              r.readAsDataURL(file);
+            });
+          } catch (_) {}
+        }
+
         let url = "",
           storagePath = "";
         if (_hrmStorage) {
@@ -8513,7 +8683,7 @@ document.addEventListener("DOMContentLoaded", () => {
                   url = u;
                 }),
               new Promise((_, rej) =>
-                setTimeout(() => rej(new Error("timeout")), 12000),
+                setTimeout(() => rej(new Error("timeout")), 3500),
               ),
             ]);
           } catch (e) {
@@ -8521,35 +8691,14 @@ document.addEventListener("DOMContentLoaded", () => {
             url = "";
           }
         }
-        const extUp = file.name.split(".").pop().toLowerCase();
-        let previewData = null;
-        if (["xlsx", "xls", "csv"].includes(extUp) && window.XLSX) {
-          try {
-            const buf = await file.arrayBuffer();
-            const wb = XLSX.read(buf, { type: "array" });
-            const ws = wb.Sheets[wb.SheetNames[0]];
-            previewData = XLSX.utils
-              .sheet_to_json(ws, { header: 1, defval: "" })
-              .slice(0, 120);
-          } catch (_) {}
-        }
-        let dataUrl = url;
-        if (!dataUrl && file.size <= 800 * 1024) {
-          try {
-            dataUrl = await new Promise((res, rej) => {
-              const r = new FileReader();
-              r.onload = (e) => res(e.target.result);
-              r.onerror = rej;
-              r.readAsDataURL(file);
-            });
-          } catch (_) {}
-        }
+
+        const finalUrl = url || dataUrl || "";
         const nowTs = firebase.firestore.Timestamp.fromDate(new Date());
         const docPayload = {
           name: file.name,
           size: file.size,
           type: file.type || "",
-          url: dataUrl || "",
+          url: finalUrl,
           storagePath,
           uploadedAt: nowTs,
         };
@@ -8638,9 +8787,9 @@ document.addEventListener("DOMContentLoaded", () => {
         <td style="text-align:center;">
           <div style="display:flex;align-items:center;justify-content:center;gap:5px;">
             <button class="crm-icon-btn hrm-cdoc-view-btn" data-idx="${i}" title="Xem trước" style="color:#2563EB;background:#EEF2FF;border-radius:6px;padding:5px 7px;border:none;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;">
-              <svg viewBox="0 0 24 24" style="width:14px;height:14px;fill:currentColor;"><path d="M12,9A3,3 0 0,0 9,12A3,3 0 0,0 12,15A3,3 0 0,0 15,12A3,3 0 0,0 12,9M12,17A5,5 0 0,1 7,12A5,5 0 0,1 12,7A5,5 0 0,1 17,12A5,5 0 0,1 12,7A5,5 0 0,1 12,17M12,4.5C7,4.5 2.73,7.61 1,12C2.73,16.39 7,19.5 12,19.5C17,19.5 21.27,16.39 23,12C21.27,7.61 17,4.5 12,4.5Z"/></svg>
+              <svg viewBox="0 0 24 24" style="width:14px;height:14px;fill:currentColor;"><path d="M12,9A3,3 0 0,0 9,12A3,3 0 0,0 12,15A3,3 0 0,0 15,12A3,3 0 0,0 12,9M12,17A5,5 0 0,1 7,12A5,5 0 0,1 12,7A5,5 0 0,1 12,7A5,5 0 0,1 12,17M12,4.5C7,4.5 2.73,7.61 1,12C2.73,16.39 7,19.5 12,19.5C17,19.5 21.27,16.39 23,12C21.27,7.61 17,4.5 12,4.5Z"/></svg>
             </button>
-            <button class="crm-icon-btn hrm-cdoc-download-btn" data-idx="${i}" title="Tải về" style="color:#059669;background:#ECFDF5;border-radius:6px;padding:5px 7px;border:none;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;${doc.url ? "" : "opacity:0.4;cursor:not-allowed;"}">
+            <button class="crm-icon-btn hrm-cdoc-download-btn" data-idx="${i}" title="Tải về" style="color:#059669;background:#ECFDF5;border-radius:6px;padding:5px 7px;border:none;cursor:${doc.url ? "pointer" : "not-allowed"};display:inline-flex;align-items:center;justify-content:center;${doc.url ? "" : "opacity:0.4;"}">
               <svg viewBox="0 0 24 24" style="width:14px;height:14px;fill:currentColor;"><path d="M5,20H19V18H5M19,9H15V3H9V9H5L12,16L19,9Z"/></svg>
             </button>
             <button class="crm-icon-btn btn-del-hrm-cdoc" data-docid="${doc.id}" data-path="${doc.storagePath || ""}" title="Xóa" style="color:#EF4444;background:#FEF2F2;border-radius:6px;padding:5px 7px;border:none;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;">
@@ -8709,6 +8858,31 @@ document.addEventListener("DOMContentLoaded", () => {
       if (msgEl)
         msgEl.textContent = `Đang lưu: ${file.name} (${done + 1}/${files.length})`;
       try {
+        const extUp = file.name.split(".").pop().toLowerCase();
+        let previewData = null;
+        if (["xlsx", "xls", "csv"].includes(extUp) && window.XLSX) {
+          try {
+            const buf = await file.arrayBuffer();
+            const wb = XLSX.read(buf, { type: "array" });
+            const ws = wb.Sheets[wb.SheetNames[0]];
+            previewData = XLSX.utils
+              .sheet_to_json(ws, { header: 1, defval: "" })
+              .slice(0, 120);
+          } catch (_) {}
+        }
+
+        let dataUrl = "";
+        if (file.size <= 800 * 1024) {
+          try {
+            dataUrl = await new Promise((res, rej) => {
+              const r = new FileReader();
+              r.onload = (e) => res(e.target.result);
+              r.onerror = rej;
+              r.readAsDataURL(file);
+            });
+          } catch (_) {}
+        }
+
         let url = "",
           storagePath = "";
         if (_hrmStorage) {
@@ -8723,7 +8897,7 @@ document.addEventListener("DOMContentLoaded", () => {
                   url = u;
                 }),
               new Promise((_, rej) =>
-                setTimeout(() => rej(new Error("timeout")), 12000),
+                setTimeout(() => rej(new Error("timeout")), 3500),
               ),
             ]);
           } catch (e) {
@@ -8731,35 +8905,14 @@ document.addEventListener("DOMContentLoaded", () => {
             url = "";
           }
         }
-        const extUp = file.name.split(".").pop().toLowerCase();
-        let previewData = null;
-        if (["xlsx", "xls", "csv"].includes(extUp) && window.XLSX) {
-          try {
-            const buf = await file.arrayBuffer();
-            const wb = XLSX.read(buf, { type: "array" });
-            const ws = wb.Sheets[wb.SheetNames[0]];
-            previewData = XLSX.utils
-              .sheet_to_json(ws, { header: 1, defval: "" })
-              .slice(0, 120);
-          } catch (_) {}
-        }
-        let dataUrl = url;
-        if (!dataUrl && file.size <= 800 * 1024) {
-          try {
-            dataUrl = await new Promise((res, rej) => {
-              const r = new FileReader();
-              r.onload = (e) => res(e.target.result);
-              r.onerror = rej;
-              r.readAsDataURL(file);
-            });
-          } catch (_) {}
-        }
+
+        const finalUrl = url || dataUrl || "";
         const nowTs = firebase.firestore.Timestamp.fromDate(new Date());
         const docPayload = {
           name: file.name,
           size: file.size,
           type: file.type || "",
-          url: dataUrl || "",
+          url: finalUrl,
           storagePath,
           uploadedAt: nowTs,
         };
