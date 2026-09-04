@@ -11308,10 +11308,40 @@ document.addEventListener("DOMContentLoaded", () => {
       },
     ];
 
+    const CRM_OLD_JOURNEY = [
+      {
+        status: "Chăm sóc L1",
+        title: "Chăm sóc lần 1",
+        color: "#6366F1",
+        bg: "#EEF2FF",
+      },
+      {
+        status: "Chăm sóc L2",
+        title: "Chăm sóc lần 2",
+        color: "#0EA5E9",
+        bg: "#E0F2FE",
+      },
+      {
+        status: "Chăm sóc L3",
+        title: "Chăm sóc lần 3",
+        color: "#D97706",
+        bg: "#FEF3C7",
+      },
+      {
+        status: "Chăm sóc L4",
+        title: "Chăm sóc lần 4",
+        color: "#10B981",
+        bg: "#ECFDF5",
+      },
+    ];
+
     const renderJourneyInto = (el, c, seed) => {
       if (!el) return;
-      const crmSt = c.crmStatus || "Khách Hàng Mới";
-      const currentIdx = CRM_JOURNEY.findIndex((m) => m.status === crmSt);
+      const isOld = c.isCrmOldCustomer || c.status === "Đã xuất cảnh";
+      const journeyList = isOld ? CRM_OLD_JOURNEY : CRM_JOURNEY;
+      const defaultStatus = isOld ? "Chăm sóc L1" : "Khách Hàng Mới";
+      const crmSt = c.crmStatus || defaultStatus;
+      const currentIdx = journeyList.findIndex((m) => m.status === crmSt);
 
       const fmt = (d) => {
         if (!d) return "--";
@@ -11325,7 +11355,7 @@ document.addEventListener("DOMContentLoaded", () => {
       );
       const updatedDateStr = fmt(c.updatedAt || c.createdAt || new Date());
 
-      el.innerHTML = CRM_JOURNEY.map((m, idx) => {
+      el.innerHTML = journeyList.map((m, idx) => {
         const done = idx <= currentIdx;
         const current = idx === currentIdx;
         const dotStyle = done
@@ -12068,6 +12098,25 @@ document.addEventListener("DOMContentLoaded", () => {
   // ── Old Customer table ─────────────────────────────────────────────────────
   let crmOldCustomerPage = 1;
 
+  const CRM_OLD_STATUSES = [
+    "Chăm sóc L1",
+    "Chăm sóc L2",
+    "Chăm sóc L3",
+    "Chăm sóc L4",
+  ];
+  const CRM_OLD_STATUS_COLORS = {
+    "Chăm sóc L1": { bg: "rgba(99,102,241,0.1)", color: "#6366F1" },
+    "Chăm sóc L2": { bg: "rgba(14,165,233,0.1)", color: "#0EA5E9" },
+    "Chăm sóc L3": { bg: "rgba(245,158,11,0.1)", color: "#D97706" },
+    "Chăm sóc L4": { bg: "rgba(16,185,129,0.1)", color: "#10B981" },
+    "Khách Hàng Mới": { bg: "rgba(99,102,241,0.1)", color: "#6366F1" },
+    "Tư Vấn L1": { bg: "rgba(14,165,233,0.1)", color: "#0EA5E9" },
+    "Tư Vấn L2": { bg: "rgba(245,158,11,0.1)", color: "#D97706" },
+    "Tư Vấn L3": { bg: "rgba(234,88,12,0.1)", color: "#EA580C" },
+    "Có Nhu Cầu": { bg: "rgba(16,185,129,0.1)", color: "#10B981" },
+    "Chốt Cọc": { bg: "rgba(220,38,38,0.1)", color: "#DC2626" },
+  };
+
   const renderCrmOldCustomers = (resetPage = false) => {
     if (resetPage) crmOldCustomerPage = 1;
     const tbody = document.getElementById("crmOldCustomerTableBody");
@@ -12084,7 +12133,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const filtered = _allCrmCustomers.filter((c) => {
       if (c.status !== "Đã xuất cảnh" && !c.isCrmOldCustomer) return false; // Chỉ lấy khách hàng cũ
       if (countryF !== "All" && c.country !== countryF) return false;
-      const cs = c.crmStatus || "Khách Hàng Mới";
+      const cs = c.crmStatus || "Chăm sóc L1";
       if (statusF !== "All" && cs !== statusF) return false;
       if (
         search &&
@@ -12136,11 +12185,11 @@ document.addEventListener("DOMContentLoaded", () => {
           const d = c.createdAt.toDate();
           dateStr = `${String(d.getDate()).padStart(2, "0")}/${String(d.getMonth() + 1).padStart(2, "0")}/${d.getFullYear()}`;
         }
-        const currentCrmStatus = c.crmStatus || "Khách Hàng Mới";
+        const currentCrmStatus = c.crmStatus || "Chăm sóc L1";
         const sc =
-          SOURCE_STATUS_COLORS[currentCrmStatus] ||
-          SOURCE_STATUS_COLORS["Khách Hàng Mới"];
-        const optionsHtml = SOURCE_STATUSES.map(
+          CRM_OLD_STATUS_COLORS[currentCrmStatus] ||
+          CRM_OLD_STATUS_COLORS["Chăm sóc L1"];
+        const optionsHtml = CRM_OLD_STATUSES.map(
           (s) =>
             `<option value="${s}"${s === currentCrmStatus ? " selected" : ""}>${s}</option>`,
         ).join("");
@@ -12198,8 +12247,8 @@ document.addEventListener("DOMContentLoaded", () => {
     tbody.querySelectorAll(".crm-old-status-select").forEach((sel) => {
       sel.addEventListener("change", async () => {
         const sc =
-          SOURCE_STATUS_COLORS[sel.value] ||
-          SOURCE_STATUS_COLORS["Khách Hàng Mới"];
+          CRM_OLD_STATUS_COLORS[sel.value] ||
+          CRM_OLD_STATUS_COLORS["Chăm sóc L1"];
         sel.style.borderColor = sc.color;
         sel.style.color = sc.color;
         sel.style.background = `${sc.bg} url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23888'/%3E%3C/svg%3E") no-repeat right 0.4rem center`;
@@ -15312,7 +15361,7 @@ document.addEventListener("DOMContentLoaded", () => {
     document.getElementById("crmOldCountry").value =
       customer?.country || "Nhật";
     document.getElementById("crmOldStatusSel").value =
-      customer?.crmStatus || "Khách Hàng Mới";
+      customer?.crmStatus || "Chăm sóc L1";
     document.getElementById("crmOldNotes").value = customer?.notes || "";
     await populateCrmOldAdvisorSelect(customer?.advisor || "");
     modal.style.display = "flex";
