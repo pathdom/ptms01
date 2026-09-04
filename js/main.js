@@ -11499,6 +11499,24 @@ document.addEventListener("DOMContentLoaded", () => {
         bg: "#FFF7ED",
       },
       {
+        status: "Tư Vấn L4",
+        title: "Tư Vấn Lần 4",
+        color: "#DB2777",
+        bg: "#FCE7F3",
+      },
+      {
+        status: "Tư Vấn L5",
+        title: "Tư Vấn Lần 5",
+        color: "#9333EA",
+        bg: "#F3E8FF",
+      },
+      {
+        status: "Tư Vấn L6",
+        title: "Tư Vấn Lần 6",
+        color: "#0891B2",
+        bg: "#ECFEFF",
+      },
+      {
         status: "Có Nhu Cầu",
         title: "Có Nhu Cầu",
         color: "#10B981",
@@ -12326,6 +12344,9 @@ document.addEventListener("DOMContentLoaded", () => {
     "Tư Vấn L1": { bg: "rgba(14,165,233,0.1)", color: "#0EA5E9" },
     "Tư Vấn L2": { bg: "rgba(245,158,11,0.1)", color: "#D97706" },
     "Tư Vấn L3": { bg: "rgba(234,88,12,0.1)", color: "#EA580C" },
+    "Tư Vấn L4": { bg: "rgba(219,39,119,0.1)", color: "#DB2777" },
+    "Tư Vấn L5": { bg: "rgba(147,51,234,0.1)", color: "#9333EA" },
+    "Tư Vấn L6": { bg: "rgba(8,145,178,0.1)", color: "#0891B2" },
     "Có Nhu Cầu": { bg: "rgba(16,185,129,0.1)", color: "#10B981" },
     "Chốt Cọc": { bg: "rgba(220,38,38,0.1)", color: "#DC2626" },
   };
@@ -12566,6 +12587,9 @@ document.addEventListener("DOMContentLoaded", () => {
     "Tư Vấn L1",
     "Tư Vấn L2",
     "Tư Vấn L3",
+    "Tư Vấn L4",
+    "Tư Vấn L5",
+    "Tư Vấn L6",
     "Có Nhu Cầu",
     "Chốt Cọc",
   ];
@@ -12574,6 +12598,9 @@ document.addEventListener("DOMContentLoaded", () => {
     "Tư Vấn L1": { bg: "rgba(14,165,233,0.1)", color: "#0EA5E9" },
     "Tư Vấn L2": { bg: "rgba(245,158,11,0.1)", color: "#D97706" },
     "Tư Vấn L3": { bg: "rgba(234,88,12,0.1)", color: "#EA580C" },
+    "Tư Vấn L4": { bg: "rgba(219,39,119,0.1)", color: "#DB2777" },
+    "Tư Vấn L5": { bg: "rgba(147,51,234,0.1)", color: "#9333EA" },
+    "Tư Vấn L6": { bg: "rgba(8,145,178,0.1)", color: "#0891B2" },
     "Có Nhu Cầu": { bg: "rgba(16,185,129,0.1)", color: "#10B981" },
     "Chốt Cọc": { bg: "rgba(220,38,38,0.1)", color: "#DC2626" },
   };
