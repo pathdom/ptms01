@@ -14018,6 +14018,9 @@ document.addEventListener("DOMContentLoaded", () => {
     color: "#6366F1",
     type: "group",
   };
+  let _iocCustomGroups = []; // nhóm chat tự tạo mà user hiện tại là thành viên
+  let _iocGroupsSubscription = null;
+  let _iocGroupSelectedEmails = new Set();
 
   // Persist favorites & mutes to localStorage (keyed by email)
   const iocFavKey = () => `ioc_favs_${currentUser?.email || "anon"}`;
@@ -14081,8 +14084,42 @@ document.addEventListener("DOMContentLoaded", () => {
     return currentUser ? [currentUser] : [];
   };
 
+  // Thành viên của 1 nhóm chat cụ thể (nhóm tự tạo, không phải nhóm toàn công ty).
+  // Với DM hoặc thread không xác định, trả về toàn bộ danh bạ như hành vi cũ.
+  const iocGetGroupMembers = (threadId) => {
+    const grp = _iocCustomGroups.find((g) => g.id === threadId);
+    if (!grp) return iocGetMembers();
+    const emails = new Set((grp.memberEmails || []).map((e) => e.toLowerCase()));
+    return iocGetMembers().filter((u) =>
+      emails.has((u.email || "").toLowerCase()),
+    );
+  };
+
+  // Lắng nghe các nhóm chat tự tạo mà user hiện tại là thành viên (gọi 1 lần)
+  const iocSubscribeGroups = () => {
+    if (_iocGroupsSubscription || !currentUser?.email) return;
+    _iocGroupsSubscription = db
+      .collection("chat_groups")
+      .where("memberEmails", "array-contains", currentUser.email.toLowerCase())
+      .onSnapshot(
+        (snap) => {
+          _iocCustomGroups = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+          iocRenderConvList();
+        },
+        (err) => console.error("Load chat groups error:", err),
+      );
+  };
+
   // ── Switch thread ──────────────────────────────────────────────────────────
-  const iocOpenThread = (id, name, av, color, type = "dm", desc = "") => {
+  const iocOpenThread = (
+    id,
+    name,
+    av,
+    color,
+    type = "dm",
+    desc = "",
+    memberCount = null,
+  ) => {
     if (_iocActiveThread.id === id) return;
     _iocActiveThread = {
       id,
@@ -14091,6 +14128,7 @@ document.addEventListener("DOMContentLoaded", () => {
       av: av || (name || "U")[0].toUpperCase(),
       color: color || iocAvatarColor(name),
       desc,
+      memberCount,
     };
 
     // Reset search when switching thread
@@ -14118,7 +14156,9 @@ document.addEventListener("DOMContentLoaded", () => {
     if (nameEl) nameEl.textContent = name;
     if (subEl)
       subEl.textContent =
-        type === "group" ? `${iocGetMembers().length} thành viên` : "Trực tiếp";
+        type === "group"
+          ? `${memberCount ?? iocGetMembers().length} thành viên`
+          : "Trực tiếp";
     if (backBtn) backBtn.style.display = type === "dm" ? "flex" : "none";
 
     // Update info panel
@@ -14141,7 +14181,7 @@ document.addEventListener("DOMContentLoaded", () => {
       infoDescEl.textContent =
         desc ||
         (type === "group"
-          ? `Nhóm · ${iocGetMembers().length} thành viên`
+          ? `Nhóm · ${memberCount ?? iocGetMembers().length} thành viên`
           : "Tin nhắn trực tiếp");
 
     iocUpdateFavBtn();
@@ -14275,16 +14315,58 @@ document.addEventListener("DOMContentLoaded", () => {
       };
     });
 
+    // Nhóm chat tự tạo (khác nhóm toàn công ty "group-global")
+    const groupsFiltered = _iocCustomGroups.filter(
+      (g) => !search || (g.name || "").toLowerCase().includes(search),
+    );
+    const customGroupItems = groupsFiltered.map((g) => {
+      const isActive = _iocActiveThread.id === g.id;
+      const memberCount = (g.memberEmails || []).length;
+      const { text, time } = isActive
+        ? getLastMsgPreview(_iocMsgs)
+        : {
+            text: _iocDmPreviews[g.id]?.text || `${memberCount} thành viên`,
+            time: _iocDmPreviews[g.id]?.time || "",
+          };
+      const unread = isActive ? 0 : _iocDmPreviews[g.id]?.unread || 0;
+      const av = (g.name || "N")[0].toUpperCase();
+      const color = g.color || iocAvatarColor(g.name || "N");
+      return {
+        id: g.id,
+        html: iocBuildConvItem(
+          g.id,
+          av,
+          color,
+          g.name || "Nhóm",
+          text,
+          time,
+          isActive,
+          unread,
+        ),
+      };
+    });
+
     const groupIsFav = _iocFavThreads.has("group-global");
+    const favCustomGroups = customGroupItems.filter((x) =>
+      _iocFavThreads.has(x.id),
+    );
+    const recCustomGroups = customGroupItems.filter(
+      (x) => !_iocFavThreads.has(x.id),
+    );
     const favDms = dmItemsHtml.filter((x) => _iocFavThreads.has(x.dmId));
     const recDms = dmItemsHtml.filter((x) => !_iocFavThreads.has(x.dmId));
 
     favEl.innerHTML =
-      (groupIsFav ? groupItem : "") + favDms.map((x) => x.html).join("");
+      (groupIsFav ? groupItem : "") +
+      favCustomGroups.map((x) => x.html).join("") +
+      favDms.map((x) => x.html).join("");
     recEl.innerHTML =
       (!groupIsFav ? groupItem : "") +
-      (recDms.map((x) => x.html).join("") ||
-        '<div class="ioc-empty-list">Không tìm thấy nhân viên</div>');
+      recCustomGroups.map((x) => x.html).join("") +
+      recDms.map((x) => x.html).join("") +
+      (recCustomGroups.length === 0 && recDms.length === 0
+        ? '<div class="ioc-empty-list">Không tìm thấy nhân viên</div>'
+        : "");
 
     [favEl, recEl].forEach((container) => {
       container.querySelectorAll("[data-thread-id]").forEach((el) => {
@@ -14293,12 +14375,19 @@ document.addEventListener("DOMContentLoaded", () => {
           const name = el.dataset.threadName || id;
           const av = el.dataset.threadAv || name[0];
           const col = el.dataset.threadColor || iocAvatarColor(name);
+          const customGrp = _iocCustomGroups.find((g) => g.id === id);
+          const isGroup = id === "group-global" || !!customGrp;
+          const memberCount = customGrp
+            ? (customGrp.memberEmails || []).length
+            : null;
           iocOpenThread(
             id,
             name,
             av,
             col,
-            id === "group-global" ? "group" : "dm",
+            isGroup ? "group" : "dm",
+            "",
+            memberCount,
           );
         });
       });
@@ -14306,7 +14395,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const subEl = document.getElementById("iocActiveThreadSub");
     if (subEl && _iocActiveThread.type === "group")
-      subEl.textContent = `${members.length} thành viên`;
+      subEl.textContent = `${_iocActiveThread.id === "group-global" ? members.length : _iocActiveThread.memberCount ?? 0} thành viên`;
     const badge = document.getElementById("crmMemberCount");
     if (badge) badge.textContent = members.length;
   };
@@ -14554,7 +14643,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const list = document.getElementById("iocMembersList");
     const cnt = document.getElementById("iocMemberListCount");
     if (!list) return;
-    const members = iocGetMembers();
+    const members = iocGetGroupMembers(_iocActiveThread.id);
     if (cnt) cnt.textContent = members.length;
     list.innerHTML = members
       .map((u) => {
@@ -14758,10 +14847,17 @@ document.addEventListener("DOMContentLoaded", () => {
       editBtn.addEventListener("click", iocRenameGroup);
       if (name !== current) {
         try {
-          await db
-            .collection("chat_settings")
-            .doc(_iocActiveThread.id)
-            .set({ name }, { merge: true });
+          if (_iocActiveThread.id === "group-global") {
+            await db
+              .collection("chat_settings")
+              .doc(_iocActiveThread.id)
+              .set({ name }, { merge: true });
+          } else {
+            await db
+              .collection("chat_groups")
+              .doc(_iocActiveThread.id)
+              .update({ name });
+          }
           showToast("Đã đổi tên nhóm!", "success");
         } catch (_) {}
       }
@@ -14935,6 +15031,104 @@ document.addEventListener("DOMContentLoaded", () => {
         );
       });
     });
+  };
+
+  // ── Tạo nhóm chat mới ──────────────────────────────────────────────────────
+  const iocOpenCreateGroupModal = () => {
+    _iocGroupSelectedEmails = new Set();
+    const nameInp = document.getElementById("iocGroupNameInput");
+    if (nameInp) nameInp.value = "";
+    const searchInp = document.getElementById("iocCreateGroupSearch");
+    if (searchInp) searchInp.value = "";
+    iocRenderCreateGroupList("");
+    const modal = document.getElementById("iocCreateGroupModal");
+    if (modal) modal.style.display = "flex";
+  };
+
+  const iocRenderCreateGroupList = (search) => {
+    const list = document.getElementById("iocCreateGroupList");
+    if (!list) return;
+    const myEmail = (currentUser?.email || "").toLowerCase();
+    const members = iocGetMembers().filter(
+      (u) => (u.email || "").toLowerCase() !== myEmail,
+    );
+    const q = (search || "").toLowerCase();
+    const filtered = members.filter(
+      (u) => !q || (u.name || "").toLowerCase().includes(q),
+    );
+    list.innerHTML =
+      filtered
+        .slice(0, 50)
+        .map((u) => {
+          const email = (u.email || "").toLowerCase();
+          const ini = (u.name || "U")
+            .split(" ")
+            .map((w) => w[0])
+            .join("")
+            .slice(0, 2)
+            .toUpperCase();
+          const color = iocAvatarColor(u.name || "U");
+          const sub = u.position || u.department || "Nhân viên";
+          const selected = _iocGroupSelectedEmails.has(email);
+          return `<div class="ioc-fwd-item${selected ? " selected" : ""}" data-email="${esc(email)}">
+        <div class="ioc-member-av" style="background:${color}">${ini}</div>
+        <div style="flex:1"><div style="font-weight:600">${esc(u.name || "Người dùng")}</div><div style="font-size:0.75rem;color:var(--text-muted)">${esc(sub)}</div></div>
+        <input type="checkbox" ${selected ? "checked" : ""} style="pointer-events:none" />
+      </div>`;
+        })
+        .join("") ||
+      '<div class="ioc-empty-list">Không tìm thấy nhân viên</div>';
+    list.querySelectorAll("[data-email]").forEach((el) => {
+      el.addEventListener("click", () => {
+        const email = el.dataset.email;
+        if (_iocGroupSelectedEmails.has(email))
+          _iocGroupSelectedEmails.delete(email);
+        else _iocGroupSelectedEmails.add(email);
+        el.classList.toggle("selected");
+        const cb = el.querySelector("input[type=checkbox]");
+        if (cb) cb.checked = _iocGroupSelectedEmails.has(email);
+      });
+    });
+  };
+
+  const iocConfirmCreateGroup = async () => {
+    const name = document.getElementById("iocGroupNameInput")?.value.trim();
+    if (!name) {
+      showToast("Vui lòng nhập tên nhóm!", "error");
+      return;
+    }
+    if (_iocGroupSelectedEmails.size === 0) {
+      showToast("Vui lòng chọn ít nhất 1 thành viên!", "error");
+      return;
+    }
+    if (!currentUser?.email) return;
+    const memberEmails = [
+      currentUser.email.toLowerCase(),
+      ..._iocGroupSelectedEmails,
+    ];
+    try {
+      const ref = await db.collection("chat_groups").add({
+        name,
+        memberEmails,
+        createdBy: currentUser.email,
+        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+      });
+      const modal = document.getElementById("iocCreateGroupModal");
+      if (modal) modal.style.display = "none";
+      showToast(`Đã tạo nhóm "${name}"!`, "success");
+      iocOpenThread(
+        ref.id,
+        name,
+        name[0].toUpperCase(),
+        iocAvatarColor(name),
+        "group",
+        "",
+        memberEmails.length,
+      );
+    } catch (err) {
+      console.error("Create group error:", err);
+      showToast("Lỗi tạo nhóm: " + err.message, "error");
+    }
   };
 
   // ── Emoji picker ───────────────────────────────────────────────────────────
@@ -15460,8 +15654,31 @@ document.addEventListener("DOMContentLoaded", () => {
       .getElementById("iocNewChatSearch")
       ?.addEventListener("input", (e) => iocRenderNewChatList(e.target.value));
 
+    // Create group modal
+    document
+      .getElementById("btnIocCreateGroup")
+      ?.addEventListener("click", iocOpenCreateGroupModal);
+    document
+      .getElementById("btnCloseIocCreateGroup")
+      ?.addEventListener("click", () => {
+        document.getElementById("iocCreateGroupModal").style.display = "none";
+      });
+    document
+      .getElementById("btnCancelIocCreateGroup")
+      ?.addEventListener("click", () => {
+        document.getElementById("iocCreateGroupModal").style.display = "none";
+      });
+    document
+      .getElementById("btnConfirmIocCreateGroup")
+      ?.addEventListener("click", iocConfirmCreateGroup);
+    document
+      .getElementById("iocCreateGroupSearch")
+      ?.addEventListener("input", (e) =>
+        iocRenderCreateGroupList(e.target.value),
+      );
+
     // Close modals on backdrop click
-    ["iocForwardModal", "iocNewChatModal"].forEach((id) => {
+    ["iocForwardModal", "iocNewChatModal", "iocCreateGroupModal"].forEach((id) => {
       document.getElementById(id)?.addEventListener("click", (e) => {
         if (e.target.id === id) {
           document.getElementById(id).style.display = "none";
@@ -16311,6 +16528,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
       iocLoadPrefs();
       iocBindEvents();
+      iocSubscribeGroups();
 
       if (currentUser) {
         const av = document.getElementById("miniCrmAvatar");

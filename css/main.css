@@ -5320,6 +5320,24 @@ body.dark-theme-crm {
   fill: currentColor;
 }
 
+.crm-btn-primary {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.5rem 1.1rem;
+  background: var(--crm-blue);
+  color: #fff;
+  border: none;
+  border-radius: var(--border-radius-md);
+  font-size: 0.8rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: var(--transition-fast);
+}
+.crm-btn-primary:hover {
+  background: var(--crm-blue-hover);
+}
+
 .crm-btn-secondary {
   display: inline-flex;
   align-items: center;
