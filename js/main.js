@@ -15868,6 +15868,55 @@ document.addEventListener("DOMContentLoaded", () => {
           showToast("Đã xuất Excel khách hàng cũ thành công!", "success");
         });
 
+      // ── Tải mẫu Excel nhập khách hàng (dùng chung cho khách hàng mới/cũ) ───
+      const handleDownloadCrmTemplate = (isOld) => {
+        try {
+          const sampleData = [
+            {
+              "Họ Tên": "Nguyễn Văn A",
+              Email: "nguyenvana@gmail.com",
+              "Số Điện Thoại": "0912345678",
+              "Quốc Gia": "Nhật",
+              "NV Tư Vấn": "",
+              "Trạng Thái CRM": isOld ? "Chăm sóc L1" : "Khách Hàng Mới",
+              "Ghi Chú": "",
+            },
+            {
+              "Họ Tên": "Trần Thị B",
+              Email: "tranthib@gmail.com",
+              "Số Điện Thoại": "0987654321",
+              "Quốc Gia": "Hàn",
+              "NV Tư Vấn": "",
+              "Trạng Thái CRM": isOld ? "Chăm sóc L2" : "Tư Vấn L1",
+              "Ghi Chú": "",
+            },
+          ];
+          const ws = XLSX.utils.json_to_sheet(sampleData);
+          const wb = XLSX.utils.book_new();
+          XLSX.utils.book_append_sheet(
+            wb,
+            ws,
+            isOld ? "KhachHangCu_Mau" : "KhachHang_Mau",
+          );
+          XLSX.writeFile(
+            wb,
+            isOld
+              ? "mau_nhap_khach_hang_cu.xlsx"
+              : "mau_nhap_khach_hang.xlsx",
+          );
+          showToast("Đã tải xuống file mẫu thành công!", "success");
+        } catch (err) {
+          console.error("Failed to generate CRM template excel:", err);
+          showToast("Không thể sinh file mẫu Excel!", "error");
+        }
+      };
+      document
+        .getElementById("btnDownloadCrmTemplate")
+        ?.addEventListener("click", () => handleDownloadCrmTemplate(false));
+      document
+        .getElementById("btnDownloadCrmOldTemplate")
+        ?.addEventListener("click", () => handleDownloadCrmTemplate(true));
+
       // ── Import khách hàng từ Excel (dùng chung cho khách hàng mới/cũ) ──────
       const CRM_COUNTRY_MAP = {
         "nhật": "Nhật", "nhật bản": "Nhật", "jp": "Nhật", "japan": "Nhật",
@@ -15957,7 +16006,8 @@ document.addEventListener("DOMContentLoaded", () => {
               )
                 .toString()
                 .trim();
-              const crmStatus = SOURCE_STATUSES.includes(statusRaw)
+              const validStatuses = isOld ? CRM_OLD_STATUSES : SOURCE_STATUSES;
+              const crmStatus = validStatuses.includes(statusRaw)
                 ? statusRaw
                 : defaultStatus;
               const advisor = (
