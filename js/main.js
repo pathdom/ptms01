@@ -15868,6 +15868,180 @@ document.addEventListener("DOMContentLoaded", () => {
           showToast("Đã xuất Excel khách hàng cũ thành công!", "success");
         });
 
+      // ── Import khách hàng từ Excel (dùng chung cho khách hàng mới/cũ) ──────
+      const CRM_COUNTRY_MAP = {
+        "nhật": "Nhật", "nhật bản": "Nhật", "jp": "Nhật", "japan": "Nhật",
+        "hàn": "Hàn", "hàn quốc": "Hàn", "kr": "Hàn", "korea": "Hàn",
+        "đài": "Đài", "đài loan": "Đài", "tw": "Đài", "taiwan": "Đài",
+        "úc": "Úc", "australia": "Úc", "au": "Úc",
+        "canada": "Canada", "ca": "Canada",
+        "mỹ": "Mỹ", "usa": "Mỹ", "us": "Mỹ",
+      };
+      const normalizeCrmCountry = (raw) => {
+        const key = (raw || "").toString().trim().toLowerCase();
+        return CRM_COUNTRY_MAP[key] || (raw ? raw.toString().trim() : "Nhật");
+      };
+
+      const importCrmCustomersFromExcel = (file, isOld) => {
+        if (!file) return;
+        if (!window.XLSX) {
+          showToast("Thư viện Excel chưa sẵn sàng!", "warning");
+          return;
+        }
+        showToast("Đang đọc file Excel...", "info");
+        const reader = new FileReader();
+        reader.onload = async (evt) => {
+          try {
+            const data = new Uint8Array(evt.target.result);
+            const wb = XLSX.read(data, { type: "array" });
+            const ws = wb.Sheets[wb.SheetNames[0]];
+            const rows = XLSX.utils.sheet_to_json(ws);
+
+            if (!rows || rows.length === 0) {
+              showToast("File Excel trống hoặc không đúng định dạng!", "error");
+              return;
+            }
+
+            showToast(`Đang nhập ${rows.length} khách hàng...`, "info");
+
+            const snap = await db
+              .collection("students")
+              .where("isCrmCustomer", "==", true)
+              .get();
+            let maxCode = 30000;
+            snap.forEach((doc) => {
+              const codeNum =
+                parseInt((doc.data().code || "").replace(/\D/g, "")) || 0;
+              if (codeNum > maxCode) maxCode = codeNum;
+            });
+
+            const defaultStatus = isOld ? "Chăm sóc L1" : "Khách Hàng Mới";
+            const batch = db.batch();
+            let count = 0;
+            let skipped = 0;
+
+            rows.forEach((row) => {
+              const name = (
+                row["Họ Tên"] ||
+                row["Họ và Tên"] ||
+                row["Họ tên"] ||
+                row["Name"] ||
+                ""
+              )
+                .toString()
+                .trim();
+              if (!name) {
+                skipped++;
+                return;
+              }
+              const email = (row["Email"] || row["email"] || "")
+                .toString()
+                .trim();
+              const phone = (
+                row["Số Điện Thoại"] ||
+                row["SĐT"] ||
+                row["Điện thoại"] ||
+                row["Phone"] ||
+                ""
+              )
+                .toString()
+                .trim();
+              const country = normalizeCrmCountry(
+                row["Quốc Gia"] || row["Quốc gia"] || row["Country"] || "",
+              );
+              const statusRaw = (
+                row["Trạng Thái CRM"] ||
+                row["Trạng thái"] ||
+                row["Status"] ||
+                ""
+              )
+                .toString()
+                .trim();
+              const crmStatus = SOURCE_STATUSES.includes(statusRaw)
+                ? statusRaw
+                : defaultStatus;
+              const advisor = (
+                row["NV Tư Vấn"] ||
+                row["Tư vấn viên"] ||
+                row["Advisor"] ||
+                ""
+              )
+                .toString()
+                .trim();
+              const notes = (row["Ghi Chú"] || row["Ghi chú"] || row["Notes"] || "")
+                .toString()
+                .trim();
+
+              maxCode += 1;
+              const payload = {
+                name,
+                email,
+                phone,
+                country,
+                crmStatus,
+                advisor,
+                source: advisor,
+                notes,
+                isCrmCustomer: true,
+                code: String(maxCode),
+                createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+                [`statusDate_${crmStatus.replace(/\s+/g, "_")}`]:
+                  firebase.firestore.FieldValue.serverTimestamp(),
+              };
+              if (isOld) {
+                payload.isCrmOldCustomer = true;
+                payload.status = "Đã xuất cảnh";
+              }
+              const ref = db.collection("students").doc();
+              batch.set(ref, payload);
+              count++;
+            });
+
+            if (count === 0) {
+              showToast(
+                "Không có dòng hợp lệ nào để nhập (thiếu Họ Tên)!",
+                "error",
+              );
+              return;
+            }
+
+            await batch.commit();
+            showToast(
+              `Đã nhập ${count} khách hàng${skipped ? `, bỏ qua ${skipped} dòng thiếu họ tên` : ""}!`,
+              "success",
+            );
+            initCrmModule();
+          } catch (err) {
+            console.error("CRM Excel import error:", err);
+            showToast("Lỗi khi nhập Excel: " + err.message, "error");
+          }
+        };
+        reader.readAsArrayBuffer(file);
+      };
+
+      document.getElementById("btnImportCrm")?.addEventListener("click", () => {
+        document.getElementById("crmCustomerExcelFileInput")?.click();
+      });
+      document
+        .getElementById("crmCustomerExcelFileInput")
+        ?.addEventListener("change", (e) => {
+          importCrmCustomersFromExcel(e.target.files[0], false);
+          e.target.value = "";
+        });
+
+      document
+        .getElementById("btnImportCrmOld")
+        ?.addEventListener("click", () => {
+          document.getElementById("crmOldCustomerExcelFileInput")?.click();
+        });
+      document
+        .getElementById("crmOldCustomerExcelFileInput")
+        ?.addEventListener("change", (e) => {
+          importCrmCustomersFromExcel(e.target.files[0], true);
+          e.target.value = "";
+        });
+
       document
         .getElementById("crmSearchInput")
         ?.addEventListener("input", () => renderCrmCustomers(true));
